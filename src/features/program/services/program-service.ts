@@ -213,7 +213,7 @@ const promoteWaitlist = async (
   if (!session.waitlistEnabled) {
     return;
   }
-  const counts = await sessionRegistrationRepository.countsBySession(session.id);
+  const counts = await sessionRepository.countsBySession(session.id);
   const capacity = computeCapacity({
     limit: session.capacity,
     confirmed: counts.confirmed,
