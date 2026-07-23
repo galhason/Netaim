@@ -1,0 +1,655 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens are the single source of truth for visual values.
+ * Semantic tokens (below) may be overridden at runtime per event from
+ * CMS theme settings by reassigning the CSS variables on a container.
+ * Palette direction (Task 2.2): Jerusalem stone surfaces, civic ink
+ * text, one bronze accent used with restraint.
+ */
+:root {
+  --color-surface: oklch(96.5% 0.011 90);
+  --color-surface-raised: oklch(99% 0.005 90);
+  --color-text-primary: oklch(24% 0.028 264);
+  --color-text-secondary: oklch(42% 0.022 264);
+  --color-brand: oklch(34% 0.055 262);
+  --color-brand-contrast: oklch(97% 0.008 90);
+  --color-accent: oklch(58% 0.088 70);
+  --color-on-media: oklch(97% 0.01 90);
+  --color-scrim: oklch(18% 0.03 264);
+  --color-focus-ring: oklch(58% 0.088 70);
+  --color-border: oklch(85% 0.015 90);
+  --color-border-strong: oklch(78% 0.017 90);
+
+  /*
+   * The Studio sidebar is the product's permanent identity: a deep
+   * civic-ink rail (the brand hue carried to low lightness), warm
+   * near-white text, one bronze accent for the current place. Text/
+   * surface pairs clear AA in both directions.
+   */
+  --color-sidebar: oklch(22% 0.03 264);
+  --color-sidebar-active: oklch(30% 0.038 264);
+  --color-sidebar-border: oklch(32% 0.025 264);
+  --color-sidebar-text: oklch(94% 0.008 90);
+  --color-sidebar-muted: oklch(72% 0.016 264);
+
+  --space-unit: 0.25rem;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+  --easing-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /*
+   * Elevation is used with extreme restraint — the workspace stays flat
+   * (whitespace before borders); soft shadow marks only what genuinely
+   * floats above the surface, chiefly the Composer canvas.
+   */
+  --shadow-soft: 0 1px 2px oklch(24% 0.028 264 / 0.04),
+    0 10px 30px oklch(24% 0.028 264 / 0.06);
+  --shadow-raised: 0 1px 2px oklch(24% 0.028 264 / 0.05),
+    0 24px 56px oklch(24% 0.028 264 / 0.1);
+}
+
+@theme inline {
+  --color-surface: var(--color-surface);
+  --color-surface-raised: var(--color-surface-raised);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-brand: var(--color-brand);
+  --color-brand-contrast: var(--color-brand-contrast);
+  --color-accent: var(--color-accent);
+  --color-on-media: var(--color-on-media);
+  --color-scrim: var(--color-scrim);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-sidebar: var(--color-sidebar);
+  --color-sidebar-active: var(--color-sidebar-active);
+  --color-sidebar-border: var(--color-sidebar-border);
+  --color-sidebar-text: var(--color-sidebar-text);
+  --color-sidebar-muted: var(--color-sidebar-muted);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-body), 'Segoe UI', sans-serif;
+}
+
+main [id] {
+  scroll-margin-top: 4rem;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background-color: var(--color-accent);
+  color: var(--color-on-media);
+}
+
+@keyframes hero-hint-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+/*
+ * Motion explains, never entertains. `rise` is the single content-enter
+ * gesture — a short, soft settle. Reduced motion collapses it to an
+ * instant state change through the global override below.
+ */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -150% 0;
+  }
+}
+
+.rise {
+  animation: rise var(--duration-slow) var(--easing-standard) both;
+}
+
+.elevation-soft {
+  box-shadow: var(--shadow-soft);
+}
+
+.elevation-raised {
+  box-shadow: var(--shadow-raised);
+}
+
+.skeleton {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-border) 0%,
+    var(--color-surface-raised) 50%,
+    var(--color-border) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+/*
+ * The public cinematic identity (Phase 1). A deep-navy, bronze-lit theme
+ * scoped to `.cinematic` only — the Studio keeps its light stone identity
+ * untouched. Because the Tailwind theme reads these same variables, every
+ * utility (bg-surface, text-accent, border-border …) adopts the dark
+ * palette automatically inside this scope.
+ */
+.cinematic {
+  --color-surface: #08111e;
+  --color-surface-raised: #0f1728;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #c7ced9;
+  --color-brand: #c9a15d;
+  --color-brand-contrast: #08111e;
+  --color-accent: #c9a15d;
+  --color-on-media: #ffffff;
+  --color-border: rgb(255 255 255 / 0.1);
+  --color-border-strong: rgb(255 255 255 / 0.2);
+  --color-focus-ring: #c9a15d;
+  --radius-lg: 24px;
+  --font-display: var(--font-cine);
+  /*
+   * Art Direction V4 — depth replaces borders. One floating-shadow scale
+   * (soft close contact + deep ambient throw) carries every card that
+   * lifts off the darkness, so scenes stop relying on outlines.
+   */
+  --cine-shadow: 0 1px 0 rgb(255 255 255 / 0.05) inset,
+    0 28px 64px -30px rgb(0 0 0 / 0.7);
+  --cine-shadow-lg: 0 1px 0 rgb(255 255 255 / 0.06) inset,
+    0 48px 110px -44px rgb(0 0 0 / 0.78);
+  color-scheme: dark;
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.cine-image-scrim {
+  background: linear-gradient(
+    180deg,
+    rgb(8 17 30 / 0.35) 0%,
+    rgb(8 17 30 / 0.55) 55%,
+    rgb(8 17 30 / 0.92) 100%
+  );
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.cine-audience {
+  background: linear-gradient(180deg, rgb(8 17 30 / 0) 55%, #08111e 100%);
+}
+
+.cine-blue-band {
+  background:
+    radial-gradient(120% 140% at 50% 0%, #1b3a63 0%, #0c1c33 55%, #08111e 100%);
+}
+
+.cine-hero-glow {
+  background: radial-gradient(
+    120% 90% at 50% 18%,
+    rgb(201 161 93 / 0.16),
+    transparent 55%
+  );
+}
+
+.cine-hero-fade {
+  background: linear-gradient(180deg, rgb(8 17 30 / 0) 45%, #08111e 100%);
+}
+
+.cine-vignette {
+  background: radial-gradient(
+    130% 100% at 50% 38%,
+    transparent 52%,
+    rgb(8 17 30 / 0.92) 100%
+  );
+}
+
+.cine-panel {
+  background: linear-gradient(150deg, #10203a 0%, #0b1526 60%, #0a1322 100%);
+}
+
+/*
+ * The premium card system (Art Direction V4). A card is glass floating on
+ * the darkness, not a boxed outline: a faint gradient body, one hairline
+ * top highlight, and a deep soft shadow do the separating. `cine-card-lg`
+ * lifts the hero surfaces higher; `cine-glow` breathes a warm bronze halo
+ * from the top edge for the pieces that should feel lit. This is the
+ * "Beauty by Default" surface — every scene composes it, none re-styles a
+ * border by hand.
+ */
+.cine-card {
+  background: linear-gradient(
+    155deg,
+    rgb(20 32 54 / 0.66),
+    rgb(11 21 38 / 0.72)
+  );
+  border: 1px solid rgb(255 255 255 / 0.07);
+  box-shadow: var(--cine-shadow);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.cine-card-lg {
+  box-shadow: var(--cine-shadow-lg);
+}
+
+.cine-float {
+  box-shadow: var(--cine-shadow-lg);
+}
+
+.cine-glow {
+  position: relative;
+  isolation: isolate;
+}
+
+.cine-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(
+    82% 62% at 50% 0%,
+    rgb(201 161 93 / 0.12),
+    transparent 72%
+  );
+  pointer-events: none;
+}
+
+/*
+ * The one hairline that survives (Art Direction V4: keep ~20% of borders).
+ * Softer than the token border, for dividers inside glass.
+ */
+.cine-hair {
+  border-color: rgb(255 255 255 / 0.08);
+}
+
+/*
+ * Scroll-revealed scenes. Motion is an enhancement: only when motion is
+ * welcome does a scene start hidden and settle in as JS marks it visible.
+ * Under reduced motion, or without JS (see the noscript reset), scenes are
+ * simply present.
+ */
+@keyframes cine-hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cine-reveal {
+    opacity: 0;
+    transform: translateY(2rem);
+    transition:
+      opacity 900ms var(--easing-standard),
+      transform 900ms var(--easing-standard);
+  }
+
+  .cine-reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  .cine-hero-line {
+    animation: cine-hero-in 1100ms var(--easing-standard) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/*
+ * Atmosphere without WebGL: when the shader cannot run (no GL context),
+ * these layers keep the darkness alive — a breathing bronze glow and a
+ * slow upward drift of dust, both pure CSS. When the shader does run its
+ * opaque canvas simply covers them. Reduced motion freezes them via the
+ * global override into a still composition.
+ */
+@keyframes cine-breath {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes cine-drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 -560px;
+  }
+}
+
+.cine-breath {
+  animation: cine-breath 9s ease-in-out infinite;
+}
+
+.cine-darkness-glow {
+  background: radial-gradient(
+    60% 45% at 50% 42%,
+    rgb(201 161 93 / 0.14),
+    transparent 70%
+  );
+}
+
+.cine-dust {
+  background-image:
+    radial-gradient(1.5px 1.5px at 20% 30%, rgb(255 255 255 / 0.4), transparent 60%),
+    radial-gradient(1px 1px at 70% 60%, rgb(201 161 93 / 0.35), transparent 60%),
+    radial-gradient(1.2px 1.2px at 45% 84%, rgb(255 255 255 / 0.25), transparent 60%),
+    radial-gradient(1px 1px at 88% 18%, rgb(255 255 255 / 0.2), transparent 60%);
+  background-size: 340px 560px;
+  animation: cine-drift 64s linear infinite;
+}
+
+.cine-nav-scrim {
+  background: linear-gradient(
+    180deg,
+    rgb(8 17 30 / 0.85) 0%,
+    rgb(8 17 30 / 0.45) 60%,
+    rgb(8 17 30 / 0) 100%
+  );
+}
+
+/*
+ * The camera never stops: an almost imperceptible push-in on the hero
+ * photograph, and the seam that lets a scene dissolve into the next —
+ * the visitor keeps walking, never "enters a section".
+ */
+@keyframes cine-slow-zoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.07);
+  }
+}
+
+.cine-slow-zoom {
+  animation: cine-slow-zoom 36s ease-in-out infinite alternate;
+}
+
+.cine-seam-top {
+  background: linear-gradient(180deg, var(--color-surface), transparent);
+}
+
+.cine-bleed {
+  background: radial-gradient(
+    60% 100% at 50% 0%,
+    var(--bleed-tone),
+    transparent 72%
+  );
+}
+
+/*
+ * The Console — the Studio's dark suite (Phase 3, The Director's
+ * Console direction): deep navy void, warm parchment text, bronze
+ * accents and hairline glass. Scoped tokens only; components compose
+ * them through Tailwind arbitrary values.
+ */
+.console {
+  --c-void: #06090f;
+  --c-deep: #0a1119;
+  --c-panel: rgba(15, 22, 33, 0.78);
+  --c-glass: rgba(17, 25, 38, 0.66);
+  --c-line: rgba(233, 228, 216, 0.09);
+  --c-line-strong: rgba(233, 228, 216, 0.18);
+  --c-text: #e7e1d4;
+  --c-text-soft: #95a0af;
+  --c-text-faint: #5c6878;
+  --c-bronze: #c9a96e;
+  --c-live: #4db47e;
+}
+
+/*
+ * The Lounge — the participant's personal space (Apple Wallet × Airbnb
+ * × Apple Events): warm daylight, generous air, the conference's own
+ * light continuing past registration. Guest tones, not work tones.
+ */
+.lounge {
+  --l-bg: #f4f0e8;
+  --l-card: #ffffff;
+  --l-ink: #23282f;
+  --l-soft: #6e7480;
+  --l-faint: #9aa0ab;
+  --l-hair: #e7e1d4;
+  --l-bronze: #b08c55;
+  --l-bronze-soft: #c9a96e;
+  --l-navy: #0e1b2e;
+  --l-live: #3fa36c;
+}
+@keyframes lounge-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.lounge-rise {
+  animation: lounge-rise 420ms cubic-bezier(0.3, 0.7, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lounge-rise {
+    animation-duration: 0.001s;
+  }
+}
+
+/*
+ * The Conference Experience — the public design language for every
+ * participant-facing page (Program, Activity, Speaker, Schedule). Light,
+ * editorial, calm: a modern SaaS product, not a CMS with public pages.
+ * Navy ink on cool daylight, one indigo accent for every action, colour
+ * reserved for meaning (availability, type). The signature is the
+ * timeline spine — a conference is time, so time is the structure.
+ */
+.experience {
+  --x-bg: #f6f7fb;
+  --x-surface: #ffffff;
+  --x-raise: #fbfcfe;
+  --x-ink: #182031;
+  --x-soft: #5b6273;
+  --x-faint: #99a0af;
+  --x-line: #e9ebf2;
+  --x-line-strong: #dcdfea;
+  --x-nav: #0e1b2e;
+
+  --x-primary: #5654d6;
+  --x-primary-strong: #4a48c4;
+  --x-primary-ink: #ffffff;
+  --x-primary-wash: #eeeefc;
+  --x-ring: rgba(86, 84, 214, 0.35);
+
+  --x-ok: #2f9e5b;
+  --x-ok-wash: #e7f5ec;
+  --x-warn: #c67a12;
+  --x-warn-wash: #fbf0dd;
+  --x-full: #cf4b39;
+  --x-full-wash: #fbe8e5;
+  --x-wait: #7c5cf0;
+  --x-wait-wash: #efeafd;
+  --x-live: #e5484d;
+
+  --x-r-card: 18px;
+  --x-r-field: 12px;
+  --x-r-pill: 999px;
+  --x-shadow: 0 8px 30px rgba(20, 25, 45, 0.06);
+  --x-shadow-lift: 0 18px 48px rgba(20, 25, 45, 0.12);
+  --x-shadow-drawer: -24px 0 60px rgba(20, 25, 45, 0.14);
+
+  color: var(--x-ink);
+  font-family: var(--font-body), 'Segoe UI', sans-serif;
+}
+
+@keyframes x-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes x-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes x-drawer-in {
+  from { opacity: 0; transform: translateX(var(--x-drawer-from, 24px)); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes x-live-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(229, 72, 77, 0.45); }
+  50% { box-shadow: 0 0 0 6px rgba(229, 72, 77, 0); }
+}
+.x-rise { animation: x-rise 460ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.x-fade { animation: x-fade 300ms ease both; }
+.x-drawer-in { animation: x-drawer-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.x-live-dot { animation: x-live-pulse 2.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .x-rise, .x-fade, .x-drawer-in, .x-live-dot {
+    animation-duration: 0.001s;
+    animation-iteration-count: 1;
+  }
+}
+
+/*
+ * Portal v2.0 motion: the hero breathes, the title carries a slow
+ * bronze sheen. Calm by contract; both stop under reduced motion.
+ */
+@keyframes lounge-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+.lounge-breathe {
+  animation: lounge-breathe 24s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes lounge-sheen {
+  0%,
+  70% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -60% 0;
+  }
+}
+
+.lounge-sheen {
+  background-image: linear-gradient(
+    100deg,
+    #ffffff 38%,
+    #e8cfa4 50%,
+    #ffffff 62%
+  );
+  background-size: 220% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: lounge-sheen 9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lounge-breathe,
+  .lounge-sheen {
+    animation: none;
+  }
+}
+
+
+/*
+ * Art Direction V5 — the Atmosphere System. The darkness is never flat:
+ * every chapter carries an invisible, toned ambient light plus a whisper
+ * of film grain. The glow bleeds ~22% past each chapter so one dissolves
+ * into the next with no visible seam. Automatic — the editor edits only
+ * content; the tone per chapter is declared in the scene catalog.
+ */
+.cine-atmos {
+  position: relative;
+  isolation: isolate;
+}
+.cine-atmos::before {
+  content: '';
+  position: absolute;
+  inset: -22% 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    58% 52% at var(--atmos-x, 50%) 42%,
+    var(--atmos, transparent),
+    transparent 70%
+  );
+  opacity: var(--atmos-strength, 1);
+}
+.cinematic::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}

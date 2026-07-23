@@ -1,0 +1,71 @@
+{
+  "id": "showcase",
+  "type": "showcase",
+  "lifecycle": "live",
+  "dna": { "tone": "innovation", "texture": "dust" },
+  "scenes": [
+    {
+      "id": "nav",
+      "type": "opening-nav",
+      "content": { "brand": "HASON" }
+    },
+    {
+      "id": "hero",
+      "type": "opening-hero",
+      "content": {
+        "titleMain": "חוויה שנולדה",
+        "titleAccent": "מקובץ אחד",
+        "subtitle": "אותן סצנות, אותה במה — הרכב חדש לגמרי, בלי שורת קוד.",
+        "image": "https://picsum.photos/seed/hason-showcase-hero/2400/1400"
+      }
+    },
+    {
+      "id": "moments",
+      "type": "opening-moments",
+      "content": {
+        "title": "הפעם הרגעים מגיעים קודם",
+        "images": [
+          "https://picsum.photos/seed/hason-showcase-a/900/900",
+          "https://picsum.photos/seed/hason-showcase-b/900/1200",
+          "https://picsum.photos/seed/hason-showcase-c/1200/900",
+          "https://picsum.photos/seed/hason-showcase-d/900/900"
+        ]
+      }
+    },
+    {
+      "id": "story",
+      "type": "opening-story",
+      "content": {
+        "eyebrow": "הסדר התהפך",
+        "title": "הסיפור מוקרן אחרי הרגעים",
+        "paragraph": "בדף הבית הסיפור מגיע לפני הרגעים. כאן המסמך ביקש סדר אחר — וה־Runtime פשוט ציית. אף קומפוננטה לא ידעה על כך מראש.",
+        "image": "https://picsum.photos/seed/hason-showcase-story/1800/1200"
+      }
+    },
+    {
+      "id": "quote",
+      "type": "conference-quote",
+      "content": {
+        "quote": "סצנה של כנס מתארחת בחוויית פתיחה — כי הקטלוג אחד והבמה אחת.",
+        "attribution": "מערכת ההפעלה של הסון",
+        "role": "Experience Runtime",
+        "image": "https://picsum.photos/seed/hason-showcase-quote/1600/2000"
+      }
+    },
+    {
+      "id": "closing",
+      "type": "opening-closing",
+      "content": {
+        "title": "אותו רנטיים. חוויה חדשה.",
+        "subtitle": "המסמך הזה הוא כל מה שנדרש כדי להעלות אותה.",
+        "cta": "חזרה לפתיחה",
+        "href": "/he"
+      }
+    },
+    {
+      "id": "footer",
+      "type": "opening-footer",
+      "content": { "brand": "HASON" }
+    }
+  ]
+}

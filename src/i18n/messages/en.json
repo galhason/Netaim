@@ -1,0 +1,10 @@
+{
+  "common": {
+    "loading": "Loading",
+    "error": "An error occurred",
+    "retry": "Try again",
+    "notFound": "Page not found",
+    "skipToContent": "Skip to content",
+    "mainNavigation": "Main navigation"
+  }
+}

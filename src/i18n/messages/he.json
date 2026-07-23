@@ -1,0 +1,10 @@
+{
+  "common": {
+    "loading": "טוען",
+    "error": "אירעה שגיאה",
+    "retry": "נסו שוב",
+    "notFound": "העמוד לא נמצא",
+    "skipToContent": "דלג לתוכן",
+    "mainNavigation": "ניווט ראשי"
+  }
+}

@@ -1,0 +1,38 @@
+import { redirect } from 'next/navigation';
+import {
+  ConsoleShell,
+  getStudioCreator,
+  getStudioLocale as localeOf,
+} from '@/features/studio';
+import { getActiveConferenceSlug } from '@/features/events';
+import { listSpeakerCandidates } from '@/features/speakers';
+import ActivityWizard from '../activity-wizard';
+import { BackToActivities } from '../activity-manager';
+
+/*
+ * A blank Activity Studio wizard for the active conference. The speaker
+ * candidates (existing platform accounts) are read once here so the picker
+ * can offer real people. With no active conference there is nothing to
+ * attach an activity to, so we return to the manager.
+ */
+const NewActivityPage = async () => {
+  const locale = await localeOf();
+  const creator = await getStudioCreator();
+  const slug = await getActiveConferenceSlug(locale).catch(() => null);
+  if (!slug) {
+    redirect('/studio/activity');
+  }
+  const candidates = await listSpeakerCandidates(locale).catch(() => []);
+
+  return (
+    <ConsoleShell
+      locale={locale}
+      userName={creator?.name ?? ''}
+      breadcrumb={<BackToActivities locale={locale} />}
+    >
+      <ActivityWizard locale={locale} slug={slug} candidates={candidates} />
+    </ConsoleShell>
+  );
+};
+
+export default NewActivityPage;
