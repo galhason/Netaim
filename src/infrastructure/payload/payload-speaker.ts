@@ -46,7 +46,7 @@ const toLinks = (
 ): SpeakerSocialLink[] =>
   (rows ?? [])
     .map((link) => ({ label: clean(link.label), url: (link.url ?? '').trim() }))
-    .filter((link): link is SpeakerSocialLink => link.url !== '');
+    .filter((link) => link.url !== '');
 
 /*
  * The single resolution point (mirrors toOpeningSpeakers): a linked

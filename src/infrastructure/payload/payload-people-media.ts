@@ -18,7 +18,7 @@ const requireActor = async () => {
 
 const toPerson = (speaker: Speaker): PersonSummary => ({
   id: String(speaker.id),
-  name: speaker.name,
+  name: speaker.name ?? '',
   role: speaker.role ?? undefined,
   portraitUrl:
     typeof speaker.photo === 'object' && speaker.photo?.url
