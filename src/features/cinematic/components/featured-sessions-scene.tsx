@@ -6,6 +6,7 @@ import { useRef } from 'react';
 import { motion, useReducedMotion, type Variants } from 'motion/react';
 import type { Locale } from '@/config/locales';
 import { CINEMATIC_UI } from '../constants/cinematic-content';
+import SessionCover from './session-cover';
 import type { FeaturedSessionItem } from '../types/cinematic';
 import { RevealText } from '@/shared';
 
@@ -198,7 +199,10 @@ const SessionCard = ({
             className="object-cover transition-transform duration-200 ease-out group-hover:scale-[1.05]"
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1a2740] via-surface to-[#0e1826]" />
+          <SessionCover
+            seed={session.id}
+            className="transition-transform duration-200 ease-out group-hover:scale-[1.05]"
+          />
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-surface/45 to-transparent" />
 

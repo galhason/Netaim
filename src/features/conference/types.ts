@@ -105,3 +105,40 @@ export interface ProgramInsights {
   hoursRegistered: number;
   next?: NextActivityVM;
 }
+
+/*
+ * The personal dashboard's own view models. They describe *my* relation
+ * to the program — nothing here duplicates an activity, it only points at
+ * one. The dashboard is a filtered Program, so every card still reads its
+ * facts from the ActivityVM list the Program itself was built from.
+ */
+export interface MyRegistrationsVM {
+  registeredIds: string[];
+  waitingIds: string[];
+  cancelledIds: string[];
+}
+
+export interface MySpeakerVM {
+  id: string;
+  name: string;
+  role?: string;
+  company?: string;
+  photoUrl?: string;
+  registered: boolean;
+  count: number;
+}
+
+export interface FreeGapVM {
+  key: string;
+  dayKey: string;
+  from: string;
+  to: string;
+  minutes: number;
+  suggestionIds: string[];
+}
+
+export interface DayProgressVM {
+  done: number;
+  total: number;
+  pct: number;
+}

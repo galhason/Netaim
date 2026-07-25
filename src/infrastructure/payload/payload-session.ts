@@ -10,7 +10,7 @@ import type {
   SessionWaitlistEntry,
 } from '@/features/program/types/session';
 import { actorContext, getSystemPayload } from './payload-context';
-import { mediaUrl } from './payload-media';
+import { mediaId, mediaUrl } from './payload-media';
 import { resolveSpeakerRow, type SpeakerRow } from './payload-speaker';
 import type { ResolvedSpeaker } from '@/features/speakers/types/speaker';
 
@@ -86,6 +86,7 @@ const toSession = (row: SessionRow): SessionSummary => ({
   language: row.language ?? undefined,
   featured: Boolean(row.featured),
   image: mediaUrl(row.image as never),
+  imageId: mediaId(row.image as never),
   subtitle: row.subtitle ?? undefined,
   floor: row.floor ?? undefined,
   registrationOpensAt: row.registrationOpensAt ?? undefined,

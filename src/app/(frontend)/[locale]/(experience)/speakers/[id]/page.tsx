@@ -51,7 +51,7 @@ const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
         className="relative h-48 overflow-hidden md:h-56"
         style={{
           background:
-            'radial-gradient(120% 160% at 100% 0%, rgba(86,84,214,0.45), transparent 55%), radial-gradient(90% 120% at 0% 100%, rgba(43,58,110,0.55), transparent 60%), linear-gradient(135deg, #1b2946, #0d1626)',
+            'radial-gradient(120% 160% at 100% 0%, rgba(110,86,207,0.45), transparent 55%), radial-gradient(90% 120% at 0% 100%, rgba(43,58,110,0.55), transparent 60%), linear-gradient(135deg, #1b2946, #0d1626)',
         }}
       >
         <span

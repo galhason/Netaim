@@ -513,11 +513,11 @@ main [id] {
   --x-line-strong: #dcdfea;
   --x-nav: #0e1b2e;
 
-  --x-primary: #5654d6;
-  --x-primary-strong: #4a48c4;
+  --x-primary: #6e56cf;
+  --x-primary-strong: #5b43bd;
   --x-primary-ink: #ffffff;
-  --x-primary-wash: #eeeefc;
-  --x-ring: rgba(86, 84, 214, 0.35);
+  --x-primary-wash: #f1eefc;
+  --x-ring: rgba(110, 86, 207, 0.35);
 
   --x-ok: #2f9e5b;
   --x-ok-wash: #e7f5ec;
@@ -529,7 +529,15 @@ main [id] {
   --x-wait-wash: #efeafd;
   --x-live: #e5484d;
 
-  --x-r-card: 18px;
+  /* The premium accent — navy and gold, reserved for the personal
+     dashboard's hero moments (next activity, daily progress). */
+  --x-navy: #0e1b2e;
+  --x-navy-deep: #081321;
+  --x-gold: #c2a05a;
+  --x-gold-soft: #ddbf7d;
+  --x-gold-wash: #f8f3e8;
+
+  --x-r-card: 16px;
   --x-r-field: 12px;
   --x-r-pill: 999px;
   --x-shadow: 0 8px 30px rgba(20, 25, 45, 0.06);

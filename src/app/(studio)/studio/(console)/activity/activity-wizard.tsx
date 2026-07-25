@@ -6,6 +6,7 @@ import type { Locale } from '@/config/locales';
 import type { SessionType } from '@/features/program';
 import type { ResolvedSpeaker, SpeakerCandidate } from '@/features/speakers';
 import { saveActivityAction } from './actions';
+import ActivityImagePicker, { type MediaOption } from './activity-image-picker';
 import SpeakerPicker from './speaker-picker';
 
 export interface WizardInitial {
@@ -27,12 +28,15 @@ export interface WizardInitial {
   allowCancellation?: boolean;
   cancellationDeadline?: string;
   featured?: boolean;
+  image?: MediaOption;
 }
 
 interface Props {
   locale: Locale;
   slug: string;
   candidates: SpeakerCandidate[];
+  /* Everything already uploaded, so a cover can be reused, not re-uploaded. */
+  library?: MediaOption[];
   initial?: WizardInitial;
 }
 
@@ -168,7 +172,13 @@ const Check = ({
   </label>
 );
 
-const ActivityWizard = ({ locale, slug, candidates, initial }: Props) => {
+const ActivityWizard = ({
+  locale,
+  slug,
+  candidates,
+  library = [],
+  initial,
+}: Props) => {
   const t = T(locale);
   const editing = Boolean(initial?.sessionId);
   const [step, setStep] = useState(0);
@@ -328,6 +338,13 @@ const ActivityWizard = ({ locale, slug, candidates, initial }: Props) => {
                 className={`${field} resize-y`}
               />
             </div>
+            <ActivityImagePicker
+              locale={locale}
+              slug={slug}
+              seed={initial?.sessionId ?? 'netaim-activity'}
+              initial={initial?.image}
+              library={library}
+            />
             <Check name="featured" defaultChecked={initial?.featured}>
               {t.fFeatured}
             </Check>

@@ -4,7 +4,7 @@ import {
   getStudioCreator,
   getStudioLocale as localeOf,
 } from '@/features/studio';
-import { getActiveConferenceSlug } from '@/features/events';
+import { getActiveConferenceSlug, listMedia } from '@/features/events';
 import { getSessionSituation } from '@/features/program';
 import { listSpeakerCandidates } from '@/features/speakers';
 import { toDateTimeInputValue } from '@/shared';
@@ -35,7 +35,15 @@ const EditActivityPage = async ({ params }: EditActivityPageProps) => {
     notFound();
   }
   const s = situation.session;
-  const candidates = await listSpeakerCandidates(locale).catch(() => []);
+  const [candidates, media] = await Promise.all([
+    listSpeakerCandidates(locale).catch(() => []),
+    listMedia().catch(() => []),
+  ]);
+  const library = media.map((item) => ({
+    id: item.id,
+    url: item.url,
+    alt: item.alt,
+  }));
 
   const initial: WizardInitial = {
     sessionId: s.id,
@@ -56,6 +64,8 @@ const EditActivityPage = async ({ params }: EditActivityPageProps) => {
     allowCancellation: s.allowCancellation ?? true,
     cancellationDeadline: toDateTimeInputValue(s.cancellationDeadline),
     featured: s.featured,
+    image:
+      s.imageId && s.image ? { id: s.imageId, url: s.image } : undefined,
   };
 
   return (
@@ -69,6 +79,7 @@ const EditActivityPage = async ({ params }: EditActivityPageProps) => {
         locale={locale}
         slug={slug}
         candidates={candidates}
+        library={library}
         initial={initial}
       />
     </ConsoleShell>

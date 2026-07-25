@@ -7,7 +7,7 @@ import {
 } from '@/features/events';
 import { listDirectory } from '@/features/networking';
 import { listEventParticipants } from '@/infrastructure';
-import { listMyFeed } from '@/features/notifications';
+import { listMyAnnouncements } from '@/features/notifications';
 import { listAgenda, myWorkshops } from '@/features/program';
 import {
   currentParticipant,
@@ -47,7 +47,7 @@ export const getAttendeeExperience = async (
       currentParticipant().catch(() => null),
       listAgenda(slug, locale).catch(() => []),
       myWorkshops(slug).catch(() => []),
-      listMyFeed(slug).catch(() => []),
+      listMyAnnouncements(slug).catch(() => []),
       listDirectory(slug).catch(() => []),
       listEventParticipants(slug).catch(() => []),
       listSpeakersPublic().catch(() => []),

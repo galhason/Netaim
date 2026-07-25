@@ -27,6 +27,24 @@ export const listMyFeed = async (
   return notificationOutbox.listFeedFor(slug, me.id);
 };
 
+export const BROADCAST_TYPE = 'announcement';
+
+/*
+ * Only what the production actually said. The outbox also carries the
+ * platform's own bookkeeping — a registration receipt, a sign-in note —
+ * and those are records, not news. The Updates card in the personal
+ * area and the messages room both speak for the Studio composer alone.
+ */
+export const isAnnouncement = (type: string): boolean =>
+  type === BROADCAST_TYPE || type.startsWith(`${BROADCAST_TYPE}.`);
+
+export const listMyAnnouncements = async (
+  slug: string,
+): Promise<NotificationView[]> => {
+  const feed = await listMyFeed(slug).catch(() => [] as NotificationView[]);
+  return feed.filter((entry) => isAnnouncement(entry.type));
+};
+
 /*
  * The broadcast composer (PRD §4): a message from the production —
  * global to every guest, or targeted to the registrants of one
@@ -34,8 +52,6 @@ export const listMyFeed = async (
  * the top of every conference page, or the pop-up that asks for a
  * click. Email delivery joins when a real provider is wired.
  */
-export const BROADCAST_TYPE = 'announcement';
-
 export type BroadcastKind = 'feed' | 'banner' | 'popup';
 
 export const broadcastTypeOf = (kind: BroadcastKind): string =>

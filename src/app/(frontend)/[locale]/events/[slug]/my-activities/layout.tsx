@@ -5,31 +5,30 @@ import { BRAND_NAME } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { ConferenceFooter, SITE_NAV_LINKS } from '@/features/cinematic';
 import { ExperienceNav } from '@/features/conference';
-import { getActiveConferenceSlug } from '@/features/events';
 import { currentParticipant } from '@/features/registration';
 
-interface ExperienceLayoutProps {
+interface Props {
   children: ReactNode;
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 }
 
 /*
- * The Conference Experience shell — the participant-facing chrome for the
- * Program, Activity and Speaker pages. Its own calm navy navigation and a
- * light daylight body set it apart from the cinematic landing, so every
- * public page a participant browses feels like one modern product.
+ * The personal dashboard lives under /events/[slug], outside the
+ * (experience) route group, yet it is the same product as the Program.
+ * This shell repeats the Experience chrome — the navy navigation, the
+ * daylight body, the conference footer — so a participant moving between
+ * the program, an activity, a speaker and their own day never notices a
+ * seam.
  */
-const ExperienceLayout = async ({ children, params }: ExperienceLayoutProps) => {
-  const { locale } = await params;
+const MyScheduleLayout = async ({ children, params }: Props) => {
+  const { locale, slug } = await params;
   if (!isSupportedLocale(locale)) {
     notFound();
   }
   setRequestLocale(locale);
   const lang = locale as Locale;
 
-  const slug = await getActiveConferenceSlug(lang).catch(() => null);
   const participant = await currentParticipant().catch(() => null);
-  const registerHref = slug ? `/${lang}/events/${slug}/register` : `/${lang}`;
 
   return (
     <div className="experience min-h-dvh bg-[var(--x-bg)] text-[var(--x-ink)]">
@@ -37,10 +36,10 @@ const ExperienceLayout = async ({ children, params }: ExperienceLayoutProps) => 
         locale={lang}
         links={SITE_NAV_LINKS}
         brand={BRAND_NAME}
-        registerHref={registerHref}
+        registerHref={`/${lang}/events/${slug}/register`}
         meHref={`/${lang}/me`}
         userName={participant?.name ?? undefined}
-        {...(slug && participant
+        {...(participant
           ? { scheduleHref: `/${lang}/events/${slug}/my-activities` }
           : {})}
       />
@@ -50,4 +49,4 @@ const ExperienceLayout = async ({ children, params }: ExperienceLayoutProps) => 
   );
 };
 
-export default ExperienceLayout;
+export default MyScheduleLayout;

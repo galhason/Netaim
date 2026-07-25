@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { Locale } from '@/config/locales';
 import { Avatar } from '../ui/kit';
-import { IconSearch } from '../ui/icons';
+import { IconCalendar, IconSearch } from '../ui/icons';
 
 interface NavLink {
   key: string;
@@ -20,6 +20,13 @@ interface Props {
   meHref: string;
   brand: string;
   userName?: string;
+  /*
+   * Inside a conference the participant's own schedule is a destination,
+   * not a setting. Pages that know which conference they belong to pass
+   * its address here and the bar grows one more stop; pages that don't
+   * (the portal, the landing) leave it out and the bar is unchanged.
+   */
+  scheduleHref?: string;
 }
 
 const Bell = ({ className = '' }: { className?: string }) => (
@@ -51,6 +58,7 @@ const ExperienceNav = ({
   meHref,
   brand,
   userName,
+  scheduleHref,
 }: Props) => {
   const pathname = usePathname();
   const home = `/${locale}`;
@@ -66,6 +74,8 @@ const ExperienceNav = ({
       ? pathname === home
       : pathname === href || pathname?.startsWith(`${href}/`);
   };
+
+  const scheduleOn = Boolean(scheduleHref && pathname === scheduleHref);
 
   const links = (
     <>
@@ -87,6 +97,21 @@ const ExperienceNav = ({
           </Link>
         );
       })}
+      {scheduleHref ? (
+        <Link
+          href={scheduleHref}
+          onClick={() => setOpen(false)}
+          className={`relative inline-flex items-center gap-1.5 py-1.5 text-sm transition-colors ${
+            scheduleOn ? 'font-medium text-white' : 'text-white/70 hover:text-white'
+          }`}
+        >
+          <IconCalendar className="size-4" />
+          {locale === 'he' ? 'הלוז שלי' : 'My schedule'}
+          {scheduleOn ? (
+            <span className="absolute inset-x-0 -bottom-0.5 h-0.5 rounded-full bg-[var(--x-primary)]" />
+          ) : null}
+        </Link>
+      ) : null}
     </>
   );
 

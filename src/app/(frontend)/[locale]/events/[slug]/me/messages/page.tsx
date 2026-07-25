@@ -4,7 +4,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale } from '@/config/locales';
 import { LOUNGE_UI, getAttendeeExperience } from '@/features/attendee';
 import { myConnections, myMeetings } from '@/features/networking';
-import { listMyFeed } from '@/features/notifications';
+import { listMyAnnouncements } from '@/features/notifications';
 import { formatLongDate, formatTimeLabel } from '@/shared';
 import {
   cancelMeetingAction,
@@ -46,7 +46,7 @@ const MessagesPage = async ({ params }: MessagesPageProps) => {
   const [connections, meetings, notifications] = await Promise.all([
     myConnections(slug).catch(() => []),
     myMeetings(slug).catch(() => []),
-    listMyFeed(slug).catch(() => []),
+    listMyAnnouncements(slug).catch(() => []),
   ]);
 
   const requests = connections.filter(

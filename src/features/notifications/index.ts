@@ -1,5 +1,7 @@
 export {
   broadcastAnnouncement,
+  isAnnouncement,
+  listMyAnnouncements,
   listMyFeed,
   listNotifications,
   mySpotlight,

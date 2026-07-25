@@ -29,14 +29,14 @@ export const buildPlatformLounge = (
       eventDateLabel: he ? 'הבית של הכנסים שלך' : 'The home of your conferences',
       venueLine: '',
       primaryCta: {
-        label: he ? 'לכנסים הפתוחים' : 'Open conferences',
-        href: `/${locale}/me#conferences`,
+        label: he ? 'לתוכנית' : 'Browse the program',
+        href: `/${locale}/program`,
       },
     },
     myEvent: {
       summary: he
-        ? 'זה המרחב האישי שלך. ברגע שתצטרפו לכנס — הכרטיס, הלו״ז, האנשים והעדכונים שלו יתעוררו כאן.'
-        : 'This is your personal space. The moment you join a conference — its ticket, schedule, people and updates wake up here.',
+        ? 'זה המרחב האישי שלך. הסדנאות וההרצאות שנרשמת אליהן — ואלה שאת/ה מעביר/ה — מחכות כאן.'
+        : 'This is your personal space. The sessions you signed up for — and the ones you present — live here.',
       statusLabel: he ? 'הסטטוס שלך' : 'Your status',
       statusValue: he ? 'חשבון פעיל' : 'Active account',
       image: {

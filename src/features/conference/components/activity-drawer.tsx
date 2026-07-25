@@ -22,6 +22,7 @@ import {
   IconStarFilled,
 } from '../ui/icons';
 import { Modal, useToast } from '../ui/feedback';
+import { useFavorites } from '../ui/favorites';
 import SpeakerCard from './speaker-card';
 
 interface Props {
@@ -214,12 +215,12 @@ const ActivityDrawer = ({
   const reduce = useReducedMotion();
   const toast = useToast();
   const he = locale === 'he';
-  const [fav, setFav] = useState(false);
+  const favorites = useFavorites();
+  const fav = activity ? favorites.has(activity.id) : false;
   const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     if (!activity) return;
-    setFav(false);
     setShareOpen(false);
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     document.addEventListener('keydown', onKey);
@@ -279,7 +280,7 @@ const ActivityDrawer = ({
                 className="relative flex-none overflow-hidden px-6 pb-5 pt-6"
                 style={{
                   background:
-                    'radial-gradient(120% 160% at 100% 0%, rgba(86,84,214,0.45), transparent 55%), radial-gradient(90% 120% at 0% 100%, rgba(43,58,110,0.55), transparent 60%), linear-gradient(135deg, #1b2946, #0d1626)',
+                    'radial-gradient(120% 160% at 100% 0%, rgba(110,86,207,0.45), transparent 55%), radial-gradient(90% 120% at 0% 100%, rgba(43,58,110,0.55), transparent 60%), linear-gradient(135deg, #1b2946, #0d1626)',
                 }}
               >
                 <span
@@ -306,11 +307,11 @@ const ActivityDrawer = ({
                       aria-label={he ? 'מועדף' : 'Favorite'}
                       aria-pressed={fav}
                       onClick={() => {
-                        setFav((v) => !v);
+                        const on = favorites.toggle(activity.id);
                         toast.show(
-                          fav
-                            ? he ? 'הוסר מהמועדפים' : 'Removed from favorites'
-                            : he ? 'נוסף למועדפים' : 'Added to favorites',
+                          on
+                            ? he ? 'נוסף למועדפים' : 'Added to favorites'
+                            : he ? 'הוסר מהמועדפים' : 'Removed from favorites',
                           'success',
                         );
                       }}

@@ -379,7 +379,7 @@ export const SearchBar = ({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       aria-label={placeholder}
-      className="w-full rounded-2xl border border-[var(--x-line)] bg-[var(--x-surface)] py-4 pe-4 ps-12 text-[15px] text-[var(--x-ink)] shadow-[0_2px_10px_rgba(20,25,45,0.05)] outline-none transition-[box-shadow,border-color] duration-200 placeholder:text-[var(--x-faint)] focus:border-[var(--x-primary)] focus:shadow-[0_8px_30px_rgba(86,84,214,0.16)] focus:ring-4 focus:ring-[var(--x-ring)]"
+      className="w-full rounded-2xl border border-[var(--x-line)] bg-[var(--x-surface)] py-4 pe-4 ps-12 text-[15px] text-[var(--x-ink)] shadow-[0_2px_10px_rgba(20,25,45,0.05)] outline-none transition-[box-shadow,border-color] duration-200 placeholder:text-[var(--x-faint)] focus:border-[var(--x-primary)] focus:shadow-[0_8px_30px_rgba(110,86,207,0.16)] focus:ring-4 focus:ring-[var(--x-ring)]"
     />
   </div>
 );
@@ -483,14 +483,21 @@ export const FilterChips = ({
 };
 
 /* ---------- Empty state ---------- */
+/*
+ * Nothing here yet is still a moment in the product, so it gets a way
+ * forward: an icon to soften the blank, a sentence that explains, and —
+ * where there is something useful to do — the door to do it.
+ */
 export const EmptyState = ({
   title,
   hint,
   icon,
+  action,
 }: {
   title: string;
   hint?: string;
   icon?: ReactNode;
+  action?: ReactNode;
 }) => (
   <div
     className={`${surface} ${hairline} flex flex-col items-center gap-3 px-6 py-16 text-center`}
@@ -502,6 +509,7 @@ export const EmptyState = ({
       {title}
     </p>
     {hint ? <p className="max-w-sm text-sm text-[var(--x-soft)]">{hint}</p> : null}
+    {action ? <div className="mt-1">{action}</div> : null}
   </div>
 );
 

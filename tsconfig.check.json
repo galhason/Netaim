@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false },
+  "include": [
+    "next-env.d.ts",
+    "src/app/(frontend)/[locale]/events/[slug]/my-activities/**/*.ts",
+    "src/app/(frontend)/[locale]/events/[slug]/my-activities/**/*.tsx",
+    "src/app/(frontend)/[locale]/(experience)/program/**/*.tsx",
+    "src/features/conference/**/*.ts",
+    "src/features/conference/**/*.tsx",
+    "src/features/program/**/*.ts"
+  ]
+}

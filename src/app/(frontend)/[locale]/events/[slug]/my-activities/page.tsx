@@ -1,210 +1,86 @@
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
-import type { Locale } from '@/config/locales';
-import { isSupportedLocale } from '@/config/locales';
-import {
-  LoungeCard,
-  LoungeHeading,
-  LoungeNote,
-  LoungeSection,
-  LoungeShell,
-  loungeChip,
-  loungeGhost,
-} from '@/features/attendee';
+import { isSupportedLocale, type Locale } from '@/config/locales';
+import { findPortalEvent } from '@/features/events';
+import { buildProgramModel } from '@/features/program';
 import { currentParticipant } from '@/features/registration';
-import { myActivities, type MyActivity } from '@/features/program';
-import { formatLongDate, formatTimeLabel } from '@/shared';
-import { leaveActivityAction } from './actions';
+import AutoRefresh from './auto-refresh';
+import MyScheduleDashboard from './my-schedule-dashboard';
 
-interface MyActivitiesPageProps {
+interface Props {
   params: Promise<{ locale: string; slug: string }>;
+  searchParams: Promise<{ notice?: string; activity?: string }>;
 }
 
-const COPY = {
-  eyebrow: { he: 'האזור האישי', en: 'Personal area' },
-  title: { he: 'הפעילויות שלי', en: 'My activities' },
-  sub: {
-    he: 'כל ההרשמות שלכם במקום אחד — הקרובות, אלו שבהמתנה, ומה שכבר היה.',
-    en: 'Every registration in one place — what’s ahead, what’s waiting, and what has passed.',
+const SIGN_IN = {
+  title: { he: 'הלוח האישי מחכה לך', en: 'Your schedule is waiting' },
+  hint: {
+    he: 'התחברו כדי לראות את הפעילויות שנרשמתם אליהן, את הבאה בתור ואת הדרך לחדר.',
+    en: 'Sign in to see the activities you registered for, what’s next and how to get there.',
   },
-  upcoming: { he: 'הקרובות', en: 'Upcoming' },
-  waiting: { he: 'ברשימת המתנה', en: 'On the waiting list' },
-  completed: { he: 'שהושלמו', en: 'Completed' },
-  cancelled: { he: 'שבוטלו', en: 'Cancelled' },
-  empty: {
-    he: 'עדיין לא נרשמתם לפעילויות. בקרו בעמוד הסדנאות והסיורים כדי לבחור.',
-    en: 'You haven’t registered for any activities yet. Visit the workshops & tours page to choose.',
-  },
-  leave: { he: 'לבטל הרשמה', en: 'Cancel' },
-  browse: { he: 'לסדנאות ולסיורים', en: 'Workshops & tours' },
-  back: { he: 'לאזור האישי', en: 'My space' },
-  position: { he: 'מקום', en: 'Position' },
-  inLine: { he: 'בתור', en: 'in line' },
-} as const;
-
-const STATUS_LABEL: Record<string, { he: string; en: string }> = {
-  confirmed: { he: 'מקומך שמור', en: 'Seat confirmed' },
-  attended: { he: 'נכחת', en: 'Attended' },
-  waitlisted: { he: 'ברשימת המתנה', en: 'On the waiting list' },
-  pending: { he: 'ממתין לאישור', en: 'Awaiting approval' },
-  cancelled: { he: 'בוטל', en: 'Cancelled' },
-  declined: { he: 'לא אושר', en: 'Not approved' },
-  expired: { he: 'פג תוקף', en: 'Expired' },
-  noShow: { he: 'לא הגעת', en: 'Missed' },
-};
-
-const whenLabel = (activity: MyActivity, locale: Locale): string => {
-  const date = formatLongDate(activity.session.startsAt, locale);
-  const time = formatTimeLabel(activity.session.startsAt, locale);
-  if (date && time) return `${date} · ${time}`;
-  return date || time;
-};
-
-const ActivityItem = ({
-  activity,
-  locale,
-  slug,
-  index,
-  canLeave,
-  muted,
-}: {
-  activity: MyActivity;
-  locale: Locale;
-  slug: string;
-  index: number;
-  canLeave?: boolean;
-  muted?: boolean;
-}) => {
-  const when = whenLabel(activity, locale);
-  const status = STATUS_LABEL[activity.status]?.[locale] ?? '';
-  return (
-    <LoungeCard delay={Math.min(index, 3) as 0 | 1 | 2 | 3}>
-      <div className={`flex items-start gap-4 ${muted ? 'opacity-70' : ''}`}>
-        <span className="min-w-0 flex-1">
-          <span className="block font-display text-lg font-semibold leading-snug">
-            {activity.session.title}
-          </span>
-          {when ? (
-            <span className="mt-1 block text-sm tabular-nums text-[var(--l-soft)]">
-              {when}
-            </span>
-          ) : null}
-          {activity.session.room ? (
-            <span className="block text-sm text-[var(--l-soft)]">
-              {activity.session.room}
-            </span>
-          ) : null}
-          <span className="mt-2.5 flex flex-wrap items-center gap-2">
-            <span className={loungeChip}>{status}</span>
-            {activity.category === 'waiting' && activity.waitlistPosition ? (
-              <span className="text-xs tabular-nums text-[var(--l-soft)]">
-                {COPY.position[locale]} {activity.waitlistPosition}{' '}
-                {COPY.inLine[locale]}
-              </span>
-            ) : null}
-          </span>
-        </span>
-        {canLeave ? (
-          <form action={leaveActivityAction} className="flex-none">
-            <input type="hidden" name="slug" value={slug} />
-            <input type="hidden" name="locale" value={locale} />
-            <input type="hidden" name="sessionId" value={activity.session.id} />
-            <button type="submit" className={loungeGhost}>
-              {COPY.leave[locale]}
-            </button>
-          </form>
-        ) : null}
-      </div>
-    </LoungeCard>
-  );
+  cta: { he: 'כניסה לכנס', en: 'Enter the conference' },
 };
 
 /*
- * The guest's own activities, sorted into what's ahead, what they're
- * waiting for, and what has passed — one calm list, drawn live from the
- * Registration Engine. Upcoming seats and waiting places can be released
- * here; the freed seat promotes the next guest in line automatically.
+ * My Schedule is not a second program — it is the program, filtered to one
+ * person. The page builds the very same model the Program page builds, then
+ * hands it to the dashboard together with the list of registrations that
+ * decides what belongs on this participant's timeline. One source, two
+ * lenses; nothing here can drift out of step with the program.
  */
-const MyActivitiesPage = async ({ params }: MyActivitiesPageProps) => {
+const MySchedulePage = async ({ params, searchParams }: Props) => {
   const { locale, slug } = await params;
   if (!isSupportedLocale(locale)) {
     notFound();
   }
   setRequestLocale(locale);
+  const lang = locale as Locale;
+  const { notice, activity } = await searchParams;
 
   const participant = await currentParticipant().catch(() => null);
-  const activities = participant
-    ? await myActivities(slug, locale).catch(() => null)
-    : null;
 
-  const total = activities
-    ? activities.upcoming.length +
-      activities.waiting.length +
-      activities.completed.length +
-      activities.cancelled.length
-    : 0;
+  if (!participant) {
+    return (
+      <main className="mx-auto flex max-w-lg flex-col items-center gap-4 px-6 py-24 text-center">
+        <h1 className="font-display text-3xl font-extrabold tracking-tight text-[var(--x-ink)]">
+          {SIGN_IN.title[lang]}
+        </h1>
+        <p className="text-[15px] text-[var(--x-soft)]">{SIGN_IN.hint[lang]}</p>
+        <a
+          href={`/${lang}/events/${slug}/register`}
+          className="mt-2 inline-flex min-h-[48px] items-center rounded-[var(--x-r-pill)] bg-[var(--x-primary)] px-6 text-sm font-semibold text-[var(--x-primary-ink)] shadow-[var(--x-shadow)] transition-colors hover:bg-[var(--x-primary-strong)]"
+        >
+          {SIGN_IN.cta[lang]}
+        </a>
+      </main>
+    );
+  }
 
-  const sections: {
-    key: 'upcoming' | 'waiting' | 'completed' | 'cancelled';
-    items: MyActivity[];
-    canLeave?: boolean;
-    muted?: boolean;
-  }[] = activities
-    ? [
-        { key: 'upcoming', items: activities.upcoming, canLeave: true },
-        { key: 'waiting', items: activities.waiting, canLeave: true },
-        { key: 'completed', items: activities.completed, muted: true },
-        { key: 'cancelled', items: activities.cancelled, muted: true },
-      ]
-    : [];
+  const [event, model] = await Promise.all([
+    findPortalEvent(slug, lang).catch(() => null),
+    buildProgramModel(slug, lang),
+  ]);
+
+  const title = event?.title ?? (lang === 'he' ? 'הכנס' : 'The conference');
+  const todayKey = new Date().toISOString().slice(0, 10);
 
   return (
-    <LoungeShell
-      backHref={`/${locale}/events/${slug}/me`}
-      backLabel={COPY.back[locale]}
-    >
-      <div className="mt-6">
-        <LoungeHeading
-          eyebrow={COPY.eyebrow[locale]}
-          title={COPY.title[locale]}
-          sub={COPY.sub[locale]}
-        />
-      </div>
-
-      {total === 0 ? (
-        <div className="mt-8 flex flex-col items-start gap-4">
-          <LoungeNote>{COPY.empty[locale]}</LoungeNote>
-          <a
-            href={`/${locale}/events/${slug}/workshops`}
-            className={loungeGhost}
-          >
-            {COPY.browse[locale]} →
-          </a>
-        </div>
-      ) : (
-        sections
-          .filter((section) => section.items.length > 0)
-          .map((section) => (
-            <LoungeSection key={section.key} title={COPY[section.key][locale]}>
-              <ul className="grid gap-4 md:grid-cols-2">
-                {section.items.map((activity, index) => (
-                  <li key={activity.registrationId}>
-                    <ActivityItem
-                      activity={activity}
-                      locale={locale}
-                      slug={slug}
-                      index={index}
-                      canLeave={section.canLeave}
-                      muted={section.muted}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </LoungeSection>
-          ))
-      )}
-    </LoungeShell>
+    <>
+      <AutoRefresh />
+      <MyScheduleDashboard
+        locale={lang}
+        slug={slug}
+        eventTitle={title}
+        activities={model.activities}
+        days={model.days}
+        mine={model.mine}
+        todayKey={todayKey}
+        notice={notice ?? null}
+        initialActivityId={activity ?? null}
+        {...(event?.location ? { venue: event.location } : {})}
+      />
+    </>
   );
 };
 
-export default MyActivitiesPage;
+export default MySchedulePage;

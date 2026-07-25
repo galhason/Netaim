@@ -53,6 +53,7 @@ export interface SessionSummary {
   language?: string;
   featured?: boolean;
   image?: string;
+  imageId?: string;
 }
 
 export interface SessionCounts {

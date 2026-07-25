@@ -166,7 +166,7 @@ const InfoPage = async ({ params }: InfoPageProps) => {
           className="relative overflow-hidden rounded-[var(--x-r-card)] p-7 md:p-9"
           style={{
             background:
-              'radial-gradient(120% 160% at 100% 0%, rgba(86,84,214,0.4), transparent 55%), linear-gradient(135deg, #1b2946, #0d1626)',
+              'radial-gradient(120% 160% at 100% 0%, rgba(110,86,207,0.4), transparent 55%), linear-gradient(135deg, #1b2946, #0d1626)',
           }}
         >
           <span

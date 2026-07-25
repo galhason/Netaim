@@ -3,26 +3,15 @@ import Link from 'next/link';
 import type { Locale } from '@/config/locales';
 import { LOUNGE_UI } from '../../constants/lounge-ui';
 import type { AttendeeExperienceContent } from '../../types/attendee-experience';
-import MyPass from './my-pass';
-import MyPassQr from './my-pass-qr';
 
 /*
  * The Personal Lounge (the approved reference, precisely): the
  * conference's own light continues past registration. A quiet sidebar,
- * a hero that greets by name and counts down, four generous cards —
- * ticket, schedule, networking, updates — and a floating pass. The
- * guest never feels they left the experience.
+ * a hero that greets by name and counts down, three generous cards —
+ * schedule, networking, updates — the guest's own sessions, and a
+ * floating pass. The guest never feels they left the experience.
  */
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-const daysUntil = (iso: string): number | null => {
-  const target = Date.parse(iso);
-  if (Number.isNaN(target)) {
-    return null;
-  }
-  const diff = Math.ceil((target - Date.now()) / DAY_MS);
-  return diff > 0 ? diff : null;
-};
 
 export interface LoungeConferenceChip {
   slug: string;
@@ -31,35 +20,27 @@ export interface LoungeConferenceChip {
   href: string;
 }
 
-export interface LoungeConferenceActivity {
+export interface LoungeSessionCard {
   id: string;
   title: string;
-  timeLabel: string;
+  /* Which conference this session belongs to — the guest may hold several. */
+  conferenceTitle?: string;
+  dayLabel?: string;
+  timeLabel?: string;
   room?: string;
+  sessionType?: string;
   waiting: boolean;
-  /* Opens the Program drawer for this activity: full details + leave. */
+  imageUrl?: string;
+  /* Opens the Program drawer for this session: full details + leave. */
   href: string;
 }
 
-export interface LoungeConferenceCard {
-  slug: string;
-  title: string;
-  dateLabel: string;
-  location?: string;
-  posterUrl?: string;
-  registered: boolean;
-  statusLabel?: string;
-  /* Registered: opens this conference's lounge in place. */
-  href: string;
-  /* Overrides the registered card's primary button label when set. */
-  primaryLabel?: string;
-  /* Registered: the guest's own activities in this conference, inline. */
-  activities?: LoungeConferenceActivity[];
-}
-
-export interface LoungeConferencesSection {
-  items: LoungeConferenceCard[];
-  notRegistered: boolean;
+export interface LoungeSessionsSection {
+  /* Sessions the guest signed up for, waiting list included. */
+  registered: LoungeSessionCard[];
+  /* Sessions the guest presents — resolved from the speaker roster. */
+  presenting: LoungeSessionCard[];
+  programHref?: string;
 }
 
 interface LoungeViewProps {
@@ -73,10 +54,8 @@ interface LoungeViewProps {
   conferences?: LoungeConferenceChip[];
   /* Platform mode: where joining and leaving conferences is managed. */
   accountHref?: string;
-  /* Platform mode: the conferences section — joined, open, or none. */
-  conferencesSection?: LoungeConferencesSection;
-  /* Platform mode: one-click join, wired to the account's own engine. */
-  joinAction?: (formData: FormData) => Promise<void>;
+  /* The guest's own sessions: the ones attended and the ones presented. */
+  sessionsSection?: LoungeSessionsSection;
   /* Platform mode: the personal home and profile live at /me. */
   homeHref?: string;
   profileHref?: string;
@@ -117,6 +96,128 @@ const NavIcon = ({ path }: { path: string }) => (
   </svg>
 );
 
+const SESSION_TYPE_LABEL: Record<string, { he: string; en: string }> = {
+  workshop: { he: 'סדנה', en: 'Workshop' },
+  keynote: { he: 'הרצאת פתיחה', en: 'Keynote' },
+  panel: { he: 'פאנל', en: 'Panel' },
+  talk: { he: 'הרצאה', en: 'Talk' },
+};
+
+const RISE_DELAY = ['', '[animation-delay:60ms]', '[animation-delay:120ms]'];
+
+/*
+ * One session, as the guest owns it: the cover carries the type, the
+ * body carries when and where, and the whole tile opens the Program
+ * drawer where it can also be left.
+ */
+const SessionTile = ({
+  session,
+  locale,
+  presenting,
+  index,
+}: {
+  session: LoungeSessionCard;
+  locale: Locale;
+  presenting: boolean;
+  index: number;
+}) => {
+  const typeLabel = session.sessionType
+    ? (SESSION_TYPE_LABEL[session.sessionType]?.[locale] ?? session.sessionType)
+    : null;
+  const when = [session.dayLabel, session.timeLabel, session.room]
+    .filter(Boolean)
+    .join(' · ');
+
+  return (
+    <li className={`lounge-rise ${RISE_DELAY[index % 3] ?? ''}`}>
+      <Link
+        href={session.href}
+        title={LOUNGE_UI.activityDetailsHint[locale]}
+        className="group flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-[0_14px_44px_rgba(35,40,47,0.08)] transition-shadow hover:shadow-[0_18px_54px_rgba(35,40,47,0.14)]"
+      >
+        <span className="relative block h-20 flex-none bg-[var(--l-navy)]">
+          <span
+            aria-hidden="true"
+            className="absolute inset-0 bg-cover bg-center opacity-80"
+            style={
+              session.imageUrl
+                ? { backgroundImage: `url(${session.imageUrl})` }
+                : undefined
+            }
+          />
+          <span
+            aria-hidden="true"
+            className="absolute inset-0 bg-gradient-to-t from-[rgba(14,27,46,0.6)] to-transparent"
+          />
+          {typeLabel ? (
+            <span className="absolute bottom-3 start-3 inline-flex items-center rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-medium text-[var(--l-navy)] backdrop-blur-sm">
+              {typeLabel}
+            </span>
+          ) : null}
+          {presenting ? (
+            <span className="absolute end-3 top-3 inline-flex items-center rounded-full bg-[var(--l-bronze)] px-2.5 py-0.5 text-[11px] font-semibold text-white">
+              {LOUNGE_UI.sessionsPresenting[locale]}
+            </span>
+          ) : session.waiting ? (
+            <span className="absolute end-3 top-3 inline-flex items-center rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-medium text-[var(--l-navy)] backdrop-blur-sm">
+              {LOUNGE_UI.onWaitlist[locale]}
+            </span>
+          ) : null}
+        </span>
+        <span className="flex flex-1 flex-col p-4">
+          <span className="line-clamp-2 font-display text-[17px] font-semibold leading-snug text-[var(--l-ink)]">
+            {session.title}
+          </span>
+          {when ? (
+            <span className="mt-1 block text-xs text-[var(--l-soft)]">{when}</span>
+          ) : null}
+          {session.conferenceTitle ? (
+            <span className="mt-auto flex items-center gap-1.5 pt-3 text-[11px] text-[var(--l-faint)]">
+              <span
+                aria-hidden="true"
+                className="inline-flex h-1.5 w-1.5 flex-none rounded-full bg-[var(--l-bronze)]"
+              />
+              <span className="truncate">{session.conferenceTitle}</span>
+            </span>
+          ) : null}
+        </span>
+      </Link>
+    </li>
+  );
+};
+
+const SessionGroup = ({
+  title,
+  sessions,
+  locale,
+  presenting,
+}: {
+  title: string;
+  sessions: LoungeSessionCard[];
+  locale: Locale;
+  presenting: boolean;
+}) => (
+  <div>
+    <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--l-soft)]">
+      {title}
+      <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[var(--l-bronze)]/12 px-1.5 text-[11px] font-semibold text-[var(--l-bronze)]">
+        {sessions.length}
+      </span>
+    </p>
+    <ul className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {sessions.map((session, index) => (
+        <SessionTile
+          key={session.id}
+          session={session}
+          locale={locale}
+          presenting={presenting}
+          index={index}
+        />
+      ))}
+    </ul>
+  </div>
+);
+
 const LoungeView = ({
   content,
   locale,
@@ -125,8 +226,7 @@ const LoungeView = ({
   unreadMessages,
   conferences,
   accountHref,
-  conferencesSection,
-  joinAction,
+  sessionsSection,
   homeHref,
   profileHref,
 }: LoungeViewProps) => {
@@ -138,9 +238,7 @@ const LoungeView = ({
   const networkingHref = content.slug
     ? `${base}/networking`
     : `${platformBase}/networking`;
-  const workshopsHref = content.slug
-    ? `${base}/workshops`
-    : `${home}#conferences`;
+  const workshopsHref = `/${locale}/program`;
   const messagesHref = content.slug
     ? `${base}/me/messages`
     : `${platformBase}/messages`;
@@ -148,7 +246,6 @@ const LoungeView = ({
   const venueHref = content.slug ? `${base}/me/venue` : base;
   const endStamp = Date.parse(content.welcome.endsAt ?? '');
   const ended = !Number.isNaN(endStamp) && endStamp < Date.now();
-  const days = daysUntil(content.welcome.countdownTarget);
   const untilStart = Date.parse(content.welcome.countdownTarget) - Date.now();
   const countdown =
     untilStart > 0
@@ -172,7 +269,7 @@ const LoungeView = ({
     ? {
         title: LOUNGE_UI.actionJoin[locale],
         sub: LOUNGE_UI.actionJoinSub[locale],
-        href: '#conferences',
+        href: '#my-sessions',
         progress: null as { done: number; total: number } | null,
       }
     : workshopMoments.length > 0 && savedWorkshops.length === 0
@@ -199,9 +296,6 @@ const LoungeView = ({
             progress: null,
           };
   const initial = (content.welcome.greeting || content.brandName).slice(0, 1);
-  const seatLine = content.entrance.details
-    .map((detail) => `${detail.label}: ${detail.value}`)
-    .join(' · ');
   const suggestions = content.myDay.moments
     .filter((moment) => moment.kind !== 'break' && moment.saved !== true)
     .slice(0, 3);
@@ -212,11 +306,6 @@ const LoungeView = ({
    */
   const journey = [
     { key: 'account', label: LOUNGE_UI.journeyAccount[locale], done: true },
-    {
-      key: 'ticket',
-      label: LOUNGE_UI.journeyTicket[locale],
-      done: Boolean(content.entrance.qrValue),
-    },
     {
       key: 'sessions',
       label: LOUNGE_UI.journeyChooseSessions[locale],
@@ -253,7 +342,6 @@ const LoungeView = ({
     { key: 'speakers', label: LOUNGE_UI.speakers[locale], href: speakersHref },
     { key: 'map', label: LOUNGE_UI.mapVenue[locale], href: venueHref },
     { key: 'resources', label: LOUNGE_UI.resources[locale], href: workshopsHref },
-    { key: 'ticket', label: LOUNGE_UI.myTicketNav[locale], href: '#ticket' },
   ];
 
   return (
@@ -427,28 +515,7 @@ const LoungeView = ({
                     </span>
                   </span>
                 </div>
-              ) : !content.slug && !days ? null : days ? null : (
-                <div className="mt-6 inline-flex items-center gap-4 rounded-2xl bg-white/90 px-5 py-3.5 text-[var(--l-ink)] shadow-[0_10px_30px_rgba(14,27,46,0.2)] backdrop-blur-sm">
-                  <span className="grid size-9 place-items-center rounded-full bg-[var(--l-live)]/15 text-[var(--l-live)]">
-                    <NavIcon path="m5 12.5 4.5 4.5L19 7.5" />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-semibold">
-                      {LOUNGE_UI.checkInOpen[locale]}
-                    </span>
-                    <span className="block text-xs text-[var(--l-faint)]">
-                      {LOUNGE_UI.showPassAtGate[locale]}
-                    </span>
-                    {content.myDay.moments[0] ? (
-                      <span className="mt-0.5 block text-xs text-[var(--l-soft)]">
-                        {LOUNGE_UI.nextForYou[locale]}:{' '}
-                        {content.myDay.moments[0].startTime} ·{' '}
-                        {content.myDay.moments[0].title}
-                      </span>
-                    ) : null}
-                  </span>
-                </div>
-              )}
+              ) : null}
               <Link
                 href={nextAction.href}
                 className="mt-7 inline-flex min-h-12 items-center gap-2.5 rounded-2xl bg-gradient-to-l from-[#8a6a3c] to-[#b08c55] px-7 text-sm font-semibold text-white shadow-[0_12px_32px_rgba(176,140,85,0.35)] transition-transform hover:-translate-y-0.5"
@@ -525,7 +592,7 @@ const LoungeView = ({
                   href={accountHref}
                   className="inline-flex items-center gap-2 px-1 py-2.5 text-sm text-white/75 transition-colors hover:text-white"
                 >
-                  {LOUNGE_UI.myConferences[locale]}
+                  {LOUNGE_UI.myAccount[locale]}
                 </Link>
               ) : null}
               <Link
@@ -591,66 +658,7 @@ const LoungeView = ({
           ) : null}
         </div>
 
-        <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-5 px-6 md:grid-cols-2 md:px-10 xl:grid-cols-4">
-          <article
-            id="ticket"
-            className="lounge-rise flex scroll-mt-24 flex-col rounded-3xl bg-white p-5 shadow-[0_18px_54px_rgba(35,40,47,0.12)] ring-1 ring-[var(--l-bronze)]/20"
-          >
-            <h2 className="flex items-center gap-2.5 text-[15px] font-semibold">
-              <NavIcon path="M4 8.5h16v3a1.7 1.7 0 0 0 0 3.4v3.1H4v-3.1a1.7 1.7 0 0 0 0-3.4z" />
-              {LOUNGE_UI.myTicket[locale]}
-            </h2>
-            {content.entrance.qrValue ? (
-              <>
-                <div className="relative mt-4 flex flex-1 flex-col items-center overflow-hidden rounded-2xl bg-[var(--l-navy)] px-5 py-6 text-center text-white">
-                  <span
-                    aria-hidden="true"
-                    className="absolute -end-16 -top-10 h-44 w-44 rounded-full bg-[radial-gradient(closest-side,rgba(201,169,110,0.35),transparent_72%)]"
-                  />
-                  <p className="text-[10px] tracking-[0.24em] text-white/70">
-                    {content.brandName.toUpperCase()}
-                  </p>
-                  <p className="mt-2 font-display text-xl font-medium">
-                    {content.welcome.greeting}
-                  </p>
-                  <p className="text-xs text-white/70">{LOUNGE_UI.participant[locale]}</p>
-                  <span className="mt-4 rounded-xl bg-white p-3">
-                    <MyPassQr value={content.entrance.qrValue} />
-                  </span>
-                  {seatLine ? (
-                    <p className="mt-4 text-[11px] text-white/75">{seatLine}</p>
-                  ) : (
-                    <p className="mt-4 text-[11px] text-white/75">
-                      {content.entrance.statusLabel}: {content.entrance.statusValue}
-                    </p>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--l-hair)] text-sm font-medium text-[var(--l-ink)] transition-colors hover:border-[var(--l-bronze)]"
-                >
-                  <NavIcon path="M6 5.5h12v13l-6-3.5-6 3.5z" />
-                  {LOUNGE_UI.addToWallet[locale]}
-                </button>
-              </>
-            ) : (
-              <div className="mt-4 flex flex-1 flex-col items-center justify-center rounded-2xl bg-[var(--l-navy)] px-5 py-8 text-center text-white">
-                <p className="text-[10px] tracking-[0.24em] text-white/70">
-                  {content.brandName.toUpperCase()}
-                </p>
-                <p className="mt-3 text-sm text-white/85">
-                  {LOUNGE_UI.noTicketNote[locale]}
-                </p>
-                <Link
-                  href="#conferences"
-                  className="mt-5 inline-flex min-h-10 items-center rounded-xl bg-white/90 px-5 text-sm font-medium text-[var(--l-ink)] transition-colors hover:bg-white"
-                >
-                  {LOUNGE_UI.noTicketCta[locale]}
-                </Link>
-              </div>
-            )}
-          </article>
-
+        <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-5 px-6 md:grid-cols-2 md:px-10 xl:grid-cols-3">
           <article className="lounge-rise flex flex-col rounded-3xl bg-white p-5 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:60ms]">
             <h2 className="flex items-center gap-2.5 text-[15px] font-semibold">
               <NavIcon path="M4 6.5h16v13H4zM4 10.5h16M8.5 4v4M15.5 4v4" />
@@ -858,7 +866,7 @@ const LoungeView = ({
               ))}
             </ul>
             <Link
-              href={`${base}/me`}
+              href={messagesHref}
               className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--l-hair)] text-sm font-medium transition-colors hover:border-[var(--l-bronze)]"
             >
               {LOUNGE_UI.allUpdates[locale]}
@@ -866,225 +874,61 @@ const LoungeView = ({
           </article>
         </div>
 
-        {conferencesSection ? (
+        {sessionsSection ? (
           <section
-            id="conferences"
+            id="my-sessions"
             className="mx-auto mt-9 max-w-6xl scroll-mt-24 px-6 md:px-10"
           >
             <h2 className="flex items-center gap-2 text-[15px] font-semibold">
-              <NavIcon path="M4 19V8.5l8-4.5 8 4.5V19M4 12h16M9.5 19v-4h5v4" />
-              {LOUNGE_UI.myConferences[locale]}
+              <NavIcon path={NAV_ICONS.schedule} />
+              {LOUNGE_UI.mySessions[locale]}
+              {sessionsSection.programHref ? (
+                <Link
+                  href={sessionsSection.programHref}
+                  className="ms-auto text-xs font-normal text-[var(--l-soft)] transition-colors hover:text-[var(--l-bronze)]"
+                >
+                  {LOUNGE_UI.viewFullProgram[locale]}
+                </Link>
+              ) : null}
             </h2>
-            {conferencesSection.notRegistered ? (
-              <p className="mt-3 rounded-2xl bg-[var(--l-bronze)]/10 px-5 py-4 text-sm text-[var(--l-ink)]">
-                {conferencesSection.items.length > 0
-                  ? LOUNGE_UI.notRegisteredNote[locale]
-                  : `${LOUNGE_UI.notRegisteredNote[locale]} ${LOUNGE_UI.noOpenConferences[locale]}`}
-              </p>
-            ) : null}
-            {conferencesSection.items.length > 0 ? (
-              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {conferencesSection.items.map((conference, index) => (
-                  <article
-                    key={conference.slug}
-                    className={`lounge-rise flex flex-col overflow-hidden rounded-3xl bg-white shadow-[0_14px_44px_rgba(35,40,47,0.08)] ${
-                      ['', '[animation-delay:60ms]', '[animation-delay:120ms]'][index % 3]
-                    }`}
-                  >
-                    <span className="relative block h-24 bg-[var(--l-navy)]">
-                      <span
-                        aria-hidden="true"
-                        className="absolute inset-0 bg-cover bg-center opacity-80"
-                        style={
-                          conference.posterUrl
-                            ? { backgroundImage: `url(${conference.posterUrl})` }
-                            : undefined
-                        }
-                      />
-                      <span
-                        aria-hidden="true"
-                        className="absolute inset-0 bg-gradient-to-t from-[rgba(14,27,46,0.55)] to-transparent"
-                      />
-                      {conference.statusLabel ? (
-                        <span className="absolute end-3 top-3 inline-flex items-center rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-medium text-[var(--l-bronze)] backdrop-blur-sm">
-                          {conference.statusLabel}
-                        </span>
-                      ) : null}
-                    </span>
-                    <div className="flex flex-1 flex-col p-4">
-                      <span className="block truncate font-display text-lg font-semibold">
-                        {conference.title}
-                      </span>
-                      <span className="mt-0.5 block text-xs text-[var(--l-soft)]">
-                        {conference.dateLabel}
-                        {conference.location ? ` · ${conference.location}` : ''}
-                      </span>
-                      {conference.activities &&
-                      conference.activities.length > 0 ? (
-                        <div className="mt-4 border-t border-[var(--l-hair)] pt-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--l-soft)]">
-                              {LOUNGE_UI.registeredActivities[locale]}
-                            </span>
-                            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[var(--l-bronze)]/12 px-1.5 text-[11px] font-semibold text-[var(--l-bronze)]">
-                              {conference.activities.length}
-                            </span>
-                          </div>
-                          <ul className="mt-2 space-y-1">
-                            {conference.activities
-                              .slice(0, 4)
-                              .map((activity) => (
-                                <li key={activity.id}>
-                                  <Link
-                                    href={activity.href}
-                                    className="group/act -mx-2 flex items-start gap-2.5 rounded-xl px-2 py-1.5 transition-colors hover:bg-[var(--l-bronze)]/[0.08]"
-                                    title={LOUNGE_UI.activityDetailsHint[locale]}
-                                  >
-                                    <span
-                                      aria-hidden="true"
-                                      className="mt-[7px] inline-flex h-1.5 w-1.5 flex-none rounded-full bg-[var(--l-bronze)]"
-                                    />
-                                    <span className="min-w-0 flex-1">
-                                      <span className="flex items-center gap-2">
-                                        <span className="truncate text-[13px] font-medium text-[var(--l-ink)]">
-                                          {activity.title}
-                                        </span>
-                                        {activity.waiting ? (
-                                          <span className="inline-flex flex-none items-center rounded-full bg-[var(--l-navy)]/[0.08] px-1.5 py-0.5 text-[10px] font-medium text-[var(--l-navy)]">
-                                            {LOUNGE_UI.onWaitlist[locale]}
-                                          </span>
-                                        ) : null}
-                                      </span>
-                                      <span className="mt-0.5 block truncate text-[11px] text-[var(--l-soft)]">
-                                        {activity.timeLabel}
-                                        {activity.room
-                                          ? ` · ${activity.room}`
-                                          : ''}
-                                      </span>
-                                    </span>
-                                    <span
-                                      aria-hidden="true"
-                                      className="mt-1 flex-none text-[var(--l-soft)] opacity-0 transition-opacity group-hover/act:opacity-100"
-                                    >
-                                      <svg
-                                        width="14"
-                                        height="14"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      >
-                                        <path d="M15 18l-6-6 6-6" />
-                                      </svg>
-                                    </span>
-                                  </Link>
-                                </li>
-                              ))}
-                          </ul>
-                          {conference.activities.length > 4 ? (
-                            <Link
-                              href={conference.href}
-                              className="mt-1.5 inline-block text-[11px] font-medium text-[var(--l-bronze)] hover:underline"
-                            >
-                              {`+${conference.activities.length - 4} · ${LOUNGE_UI.viewFullProgram[locale]}`}
-                            </Link>
-                          ) : null}
-                        </div>
-                      ) : null}
-                      <div className="mt-auto pt-4">
-                        {conference.registered ? (
-                          <Link
-                            href={conference.href}
-                            className="inline-flex min-h-10 items-center rounded-xl bg-[var(--l-navy)] px-5 text-sm font-medium text-white transition-colors hover:bg-[#16263c]"
-                          >
-                            {conference.primaryLabel ??
-                              LOUNGE_UI.openLounge[locale]}
-                          </Link>
-                        ) : joinAction ? (
-                          <form action={joinAction}>
-                            <input type="hidden" name="locale" value={locale} />
-                            <input
-                              type="hidden"
-                              name="slug"
-                              value={conference.slug}
-                            />
-                            <button
-                              type="submit"
-                              className="inline-flex min-h-10 items-center rounded-xl border border-[var(--l-hair)] px-5 text-sm font-medium text-[var(--l-ink)] transition-colors hover:border-[var(--l-bronze)]"
-                            >
-                              {LOUNGE_UI.joinConference[locale]}
-                            </button>
-                          </form>
-                        ) : (
-                          <Link
-                            href={conference.href}
-                            className="inline-flex min-h-10 items-center rounded-xl border border-[var(--l-hair)] px-5 text-sm font-medium text-[var(--l-ink)] transition-colors hover:border-[var(--l-bronze)]"
-                          >
-                            {LOUNGE_UI.joinConference[locale]}
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            ) : null}
+
+            <div className="mt-4 space-y-7">
+              {sessionsSection.registered.length > 0 ? (
+                <SessionGroup
+                  title={LOUNGE_UI.sessionsRegistered[locale]}
+                  sessions={sessionsSection.registered}
+                  locale={locale}
+                  presenting={false}
+                />
+              ) : (
+                <div className="rounded-2xl bg-[var(--l-bronze)]/10 px-5 py-4">
+                  <p className="text-sm text-[var(--l-ink)]">
+                    {LOUNGE_UI.noRegisteredSessions[locale]}
+                  </p>
+                  {sessionsSection.programHref ? (
+                    <Link
+                      href={sessionsSection.programHref}
+                      className="mt-3 inline-flex min-h-10 items-center rounded-xl bg-[var(--l-navy)] px-5 text-sm font-medium text-white transition-colors hover:bg-[#16263c]"
+                    >
+                      {LOUNGE_UI.browseProgram[locale]}
+                    </Link>
+                  ) : null}
+                </div>
+              )}
+
+              {sessionsSection.presenting.length > 0 ? (
+                <SessionGroup
+                  title={LOUNGE_UI.sessionsPresenting[locale]}
+                  sessions={sessionsSection.presenting}
+                  locale={locale}
+                  presenting
+                />
+              ) : null}
+            </div>
           </section>
         ) : null}
 
-        <div className="mx-auto mt-9 grid max-w-6xl gap-8 px-6 md:px-10 xl:grid-cols-[1.05fr_1fr]">
-          {content.speakers && content.speakers.length > 0 ? (
-            <section className="min-w-0">
-              <h2 className="flex items-center gap-2 text-[15px] font-semibold">
-                <NavIcon path={NAV_ICONS.speakers} />
-                {LOUNGE_UI.leadingSpeakers[locale]}
-                <Link
-                  href={speakersHref}
-                  className="ms-auto text-xs font-normal text-[var(--l-soft)] transition-colors hover:text-[var(--l-bronze)]"
-                >
-                  {LOUNGE_UI.seeAllSpeakers[locale]}
-                </Link>
-              </h2>
-              <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
-                {content.speakers.slice(0, 5).map((speaker) => (
-                  <Link
-                    key={speaker.id}
-                    href={speakersHref}
-                    className="lounge-rise group w-32 flex-none"
-                  >
-                    <span className="relative block aspect-[4/5] overflow-hidden rounded-2xl bg-[var(--l-navy)]">
-                      {speaker.photoUrl ? (
-                        <Image
-                          src={speaker.photoUrl}
-                          alt={speaker.name}
-                          fill
-                          sizes="128px"
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      ) : (
-                        <span className="grid size-full place-items-center font-display text-3xl text-white/85">
-                          {speaker.name.slice(0, 1)}
-                        </span>
-                      )}
-                      <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(14,27,46,0.85)] to-transparent p-2.5 pt-8 text-white">
-                        <span className="block truncate text-[13px] font-semibold">
-                          {speaker.name}
-                        </span>
-                        {speaker.role ? (
-                          <span className="block truncate text-[10px] text-white/75">
-                            {speaker.role}
-                          </span>
-                        ) : null}
-                      </span>
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          ) : null}
-
+        <div className="mx-auto mt-9 grid max-w-6xl gap-8 px-6 md:px-10">
           {suggestions.length > 0 || content.myEvent.image ? (
             <section className="min-w-0">
               <h2 className="flex items-center gap-2 text-[15px] font-semibold">
@@ -1185,14 +1029,6 @@ const LoungeView = ({
           </Link>
         </nav>
 
-        {content.entrance.qrValue ? (
-          <MyPass
-            locale={locale}
-            qrValue={content.entrance.qrValue}
-            name={content.welcome.greeting}
-            detailLine={seatLine || content.welcome.venueLine}
-          />
-        ) : null}
       </div>
     </div>
   );

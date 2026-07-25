@@ -4,7 +4,7 @@ import {
   getStudioCreator,
   getStudioLocale as localeOf,
 } from '@/features/studio';
-import { getActiveConferenceSlug } from '@/features/events';
+import { getActiveConferenceSlug, listMedia } from '@/features/events';
 import { listSpeakerCandidates } from '@/features/speakers';
 import ActivityWizard from '../activity-wizard';
 import { BackToActivities } from '../activity-manager';
@@ -22,7 +22,15 @@ const NewActivityPage = async () => {
   if (!slug) {
     redirect('/studio/activity');
   }
-  const candidates = await listSpeakerCandidates(locale).catch(() => []);
+  const [candidates, media] = await Promise.all([
+    listSpeakerCandidates(locale).catch(() => []),
+    listMedia().catch(() => []),
+  ]);
+  const library = media.map((item) => ({
+    id: item.id,
+    url: item.url,
+    alt: item.alt,
+  }));
 
   return (
     <ConsoleShell
@@ -30,7 +38,13 @@ const NewActivityPage = async () => {
       userName={creator?.name ?? ''}
       breadcrumb={<BackToActivities locale={locale} />}
     >
-      <ActivityWizard key={locale} locale={locale} slug={slug} candidates={candidates} />
+      <ActivityWizard
+        key={locale}
+        locale={locale}
+        slug={slug}
+        candidates={candidates}
+        library={library}
+      />
     </ConsoleShell>
   );
 };

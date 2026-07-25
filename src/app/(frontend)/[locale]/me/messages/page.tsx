@@ -5,7 +5,7 @@ import { isSupportedLocale } from '@/config/locales';
 import { getMyAccount } from '@/features/account';
 import { LOUNGE_UI } from '@/features/attendee';
 import { myConnections, myMeetings } from '@/features/networking';
-import { listMyFeed } from '@/features/notifications';
+import { listMyAnnouncements } from '@/features/notifications';
 import { formatLongDate, formatTimeLabel } from '@/shared';
 import {
   cancelMeetingAction,
@@ -55,7 +55,7 @@ const MessagesPage = async ({ params }: MessagesPageProps) => {
       const [connections, meetings, notifications] = await Promise.all([
         myConnections(slug).catch(() => []),
         myMeetings(slug).catch(() => []),
-        listMyFeed(slug).catch(() => []),
+        listMyAnnouncements(slug).catch(() => []),
       ]);
       return { slug, connections, meetings, notifications };
     }),

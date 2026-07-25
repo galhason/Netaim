@@ -1,7 +1,6 @@
 'use client';
 
 import { motion, useReducedMotion } from 'motion/react';
-import { useState } from 'react';
 import type { Locale } from '@/config/locales';
 import type { ActivityVM } from '../types';
 import {
@@ -14,6 +13,7 @@ import {
 } from '../ui/kit';
 import { IconClock, IconPin, IconShare, IconStar, IconStarFilled } from '../ui/icons';
 import { useToast } from '../ui/feedback';
+import { useFavorites } from '../ui/favorites';
 
 interface Props {
   activity: ActivityVM;
@@ -23,6 +23,14 @@ interface Props {
   registerAction: (formData: FormData) => void | Promise<void>;
   leaveAction: (formData: FormData) => void | Promise<void>;
   index?: number;
+  /*
+   * The personal timeline often shows a single activity on a wide column,
+   * where the compact card leaves half the page empty. `rich` lets the
+   * same card breathe: a longer excerpt and the practical details — floor,
+   * language, length — that the Program grid has no room for. Same
+   * component, same behaviour; only the density changes.
+   */
+  rich?: boolean;
 }
 
 const timeRange = (a: ActivityVM): string => {
@@ -51,19 +59,21 @@ const ActivityCard = ({
   registerAction,
   leaveAction,
   index = 0,
+  rich = false,
 }: Props) => {
   const reduce = useReducedMotion();
   const toast = useToast();
   const he = locale === 'he';
-  const [fav, setFav] = useState(false);
+  const favorites = useFavorites();
+  const fav = favorites.has(activity.id);
 
   const open = () => onOpen(activity.id);
   const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
 
   const toggleFav = () => {
-    setFav((v) => !v);
+    const on = favorites.toggle(activity.id);
     toast.show(
-      !fav
+      on
         ? he
           ? 'נוסף למועדפים'
           : 'Added to favorites'
@@ -170,7 +180,11 @@ const ActivityCard = ({
           {activity.title}
         </h3>
         {activity.description ? (
-          <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-[var(--x-soft)]">
+          <p
+            className={`mt-1 text-sm leading-relaxed text-[var(--x-soft)] ${
+              rich ? 'line-clamp-3' : 'line-clamp-2'
+            }`}
+          >
             {activity.description}
           </p>
         ) : null}
@@ -190,6 +204,22 @@ const ActivityCard = ({
             </span>
           ) : null}
         </div>
+
+        {/* The practical details, only where there is room for them. */}
+        {rich && (activity.floor || activity.language) ? (
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            {activity.floor ? (
+              <span className="rounded-[var(--x-r-pill)] bg-[var(--x-raise)] px-2.5 py-1 text-[11px] font-medium text-[var(--x-soft)] ring-1 ring-inset ring-[var(--x-line)]">
+                {activity.floor}
+              </span>
+            ) : null}
+            {activity.language ? (
+              <span className="rounded-[var(--x-r-pill)] bg-[var(--x-raise)] px-2.5 py-1 text-[11px] font-medium text-[var(--x-soft)] ring-1 ring-inset ring-[var(--x-line)]">
+                {activity.language}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
 
         {/* Speakers */}
         {activity.speakers.length > 0 ? (

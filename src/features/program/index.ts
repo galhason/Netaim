@@ -17,6 +17,8 @@ export type {
   MyActivity,
   ActivityCategory,
 } from './services/program-service';
+export { buildProgramModel, TYPE_LABELS, dayKeyOf } from './services/program-model';
+export type { ProgramModel } from './services/program-model';
 export { SESSION_TYPES, isSessionType } from './types/session';
 export type { CreateSessionInput } from './types/session';
 export {

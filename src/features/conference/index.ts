@@ -38,3 +38,23 @@ export {
   TimelineSkeleton,
   SidebarSkeleton,
 } from './ui/skeleton';
+export {
+  IconSearch,
+  IconClock,
+  IconPin,
+  IconUsers,
+  IconCalendar,
+  IconStar,
+  IconStarFilled,
+  IconShare,
+  IconCheck,
+  IconClose,
+  IconChevronLeft,
+  IconChevronRight,
+  IconArrow,
+  IconWait,
+  IconLink,
+  IconLive,
+} from './ui/icons';
+export { useFavorites } from './ui/favorites';
+export type { FavoritesApi } from './ui/favorites';

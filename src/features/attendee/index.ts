@@ -4,8 +4,8 @@ export { buildPlatformLounge } from './services/platform-lounge';
 export { default as AttendeeJourney } from './components/attendee-journey';
 export { default as LoungeView } from './components/lounge/lounge-view';
 export type {
-  LoungeConferenceCard,
-  LoungeConferencesSection,
+  LoungeSessionCard,
+  LoungeSessionsSection,
 } from './components/lounge/lounge-view';
 export type {
   AttendeeExperienceContent,

@@ -13,6 +13,7 @@ import {
   isSessionType,
   type CreateSessionInput,
 } from '@/features/program';
+import { addMedia } from '@/features/events';
 import {
   createExternalSpeaker,
   createLinkedSpeaker,
@@ -75,6 +76,13 @@ export const saveActivityAction = async (formData: FormData) => {
     allowCancellation: formData.get('allowCancellation') === 'on',
     cancellationDeadline: iso(formData.get('cancellationDeadline')),
     featured: formData.get('featured') === 'on',
+    /*
+     * The picker always submits the field, so an empty value is a real
+     * instruction ("remove the cover"), not a missing one.
+     */
+    imageId: formData.has('imageId')
+      ? String(formData.get('imageId') ?? '').trim()
+      : undefined,
     track: text(formData.get('track')),
     language: text(formData.get('language')),
   };
@@ -114,6 +122,7 @@ export const duplicateActivityAction = async (formData: FormData) => {
       allowCancellation: s.allowCancellation,
       cancellationDeadline: s.cancellationDeadline,
       featured: false,
+      imageId: s.imageId,
       track: s.track,
       language: s.language,
     });
@@ -174,4 +183,37 @@ export const createSpeakerAction = async (input: {
     },
     locale,
   );
+};
+
+/*
+ * A cover for the activity, uploaded from the organizer's own computer.
+ * The file lands in the media library under the acting creator and the
+ * saved reference comes straight back to the picker, so the wizard never
+ * has to send the editor to another screen.
+ */
+const MAX_COVER_BYTES = 10 * 1024 * 1024;
+
+export const uploadActivityImageAction = async (
+  formData: FormData,
+): Promise<{ id: string; url: string } | null> => {
+  const slug = String(formData.get('slug') ?? '');
+  if (!slug || !(await authorized(slug))) {
+    return null;
+  }
+  const file = formData.get('file');
+  if (
+    !(file instanceof File) ||
+    file.size === 0 ||
+    file.size > MAX_COVER_BYTES ||
+    !file.type.startsWith('image/')
+  ) {
+    return null;
+  }
+  const data = new Uint8Array(await file.arrayBuffer());
+  const media = await addMedia({
+    file: { name: file.name, type: file.type, data },
+    alt: String(formData.get('alt') ?? '').trim() || file.name,
+  });
+  revalidatePath('/studio/media');
+  return { id: media.id, url: media.url };
 };

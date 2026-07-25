@@ -23,7 +23,8 @@ import { myConnections, myUnreadByConnection } from '@/features/networking';
 import { listPlatformParticipants } from '@/infrastructure';
 import { PASSWORD_POLICY_TEXT } from '@/features/registration';
 import { getActiveConferenceSlug } from '@/features/events';
-import { myActivities } from '@/features/program';
+import { listAgenda, myActivities } from '@/features/program';
+import type { SessionSummary } from '@/features/program';
 import { formatDayLabel, formatTimeLabel } from '@/shared';
 import {
   joinConferenceAction,
@@ -482,19 +483,6 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
             Date.parse(b.session.startsAt ?? ''),
         )
       : [];
-    const registeredActivities = myRegistrations.map((a) => ({
-      id: a.session.id,
-      title: a.session.title,
-      timeLabel: [
-        formatDayLabel(a.session.startsAt, locale),
-        formatTimeLabel(a.session.startsAt, locale),
-      ]
-        .filter(Boolean)
-        .join(' · '),
-      room: a.session.room,
-      waiting: a.category === 'waiting',
-      href: `/${locale}/program?activity=${a.session.id}`,
-    }));
     const scheduleMoments = myRegistrations.map((a) => ({
       id: a.session.id,
       startTime: formatTimeLabel(a.session.startsAt, locale),
@@ -510,67 +498,79 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
       speaker: a.session.speaker,
       sessionType: a.session.sessionType,
     }));
-    const joinedSlugs = new Set(account.joined.map((c) => c.slug));
     /*
-     * The active conference the guest registered activities for — but has
-     * not formally joined — still belongs under "My conferences", shown as
-     * registered with its lectures inside. Promoted out of "open to join" so
-     * it never appears twice.
+     * The Lounge no longer sells conferences — it holds the guest's own
+     * sessions: the ones they registered for, and the ones they give.
+     * Both are read across every conference they belong to, so a speaker
+     * sees their talks the moment the organizer lists them.
      */
-    const promotedActive =
-      activeSlug &&
-      registeredActivities.length > 0 &&
-      !joinedSlugs.has(activeSlug)
-        ? account.available.find((c) => c.slug === activeSlug)
-        : undefined;
-    const conferenceCards = [
-      ...(promotedActive
-        ? [
-            {
-              slug: promotedActive.slug,
-              title: promotedActive.title,
-              dateLabel: promotedActive.dateLabel,
-              location: promotedActive.location,
-              posterUrl: promotedActive.posterUrl,
-              registered: true,
-              statusLabel: undefined,
-              activities: registeredActivities,
-              href: `/${locale}/program`,
-              primaryLabel: ui.viewFullProgram[locale],
-            },
-          ]
-        : []),
-      ...account.joined.map((conference) => ({
-        slug: conference.slug,
-        title: conference.title,
-        dateLabel: conference.dateLabel,
-        location: conference.location,
-        posterUrl: conference.posterUrl,
-        registered: true,
-        statusLabel: conference.status
-          ? (ACCOUNT_STATUS_LABELS[conference.status]?.[locale] ??
-            conference.status)
-          : undefined,
-        activities:
-          conference.slug === activeSlug ? registeredActivities : undefined,
-        href: `/${locale}/me?event=${conference.slug}`,
-      })),
-      ...account.available
-        .filter((conference) => conference.slug !== promotedActive?.slug)
-        .map((conference) => ({
-          slug: conference.slug,
-          title: conference.title,
-          dateLabel: conference.dateLabel,
-          location: conference.location,
-          posterUrl: conference.posterUrl,
-          registered: false,
-          statusLabel: conference.conflictWith
-            ? `${ui.conflictPrefix[locale]} ${conference.conflictWith}`
-            : undefined,
-          activities: undefined,
-          href: `/${locale}/events/${conference.slug}`,
-        })),
+    const conferenceTitleBySlug = new Map<string, string>();
+    for (const conference of [...account.joined, ...account.available]) {
+      conferenceTitleBySlug.set(conference.slug, conference.title);
+    }
+    const sessionSlugs = [
+      ...new Set([
+        ...account.joined.slice(0, 5).map((conference) => conference.slug),
+        ...(activeSlug ? [activeSlug] : []),
+      ]),
     ];
+    const manyConferences = sessionSlugs.length > 1;
+    const toSessionCard = (
+      session: SessionSummary,
+      slug: string,
+      waiting: boolean,
+    ) => ({
+      at: Date.parse(session.startsAt ?? '') || Number.MAX_SAFE_INTEGER,
+      card: {
+        id: session.id,
+        title: session.title,
+        conferenceTitle: manyConferences
+          ? conferenceTitleBySlug.get(slug)
+          : undefined,
+        dayLabel: formatDayLabel(session.startsAt, locale),
+        timeLabel: formatTimeLabel(session.startsAt, locale),
+        room: session.room,
+        sessionType: session.sessionType,
+        waiting,
+        imageUrl: session.image,
+        href: `/${locale}/program?activity=${session.id}`,
+      },
+    });
+    const sessionSets = await Promise.all(
+      sessionSlugs.map(async (slug) => {
+        const [mine, agenda] = await Promise.all([
+          myActivities(slug, locale).catch(() => null),
+          listAgenda(slug, locale).catch(() => [] as SessionSummary[]),
+        ]);
+        return {
+          registered: mine
+            ? [...mine.upcoming, ...mine.waiting].map((entry) =>
+                toSessionCard(
+                  entry.session,
+                  slug,
+                  entry.category === 'waiting',
+                ),
+              )
+            : [],
+          presenting: agenda
+            .filter((session) =>
+              (session.speakers ?? []).some(
+                (speaker) => speaker.accountId === account.id,
+              ),
+            )
+            .map((session) => toSessionCard(session, slug, false)),
+        };
+      }),
+    );
+    const byTime = (a: { at: number }, b: { at: number }) => a.at - b.at;
+    const registeredSessions = sessionSets
+      .flatMap((set) => set.registered)
+      .sort(byTime)
+      .map((entry) => entry.card);
+    const presentingSessions = sessionSets
+      .flatMap((set) => set.presenting)
+      .sort(byTime)
+      .map((entry) => entry.card);
     const platformContent = buildPlatformLounge(
       account.name || account.email,
       locale,
@@ -592,23 +592,12 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
           ).length
         }
         unreadMessages={unreadTotal}
-        conferences={
-          chosen
-            ? account.joined.map((conference) => ({
-                slug: conference.slug,
-                title: conference.title,
-                active: conference.slug === chosen.slug,
-                href: `/${locale}/me?event=${conference.slug}`,
-              }))
-            : undefined
-        }
         accountHref={`/${locale}/me?view=account`}
-        conferencesSection={{
-          items: conferenceCards,
-          notRegistered:
-            account.joined.length === 0 && registeredActivities.length === 0,
+        sessionsSection={{
+          registered: registeredSessions,
+          presenting: presentingSessions,
+          programHref: `/${locale}/program`,
         }}
-        joinAction={joinConferenceAction}
         homeHref={`/${locale}/me`}
         profileHref={`/${locale}/me/profile`}
       />

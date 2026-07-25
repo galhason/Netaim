@@ -50,7 +50,7 @@ const xLabel = 'mb-1.5 block text-sm font-medium text-[var(--x-ink)]';
 const xField =
   'w-full rounded-2xl border border-[var(--x-line)] bg-[var(--x-surface)] px-4 py-3 text-[15px] text-[var(--x-ink)] outline-none transition-[box-shadow,border-color] duration-200 placeholder:text-[var(--x-faint)] focus:border-[var(--x-primary)] focus:ring-4 focus:ring-[var(--x-ring)]';
 const xPrimary =
-  'inline-flex min-h-12 items-center justify-center rounded-2xl bg-[var(--x-primary)] px-6 text-[15px] font-semibold text-white shadow-[0_10px_30px_rgba(86,84,214,0.28)] transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]';
+  'inline-flex min-h-12 items-center justify-center rounded-2xl bg-[var(--x-primary)] px-6 text-[15px] font-semibold text-white shadow-[0_10px_30px_rgba(110,86,207,0.28)] transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]';
 const xGhost =
   'inline-flex min-h-11 items-center justify-center rounded-2xl border border-[var(--x-line)] bg-[var(--x-surface)] px-5 text-sm font-semibold text-[var(--x-ink)] transition-colors hover:border-[var(--x-primary)]';
 const cardCls =
@@ -82,6 +82,9 @@ const Shell = ({
       registerHref={`/${locale}/events/${slug}/register`}
       meHref={`/${locale}/me`}
       userName={userName}
+      {...(userName
+        ? { scheduleHref: `/${locale}/events/${slug}/my-activities` }
+        : {})}
     />
     {children}
     <ConferenceFooter locale={locale} brand={BRAND_NAME} />
