@@ -30,7 +30,7 @@ const NewActivityPage = async () => {
       userName={creator?.name ?? ''}
       breadcrumb={<BackToActivities locale={locale} />}
     >
-      <ActivityWizard locale={locale} slug={slug} candidates={candidates} />
+      <ActivityWizard key={locale} locale={locale} slug={slug} candidates={candidates} />
     </ConsoleShell>
   );
 };

@@ -49,7 +49,7 @@ const ArrivalScene = ({ arrival, registerHref, locale }: ArrivalSceneProps) => {
               fill
               priority
               sizes="100vw"
-              className="object-cover object-[78%_center]"
+              className="object-cover object-[22%_center] rtl:object-[78%_center]"
             />
           </div>
         ) : (
@@ -60,7 +60,7 @@ const ArrivalScene = ({ arrival, registerHref, locale }: ArrivalSceneProps) => {
          * for the reading half, then a gradual fade to clear across the
          * middle, leaving only the outer third as open photograph.
          */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-surface)_0%,var(--color-surface)_32%,color-mix(in_srgb,var(--color-surface)_55%,transparent)_52%,transparent_80%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_left,var(--color-surface)_0%,var(--color-surface)_32%,color-mix(in_srgb,var(--color-surface)_55%,transparent)_52%,transparent_80%)] rtl:bg-[linear-gradient(to_right,var(--color-surface)_0%,var(--color-surface)_32%,color-mix(in_srgb,var(--color-surface)_55%,transparent)_52%,transparent_80%)]" />
         {/* seat the picture into the dark at top and bottom */}
         <div className="absolute inset-0 bg-gradient-to-b from-surface/50 via-transparent to-surface" />
         {/* a deeper base fade, so the figures below read cleanly with no card */}

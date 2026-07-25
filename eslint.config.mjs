@@ -12,7 +12,7 @@ const config = [
     },
   },
   {
-    ignores: ['.next/', 'node_modules/', 'src/payload-types.ts'],
+    ignores: ['.next/', 'node_modules/', 'src/payload-types.ts', 'src/migrations/'],
   },
 ];
 

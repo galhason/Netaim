@@ -65,6 +65,7 @@ const EditActivityPage = async ({ params }: EditActivityPageProps) => {
       breadcrumb={<BackToActivities locale={locale} />}
     >
       <ActivityWizard
+        key={locale}
         locale={locale}
         slug={slug}
         candidates={candidates}

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import type { Locale } from '@/config/locales';
+import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from '@/config/locales';
+import { setStudioLocaleAction } from '@/app/(studio)/studio/(classic)/actions';
 import ConsoleSidebar from './console-sidebar';
 
 /*
@@ -14,6 +15,36 @@ interface ConsoleShellProps {
   actions?: ReactNode;
   children: ReactNode;
 }
+
+const LocaleSwitch = ({ locale }: { locale: Locale }) => (
+  <form
+    action={setStudioLocaleAction}
+    className="flex items-center gap-1.5 text-xs"
+  >
+    {SUPPORTED_LOCALES.map((entry, i) => (
+      <span key={entry} className="flex items-center gap-1.5">
+        {i > 0 ? (
+          <span aria-hidden="true" className="text-[var(--c-text-soft)]/40">
+            /
+          </span>
+        ) : null}
+        <button
+          type="submit"
+          name="locale"
+          value={entry}
+          aria-pressed={entry === locale}
+          className={`min-h-8 px-1 ${
+            entry === locale
+              ? 'font-semibold text-[var(--c-bronze)]'
+              : 'text-[var(--c-text-soft)] transition-colors hover:text-[var(--c-text)]'
+          }`}
+        >
+          {LOCALE_LABELS[entry]}
+        </button>
+      </span>
+    ))}
+  </form>
+);
 
 const ConsoleShell = ({
   locale,
@@ -31,6 +62,7 @@ const ConsoleShell = ({
           {breadcrumb}
         </div>
         <div className="ms-auto flex items-center gap-3">
+          <LocaleSwitch locale={locale} />
           <span className="text-sm text-[var(--c-text-soft)]">{userName}</span>
           {actions}
         </div>
