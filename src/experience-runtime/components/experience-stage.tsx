@@ -2,7 +2,7 @@ import type { Locale } from '@/config/locales';
 import { GuidingLight } from '@/shared';
 import { resolveScene } from '../registry/scene-registry';
 import type { ExperienceDescriptor } from '../types/experience';
-import type { RuntimeMode, ScenePlacement } from '../types/scene';
+import type { RuntimeMode, ScenePlacement, SceneViewer } from '../types/scene';
 import { ExperienceRuntime } from './experience-runtime';
 
 /*
@@ -30,12 +30,18 @@ interface ExperienceStageProps {
   experience: ExperienceDescriptor;
   mode?: RuntimeMode;
   locale: Locale;
+  /*
+   * Resolved by the page, per request. Never part of `experience`,
+   * which is cached — see `SceneViewer`.
+   */
+  viewer?: SceneViewer | null;
 }
 
 export const ExperienceStage = ({
   experience,
   mode = 'read',
   locale,
+  viewer = null,
 }: ExperienceStageProps) => (
   <div className="cinematic min-h-dvh bg-surface font-body text-text-primary">
     <GuidingLight tone={experience.dna.tone} />
@@ -53,6 +59,7 @@ export const ExperienceStage = ({
       experience={byPlacement(experience, 'overlay')}
       mode={mode}
       locale={locale}
+      viewer={viewer}
     />
 
     <main id="main-content">
@@ -60,6 +67,7 @@ export const ExperienceStage = ({
         experience={byPlacement(experience, 'flow')}
         mode={mode}
         locale={locale}
+        viewer={viewer}
       />
     </main>
 
@@ -67,6 +75,7 @@ export const ExperienceStage = ({
       experience={byPlacement(experience, 'closing')}
       mode={mode}
       locale={locale}
+      viewer={viewer}
     />
   </div>
 );

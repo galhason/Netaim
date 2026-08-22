@@ -3,7 +3,7 @@ import { currentParticipant } from '@/features/registration';
 import type { ChatMessage } from '../types/chat';
 
 /*
- * HASON Messages, person to person (Connection Framework v1.0): the
+ * Netaim Messages, person to person (Connection Framework v1.0): the
  * channel every accepted connection always has. Deny by default — only
  * a member of a living (accepted or muted) connection reads or writes,
  * and mute never blocks words, only noise.

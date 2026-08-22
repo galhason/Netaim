@@ -12,11 +12,8 @@ import {
   STUDIO_AREAS,
   WORKSPACE_MESSAGES,
 } from '@/features/studio';
-import {
-  archiveEventAction,
-  createEventAction,
-  duplicateEventAction,
-} from '../actions';
+import { createEventAction } from '../actions';
+import { archiveEventAction, duplicateEventAction } from '../../actions';
 
 const area = STUDIO_AREAS.find((entry) => entry.id === 'events');
 
@@ -140,5 +137,14 @@ const StudioEventsPage = async () => {
     </section>
   );
 };
+
+/*
+ * The response depends on who is asking, so it is rendered per request
+ * and never prerendered or shared. Declared rather than left to Next to
+ * infer from a cookie read: an inferred guard disappears the moment a
+ * refactor moves that read behind a helper, and the failure would be a
+ * privacy leak that nothing announces.
+ */
+export const dynamic = 'force-dynamic';
 
 export default StudioEventsPage;

@@ -4,8 +4,6 @@ export {
   saveMyProfile,
 } from './services/networking-service';
 export {
-  connectByToken,
-  connectPreview,
   connectToParticipant,
   connectionChannels,
   connectionContactCard,
@@ -17,9 +15,8 @@ export {
 } from './services/connection-service';
 export type {
   ConnectionChannels,
-  ConnectPreview,
+  ConnectResult,
   ContactCard,
-  QrConnectResult,
 } from './services/connection-service';
 export {
   myChatThread,

@@ -4,11 +4,24 @@ import type { Payload } from 'payload';
 const databaseUrl = process.env.TEST_DATABASE_URL;
 
 /*
- * The S1 exit gate: two organizations with distinct teams cannot see
- * each other's anything, proven against a real PostgreSQL through the
- * Payload access layer (overrideAccess: false). Runs wherever
- * TEST_DATABASE_URL points at the docker-compose postgres-test service.
+ * This suite is the only proof that the isolation layer holds against a
+ * real database, and for its whole life it skipped silently whenever
+ * TEST_DATABASE_URL was unset — which was every run. Skipping stays
+ * allowed on a developer machine with no Postgres to hand; on CI it is
+ * a failure, so the gate can never quietly stop being a gate.
  */
+describe('organization isolation (integration) — availability', () => {
+  it('runs against a real database on CI', () => {
+    if (process.env.CI !== 'true') {
+      return;
+    }
+    expect(
+      databaseUrl,
+      'TEST_DATABASE_URL is unset on CI: the isolation gate would skip silently. Start the postgres-test service and set it.',
+    ).toBeTruthy();
+  });
+});
+
 describe.skipIf(!databaseUrl)('organization isolation (integration)', () => {
   let payload: Payload;
   let orgA: { id: string | number };

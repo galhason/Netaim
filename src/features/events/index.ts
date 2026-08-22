@@ -35,14 +35,20 @@ export {
   addPerson,
   listMedia,
   addMedia,
-  updateVenueChapter,
 } from './services/people-media-service';
-export type { VenueDetailsInput } from './services/people-media-service';
 export { listSpeakersPublic } from './services/people-media-service';
 export { EventExperience } from './components/event-experience';
 export { default as EventHeader } from './components/event-header';
 export { firstSceneHasMedia } from './utils/hero-media';
 export { toEventHealthInput } from './utils/health-input';
+export {
+  journeyReadinessFacts,
+  notesAsFindings,
+} from './utils/journey-facts';
+export type {
+  JourneyReadinessFacts,
+  ProgramSessionTime,
+} from './utils/journey-facts';
 export { toEventSlug, duplicateSlug } from './utils/slug';
 export { DEMO_EVENT_SLUG } from './constants/demo-event';
 export { isDemoContentEnabled } from './constants/demo';

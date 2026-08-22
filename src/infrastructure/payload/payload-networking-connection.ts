@@ -11,8 +11,14 @@ type ParticipantRef =
   | string
   | { id: number | string; name?: string | null };
 
+type EventRefValue =
+  | number
+  | string
+  | { id: number | string; slug?: string | null };
+
 interface ConnectionRow {
   id: number | string;
+  event?: EventRefValue;
   requester?: ParticipantRef;
   addressee?: ParticipantRef;
   status?: ConnectionStatus;
@@ -27,8 +33,14 @@ const nameOf = (value: ParticipantRef | undefined): string => {
   return '';
 };
 
+const slugOf = (value: EventRefValue | undefined): string =>
+  value && typeof value === 'object' && typeof value.slug === 'string'
+    ? value.slug
+    : '';
+
 const toConnection = (row: ConnectionRow): ConnectionSummary => ({
   id: String(row.id),
+  slug: slugOf(row.event),
   requesterId: String(relationshipId(row.requester ?? null) ?? ''),
   requesterName: nameOf(row.requester),
   addresseeId: String(relationshipId(row.addressee ?? null) ?? ''),
@@ -80,7 +92,7 @@ export const payloadConnectionRepository: ConnectionRepository = {
         ],
       },
       depth: 1,
-      limit: 500,
+      pagination: false,
       overrideAccess: true,
     });
     return (result.docs as unknown as ConnectionRow[]).map(toConnection);

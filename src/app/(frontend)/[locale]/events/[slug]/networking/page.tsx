@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
-import { isSupportedLocale } from '@/config/locales';
+import { isSupportedLocale, type Locale } from '@/config/locales';
+import { formatDayLabel, formatTimeLabel } from '@/shared';
 import { currentParticipant } from '@/features/registration';
 import {
   connectionChannels,
@@ -99,19 +100,21 @@ const COPY = {
 const labelClass = 'text-xs tracking-widest text-text-secondary';
 const fieldClass = 'border-b border-border bg-transparent py-2 outline-none';
 
-const clock = (iso: string): string => {
-  const parsed = Date.parse(iso);
-  return Number.isNaN(parsed)
-    ? ''
-    : new Date(parsed).toISOString().slice(0, 16).replace('T', ' ');
+/*
+ * These two rendered `toISOString()` — that is, UTC — while every other
+ * surface showed venue time. A meeting proposed for 14:00 read 12:00
+ * here and 14:00 on the messages page, for the same appointment. The
+ * shared formatters honour the conference's own clock, so both pages now
+ * say what the producer typed.
+ */
+const clock = (iso: string, locale: Locale): string => {
+  const day = formatDayLabel(iso, locale);
+  const time = formatTimeLabel(iso, locale);
+  return [day, time].filter(Boolean).join(' · ');
 };
 
-const hhmm = (iso: string): string => {
-  const parsed = Date.parse(iso);
-  return Number.isNaN(parsed)
-    ? ''
-    : new Date(parsed).toISOString().slice(11, 16);
-};
+const hhmm = (iso: string, locale: Locale): string =>
+  formatTimeLabel(iso, locale);
 
 const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => {
   const { locale, slug } = await params;
@@ -279,8 +282,8 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
                     </span>
                   </div>
                   <span className="text-sm tabular-nums text-text-secondary">
-                    {clock(meeting.startsAt)}
-                    {meeting.endsAt ? `–${hhmm(meeting.endsAt)}` : ''}
+                    {clock(meeting.startsAt, locale)}
+                    {meeting.endsAt ? `–${hhmm(meeting.endsAt, locale)}` : ''}
                   </span>
                   {meeting.location ? (
                     <span className="text-sm text-text-secondary">
@@ -712,5 +715,14 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
     </main>
   );
 };
+
+/*
+ * The response depends on who is asking, so it is rendered per request
+ * and never prerendered or shared. Declared rather than left to Next to
+ * infer from a cookie read: an inferred guard disappears the moment a
+ * refactor moves that read behind a helper, and the failure would be a
+ * privacy leak that nothing announces.
+ */
+export const dynamic = 'force-dynamic';
 
 export default NetworkingPage;

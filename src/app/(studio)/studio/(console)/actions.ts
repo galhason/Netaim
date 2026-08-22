@@ -30,7 +30,12 @@ import {
   requireCapability,
   setParticipantBlocked,
 } from '@/features/studio';
-import { grantRole, revokeGrant } from '@/features/access';
+import {
+  audit,
+  grantRole,
+  revokeGrant,
+  type AuditActor,
+} from '@/features/access';
 import { cancelRegistration } from '@/features/registration';
 import { broadcastAnnouncement } from '@/features/notifications';
 import {
@@ -40,12 +45,13 @@ import {
 } from '@/features/opening';
 import { applyComposition, resolveScene } from '@/experience-runtime';
 import { fromDateTimeInputValue } from '@/shared';
+import { publishedEvent, publishedHomepage } from '@/shared/cache/publish';
 import '@/scenes';
 import {
   launchExperienceAction,
   saveEventOpeningAction,
   saveProgramDaysAction,
-} from '../(classic)/actions';
+} from '../actions';
 
 /*
  * Console actions: thin envelopes over the Studio's existing actions —
@@ -60,6 +66,17 @@ const authorized = async (
   capability: Parameters<typeof requireCapability>[0],
   eventSlug?: string,
 ): Promise<boolean> => (await requireCapability(capability, eventSlug)) !== null;
+
+/*
+ * The same gate, but keeping the actor, for the acts that go into the
+ * audit trail. Taking permission and identity from one call means the
+ * trail can never name the wrong person.
+ */
+const actorFor = async (
+  capability: Parameters<typeof requireCapability>[0],
+  eventSlug?: string,
+): Promise<AuditActor | null> =>
+  (await requireCapability(capability, eventSlug))?.creator ?? null;
 
 export const createExperienceAction = async (formData: FormData) => {
   const title = String(formData.get('title') ?? '').trim();
@@ -82,15 +99,18 @@ export const createExperienceAction = async (formData: FormData) => {
  */
 export const deleteEventAction = async (formData: FormData) => {
   const slug = String(formData.get('slug') ?? '');
-  if (!slug || !(await authorized('events:manage', slug))) {
+  const actor = slug ? await actorFor('events:manage', slug) : null;
+  if (!actor) {
     return;
   }
   await deleteEvent(slug);
+  await audit(actor, 'event.deleted', slug);
   revalidatePath('/studio', 'layout');
-  revalidatePath('/', 'layout');
+  publishedEvent(slug);
 };
 
 export const consoleSaveEventOpeningAction = async (formData: FormData) => {
+  /* saveEventOpeningAction publishes the conference tag itself. */
   await saveEventOpeningAction(formData);
   revalidatePath('/studio', 'layout');
 };
@@ -98,13 +118,13 @@ export const consoleSaveEventOpeningAction = async (formData: FormData) => {
 export const consoleSaveProgramDaysAction = async (formData: FormData) => {
   await saveProgramDaysAction(formData);
   revalidatePath('/studio', 'layout');
-  revalidatePath('/', 'layout');
+  publishedEvent(String(formData.get('slug') ?? ''));
 };
 
 export const consoleLaunchExperienceAction = async (formData: FormData) => {
   await launchExperienceAction(formData);
   revalidatePath('/studio', 'layout');
-  revalidatePath('/', 'layout');
+  publishedEvent(String(formData.get('slug') ?? ''));
 };
 
 /*
@@ -117,7 +137,7 @@ const COMPOSER_LOCALE = 'he';
 
 const currentScenes = async () => {
   const opening = await getOpening(COMPOSER_LOCALE);
-  return buildOpeningDescriptor(opening).scenes;
+  return buildOpeningDescriptor(opening, COMPOSER_LOCALE).scenes;
 };
 
 const isFlow = (type: string): boolean =>
@@ -129,7 +149,7 @@ const persistComposition = async (
   await saveHomepageCompositionEntries(
     scenes.map((scene) => ({ scene: scene.id, hidden: scene.hidden === true })),
   );
-  revalidatePath('/', 'layout');
+  publishedHomepage();
   revalidatePath('/studio/homepage');
 };
 
@@ -254,7 +274,7 @@ export const uploadOpeningImageAction = async (formData: FormData) => {
   } else {
     return;
   }
-  revalidatePath('/', 'layout');
+  publishedEvent(slug);
   revalidatePath('/studio/media');
   revalidatePath(`/studio/experiences/${slug}`);
 };
@@ -300,7 +320,7 @@ const persistEventComposition = async (
       emphasis: scene.emphasis || undefined,
     })),
   );
-  revalidatePath('/', 'layout');
+  publishedEvent(slug);
   revalidatePath(`/studio/experiences/${slug}`);
 };
 
@@ -456,7 +476,19 @@ export const broadcastAnnouncementAction = async (formData: FormData) => {
       targetSessionId = sessionId;
     }
   }
-  if (!slug || !(await authorized('participants:manage', slug))) {
+  /* a private message: "slug::participantId" reaches one guest only */
+  const person = String(formData.get('person') ?? '');
+  let targetParticipantId: string | undefined;
+  if (person.includes('::')) {
+    const [personSlug, participantId] = person.split('::');
+    if (personSlug && participantId) {
+      slug = personSlug;
+      targetParticipantId = participantId;
+      targetSessionId = undefined;
+    }
+  }
+  const actor = slug ? await actorFor('participants:manage', slug) : null;
+  if (!actor) {
     return;
   }
   const rawKind = String(formData.get('kind') ?? 'feed');
@@ -478,10 +510,27 @@ export const broadcastAnnouncementAction = async (formData: FormData) => {
     ],
     kind,
     targetSessionId,
+    targetParticipantId,
   });
   if (sent) {
+    /*
+     * The audience is recorded, never the message: an announcement can
+     * carry anything an organizer types, and the trail is read by more
+     * people than the announcement was addressed to.
+     */
+    await audit(actor, 'communication.broadcast', slug, {
+      kind,
+      audience: targetParticipantId
+        ? 'oneGuest'
+        : targetSessionId
+          ? 'oneActivity'
+          : 'everyone',
+    });
     revalidatePath('/studio/communications');
-    revalidatePath('/', 'layout');
+    /*
+     * Announcements are addressed to guests and read per request on
+     * the dynamic page, so no published-content tag is involved.
+     */
     redirect('/studio/communications?broadcast=sent');
   }
 };
@@ -504,13 +553,19 @@ export const renameParticipantAction = async (formData: FormData) => {
 
 export const toggleParticipantBlockedAction = async (formData: FormData) => {
   const id = String(formData.get('id') ?? '');
-  if (!(await authorized('participants:manage'))) {
+  const actor = await actorFor('participants:manage');
+  if (!actor) {
     return;
   }
   if (!id) {
     return;
   }
-  await setParticipantBlocked(id, formData.get('blocked') === '1');
+  const blocked = formData.get('blocked') === '1';
+  await setParticipantBlocked(id, blocked);
+  await audit(actor, 'participant.blocked', undefined, {
+    participantId: id,
+    blocked,
+  });
   revalidatePath('/studio/participants');
 };
 
@@ -531,12 +586,17 @@ export const grantRoleAction = async (formData: FormData) => {
     return;
   }
   await grantRole(accountId, role, eventSlug || null, access.creator.id);
+  await audit(access.creator, 'grant.granted', eventSlug || undefined, {
+    accountId,
+    role,
+  });
   revalidatePath('/studio/participants');
   revalidatePath('/studio/people');
 };
 
 export const revokeGrantAction = async (formData: FormData) => {
-  if (!(await authorized('platform:manage'))) {
+  const actor = await actorFor('platform:manage');
+  if (!actor) {
     return;
   }
   const grantId = String(formData.get('grantId') ?? '');
@@ -548,6 +608,9 @@ export const revokeGrantAction = async (formData: FormData) => {
       ? '/studio/people'
       : '/studio/participants';
   const outcome = await revokeGrant(grantId);
+  if (outcome.ok) {
+    await audit(actor, 'grant.revoked', undefined, { grantId });
+  }
   if (!outcome.ok && outcome.reason === 'lastOwner') {
     redirect(`${home}?grants=lastOwner`);
   }
@@ -618,7 +681,8 @@ export const moveParticipantRegistrationAction = async (
 };
 
 export const deleteParticipantAction = async (formData: FormData) => {
-  if (!(await authorized('platform:manage'))) {
+  const actor = await actorFor('platform:manage');
+  if (!actor) {
     return;
   }
   const id = String(formData.get('id') ?? '');
@@ -626,6 +690,7 @@ export const deleteParticipantAction = async (formData: FormData) => {
     return;
   }
   await deleteParticipantAccount(id);
+  await audit(actor, 'participant.deleted', undefined, { participantId: id });
   revalidatePath('/studio/participants');
 };
 
@@ -724,6 +789,7 @@ export const addConferenceSpeakerAction = async (formData: FormData) => {
     },
   ];
   await saveEventOpening(slug, contentLocale, { speakers: next });
+  publishedEvent(slug);
   revalidatePath('/studio', 'layout');
   revalidatePath(`/studio/experiences/${slug}`);
 };
@@ -745,6 +811,7 @@ export const removeConferenceSpeakerAction = async (formData: FormData) => {
     (_, position) => position !== index,
   );
   await saveEventOpening(slug, contentLocale, { speakers: next });
+  publishedEvent(slug);
   revalidatePath('/studio', 'layout');
   revalidatePath(`/studio/experiences/${slug}`);
 };
@@ -757,10 +824,12 @@ export const removeConferenceSpeakerAction = async (formData: FormData) => {
  */
 export const setActiveConferenceAction = async (formData: FormData) => {
   const slug = String(formData.get('slug') ?? '').trim();
-  if (!slug || !(await authorized('experiences:manage'))) {
+  const actor = slug ? await actorFor('experiences:manage') : null;
+  if (!actor) {
     return;
   }
+  /* setActiveConference clears the active-conference tag itself. */
   await setActiveConference(slug);
+  await audit(actor, 'event.activeConferenceChanged', slug);
   revalidatePath('/studio', 'layout');
-  revalidatePath('/', 'layout');
 };

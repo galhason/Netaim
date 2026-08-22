@@ -16,8 +16,14 @@
     "payload": "payload",
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap",
+    "_migrations:README": "STOP. This database was built with PAYLOAD_DB_PUSH, so it has no migration history. `migrate:create` will therefore emit a BASELINE of all 78 tables, and `migrate` will then fail on the first CREATE TABLE because they already exist. Adopting migrations needs the baseline recorded as already-applied first — see docs/Adopting-Migrations.md. Until then, local schema changes go through PAYLOAD_DB_PUSH=true in dev.",
+    "migrate:create": "payload migrate:create",
+    "migrate": "payload migrate",
+    "migrate:status": "payload migrate:status",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:integration": "docker compose up -d postgres-test && TEST_DATABASE_URL=postgres://hason:hason@localhost:5433/hason_test vitest run tests/integration",
+    "gates": "npm run generate:types && npm run typecheck && npm run lint && npm run test && npm run build"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "^3.0.0",
@@ -28,6 +34,7 @@
     "motion": "^12.42.2",
     "next": "~15.4.11",
     "next-intl": "^4.0.0",
+    "nodemailer": "^6.9.0",
     "payload": "^3.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -38,6 +45,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
+    "@types/nodemailer": "^6.4.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",

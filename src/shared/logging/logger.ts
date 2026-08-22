@@ -10,6 +10,13 @@ export interface LogEntry {
   scope: string;
   message: string;
   timestamp: string;
+  /*
+   * Ties every line written while serving one request together. Filled
+   * by the server transport, not here: reading the ambient request id
+   * needs `async_hooks`, and this module is imported by client
+   * components through the shared barrel.
+   */
+  requestId?: string;
   context?: LogContext;
 }
 
@@ -29,7 +36,7 @@ const consoleWriters: Record<LogLevel, (message: string) => void> = {
 };
 /* eslint-enable no-console */
 
-const consoleTransport: LogTransport = (entry) => {
+export const consoleTransport: LogTransport = (entry) => {
   consoleWriters[entry.level](JSON.stringify(entry));
 };
 

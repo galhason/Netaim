@@ -100,6 +100,21 @@ export const CONSOLE_UI = {
   memberRole: { he: 'תפקיד', en: 'Role' },
   invite: { he: 'הזמנה', en: 'Invite' },
   launch: { he: 'העלאה לאוויר', en: 'Go live' },
+  readiness: { he: 'מוכנות', en: 'Readiness' },
+  requiredActions: { he: 'פעולות נדרשות', en: 'Required actions' },
+  readinessClear: {
+    he: 'אין חסמים — הכנס יכול לעלות לאוויר.',
+    en: 'No blockers — the conference can go live.',
+  },
+  readinessBlocked: {
+    he: 'ההעלאה ממתינה לטיפול בחסמים.',
+    en: 'Launch waits until the blockers are resolved.',
+  },
+  readinessUnavailable: {
+    he: 'בדיקת המוכנות אינה זמינה כרגע.',
+    en: 'The readiness check is unavailable right now.',
+  },
+  seeBlockers: { he: 'לפירוט', en: 'See details' },
   publishChanges: { he: 'פרסום השינויים', en: 'Publish changes' },
   draftCanvasNote: {
     he: 'הקנבס מציג את הטיוטה — מה שהקהל יראה אחרי הפרסום.',
@@ -162,14 +177,14 @@ export const CONSOLE_UI = {
     he: 'מוחק לצמיתות את החשבון, ההרשמות, הנטוורקינג וההרשאות.',
     en: 'Permanently deletes the account, registrations, networking and grants.',
   },
-  commsTitle: { he: 'תקשורת', en: 'Communications' },
+  commsTitle: { he: 'התראות', en: 'Notifications' },
   commsSub: {
-    he: 'כל הודעה שהמערכת שלחה — מגיע ההרשמות ועד אישורי הסדנאות.',
-    en: 'Every message the system sent — from registration to workshop confirmations.',
+    he: 'כל התראה שיצאה מהמערכת — מהרשמות ואישורי סדנאות ועד הודעות שאתם שולחים לאורחים.',
+    en: 'Every notification the system sent — from registrations and workshop approvals to the messages you send guests.',
   },
   commsBroadcastNote: {
-    he: 'הודעות מתפרצות לקהל (באנר, פופ-אפ, שליחה ממוקדת) מגיעות עם מערכת הפרופיל — השלב הבא אחרי הסטודיו.',
-    en: 'Broadcast announcements (banner, pop-up, targeted send) arrive with the profile system — the next act after the Studio.',
+    he: 'שלוש דרכים לדבר עם האורחים: עדכון שנוחת ב\u201Dעדכונים\u201D שלהם, באנר עליון, או הודעה מתפרצת. אפשר לכוון לכל הכנס, למשתתפי פעילות אחת, או למשתתף אחד בלבד.',
+    en: 'Three ways to reach guests: an update that lands in their Updates, a top banner, or a pop-up. Send to the whole conference, to one activity\u2019s participants, or to a single person.',
   },
   commsEmpty: {
     he: 'עוד לא נשלחו הודעות עבור הכנס הזה.',
@@ -185,8 +200,19 @@ export const CONSOLE_UI = {
   groupWorkspace: { he: 'סביבת עבודה', en: 'WORKSPACE' },
   groupOrg: { he: 'הארגון', en: 'ORGANIZATION' },
   media: { he: 'ספריית מדיה', en: 'Media Library' },
-  communications: { he: 'תקשורת', en: 'Communications' },
+  communications: { he: 'התראות', en: 'Notifications' },
   insights: { he: 'מידע כנסים', en: 'Conference info' },
+  history: { he: 'היסטוריה', en: 'History' },
+  historyTitle: { he: 'היסטוריית פעולות', en: 'Activity history' },
+  historySub: {
+    he: 'מי עשה מה, ומתי. הרישום נוסף בלבד — אי אפשר לערוך או למחוק ממנו, כי היסטוריה שניתן לשנות אינה מוכיחה דבר.',
+    en: 'Who did what, and when. The record is append-only — it cannot be edited or deleted, because a history that can be changed proves nothing.',
+  },
+  historyAll: { he: 'הכול', en: 'Everything' },
+  historyEmpty: {
+    he: 'עוד לא נרשמה פעולה.',
+    en: 'Nothing has been recorded yet.',
+  },
   organization: { he: 'הארגון', en: 'Organization' },
   teams: { he: 'צוות', en: 'Teams' },
   settings: { he: 'הגדרות', en: 'Settings' },
@@ -241,6 +267,15 @@ export const CONSOLE_UI = {
   broadcastAudienceAll: {
     he: 'כל משתתפי הכנס שנבחר',
     en: 'Everyone in the chosen conference',
+  },
+  broadcastPerson: { he: 'נמען יחיד', en: 'Single recipient' },
+  broadcastPersonAll: {
+    he: 'ללא נמען יחיד — לפי קהל היעד שלמעלה',
+    en: 'No single recipient — use the audience above',
+  },
+  broadcastPersonNote: {
+    he: 'בחירת נמען יחיד שולחת הודעה פרטית שתופיע רק אצלו, ב"עדכונים" שבפרופיל האישי.',
+    en: 'Choosing a single recipient sends a private message that appears only in their personal profile, under Updates.',
   },
   broadcastHeSection: { he: 'ההודעה בעברית', en: 'The message in Hebrew' },
   broadcastEnSection: { he: 'ההודעה באנגלית', en: 'The message in English' },

@@ -34,6 +34,7 @@ const buildGroups = (locale: Locale): { title: string; items: NavEntry[] }[] => 
       { href: '/studio/communications', label: CONSOLE_UI.communications[locale] },
       { href: '/studio/checkin', label: CONSOLE_UI.checkinNav[locale] },
       { href: '/studio/insights', label: CONSOLE_UI.insights[locale] },
+      { href: '/studio/history', label: CONSOLE_UI.history[locale] },
     ],
   },
   {

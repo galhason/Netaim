@@ -1,5 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
+import { SUPPORT_EMAIL } from '@/config/brand';
 import type { Locale } from '@/config/locales';
 import { LOUNGE_UI } from '../../constants/lounge-ui';
 import type { AttendeeExperienceContent } from '../../types/attendee-experience';
@@ -59,6 +61,8 @@ interface LoungeViewProps {
   /* Platform mode: the personal home and profile live at /me. */
   homeHref?: string;
   profileHref?: string;
+  /* The site's own navigation bar, rendered above the Lounge. */
+  siteNav?: ReactNode;
 }
 
 const TYPE_CHIP: Record<string, string> = {
@@ -229,6 +233,7 @@ const LoungeView = ({
   sessionsSection,
   homeHref,
   profileHref,
+  siteNav,
 }: LoungeViewProps) => {
   const platformBase = `/${locale}/me`;
   const base = content.slug ? `/${locale}/events/${content.slug}` : platformBase;
@@ -346,7 +351,12 @@ const LoungeView = ({
 
   return (
     <div className="lounge grid min-h-dvh bg-[var(--l-bg)] font-body text-[var(--l-ink)] lg:grid-cols-[232px_1fr]">
-      <aside className="sticky top-0 hidden h-dvh flex-col bg-white/70 p-4 backdrop-blur-sm lg:flex">
+      {siteNav ? <div className="col-span-full">{siteNav}</div> : null}
+      <aside
+        className={`sticky top-0 hidden h-dvh flex-col bg-white/70 p-4 backdrop-blur-sm lg:flex ${
+          siteNav ? 'pt-[100px]' : ''
+        }`}
+      >
         <p className="flex items-center gap-2.5 px-2 py-3">
           <span className="grid size-9 flex-none place-items-center rounded-full bg-[var(--l-bronze)]/15 text-sm font-semibold text-[var(--l-bronze)]">
             {initial}
@@ -384,7 +394,7 @@ const LoungeView = ({
               {LOUNGE_UI.helpSub[locale]}
             </p>
             <a
-              href="mailto:support@hason.events"
+              href={`mailto:${SUPPORT_EMAIL}`}
               className="mt-3 inline-flex min-h-9 w-full items-center justify-center rounded-xl bg-white text-xs font-medium text-[var(--l-ink)] shadow-[0_6px_18px_rgba(35,40,47,0.08)] transition-colors hover:text-[var(--l-bronze)]"
             >
               {LOUNGE_UI.contactSupport[locale]}
@@ -438,7 +448,11 @@ const LoungeView = ({
               className="absolute inset-0 bg-gradient-to-b from-[rgba(14,27,46,0.6)] via-[rgba(14,27,46,0.3)] to-[var(--l-bg)]"
             />
           </div>
-          <div className="relative mx-auto max-w-6xl px-6 pb-44 pt-6 text-white md:px-10">
+          <div
+            className={`relative mx-auto max-w-6xl px-6 pb-44 text-white md:px-10 ${
+              siteNav ? 'pt-[104px]' : 'pt-6'
+            }`}
+          >
             <div className="flex items-center gap-3 text-[13px] text-white/85">
               <span className="flex items-center gap-2 font-display text-sm font-semibold tracking-wide">
                 <span className="grid size-6 place-items-center rounded-full bg-[var(--l-bronze-soft)]/25 text-[10px] text-[var(--l-bronze-soft)]">✦</span>
@@ -469,7 +483,7 @@ const LoungeView = ({
               </span>
             </div>
 
-            <div className="mt-10 gap-8 md:mt-14 lg:flex lg:items-start lg:justify-between">
+            <div className="mt-10 md:mt-14">
               <div className="min-w-0">
               <p className="text-lg text-white/90">
                 {LOUNGE_UI.welcomeBack[locale]} {content.welcome.greeting} 👋
@@ -525,47 +539,6 @@ const LoungeView = ({
               </Link>
               </div>
 
-              <aside className="lounge-rise mt-8 w-full flex-none rounded-3xl bg-white/95 p-6 text-[var(--l-ink)] shadow-[0_18px_50px_rgba(14,27,46,0.3)] backdrop-blur-sm lg:mt-0 lg:max-w-sm">
-                <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.14em] text-[var(--l-bronze)]">
-                  <NavIcon path="M12 4l1.8 4.4L18 10l-4.2 1.6L12 16l-1.8-4.4L6 10l4.2-1.6z" />
-                  {LOUNGE_UI.nextActionTitle[locale].toUpperCase()}
-                </p>
-                <p className="mt-3 font-display text-2xl font-semibold">
-                  {nextAction.title}
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--l-soft)]">
-                  {nextAction.sub}
-                </p>
-                {nextAction.progress && nextAction.progress.total > 0 ? (
-                  <>
-                    <span className="mt-4 block h-1.5 overflow-hidden rounded-full bg-[var(--l-hair)]">
-                      <span
-                        className="block h-full rounded-full bg-[var(--l-bronze)]"
-                        style={{
-                          width: `${Math.max(
-                            6,
-                            Math.round(
-                              (nextAction.progress.done /
-                                nextAction.progress.total) *
-                                100,
-                            ),
-                          )}%`,
-                        }}
-                      />
-                    </span>
-                    <span className="mt-1.5 block text-xs text-[var(--l-faint)]">
-                      {LOUNGE_UI.chosenOf[locale]} {nextAction.progress.done}{' '}
-                      {LOUNGE_UI.outOf[locale]} {nextAction.progress.total}
-                    </span>
-                  </>
-                ) : null}
-                <Link
-                  href={nextAction.href}
-                  className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[var(--l-navy)] text-sm font-medium text-white transition-colors hover:bg-[#16263c]"
-                >
-                  {nextAction.title}
-                </Link>
-              </aside>
             </div>
 
             {conferences && conferences.length > 1 ? (

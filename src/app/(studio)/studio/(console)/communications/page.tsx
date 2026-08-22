@@ -12,6 +12,7 @@ import {
   CTextAreaField,
   CTextField,
   ConsoleShell,
+  getParticipantsAdmin,
   getStudioCreator,
   getStudioLocale,
 } from '@/features/studio';
@@ -77,6 +78,22 @@ const CommunicationsPage = async ({
     )
   ).flat();
 
+  /* a private message: one named guest, per conference they belong to */
+  const eventTitles = new Map(events.map((event) => [event.slug, event.title]));
+  const personOptions = (await getParticipantsAdmin().catch(() => []))
+    .flatMap((participant) =>
+      participant.registrations
+        .filter((line) => eventTitles.has(line.eventSlug))
+        .map((line) => ({
+          value: `${line.eventSlug}::${participant.id}`,
+          label: `${participant.name} — ${line.eventTitle}`,
+        })),
+    )
+    .filter(
+      (option, index, all) =>
+        all.findIndex((other) => other.value === option.value) === index,
+    );
+
   return (
     <ConsoleShell
       locale={locale}
@@ -140,6 +157,15 @@ const CommunicationsPage = async ({
                 options={activityOptions}
               />
             </div>
+            <CSelectField
+              name="person"
+              label={CONSOLE_UI.broadcastPerson[locale]}
+              emptyLabel={CONSOLE_UI.broadcastPersonAll[locale]}
+              options={personOptions}
+            />
+            <p className="-mt-2 text-[11px] leading-relaxed text-[var(--c-text-faint)]">
+              {CONSOLE_UI.broadcastPersonNote[locale]}
+            </p>
             <div className="grid gap-5 lg:grid-cols-2">
               <fieldset className="flex flex-col gap-3 rounded-xl border border-[var(--c-line)] p-4">
                 <legend className="px-1 text-[10px] font-medium tracking-[0.16em] text-[var(--c-text-faint)]">
@@ -222,5 +248,14 @@ const CommunicationsPage = async ({
     </ConsoleShell>
   );
 };
+
+/*
+ * The response depends on who is asking, so it is rendered per request
+ * and never prerendered or shared. Declared rather than left to Next to
+ * infer from a cookie read: an inferred guard disappears the moment a
+ * refactor moves that read behind a helper, and the failure would be a
+ * privacy leak that nothing announces.
+ */
+export const dynamic = 'force-dynamic';
 
 export default CommunicationsPage;

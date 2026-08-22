@@ -145,6 +145,9 @@ export interface EventOpeningInput {
   quoteStatLabel?: string;
   quoteImageId?: string | null;
   venueName?: string;
+  venueAddress?: string;
+  venueMapUrl?: string;
+  venueMapLabel?: string;
   venueNarrative?: string;
   venueAccessibility?: string;
   venueEmergency?: string;
@@ -194,6 +197,9 @@ export interface EventOpeningDraft {
   };
   venue: {
     name?: string;
+    address?: string;
+    mapUrl?: string;
+    mapLabel?: string;
     narrative?: string;
     accessibility?: string;
     emergency?: string;
@@ -245,7 +251,19 @@ export interface EventOpeningContent {
   speakers: { name?: string; role?: string; photoUrl?: string }[];
   venue: {
     name?: string;
+    address?: string;
+    mapUrl?: string;
+    mapLabel?: string;
     narrative?: string;
+    /*
+     * Accessibility and emergency information have existed in the CMS,
+     * been editable in the Studio, and been a launch blocker since the
+     * readiness rules were written — and were dropped at this boundary,
+     * so no visitor ever saw them. A conference could not go live until
+     * they were filled in, and filling them in published nothing.
+     */
+    accessibility?: string;
+    emergency?: string;
     imageUrl?: string;
     facts: { label?: string; icon?: string; description?: string }[];
   };

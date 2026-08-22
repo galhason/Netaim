@@ -13,7 +13,7 @@ import {
   getStudioLocale,
 } from '@/features/studio';
 import { GUIDING_TONE_KEYS } from '@/shared';
-import { saveEventOpeningAction } from '../../../actions';
+import { saveEventOpeningAction } from '../../../../actions';
 
 interface OpeningEditorProps {
   params: Promise<{ slug: string }>;
@@ -241,5 +241,14 @@ const OpeningEditor = async ({ params, searchParams }: OpeningEditorProps) => {
     </div>
   );
 };
+
+/*
+ * The response depends on who is asking, so it is rendered per request
+ * and never prerendered or shared. Declared rather than left to Next to
+ * infer from a cookie read: an inferred guard disappears the moment a
+ * refactor moves that read behind a helper, and the failure would be a
+ * privacy leak that nothing announces.
+ */
+export const dynamic = 'force-dynamic';
 
 export default OpeningEditor;

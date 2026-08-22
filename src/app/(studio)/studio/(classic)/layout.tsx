@@ -38,4 +38,12 @@ const ClassicLayout = async ({ children }: ClassicLayoutProps) => {
   );
 };
 
+/*
+ * This layout resolves who is looking, so every page beneath it depends
+ * on the visitor and none may be prerendered or shared. Declared rather
+ * than left to Next to infer: an inferred guard disappears the moment a
+ * refactor moves the read behind a helper.
+ */
+export const dynamic = 'force-dynamic';
+
 export default ClassicLayout;

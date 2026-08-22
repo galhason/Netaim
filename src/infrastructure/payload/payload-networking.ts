@@ -78,7 +78,7 @@ export const payloadNetworkingProfileRepository: NetworkingProfileRepository = {
         ],
       },
       depth: 1,
-      limit: 500,
+      pagination: false,
       overrideAccess: true,
     });
     return (result.docs as unknown as ProfileRow[])

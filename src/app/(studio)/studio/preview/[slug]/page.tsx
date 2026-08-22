@@ -32,7 +32,7 @@ const PreviewPage = async ({ params, searchParams }: PreviewPageProps) => {
     notFound();
   }
 
-  const descriptor = buildConferenceDescriptor(experience);
+  const descriptor = buildConferenceDescriptor(experience, locale);
   /*
    * Focus take (approved flow): while a scene is being directed, the
    * canvas shows that scene alone — no scrolling, no getting lost.

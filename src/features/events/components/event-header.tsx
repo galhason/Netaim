@@ -4,6 +4,7 @@ import {
   SUPPORTED_LOCALES,
   type Locale,
 } from '@/config/locales';
+import { chooseLocaleAction } from '@/features/account/actions/choose-locale';
 import type { EventNavigationItem } from '../types/event-experience';
 import LogoMark from './logo-mark';
 
@@ -62,17 +63,31 @@ const EventHeader = ({
                   |
                 </span>
               ) : null}
-              <a
-                href={`/${supportedLocale}/events/${slug}`}
-                aria-current={supportedLocale === locale ? 'true' : undefined}
-                className={
-                  supportedLocale === locale
-                    ? 'font-medium text-accent'
-                    : 'opacity-85 transition-opacity hover:opacity-100'
-                }
-              >
-                {LOCALE_LABELS[supportedLocale]}
-              </a>
+              {/*
+                * A saved language preference outranks navigation, so the
+                * switch has to change the preference rather than link past
+                * it — otherwise the middleware would send the visitor back.
+                */}
+              <form action={chooseLocaleAction} className="flex">
+                <input
+                  type="hidden"
+                  name="next"
+                  value={`/${supportedLocale}/events/${slug}`}
+                />
+                <button
+                  type="submit"
+                  name="to"
+                  value={supportedLocale}
+                  aria-current={supportedLocale === locale ? 'true' : undefined}
+                  className={
+                    supportedLocale === locale
+                      ? 'inline-flex min-h-11 cursor-pointer items-center font-medium text-accent'
+                      : 'inline-flex min-h-11 cursor-pointer items-center opacity-85 transition-opacity hover:opacity-100'
+                  }
+                >
+                  {LOCALE_LABELS[supportedLocale]}
+                </button>
+              </form>
             </span>
           ))}
         </div>

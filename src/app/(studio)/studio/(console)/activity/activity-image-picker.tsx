@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react';
 import type { Locale } from '@/config/locales';
-import SessionCover from '@/features/cinematic/components/session-cover';
+import { SessionCover } from '@/features/cinematic/components';
 import { uploadActivityImageAction } from './actions';
 
 export interface MediaOption {

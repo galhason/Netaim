@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
-import { BRAND_NAME } from '@/config/brand';
+import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { ConferenceFooter, SITE_NAV_LINKS } from '@/features/cinematic';
 import { ExperienceNav } from '@/features/conference';
@@ -36,7 +36,7 @@ const ExperienceLayout = async ({ children, params }: ExperienceLayoutProps) => 
       <ExperienceNav
         locale={lang}
         links={SITE_NAV_LINKS}
-        brand={BRAND_NAME}
+        brand={brandFor(lang)}
         registerHref={registerHref}
         meHref={`/${lang}/me`}
         userName={participant?.name ?? undefined}
@@ -45,9 +45,17 @@ const ExperienceLayout = async ({ children, params }: ExperienceLayoutProps) => 
           : {})}
       />
       {children}
-      <ConferenceFooter locale={lang} brand={BRAND_NAME} />
+      <ConferenceFooter locale={lang} brand={brandFor(lang)} />
     </div>
   );
 };
+
+/*
+ * This layout resolves who is looking, so every page beneath it depends
+ * on the visitor and none may be prerendered or shared. Declared rather
+ * than left to Next to infer: an inferred guard disappears the moment a
+ * refactor moves the read behind a helper.
+ */
+export const dynamic = 'force-dynamic';
 
 export default ExperienceLayout;

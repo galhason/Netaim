@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from '@/config/locales';
-import { setStudioLocaleAction } from '@/app/(studio)/studio/(classic)/actions';
+import { setStudioLocaleAction } from '@/app/(studio)/studio/actions';
 import ConsoleSidebar from './console-sidebar';
 
 /*

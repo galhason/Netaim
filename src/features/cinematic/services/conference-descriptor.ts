@@ -1,4 +1,5 @@
-import { BRAND_NAME } from '@/config/brand';
+import { brandFor } from '@/config/brand';
+import type { Locale } from '@/config/locales';
 import { applyComposition } from '@/experience-runtime';
 import type { ExperienceDescriptor, SceneInstance } from '@/experience-runtime';
 import {
@@ -50,14 +51,16 @@ const deriveSections = (scenes: SceneInstance[]): NavSection[] => {
 
 export const buildConferenceDescriptor = (
   experience: ConferenceExperience,
+  locale: Locale,
 ): ExperienceDescriptor => {
+  const brand = brandFor(locale);
   const scenes = applyComposition(
     [
       {
         id: 'nav',
         type: CONFERENCE_SCENE_TYPES.nav,
         content: {
-          brand: BRAND_NAME,
+          brand,
           registerHref: experience.registerHref,
           meHref: experience.meHref,
         },
@@ -139,7 +142,7 @@ export const buildConferenceDescriptor = (
       {
         id: 'footer',
         type: CONFERENCE_SCENE_TYPES.footer,
-        content: { brand: BRAND_NAME },
+        content: { brand },
       },
     ],
     completeComposition(experience.composition ?? []),

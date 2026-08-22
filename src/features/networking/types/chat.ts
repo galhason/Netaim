@@ -1,5 +1,5 @@
 /*
- * HASON Messages between two connected people. The repository speaks
+ * Netaim Messages between two connected people. The repository speaks
  * connection ids only; who may read what is the service's law.
  */
 export interface ChatMessage {

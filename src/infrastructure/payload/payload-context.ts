@@ -1,9 +1,9 @@
-import { createHmac } from 'crypto';
 import { cookies, headers } from 'next/headers';
 import { getPayload, type Payload } from 'payload';
 import config from '@payload-config';
 import type { User } from '@/payload-types';
 import { organizationsWithPermission, type Grant } from '@/auth';
+import { SESSION_COOKIE, readSessionCookie } from '@/shared';
 
 export interface ActorContext {
   payload: Payload;
@@ -28,33 +28,55 @@ export const getSystemPayload = (): Promise<Payload> => getPayload({ config });
  */
 /*
  * The account session cookie, verified at the infrastructure seam with
- * the same HMAC contract the identity service signs with. Staff never
- * hold a Payload cookie — their database identity is the derived
- * technical principal, resolved here from the account's email.
+ * the same contract the identity service signs with. Staff never hold a
+ * Payload cookie — their database identity is the derived technical
+ * principal, resolved here from the account's email.
+ *
+ * This reads the session record rather than trusting the cookie alone,
+ * because it must reach the same verdict as the identity service. A
+ * revoked session that still opened the Studio would mean signing out
+ * ended the guest's access and left the operator's standing.
+ *
+ * The lookup cannot go through the repository: the repository resolves
+ * its Payload client from this module.
  */
-const SESSION_COOKIE = 'participant_session';
-const SESSION_SECRET =
-  process.env.REGISTRATION_LINK_SECRET ?? process.env.PAYLOAD_SECRET ?? '';
-
-const signSession = (value: string): string =>
-  createHmac('sha256', SESSION_SECRET).update(value).digest('hex');
-
 const principalFromAccountSession = async (
   payload: Payload,
 ): Promise<User | null> => {
   const store = await cookies();
-  const raw = store.get(SESSION_COOKIE)?.value;
-  if (!raw) {
+  const now = new Date();
+  const tokenHash = readSessionCookie(
+    store.get(SESSION_COOKIE)?.value,
+    now.getTime(),
+  );
+  if (!tokenHash) {
     return null;
   }
-  const [id, signature] = raw.split('.');
-  if (!id || !signature || signSession(id) !== signature) {
+  const sessions = await payload
+    .find({
+      collection: 'account-sessions',
+      where: {
+        and: [
+          { tokenHash: { equals: tokenHash } },
+          { revokedAt: { exists: false } },
+          { expiresAt: { greater_than: now.toISOString() } },
+        ],
+      },
+      limit: 1,
+      depth: 0,
+      overrideAccess: true,
+    })
+    .catch(() => null);
+  const session = sessions?.docs[0] as
+    | { participant?: number | string }
+    | undefined;
+  if (session?.participant === undefined) {
     return null;
   }
   const account = await payload
     .findByID({
       collection: 'participants',
-      id,
+      id: session.participant,
       depth: 0,
       overrideAccess: true,
     })

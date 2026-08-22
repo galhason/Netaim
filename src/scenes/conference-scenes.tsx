@@ -66,16 +66,32 @@ interface ConferenceFooterContent {
   brand: string;
 }
 
+/*
+ * The one scene that depends on who is asking. The viewer arrives as
+ * render context beside `locale` — never on `content`, which comes from
+ * the cached descriptor and would therefore be shared with the next
+ * visitor. The renderer stays synchronous: making one scene async would
+ * couple the whole scene system to an async renderer, which is what the
+ * locked snapshots caught the first time this was tried.
+ * `tests/unit/nav-viewer.test.ts` holds both properties.
+ */
 const NavRenderer = ({
   content,
   locale,
+  viewer,
 }: SceneComponentProps<ConferenceNavContent>) => (
   <CinematicNav
     locale={locale}
     registerHref={content.registerHref}
-    meHref={content.meHref}
+    /*
+     * The viewer's own destination wins. `content.meHref` is the
+     * descriptor's guess for someone it cannot see, and is what a
+     * signed-out visitor follows to sign in.
+     */
+    meHref={viewer?.href ?? content.meHref}
     brand={content.brand}
     sections={content.sections}
+    viewer={viewer ?? null}
   />
 );
 

@@ -8,7 +8,12 @@ interface Template {
 
 /*
  * Bilingual confirmation language (Objective 6): calm, reassuring, human.
- * CMS-managed templates are a future extension; the shape does not change.
+ *
+ * These are the platform's words, and they stay here: a conference that
+ * says nothing gets language that already reads well, in both locales,
+ * without an editor having to write seven emails before it can open
+ * registration. What an organizer writes instead arrives as an argument
+ * — the engine renders, it does not fetch.
  */
 const TEMPLATES: Record<RegistrationEventType, Template> = {
   'registration.confirmed': {
@@ -67,10 +72,40 @@ export interface RenderedNotification {
   body: string;
 }
 
+/*
+ * What one conference chose to say instead. Partial by design and
+ * per‑field: an organizer who rewrites only the subject of the
+ * confirmation keeps the platform's body, and every message the
+ * organizer never touched keeps its own wording. A blank field is not a
+ * choice to send an empty email.
+ */
+export type RegistrationTemplateOverrides = Partial<
+  Record<RegistrationEventType, { subject?: string; body?: string }>
+>;
+
+const chosen = (override: string | undefined, fallback: string): string => {
+  const trimmed = override?.trim() ?? '';
+  return trimmed === '' ? fallback : trimmed;
+};
+
 export const renderRegistrationNotification = (
   type: RegistrationEventType,
   locale: Locale,
+  overrides?: RegistrationTemplateOverrides,
 ): RenderedNotification => {
   const template = TEMPLATES[type];
-  return { subject: template.subject[locale], body: template.body[locale] };
+  const override = overrides?.[type];
+  return {
+    subject: chosen(override?.subject, template.subject[locale]),
+    body: chosen(override?.body, template.body[locale]),
+  };
 };
+
+/* The platform's own wording, for a Studio form to show as the default. */
+export const defaultRegistrationTemplate = (
+  type: RegistrationEventType,
+  locale: Locale,
+): RenderedNotification => ({
+  subject: TEMPLATES[type].subject[locale],
+  body: TEMPLATES[type].body[locale],
+});

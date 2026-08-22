@@ -8,7 +8,7 @@ import { sendChatAction } from './actions';
 import ChatRefresh from './chat-refresh';
 
 /*
- * The HASON Messages thread (Connection Framework v1.0): the default
+ * The Netaim Messages thread (Connection Framework v1.0): the default
  * channel of every accepted connection. Two people, their words, and
  * the other channels one tap away — exactly as much as was approved.
  */

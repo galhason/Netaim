@@ -84,7 +84,17 @@ export interface VenueFact {
 export interface VenueScene {
   name: string;
   subtitle?: string;
+  /*
+   * The written address. `subtitle` is the conference's `location`
+   * field, which is often a city; this is what a map can actually find.
+   */
+  address?: string;
+  /* An editor's pinned link, preferred over a generated search. */
+  mapUrl?: string;
+  mapLabel?: string;
   narrative: string;
+  accessibility?: string;
+  emergency?: string;
   image: string;
   facts: VenueFact[];
 }

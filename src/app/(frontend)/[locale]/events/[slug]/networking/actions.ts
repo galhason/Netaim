@@ -109,7 +109,12 @@ export const manageConnectionAction = async (formData: FormData) => {
   if (!isSupportedLocale(locale) || !connectionId) {
     return;
   }
-  if (manage !== 'mute' && manage !== 'unmute' && manage !== 'remove') {
+  if (
+    manage !== 'mute' &&
+    manage !== 'unmute' &&
+    manage !== 'remove' &&
+    manage !== 'withdraw'
+  ) {
     return;
   }
   await manageMyConnection(connectionId, manage);

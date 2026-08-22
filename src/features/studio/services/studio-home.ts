@@ -1,6 +1,5 @@
 import type { Locale } from '@/config/locales';
 import { computeEventHealth } from '@/event-engine';
-import { inspectExperience } from '@/experience-engine';
 import {
   DEMO_EVENT_SLUG,
   getEventExperience,
@@ -8,6 +7,7 @@ import {
   listEvents,
   reviewLaunch,
   toEventHealthInput,
+  type JourneyReadinessFacts,
 } from '@/features/events';
 import {
   buildHomeDigest,
@@ -16,6 +16,28 @@ import {
 } from '../utils/home-digest';
 
 const DEMO_EVENT_START = '2026-09-01T06:00:00Z';
+
+/*
+ * The demo conference is a fixture, so its readiness is written down
+ * rather than read off a journey: there is no stored composition to
+ * compose and no opening record behind it. A complete, healthy set —
+ * Home in development should show what a finished conference looks
+ * like, not a wall of blockers about data that was never meant to exist.
+ */
+const DEMO_READINESS_FACTS: JourneyReadinessFacts = {
+  experience: {
+    sceneCount: 8,
+    hasHero: true,
+    heroHasImage: true,
+    hasJoin: true,
+  },
+  program: { sessions: [], speakersWithoutPhoto: 0 },
+  venue: {
+    present: true,
+    hasAccessibilityInfo: true,
+    hasEmergencyInfo: true,
+  },
+};
 
 const demoDigest = async (locale: Locale): Promise<StudioHomeDigest | null> => {
   if (!isDemoContentEnabled()) {
@@ -28,7 +50,7 @@ const demoDigest = async (locale: Locale): Promise<StudioHomeDigest | null> => {
     return null;
   }
   const health = computeEventHealth(
-    toEventHealthInput(content, {
+    toEventHealthInput(DEMO_READINESS_FACTS, {
       phase: 'planning',
       publishStatus: 'published',
       capabilities: ['registration', 'notifications'],
@@ -36,7 +58,7 @@ const demoDigest = async (locale: Locale): Promise<StudioHomeDigest | null> => {
       missingTranslations: 0,
       translationCompleteness: 100,
       mediaCompleteness: 80,
-      experienceFindings: inspectExperience(content.scenes),
+      experienceFindings: [],
     }),
   );
   return {

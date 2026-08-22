@@ -58,7 +58,7 @@ describe('public experience markup', () => {
   it('renders the opening experience exactly as locked', () => {
     const markup = renderToString(
       <ExperienceStage
-        experience={buildOpeningDescriptor(fallbackOpeningContent('he'))}
+        experience={buildOpeningDescriptor(fallbackOpeningContent('he'), 'he')}
         locale="he"
       />,
     );
@@ -68,7 +68,7 @@ describe('public experience markup', () => {
   it('renders the opening experience in English exactly as locked', () => {
     const markup = renderToString(
       <ExperienceStage
-        experience={buildOpeningDescriptor(fallbackOpeningContent('en'))}
+        experience={buildOpeningDescriptor(fallbackOpeningContent('en'), 'en')}
         locale="en"
       />,
     );
@@ -78,7 +78,7 @@ describe('public experience markup', () => {
   it('renders the conference experience exactly as locked', () => {
     const markup = renderToString(
       <ExperienceStage
-        experience={buildConferenceDescriptor(fallbackConference('he'))}
+        experience={buildConferenceDescriptor(fallbackConference('he'), 'he')}
         locale="he"
       />,
     );
@@ -88,7 +88,7 @@ describe('public experience markup', () => {
   it('renders the conference experience in English exactly as locked', () => {
     const markup = renderToString(
       <ExperienceStage
-        experience={buildConferenceDescriptor(fallbackConference('en'))}
+        experience={buildConferenceDescriptor(fallbackConference('en'), 'en')}
         locale="en"
       />,
     );

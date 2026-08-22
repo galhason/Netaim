@@ -1,4 +1,8 @@
-import { accountGrants, ensureFounder } from '@/features/access';
+import {
+  accountGrants,
+  ensureFounder,
+  type AuditActor,
+} from '@/features/access';
 import { currentParticipant } from '@/features/registration';
 import { can, type Capability, type Grant } from '@/permission-engine';
 import type { StudioCreator } from '../types/creator';
@@ -62,3 +66,29 @@ export const requireCapability = async (
   }
   return access;
 };
+
+/*
+ * Defence in depth (Identity Architecture §4): every action re-derives
+ * the actor and its capability from the database before touching
+ * anything. The interface is never trusted; a hidden button is not a
+ * permission.
+ *
+ * These live beside the gate rather than in any one action module,
+ * because two copies of "may this person do this" is how the two copies
+ * come to disagree — and the permissive one wins.
+ */
+export const authorized = async (
+  capability: Capability,
+  eventSlug?: string,
+): Promise<boolean> => (await requireCapability(capability, eventSlug)) !== null;
+
+/*
+ * The same gate, but keeping the actor. An action that records to the
+ * audit trail needs the hand as well as the permission, and taking both
+ * from one call means the trail can never name the wrong person.
+ */
+export const actorFor = async (
+  capability: Capability,
+  eventSlug?: string,
+): Promise<AuditActor | null> =>
+  (await requireCapability(capability, eventSlug))?.creator ?? null;

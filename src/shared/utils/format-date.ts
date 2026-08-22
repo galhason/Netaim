@@ -1,6 +1,21 @@
 import type { Locale } from '@/config/locales';
 
 /*
+ * The clock every schedule is read on.
+ *
+ * A conference is not always in Israel — Prague, Berlin and New York are
+ * all plausible — so the zone is a property of the conference, stored on
+ * its record and passed in. This constant is only the fallback for a
+ * surface that has not been told, and for the conference that has not
+ * chosen.
+ *
+ * It matters in both directions. A producer typing 14:00 into the Studio
+ * means 14:00 at the venue, and a guest reading the programme must see
+ * the same 14:00 — wherever the server runs and wherever they are.
+ */
+export const DEFAULT_VENUE_TIMEZONE = 'Asia/Jerusalem';
+
+/*
  * One long-form date formatter for public surfaces: locale-aware,
  * tolerant of missing or malformed input (returns an empty string so
  * callers can fall back to their own copy).
@@ -31,6 +46,7 @@ export const formatLongDate = (
 export const formatTimeLabel = (
   iso: string | undefined,
   locale: Locale,
+  timeZone: string = DEFAULT_VENUE_TIMEZONE,
 ): string => {
   if (!iso) {
     return '';
@@ -43,7 +59,7 @@ export const formatTimeLabel = (
     hour: '2-digit',
     minute: '2-digit',
     hourCycle: 'h23',
-    timeZone: 'Asia/Jerusalem',
+    timeZone,
   }).format(new Date(parsed));
 };
 
@@ -53,6 +69,7 @@ export const formatTimeLabel = (
 export const formatDayLabel = (
   iso: string | undefined,
   locale: Locale,
+  timeZone: string = DEFAULT_VENUE_TIMEZONE,
 ): string => {
   if (!iso) {
     return '';
@@ -65,7 +82,7 @@ export const formatDayLabel = (
     weekday: 'short',
     day: 'numeric',
     month: 'numeric',
-    timeZone: 'Asia/Jerusalem',
+    timeZone,
   }).format(new Date(parsed));
 };
 
@@ -75,9 +92,10 @@ export const formatDayLabel = (
  * and a datetime-local value entered by the producer is read AS Israel
  * time — wherever the server happens to run.
  */
-const VENUE_TZ = 'Asia/Jerusalem';
-
-export const toDateTimeInputValue = (iso: string | undefined): string => {
+export const toDateTimeInputValue = (
+  iso: string | undefined,
+  timeZone: string = DEFAULT_VENUE_TIMEZONE,
+): string => {
   if (!iso) {
     return '';
   }
@@ -86,7 +104,7 @@ export const toDateTimeInputValue = (iso: string | undefined): string => {
     return '';
   }
   const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: VENUE_TZ,
+    timeZone,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -99,10 +117,10 @@ export const toDateTimeInputValue = (iso: string | undefined): string => {
   return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;
 };
 
-const venueOffsetMinutes = (at: number): number => {
+const venueOffsetMinutes = (at: number, timeZone: string): number => {
   const name =
     new Intl.DateTimeFormat('en-US', {
-      timeZone: VENUE_TZ,
+      timeZone,
       timeZoneName: 'longOffset',
     })
       .formatToParts(new Date(at))
@@ -117,6 +135,7 @@ const venueOffsetMinutes = (at: number): number => {
 
 export const fromDateTimeInputValue = (
   value: string | undefined,
+  timeZone: string = DEFAULT_VENUE_TIMEZONE,
 ): string | undefined => {
   if (!value || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) {
     return undefined;
@@ -126,7 +145,7 @@ export const fromDateTimeInputValue = (
     return undefined;
   }
   /* two passes so a DST boundary lands on the right side */
-  let timestamp = utcGuess - venueOffsetMinutes(utcGuess) * 60000;
-  timestamp = utcGuess - venueOffsetMinutes(timestamp) * 60000;
+  let timestamp = utcGuess - venueOffsetMinutes(utcGuess, timeZone) * 60000;
+  timestamp = utcGuess - venueOffsetMinutes(timestamp, timeZone) * 60000;
   return new Date(timestamp).toISOString();
 };

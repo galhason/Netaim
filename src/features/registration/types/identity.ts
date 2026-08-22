@@ -1,3 +1,4 @@
+import type { Locale } from '@/config/locales';
 import type { ParticipantSummary } from './registration';
 
 /*
@@ -23,7 +24,7 @@ export interface ParticipantDetailsView extends ParticipantDetailsInput {
 /*
  * Connection Framework v1.0: which channels a participant opens to the
  * connections they approved. Private by default — phone and email start
- * OFF; HASON Messages is always available and never stored.
+ * OFF; Netaim Messages is always available and never stored.
  */
 export interface ContactPreferences {
   whatsapp: boolean;
@@ -82,7 +83,14 @@ export interface ParticipantSessionRepository {
     email: string,
     name: string,
     passwordHash: string,
+    preferredLocale: Locale,
   ) => Promise<OpenAccountResult>;
+  /*
+   * The site language the participant chose. Mirrored into a cookie on
+   * sign-in so the edge middleware can serve every page in it.
+   */
+  localePreference: (id: string) => Promise<Locale | null>;
+  setLocalePreference: (id: string, locale: Locale) => Promise<void>;
   updateParticipantDetails: (
     id: string,
     input: ParticipantDetailsInput,
@@ -108,6 +116,27 @@ export interface ParticipantSessionRepository {
     tokenHash: string,
     now: string,
   ) => Promise<{ participant: ParticipantSummary } | null>;
+  /*
+   * Live sign-ins. The cookie names a session, not an account, so that
+   * signing out can end it: deleting a cookie only asks the browser to
+   * forget: it cannot reach a copy of the value taken beforehand.
+   *
+   * `resolveSession` returns the participant rather than a session row,
+   * so that reading the cookie stays one query — it replaces the
+   * lookup-by-id it used to do, instead of adding to it.
+   */
+  openSession: (
+    participantId: string,
+    tokenHash: string,
+    expiresAt: string,
+  ) => Promise<void>;
+  resolveSession: (
+    tokenHash: string,
+    now: string,
+  ) => Promise<ParticipantSummary | null>;
+  revokeSession: (tokenHash: string, at: string) => Promise<void>;
+  /* Signing out everywhere, and the answer to a stolen device. */
+  revokeAllSessions: (participantId: string, at: string) => Promise<void>;
   participantById: (id: string) => Promise<ParticipantSummary | null>;
   /*
    * Contact governance (Connection Framework v1.0): read a

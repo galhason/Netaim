@@ -80,7 +80,10 @@ export interface Config {
     registrations: Registration;
     'registration-settings': RegistrationSetting;
     'participant-sessions': ParticipantSession;
+    'account-sessions': AccountSession;
     notifications: Notification;
+    'rate-limits': RateLimit;
+    'audit-log': AuditLog;
     rooms: Room;
     sessions: Session;
     'session-registrations': SessionRegistration;
@@ -108,7 +111,10 @@ export interface Config {
     registrations: RegistrationsSelect<false> | RegistrationsSelect<true>;
     'registration-settings': RegistrationSettingsSelect<false> | RegistrationSettingsSelect<true>;
     'participant-sessions': ParticipantSessionsSelect<false> | ParticipantSessionsSelect<true>;
+    'account-sessions': AccountSessionsSelect<false> | AccountSessionsSelect<true>;
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
+    'rate-limits': RateLimitsSelect<false> | RateLimitsSelect<true>;
+    'audit-log': AuditLogSelect<false> | AuditLogSelect<true>;
     rooms: RoomsSelect<false> | RoomsSelect<true>;
     sessions: SessionsSelect<false> | SessionsSelect<true>;
     'session-registrations': SessionRegistrationsSelect<false> | SessionRegistrationsSelect<true>;
@@ -243,6 +249,18 @@ export interface Event {
   startsAt?: string | null;
   endsAt?: string | null;
   location?: string | null;
+  timezone?:
+    | (
+        | 'Asia/Jerusalem'
+        | 'Europe/Berlin'
+        | 'Europe/London'
+        | 'America/New_York'
+        | 'America/Chicago'
+        | 'America/Los_Angeles'
+        | 'Asia/Dubai'
+        | 'UTC'
+      )
+    | null;
   teaser?: string | null;
   poster?: (number | null) | Media;
   heroImage?: (number | null) | Media;
@@ -297,6 +315,9 @@ export interface Event {
       | null;
     venue?: {
       name?: string | null;
+      address?: string | null;
+      mapUrl?: string | null;
+      mapLabel?: string | null;
       narrative?: string | null;
       accessibilityInfo?: string | null;
       emergencyInfo?: string | null;
@@ -419,6 +440,10 @@ export interface Participant {
   totpSecret?: string | null;
   totpEnabledAt?: string | null;
   phone?: string | null;
+  /**
+   * Site language while this participant is signed in
+   */
+  preferredLocale?: ('he' | 'en') | null;
   /**
    * Which channels open to approved connections. Private by default.
    */
@@ -560,6 +585,36 @@ export interface RegistrationSetting {
   collectPhone?: boolean | null;
   collectAccessibility?: boolean | null;
   collectDietary?: boolean | null;
+  emailTemplates?: {
+    confirmed?: {
+      subject?: string | null;
+      body?: string | null;
+    };
+    pending?: {
+      subject?: string | null;
+      body?: string | null;
+    };
+    waitlisted?: {
+      subject?: string | null;
+      body?: string | null;
+    };
+    approved?: {
+      subject?: string | null;
+      body?: string | null;
+    };
+    declined?: {
+      subject?: string | null;
+      body?: string | null;
+    };
+    promoted?: {
+      subject?: string | null;
+      body?: string | null;
+    };
+    cancelled?: {
+      subject?: string | null;
+      body?: string | null;
+    };
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -580,6 +635,20 @@ export interface ParticipantSession {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "account-sessions".
+ */
+export interface AccountSession {
+  id: number;
+  organization: number | Organization;
+  participant: number | Participant;
+  tokenHash: string;
+  expiresAt: string;
+  revokedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "notifications".
  */
 export interface Notification {
@@ -594,6 +663,46 @@ export interface Notification {
   subject?: string | null;
   body?: string | null;
   sentAt?: string | null;
+  attempts?: number | null;
+  lastError?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rate-limits".
+ */
+export interface RateLimit {
+  id: number;
+  bucket: string;
+  attempts: number;
+  windowStartedAt: string;
+  blockedUntil?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-log".
+ */
+export interface AuditLog {
+  id: number;
+  organization: number | Organization;
+  action: string;
+  actor?: (number | null) | Participant;
+  actorName?: string | null;
+  actorEmail?: string | null;
+  subject?: string | null;
+  subjectLabel?: string | null;
+  detail?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -815,8 +924,20 @@ export interface PayloadLockedDocument {
         value: number | ParticipantSession;
       } | null)
     | ({
+        relationTo: 'account-sessions';
+        value: number | AccountSession;
+      } | null)
+    | ({
         relationTo: 'notifications';
         value: number | Notification;
+      } | null)
+    | ({
+        relationTo: 'rate-limits';
+        value: number | RateLimit;
+      } | null)
+    | ({
+        relationTo: 'audit-log';
+        value: number | AuditLog;
       } | null)
     | ({
         relationTo: 'rooms';
@@ -971,6 +1092,7 @@ export interface EventsSelect<T extends boolean = true> {
   startsAt?: T;
   endsAt?: T;
   location?: T;
+  timezone?: T;
   teaser?: T;
   poster?: T;
   heroImage?: T;
@@ -1024,6 +1146,9 @@ export interface EventsSelect<T extends boolean = true> {
           | T
           | {
               name?: T;
+              address?: T;
+              mapUrl?: T;
+              mapLabel?: T;
               narrative?: T;
               accessibilityInfo?: T;
               emergencyInfo?: T;
@@ -1129,6 +1254,7 @@ export interface ParticipantsSelect<T extends boolean = true> {
   totpSecret?: T;
   totpEnabledAt?: T;
   phone?: T;
+  preferredLocale?: T;
   contactPrefs?:
     | T
     | {
@@ -1195,6 +1321,52 @@ export interface RegistrationSettingsSelect<T extends boolean = true> {
   collectPhone?: T;
   collectAccessibility?: T;
   collectDietary?: T;
+  emailTemplates?:
+    | T
+    | {
+        confirmed?:
+          | T
+          | {
+              subject?: T;
+              body?: T;
+            };
+        pending?:
+          | T
+          | {
+              subject?: T;
+              body?: T;
+            };
+        waitlisted?:
+          | T
+          | {
+              subject?: T;
+              body?: T;
+            };
+        approved?:
+          | T
+          | {
+              subject?: T;
+              body?: T;
+            };
+        declined?:
+          | T
+          | {
+              subject?: T;
+              body?: T;
+            };
+        promoted?:
+          | T
+          | {
+              subject?: T;
+              body?: T;
+            };
+        cancelled?:
+          | T
+          | {
+              subject?: T;
+              body?: T;
+            };
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1214,6 +1386,19 @@ export interface ParticipantSessionsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "account-sessions_select".
+ */
+export interface AccountSessionsSelect<T extends boolean = true> {
+  organization?: T;
+  participant?: T;
+  tokenHash?: T;
+  expiresAt?: T;
+  revokedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "notifications_select".
  */
 export interface NotificationsSelect<T extends boolean = true> {
@@ -1227,6 +1412,36 @@ export interface NotificationsSelect<T extends boolean = true> {
   subject?: T;
   body?: T;
   sentAt?: T;
+  attempts?: T;
+  lastError?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rate-limits_select".
+ */
+export interface RateLimitsSelect<T extends boolean = true> {
+  bucket?: T;
+  attempts?: T;
+  windowStartedAt?: T;
+  blockedUntil?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-log_select".
+ */
+export interface AuditLogSelect<T extends boolean = true> {
+  organization?: T;
+  action?: T;
+  actor?: T;
+  actorName?: T;
+  actorEmail?: T;
+  subject?: T;
+  subjectLabel?: T;
+  detail?: T;
   updatedAt?: T;
   createdAt?: T;
 }

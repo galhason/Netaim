@@ -1,4 +1,5 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
+import { BRAND_LATIN } from '@/config/brand';
 
 /*
  * TOTP (RFC 6238) with nothing but node's crypto: the authenticator
@@ -88,6 +89,15 @@ export const verifyTotp = (
   return false;
 };
 
-/* The QR the authenticator app scans. */
+/*
+ * The QR the authenticator app scans. The label and issuer carry the
+ * Latin mark: an otpauth URI is read by third-party software whose
+ * rendering of Hebrew cannot be relied on, and the entry is a name the
+ * guest must recognise in a list months later.
+ *
+ * Changing this renames the entry for new enrolments only. An
+ * authenticator already holding a secret keeps showing the old name,
+ * because the name is not part of what it stores.
+ */
 export const otpauthUrl = (email: string, secret: string): string =>
-  `otpauth://totp/${encodeURIComponent(`HASON:${email}`)}?secret=${secret}&issuer=HASON&period=${PERIOD_SECONDS}&digits=${DIGITS}`;
+  `otpauth://totp/${encodeURIComponent(`${BRAND_LATIN}:${email}`)}?secret=${secret}&issuer=${BRAND_LATIN}&period=${PERIOD_SECONDS}&digits=${DIGITS}`;

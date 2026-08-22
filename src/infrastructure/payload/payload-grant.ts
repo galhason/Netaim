@@ -202,7 +202,7 @@ export const payloadAccountGrantRepository: GrantRepository = {
     const found = await payload.find({
       collection: 'account-grants',
       depth: 1,
-      limit: 500,
+      pagination: false,
       sort: '-grantedAt',
       overrideAccess: true,
     });

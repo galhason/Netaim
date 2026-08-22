@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
-import { BRAND_NAME } from '@/config/brand';
+import { brandFor } from '@/config/brand';
 import { ConferenceFooter, SITE_NAV_LINKS } from '@/features/cinematic';
 import { ExperienceNav } from '@/features/conference';
 import {
@@ -78,7 +78,7 @@ const Shell = ({
     <ExperienceNav
       locale={locale}
       links={SITE_NAV_LINKS}
-      brand={BRAND_NAME}
+      brand={brandFor(locale)}
       registerHref={`/${locale}/events/${slug}/register`}
       meHref={`/${locale}/me`}
       userName={userName}
@@ -87,7 +87,7 @@ const Shell = ({
         : {})}
     />
     {children}
-    <ConferenceFooter locale={locale} brand={BRAND_NAME} />
+    <ConferenceFooter locale={locale} brand={brandFor(locale)} />
   </div>
 );
 
@@ -457,5 +457,14 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
     </Shell>
   );
 };
+
+/*
+ * The response depends on who is asking, so it is rendered per request
+ * and never prerendered or shared. Declared rather than left to Next to
+ * infer from a cookie read: an inferred guard disappears the moment a
+ * refactor moves that read behind a helper, and the failure would be a
+ * privacy leak that nothing announces.
+ */
+export const dynamic = 'force-dynamic';
 
 export default RegisterPage;

@@ -2,6 +2,12 @@ import type { ConnectionStatus } from '@/networking-engine';
 
 export interface ConnectionSummary {
   id: string;
+  /*
+   * The conference this connection was filed in. Carried on the record
+   * rather than taken from whichever form is acting on it, so a note
+   * about the connection cannot be written into the wrong conference.
+   */
+  slug: string;
   requesterId: string;
   requesterName: string;
   addresseeId: string;

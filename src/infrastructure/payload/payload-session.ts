@@ -148,7 +148,7 @@ export const payloadSessionRepository: SessionRepository = {
       locale,
       depth: 2,
       sort: 'startsAt',
-      limit: 500,
+      pagination: false,
       overrideAccess: true,
     });
     return (result.docs as unknown as SessionRow[]).map(toSession);
@@ -373,7 +373,7 @@ export const payloadSessionRegistrationRepository: SessionRegistrationRepository
           ],
         },
         depth: 0,
-        limit: 200,
+        pagination: false,
         overrideAccess: true,
       });
       return (result.docs as unknown as SessionRegRow[]).map(toRegistration);
@@ -390,7 +390,7 @@ export const payloadSessionRegistrationRepository: SessionRegistrationRepository
           ],
         },
         depth: 0,
-        limit: 500,
+        pagination: false,
         overrideAccess: true,
       });
       return (
@@ -413,7 +413,7 @@ export const payloadSessionRegistrationRepository: SessionRegistrationRepository
           ],
         },
         depth: 0,
-        limit: 500,
+        pagination: false,
         sort: 'waitlistPosition',
         overrideAccess: true,
       });

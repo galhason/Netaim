@@ -65,3 +65,18 @@ No duplicated code, no unnecessary comments, no banner comments, no emoji, no co
 ## Definition of Done (per Sprint)
 
 No TypeScript errors, no ESLint errors, no duplicated/temporary/debugging code, code review checklist passed, documentation updated, architecture preserved, responsive verified, accessibility verified, QA completed.
+
+## The one place `console` is allowed
+
+`scripts/**` — maintenance commands an operator runs by hand. Their
+output is their product: a database report nobody reads is worth
+nothing.
+
+`no-console` exists to keep debugging output out of the running
+application. A CLI is not that. Routing the same lines through
+`process.stdout.write` would satisfy the linter and change nothing, so
+the exception is written into `eslint.config.mjs` with its reason rather
+than worked around. It is scoped to that folder; the rule still applies
+everywhere it was meant to.
+
+Nothing in `src/` is covered by this.

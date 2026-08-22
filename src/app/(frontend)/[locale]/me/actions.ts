@@ -72,14 +72,22 @@ export const openAccountAction = async (formData: FormData) => {
     .toLowerCase();
   const name = String(formData.get('name') ?? '').trim();
   const password = String(formData.get('password') ?? '');
+  /* The language chosen on the form is the account's language from now on. */
+  const requested = String(formData.get('preferredLocale') ?? '');
+  const preferred = isSupportedLocale(requested) ? requested : locale;
   if (!email || !name || !password) {
     redirect(`/${locale}/me?state=missing&view=open`);
   }
-  const result = await openAccountWithPassword(email, name, password);
+  const result = await openAccountWithPassword(
+    email,
+    name,
+    password,
+    preferred,
+  );
   if (!result.ok) {
     redirect(`/${locale}/me?state=${result.reason}&view=open`);
   }
-  redirect(`/${locale}/me`);
+  redirect(`/${preferred}/me`);
 };
 
 /*

@@ -8,6 +8,12 @@ import { useCallback, useEffect, useState } from 'react';
  * cards, the activity drawer and the personal dashboard's counter, kept in
  * step through a single event so a star lit in one place lights everywhere.
  */
+/*
+ * A stored key, not a label. It is deliberately not renamed with the
+ * brand: the string is what every guest's saved activities are already
+ * filed under in their own browser, and a new key would silently empty
+ * every one of them.
+ */
 const KEY = 'hason-favorites';
 const EVENT = 'hason-favorites-change';
 

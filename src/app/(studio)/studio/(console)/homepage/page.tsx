@@ -21,7 +21,7 @@ import {
   getStudioLocale,
 } from '@/features/studio';
 import { resolveScene } from '@/experience-runtime';
-import { saveHomepageAction } from '../../(classic)/actions';
+import { saveHomepageAction } from '../../actions';
 import {
   moveHomepageSceneAction,
   toggleHomepageSceneAction,
@@ -64,7 +64,7 @@ const ConsoleHomepage = async ({ searchParams }: ConsoleHomepageProps) => {
     listMedia().catch(() => []),
   ]);
 
-  const descriptor = buildOpeningDescriptor(opening);
+  const descriptor = buildOpeningDescriptor(opening, contentLocale);
   const selectedScene =
     descriptor.scenes.find((scene) => scene.id === sceneParam) ??
     descriptor.scenes.find((scene) => HOMEPAGE_SCENE_GROUPS[scene.type]);
@@ -219,7 +219,7 @@ const ConsoleHomepage = async ({ searchParams }: ConsoleHomepageProps) => {
               <p>{CONSOLE_UI.editedInEvent[locale]}</p>
               {opening.posters[0]?.slug ? (
                 <Link
-                  href={`/studio/events/${opening.posters[0].slug}/opening`}
+                  href={`/studio/experiences/${opening.posters[0].slug}`}
                   className="text-[var(--c-bronze)] underline underline-offset-4"
                 >
                   {CONSOLE_UI.toEventEditor[locale]}
@@ -344,5 +344,14 @@ const ConsoleHomepage = async ({ searchParams }: ConsoleHomepageProps) => {
     </ConsoleShell>
   );
 };
+
+/*
+ * The response depends on who is asking, so it is rendered per request
+ * and never prerendered or shared. Declared rather than left to Next to
+ * infer from a cookie read: an inferred guard disappears the moment a
+ * refactor moves that read behind a helper, and the failure would be a
+ * privacy leak that nothing announces.
+ */
+export const dynamic = 'force-dynamic';
 
 export default ConsoleHomepage;

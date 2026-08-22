@@ -22,7 +22,11 @@ export const canRespond = (status: ConnectionStatus): boolean =>
  * request may follow). Pure decisions only — who may mute is the
  * application layer's concern.
  */
-export type ConnectionManageAction = 'mute' | 'unmute' | 'remove';
+export type ConnectionManageAction =
+  | 'mute'
+  | 'unmute'
+  | 'remove'
+  | 'withdraw';
 
 export const manageConnection = (
   status: ConnectionStatus,
@@ -35,6 +39,21 @@ export const manageConnection = (
     return { ok: true, status: 'accepted' };
   }
   if (action === 'remove' && (status === 'accepted' || status === 'muted')) {
+    return { ok: true, status: 'removed' };
+  }
+  /*
+   * Taking back a request nobody has answered yet.
+   *
+   * `remove` deliberately refuses a pending connection — removing is
+   * something you do to a relationship that exists. But that left a
+   * request with no way out at all: the sender could not withdraw it and
+   * the receiver was under no obligation to answer, so it sat in both
+   * lists forever. Whoever sent it should be able to change their mind.
+   *
+   * It lands on `removed` rather than `declined`, because nobody
+   * declined anything — and `removed` frees the pair to try again.
+   */
+  if (action === 'withdraw' && status === 'pending') {
     return { ok: true, status: 'removed' };
   }
   return { ok: false, status };

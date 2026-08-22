@@ -12,3 +12,6 @@ media/
 
 # scratch
 _to_delete/
+
+# Runtime logs (see LOG_DIR and src/shared/logging/file-transport.ts)
+logs/

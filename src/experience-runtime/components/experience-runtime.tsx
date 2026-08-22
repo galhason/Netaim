@@ -1,7 +1,7 @@
 import type { Locale } from '@/config/locales';
 import { resolveScene } from '../registry/scene-registry';
 import type { ExperienceDescriptor } from '../types/experience';
-import type { RuntimeMode } from '../types/scene';
+import type { RuntimeMode, SceneViewer } from '../types/scene';
 
 /*
  * The one renderer of the platform (Constitution v2 §1, §12). It takes
@@ -13,12 +13,14 @@ interface ExperienceRuntimeProps {
   experience: ExperienceDescriptor;
   mode?: RuntimeMode;
   locale: Locale;
+  viewer?: SceneViewer | null;
 }
 
 export const ExperienceRuntime = ({
   experience,
   mode = 'read',
   locale,
+  viewer = null,
 }: ExperienceRuntimeProps) => (
   <>
     {experience.scenes
@@ -64,6 +66,7 @@ export const ExperienceRuntime = ({
               content={scene.content}
               mode={mode}
               locale={locale}
+              viewer={viewer}
               variant={variant}
               density={density}
               emphasis={emphasis}
@@ -75,6 +78,7 @@ export const ExperienceRuntime = ({
             content={scene.content}
             mode={mode}
             locale={locale}
+            viewer={viewer}
             variant={variant}
             density={density}
             emphasis={emphasis}

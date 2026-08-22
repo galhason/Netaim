@@ -74,6 +74,14 @@ export const ACCOUNT_UI = {
     he: 'זו הפעם הראשונה כאן? הוסיפו שם מלא כדי לפתוח חשבון.',
     en: 'First time here? Add your full name to open an account.',
   },
+  fanoutNote: {
+    he: 'מוצגים חמשת הכנסים האחרונים שלכם. שאר הכנסים זמינים מהעמוד של כל כנס.',
+    en: 'Showing your five most recent conferences. The rest are available from each conference’s own page.',
+  },
+  tooManyLinks: {
+    he: 'נשלחו יותר מדי בקשות לקישור כניסה. בדקו את תיבת הדואר, ונסו שוב בעוד שעה.',
+    en: 'Too many sign-in links requested. Check your inbox, and try again in an hour.',
+  },
   devLink: {
     he: 'סביבת פיתוח — קישור הכניסה:',
     en: 'Development environment — sign-in link:',
@@ -104,6 +112,15 @@ export const ACCOUNT_UI = {
     he: 'לא הצלחנו לצרף אתכם. נסו שוב.',
     en: 'We could not add you. Please try again.',
   },
+  /* Site language: chosen when the account opens, changed from the profile. */
+  languageLabel: { he: 'שפה', en: 'Language' },
+  languageChoiceHint: {
+    he: 'האתר יוצג בשפה הזאת בכל כניסה לחשבון.',
+    en: 'The site opens in this language every time you sign in.',
+  },
+  languageHebrew: { he: 'עברית', en: 'Hebrew' },
+  languageEnglish: { he: 'אנגלית', en: 'English' },
+  languageSaved: { he: 'שפת האתר עודכנה.', en: 'Site language updated.' },
 } as const;
 
 export const ACCOUNT_STATUS_LABELS: Record<string, Record<Locale, string>> = {

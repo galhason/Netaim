@@ -28,3 +28,33 @@ export const registrationAccess: CollectionConfig['access'] = {
   update: scopedByOrganization('registrations:manage'),
   delete: scopedByOrganization('registrations:manage'),
 };
+
+/*
+ * Platform machinery with no organization and no CMS reader: abuse
+ * counters and other operational state. Closed to everyone through the
+ * access layer; the services that own it write with overrideAccess at
+ * the infrastructure seam, exactly as the participant repositories do.
+ */
+const denied = (): boolean => false;
+
+export const platformOnlyAccess: CollectionConfig['access'] = {
+  read: denied,
+  create: denied,
+  update: denied,
+  delete: denied,
+};
+
+/*
+ * The audit trail: readable by anyone who may see the organization's
+ * people data, and otherwise append-only. Update and delete are denied
+ * outright — a record that can be rewritten proves nothing, and that
+ * holds for an owner as much as for anyone else. Entries are written
+ * through the system seam, which bypasses this layer by design; the
+ * closed create keeps the CMS from being a second way in.
+ */
+export const auditAccess: CollectionConfig['access'] = {
+  read: scopedByOrganization('registrations:read'),
+  create: denied,
+  update: denied,
+  delete: denied,
+};

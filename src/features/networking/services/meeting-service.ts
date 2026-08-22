@@ -1,4 +1,8 @@
-import { meetingRepository } from '@/infrastructure';
+import {
+  connectionRepository,
+  meetingRepository,
+  participantSessionRepository,
+} from '@/infrastructure';
 import { currentParticipant } from '@/features/registration';
 import {
   canCancelMeeting,
@@ -6,6 +10,7 @@ import {
   hasConflict,
 } from '@/networking-engine';
 import type { MeetingSummary, MyMeeting } from '../types/meeting';
+import { noticeMeetingProposed } from './networking-notices';
 
 export const proposeMeeting = async (
   slug: string,
@@ -23,7 +28,40 @@ export const proposeMeeting = async (
   if (Number.isNaN(start) || Number.isNaN(end) || start >= end) {
     return null;
   }
-  return meetingRepository.create(slug, me.id, guestId, startsAt, endsAt, location);
+  /*
+   * Two gates that lived only in the interface: the dropdown offered
+   * connected guests who had not closed meetings, and the action took
+   * the guest's id from the form. So a request shaped by hand could put
+   * an appointment in the calendar of someone who had never accepted a
+   * connection, and of someone who had explicitly said no to meetings.
+   *
+   * A filtered list is a courtesy. This is the rule.
+   */
+  const connection = await connectionRepository
+    .findActiveBetween(slug, me.id, guestId)
+    .catch(() => null);
+  if (
+    !connection ||
+    (connection.status !== 'accepted' && connection.status !== 'muted')
+  ) {
+    return null;
+  }
+  const guest = await participantSessionRepository
+    .contactProfileById(guestId)
+    .catch(() => null);
+  if (!guest || !guest.prefs.meetings) {
+    return null;
+  }
+  const meeting = await meetingRepository.create(
+    slug,
+    me.id,
+    guestId,
+    startsAt,
+    endsAt,
+    location,
+  );
+  await noticeMeetingProposed(slug, guestId, me.name);
+  return meeting;
 };
 
 export interface MeetingDecision {

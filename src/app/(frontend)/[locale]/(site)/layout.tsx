@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
-import { BRAND_NAME } from '@/config/brand';
+import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { CinematicNav, ConferenceFooter } from '@/features/cinematic';
 import { getActiveConferenceSlug } from '@/features/events';
+import { currentParticipant } from '@/features/registration';
 
 interface SiteLayoutProps {
   children: ReactNode;
@@ -32,6 +33,12 @@ const SiteLayout = async ({ children, params }: SiteLayoutProps) => {
     ? `/${locale}/events/${slug}/register`
     : `/${locale}`;
   const meHref = `/${locale}/me`;
+  /*
+   * Resolved per request, never cached: the nav says who is looking, and
+   * a shared answer would say it to the wrong person. The layout is
+   * already dynamic because of this read.
+   */
+  const me = await currentParticipant().catch(() => null);
 
   return (
     <div className="cinematic min-h-dvh bg-surface text-text-primary">
@@ -39,13 +46,22 @@ const SiteLayout = async ({ children, params }: SiteLayoutProps) => {
         locale={locale as Locale}
         registerHref={registerHref}
         meHref={meHref}
-        brand={BRAND_NAME}
+        brand={brandFor(locale as Locale)}
+        viewer={me ? { name: me.name || me.email } : null}
         immediate
       />
       {children}
-      <ConferenceFooter locale={locale as Locale} brand={BRAND_NAME} />
+      <ConferenceFooter locale={locale as Locale} brand={brandFor(locale as Locale)} />
     </div>
   );
 };
+
+/*
+ * The nav in this layout says who is looking, so every page beneath it
+ * depends on the visitor and none may be prerendered or shared.
+ * `/contact` in particular was being served with a one-hour revalidate
+ * before this line existed.
+ */
+export const dynamic = 'force-dynamic';
 
 export default SiteLayout;

@@ -2,7 +2,11 @@ import Link from 'next/link';
 import { findEvent, listEvents } from '@/features/events';
 import {
   getRegistrationCounts,
+  getRegistrationSettings,
+  getRegistrationSituation,
   listRegistrations,
+  PUBLIC_STATE_LABELS,
+  REGISTRATION_MESSAGES,
 } from '@/features/registration';
 import { TERMINAL_STATUSES } from '@/registration-engine';
 import {
@@ -13,6 +17,12 @@ import {
   getStudioLocale,
 } from '@/features/studio';
 import { removeEventRegistrationAction } from '../actions';
+import {
+  approveRegistrationAction,
+  declineRegistrationAction,
+  promoteRegistrationAction,
+  saveRegistrationSettingsAction,
+} from '../../actions';
 
 /*
  * Conference info: every experience with its headcount, and — one click
@@ -27,6 +37,16 @@ interface InsightsPageProps {
 
 const dangerButton =
   'rounded-lg border border-[#B0442F]/50 px-3 py-1 text-[11px] text-[#E39A8B] transition-colors hover:bg-[#B0442F]/10';
+const quietButton =
+  'rounded-lg border border-[var(--c-line-strong)] px-3 py-1 text-[11px] text-[var(--c-text-soft)] transition-colors hover:border-[var(--c-bronze)]/50 hover:text-[var(--c-bronze)]';
+const primaryButton =
+  'rounded-lg bg-[var(--c-bronze)] px-3 py-1 text-[11px] font-medium text-[#161006] transition-colors hover:bg-[#dcbe84]';
+const settingsField =
+  'w-full rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-3 py-2 text-sm text-[var(--c-text)] outline-none focus:border-[var(--c-bronze)]/60';
+const settingsLabel =
+  'mb-1.5 block text-[10px] font-medium tracking-[0.16em] text-[var(--c-text-faint)]';
+
+const dateValue = (iso?: string): string => (iso ? iso.slice(0, 10) : '');
 
 const InsightsPage = async ({ searchParams }: InsightsPageProps) => {
   const { event: eventParam } = await searchParams;
@@ -34,10 +54,19 @@ const InsightsPage = async ({ searchParams }: InsightsPageProps) => {
   const creator = await getStudioCreator();
 
   if (eventParam) {
-    const [event, registrations] = await Promise.all([
+    /*
+     * Moderation lives with the queue it moderates. Approving, declining
+     * and promoting were reachable only from the classic Studio, so an
+     * approval-mode conference could not be run from the Console at all —
+     * it could see who was waiting and do nothing about it.
+     */
+    const [event, registrations, settings, situation] = await Promise.all([
       findEvent(eventParam).catch(() => null),
       listRegistrations(eventParam).catch(() => []),
+      getRegistrationSettings(eventParam, locale).catch(() => null),
+      getRegistrationSituation(eventParam, locale).catch(() => null),
     ]);
+    const m = REGISTRATION_MESSAGES;
     const title = event?.title ?? eventParam;
     const active = registrations.filter(
       (registration) => !TERMINAL_STATUSES.includes(registration.status),
@@ -85,24 +114,49 @@ const InsightsPage = async ({ searchParams }: InsightsPageProps) => {
             </p>
           </header>
 
-          <div className="flex gap-8 rounded-xl border border-[var(--c-line)] bg-[var(--c-glass)] px-6 py-5">
-            <div>
-              <p className="font-display text-2xl">{counts.confirmed}</p>
-              <p className="text-[10px] tracking-[0.14em] text-[var(--c-text-faint)]">
-                {CONSOLE_UI.colConfirmed[locale]}
+          <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-glass)] px-6 py-5">
+            {situation ? (
+              <p className="mb-3 text-xs text-[var(--c-text-soft)]">
+                {PUBLIC_STATE_LABELS[situation.state][locale]}
               </p>
-            </div>
-            <div>
-              <p className="font-display text-2xl">{counts.pending}</p>
-              <p className="text-[10px] tracking-[0.14em] text-[var(--c-text-faint)]">
-                {CONSOLE_UI.colPending[locale]}
-              </p>
-            </div>
-            <div>
-              <p className="font-display text-2xl">{counts.waitlisted}</p>
-              <p className="text-[10px] tracking-[0.14em] text-[var(--c-text-faint)]">
-                {CONSOLE_UI.colWaitlist[locale]}
-              </p>
+            ) : null}
+            <div className="flex flex-wrap gap-8">
+              <div>
+                <p className="font-display text-2xl">{counts.confirmed}</p>
+                <p className="text-[10px] tracking-[0.14em] text-[var(--c-text-faint)]">
+                  {CONSOLE_UI.colConfirmed[locale]}
+                </p>
+              </div>
+              <div>
+                <p className="font-display text-2xl">{counts.pending}</p>
+                <p className="text-[10px] tracking-[0.14em] text-[var(--c-text-faint)]">
+                  {CONSOLE_UI.colPending[locale]}
+                </p>
+              </div>
+              <div>
+                <p className="font-display text-2xl">{counts.waitlisted}</p>
+                <p className="text-[10px] tracking-[0.14em] text-[var(--c-text-faint)]">
+                  {CONSOLE_UI.colWaitlist[locale]}
+                </p>
+              </div>
+              {/*
+                `capacity.reserved` is deliberately not shown: it counts
+                the same people as `pending` — places held while approval
+                is decided — and two columns of one number reads as two
+                different facts.
+              */}
+              {situation ? (
+                <div>
+                  <p className="font-display text-2xl">
+                    {situation.capacity.available ?? '—'}
+                  </p>
+                  <p className="text-[10px] tracking-[0.14em] text-[var(--c-text-faint)]">
+                    {situation.capacity.limit === null
+                      ? m.capacity.unlimited[locale]
+                      : m.capacity.available[locale]}
+                  </p>
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -133,6 +187,33 @@ const InsightsPage = async ({ searchParams }: InsightsPageProps) => {
                         locale
                       ] ?? registration.status}
                     </span>
+                    {registration.status === 'pending' ? (
+                      <>
+                        <form action={approveRegistrationAction} className="flex-none">
+                          <input type="hidden" name="slug" value={event?.slug ?? eventParam} />
+                          <input type="hidden" name="registrationId" value={registration.id} />
+                          <button type="submit" className={primaryButton}>
+                            {m.studio.approve[locale]}
+                          </button>
+                        </form>
+                        <form action={declineRegistrationAction} className="flex-none">
+                          <input type="hidden" name="slug" value={event?.slug ?? eventParam} />
+                          <input type="hidden" name="registrationId" value={registration.id} />
+                          <button type="submit" className={quietButton}>
+                            {m.studio.decline[locale]}
+                          </button>
+                        </form>
+                      </>
+                    ) : null}
+                    {registration.status === 'waitlisted' ? (
+                      <form action={promoteRegistrationAction} className="flex-none">
+                        <input type="hidden" name="slug" value={event?.slug ?? eventParam} />
+                        <input type="hidden" name="registrationId" value={registration.id} />
+                        <button type="submit" className={primaryButton}>
+                          {m.studio.promote[locale]}
+                        </button>
+                      </form>
+                    ) : null}
                     <form
                       action={removeEventRegistrationAction}
                       className="flex-none"
@@ -164,6 +245,144 @@ const InsightsPage = async ({ searchParams }: InsightsPageProps) => {
               {CONSOLE_UI.noRegistrantsYet[locale]}
             </p>
           )}
+
+          {/*
+            The rules that decide who gets in. Open by default when the
+            conference collects nothing yet, because that is the one case
+            where the organizer certainly has something to do here.
+          */}
+          <details
+            open={!settings}
+            className="rounded-xl border border-[var(--c-line)] bg-[var(--c-glass)]"
+          >
+            <summary className="cursor-pointer list-none px-5 py-3 text-xs font-medium tracking-[0.12em] text-[var(--c-text-soft)] transition-colors hover:text-[var(--c-bronze)]">
+              {m.studio.adjust[locale]}
+            </summary>
+            <form
+              action={saveRegistrationSettingsAction}
+              className="flex flex-col gap-4 border-t border-[var(--c-line)] p-5"
+            >
+              <input type="hidden" name="slug" value={event?.slug ?? eventParam} />
+              <input type="hidden" name="contentLocale" value={locale} />
+
+              {!settings ? (
+                <p className="text-xs text-[var(--c-text-faint)]">
+                  {m.studio.notConfigured[locale]}
+                </p>
+              ) : null}
+
+              <label className="block">
+                <span className={settingsLabel}>
+                  {m.studio.whoCanAttend[locale]}
+                </span>
+                <select
+                  name="mode"
+                  defaultValue={settings?.mode ?? 'open'}
+                  className={settingsField}
+                >
+                  <option value="open">{m.studio.modeOpen[locale]}</option>
+                  <option value="approval">{m.studio.modeApproval[locale]}</option>
+                  <option value="invitation">
+                    {m.studio.modeInvitation[locale]}
+                  </option>
+                </select>
+              </label>
+
+              <label className="block">
+                <span className={settingsLabel}>
+                  {m.studio.howManyPlaces[locale]}
+                </span>
+                <input
+                  type="number"
+                  name="capacity"
+                  min={1}
+                  defaultValue={settings?.capacity ?? undefined}
+                  placeholder={m.studio.placesHint[locale]}
+                  className={settingsField}
+                />
+              </label>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className={settingsLabel}>
+                    {m.studio.opensWhen[locale]}
+                  </span>
+                  <input
+                    type="date"
+                    name="opensAt"
+                    defaultValue={dateValue(settings?.opensAt)}
+                    className={settingsField}
+                  />
+                </label>
+                <label className="block">
+                  <span className={settingsLabel}>
+                    {m.studio.closesWhen[locale]}
+                  </span>
+                  <input
+                    type="date"
+                    name="closesAt"
+                    defaultValue={dateValue(settings?.closesAt)}
+                    className={settingsField}
+                  />
+                </label>
+              </div>
+
+              <label className="block">
+                <span className={settingsLabel}>
+                  {m.studio.confirmationMessage[locale]}
+                </span>
+                <textarea
+                  name="confirmationMessage"
+                  rows={3}
+                  defaultValue={settings?.confirmationMessage ?? ''}
+                  className={`${settingsField} resize-none`}
+                />
+              </label>
+
+              <fieldset className="flex flex-col gap-2.5 text-xs text-[var(--c-text-soft)]">
+                <label className="flex items-center gap-2.5">
+                  <input
+                    type="checkbox"
+                    name="waitlistEnabled"
+                    defaultChecked={settings?.waitlistEnabled ?? false}
+                    className="size-3.5"
+                  />
+                  {m.studio.waitingList[locale]}
+                </label>
+                <label className="flex items-center gap-2.5">
+                  <input
+                    type="checkbox"
+                    name="collectPhone"
+                    defaultChecked={settings?.collectPhone ?? false}
+                    className="size-3.5"
+                  />
+                  {m.studio.collectPhone[locale]}
+                </label>
+                <label className="flex items-center gap-2.5">
+                  <input
+                    type="checkbox"
+                    name="collectAccessibility"
+                    defaultChecked={settings?.collectAccessibility ?? false}
+                    className="size-3.5"
+                  />
+                  {m.studio.collectAccessibility[locale]}
+                </label>
+                <label className="flex items-center gap-2.5">
+                  <input
+                    type="checkbox"
+                    name="collectDietary"
+                    defaultChecked={settings?.collectDietary ?? false}
+                    className="size-3.5"
+                  />
+                  {m.studio.collectDietary[locale]}
+                </label>
+              </fieldset>
+
+              <button type="submit" className={`${primaryButton} self-start`}>
+                {m.studio.save[locale]}
+              </button>
+            </form>
+          </details>
         </div>
       </ConsoleShell>
     );
@@ -282,5 +501,14 @@ const InsightsPage = async ({ searchParams }: InsightsPageProps) => {
     </ConsoleShell>
   );
 };
+
+/*
+ * The response depends on who is asking, so it is rendered per request
+ * and never prerendered or shared. Declared rather than left to Next to
+ * infer from a cookie read: an inferred guard disappears the moment a
+ * refactor moves that read behind a helper, and the failure would be a
+ * privacy leak that nothing announces.
+ */
+export const dynamic = 'force-dynamic';
 
 export default InsightsPage;

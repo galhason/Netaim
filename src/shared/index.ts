@@ -1,5 +1,28 @@
 export { assertNever } from './utils/assert';
 export {
+  TOKEN_PURPOSES,
+  signPayload,
+  signedToken,
+  verifySignedToken,
+} from './security/token-namespace';
+export type { TokenPurpose } from './security/token-namespace';
+export {
+  SESSION_COOKIE,
+  SESSION_TTL_MS,
+  SESSION_TTL_SECONDS,
+  mintSession,
+  readSessionCookie,
+} from './security/session-token';
+export type { MintedSession } from './security/session-token';
+/*
+ * The cache modules are deliberately NOT re-exported here. They import
+ * `next/cache`, which is server-only, and this barrel is imported by
+ * client components across the platform — one server-only symbol in it
+ * poisons every one of them at build time. Server code imports
+ * '@/shared/cache/content-cache' and '@/shared/cache/publish' directly.
+ */
+export {
+  DEFAULT_VENUE_TIMEZONE,
   formatDayLabel,
   formatLongDate,
   formatTimeLabel,

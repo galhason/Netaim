@@ -1,4 +1,5 @@
-import { BRAND_NAME } from '@/config/brand';
+import { brandFor } from '@/config/brand';
+import type { Locale } from '@/config/locales';
 import { applyComposition } from '@/experience-runtime';
 import type { ExperienceDescriptor } from '@/experience-runtime';
 import { OPENING_SCENE_TYPES } from '../constants/opening-content';
@@ -13,6 +14,7 @@ import type { OpeningContent } from '../types/opening';
  */
 export const buildOpeningDescriptor = (
   content: OpeningContent,
+  locale: Locale,
 ): ExperienceDescriptor => ({
   id: 'homepage',
   type: 'homepage',
@@ -23,7 +25,7 @@ export const buildOpeningDescriptor = (
     {
       id: 'nav',
       type: OPENING_SCENE_TYPES.nav,
-      content: { brand: BRAND_NAME, meHref: content.meHref },
+      content: { brand: brandFor(locale), meHref: content.meHref },
     },
     content.featured
       ? {
@@ -51,7 +53,7 @@ export const buildOpeningDescriptor = (
       {
         id: 'footer',
         type: OPENING_SCENE_TYPES.footer,
-        content: { brand: BRAND_NAME },
+        content: { brand: brandFor(locale) },
       },
     ],
     content.composition ?? [],

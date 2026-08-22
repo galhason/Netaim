@@ -1,5 +1,6 @@
 import type { Locale } from '@/config/locales';
 import { formatLongDate } from '@/shared';
+import { cacheTags, cachedContent } from '@/shared/cache/content-cache';
 import {
   findEventOpeningContent,
   findEventOpeningPreview,
@@ -277,7 +278,20 @@ const assembleExperience = (
     ...fallback,
     composition,
     registerHref: `/${locale}/events/${slug}/register`,
-    meHref: `/${locale}/events/${slug}/me`,
+    /*
+     * The account's own home, not the conference's lounge.
+     *
+     * This pointed at `/events/${slug}/me`, which redirects anyone
+     * without a registration for *that* conference to its registration
+     * form. So a signed-in visitor saw their own name in the nav — the
+     * site plainly recognising them — and clicking it asked them to
+     * join. The nav is where a guest learns they are remembered; it must
+     * never be the thing that forgets them.
+     *
+     * `/me` works for everyone signed in, and leads into the lounge for
+     * the conferences they have actually joined.
+     */
+    meHref: `/${locale}/me`,
     tone: event.atmosphere,
     arrival: {
       ...fallback.arrival,
@@ -308,6 +322,16 @@ const assembleExperience = (
     venue: {
       name: opening?.venue.name ?? fallback.venue.name,
       subtitle: event.location || undefined,
+      /*
+       * No fallback for these five: an invented address would send a
+       * visitor somewhere, and invented accessibility or emergency
+       * information is worse than none. Absent means absent.
+       */
+      address: opening?.venue.address,
+      mapUrl: opening?.venue.mapUrl,
+      mapLabel: opening?.venue.mapLabel,
+      accessibility: opening?.venue.accessibility,
+      emergency: opening?.venue.emergency,
       narrative: opening?.venue.narrative ?? fallback.venue.narrative,
       image: opening?.venue.imageUrl ?? fallback.venue.image,
       facts: cmsFacts.length > 0 ? cmsFacts : fallback.venue.facts,
@@ -325,7 +349,14 @@ const assembleExperience = (
   };
 };
 
-export const getConferenceExperience = async (
+/*
+ * Assembling a conference costs four parallel reads plus the portal
+ * event itself, and the result is the same for every visitor — the
+ * landing page is dynamic for the guest's announcements and sign-in
+ * state, not for its content. Cached per (slug, locale), cleared the
+ * moment the Studio publishes that conference.
+ */
+const assembleConferenceExperience = async (
   slug: string,
   locale: Locale,
 ): Promise<ConferenceExperience | null> => {
@@ -349,6 +380,20 @@ export const getConferenceExperience = async (
     roster,
   );
 };
+
+export const getConferenceExperience = (
+  slug: string,
+  locale: Locale,
+): Promise<ConferenceExperience | null> =>
+  cachedContent(
+    assembleConferenceExperience,
+    /*
+     * The locale is part of the key. A cached reader that forgot it
+     * would serve Hebrew to an English visitor.
+     */
+    ['conference-experience', slug, locale],
+    [cacheTags.event(slug), cacheTags.speakers, cacheTags.sponsors],
+  )(slug, locale);
 
 /*
  * The same experience, assembled from the draft: what the director

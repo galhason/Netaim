@@ -1,3 +1,4 @@
+import type { Locale } from '@/config/locales';
 import type { RegistrationStatus } from '@/registration-engine';
 import type {
   ContactPreferences,
@@ -101,6 +102,35 @@ export const myRegisteredEventSlugs = async (): Promise<string[]> => {
     return [];
   }
   return registrationRepository.eventSlugsForParticipant(participant.id);
+};
+
+/*
+ * Where a signed-in guest's own area is, seen from the page they are on.
+ *
+ * A conference's lounge opens only to someone registered for it; anyone
+ * else it redirects to the registration form. So the nav may point there
+ * only once this guest is known to have joined. Otherwise the account
+ * home, which holds for anyone signed in and leads on to the lounges
+ * they do have.
+ *
+ * Resolved per request and never cached — it is about who is asking.
+ *
+ * Declared after the read it depends on, deliberately: a `const` arrow
+ * that calls one declared below it leaves TypeScript inferring a return
+ * type from a binding it has not reached, and the inference collapses.
+ */
+export const myAreaHref = async (
+  locale: Locale,
+  eventSlug?: string,
+): Promise<string> => {
+  const home = `/${locale}/me`;
+  if (!eventSlug) {
+    return home;
+  }
+  const joined = await myRegisteredEventSlugs().catch((): string[] => []);
+  return joined.includes(eventSlug)
+    ? `/${locale}/events/${eventSlug}/me`
+    : home;
 };
 
 /*

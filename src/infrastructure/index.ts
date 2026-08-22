@@ -1,3 +1,4 @@
+import { FALLBACK_LOCALE } from '@/config/locales';
 import type { ContentSource } from '@/features/events';
 import type {
   HomepageCompositionWriter,
@@ -61,13 +62,22 @@ import {
 } from './payload/payload-org-profile';
 import {
   payloadListEventParticipants,
-  payloadListPlatformParticipants,
+  payloadListDirectoryParticipants,
+  payloadSharedActivityPeers,
   payloadRegistrationRepository,
   payloadRegistrationSettingsRepository,
 } from './payload/payload-registration';
-export type { FellowParticipant } from './payload/payload-registration';
+export type {
+  ActivityPeer,
+  FellowParticipant,
+} from './payload/payload-registration';
 import { payloadParticipantSessionRepository } from './payload/payload-participant-session';
 import { payloadAccountGrantRepository } from './payload/payload-grant';
+import { payloadRateLimitRepository } from './payload/payload-rate-limit';
+import { payloadAuditRepository } from './payload/payload-audit';
+import type { AuditRepository } from '@/features/access/types/audit';
+export { checkDatabase } from './payload/payload-health';
+import type { RateLimitRepository } from '@/features/access/types/rate-limit';
 import { payloadNotificationOutboxRepository } from './payload/payload-notification';
 import {
   payloadSessionRepository,
@@ -92,10 +102,14 @@ import type { ConnectionRepository } from '@/features/networking/types/connectio
 import type { MeetingRepository } from '@/features/networking/types/meeting';
 import { subscribeRegistration } from '@/foundation/event-bus';
 import {
+  createDispatcher,
+  createNotificationSender,
   createRegistrationNotifier,
   devChannel,
+  type ChannelAdapter,
   type NotificationOutboxRepository,
 } from '@/notification-engine';
+import { smtpChannel, smtpConfigured } from './email/smtp-channel';
 import type {
   RegistrationRepository,
   RegistrationSettingsRepository,
@@ -174,7 +188,8 @@ export const organizationRepository: OrganizationRepository =
 export const profileRepository: ProfileRepository = payloadProfileRepository;
 
 export const listEventParticipants = payloadListEventParticipants;
-export const listPlatformParticipants = payloadListPlatformParticipants;
+export const listDirectoryParticipants = payloadListDirectoryParticipants;
+export const sharedActivityPeers = payloadSharedActivityPeers;
 
 export const registrationRepository: RegistrationRepository =
   payloadRegistrationRepository;
@@ -188,8 +203,55 @@ export const participantSessionRepository: ParticipantSessionRepository =
 export const accountGrantRepository: GrantRepository =
   payloadAccountGrantRepository;
 
+export const rateLimitRepository: RateLimitRepository =
+  payloadRateLimitRepository;
+
+export const auditRepository: AuditRepository = payloadAuditRepository;
+
+/*
+ * The channel the platform actually sends through. SMTP when a relay is
+ * configured, the recording dev channel otherwise — so local
+ * development is unchanged and a deployment becomes an env change
+ * rather than a code change.
+ */
+export const emailChannel: ChannelAdapter = smtpConfigured()
+  ? smtpChannel
+  : devChannel;
+
 export const notificationOutbox: NotificationOutboxRepository =
   payloadNotificationOutboxRepository;
+
+/*
+ * Send a composed message and record the outcome. Everything that used
+ * to call `notificationOutbox.enqueue({ status: 'queued' })` directly
+ * should call this instead: enqueueing by hand records a message that
+ * was never offered to a channel, which is how the sign-in link came to
+ * be recorded and never sent.
+ */
+/* Shared by the sender and the dispatcher, so both resolve alike. */
+const recipientForParticipant = async (participantId: string) => {
+  const participant =
+    await payloadParticipantSessionRepository.participantById(participantId);
+  return participant?.email
+    ? { email: participant.email, name: participant.name }
+    : null;
+};
+
+/*
+ * Reconsiders failed deliveries. Driven by cron hitting the dispatch
+ * route, not by a timer in the process — see `dispatcher.ts`.
+ */
+export const dispatchFailedNotifications = createDispatcher(
+  payloadNotificationOutboxRepository,
+  emailChannel,
+  recipientForParticipant,
+);
+
+export const sendNotification = createNotificationSender(
+  payloadNotificationOutboxRepository,
+  emailChannel,
+  recipientForParticipant,
+);
 
 export const sessionRepository: SessionRepository = payloadSessionRepository;
 
@@ -217,7 +279,28 @@ export const meetingRepository: MeetingRepository = payloadMeetingRepository;
  */
 subscribeRegistration(
   'notification',
-  createRegistrationNotifier(payloadNotificationOutboxRepository, devChannel),
+  createRegistrationNotifier(
+    payloadNotificationOutboxRepository,
+    emailChannel,
+    /*
+     * What this conference chose to say, if it chose anything. Resolved
+     * here at the composition root so the engine keeps knowing nothing
+     * about where words are stored.
+     */
+    async (eventSlug) =>
+      (
+        await payloadRegistrationSettingsRepository.getByEvent(
+          eventSlug,
+          FALLBACK_LOCALE,
+        )
+      )?.emailTemplates,
+    /*
+     * Where to send. Resolved here, at the seam, so the engine never
+     * learns what a participant row looks like — and used only for
+     * delivery, never written into the outbox record.
+     */
+    recipientForParticipant,
+  ),
 );
 
 /*

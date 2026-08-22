@@ -1,10 +1,16 @@
 import { computeEventHealth, type EventHealth } from '@/event-engine';
-import { inspectExperience } from '@/experience-engine';
 import type { Locale } from '@/config/locales';
+import { applyComposition } from '@/experience-runtime';
+import {
+  CONFERENCE_SCENE_SEQUENCE,
+  completeComposition,
+  inspectJourney,
+} from '@/features/cinematic';
 import { eventRepository } from '@/infrastructure';
+import { listAgenda } from '@/features/program/services/program-service';
 import { getRegistrationSettings } from '@/features/registration/services/registration-settings-service';
-import { getEventExperience } from './event-experience-service';
 import { toEventHealthInput } from '../utils/health-input';
+import { journeyReadinessFacts, notesAsFindings } from '../utils/journey-facts';
 import { isLaunchable } from '../utils/launch';
 import type { EventSummary } from '../types/event-repository';
 
@@ -16,6 +22,23 @@ export interface LaunchReview {
   canLaunch: boolean;
 }
 
+/*
+ * The journey exactly as the Runtime will compose it for a visitor: the
+ * authored sequence, reordered and hidden by the stored composition.
+ * Readiness reads this and nothing else, so what the gate judges and
+ * what the public page renders cannot drift apart.
+ */
+const composedJourney = (composition: Parameters<typeof completeComposition>[0]) =>
+  applyComposition(
+    CONFERENCE_SCENE_SEQUENCE.map((scene) => ({
+      id: scene.id,
+      type: scene.type,
+      hidden: scene.hidden,
+      content: {},
+    })),
+    completeComposition(composition),
+  );
+
 export const reviewLaunch = async (
   slug: string,
   locale: Locale,
@@ -24,63 +47,37 @@ export const reviewLaunch = async (
   if (!event) {
     return null;
   }
-  const content = await getEventExperience(slug, locale, { draft: true });
-  if (!content) {
+  const draft = await eventRepository.getOpeningDraft(slug, locale);
+  if (!draft) {
     return null;
   }
-  const registrationSettings = await getRegistrationSettings(slug, locale);
+  const [registrationSettings, sessions] = await Promise.all([
+    getRegistrationSettings(slug, locale),
+    listAgenda(slug, locale).catch(() => []),
+  ]);
 
+  const scenes = composedJourney(draft.composition);
   /*
-   * The cinematic conference always plays a venue scene and a closing
-   * door (the Runtime's own sequence) — the readiness inspector, born
-   * with the legacy scene model, cannot see them. Synthesize what the
-   * public page truly renders, respecting the composition's hidden
-   * flags, so launch judges the real experience.
+   * The only rule that reads sessions looks for two of them overlapping
+   * in one room. A session missing either end cannot overlap anything,
+   * and substituting a placeholder time would invent a clash or hide
+   * one, so it is dropped from the question rather than guessed at.
    */
-  const draft = await eventRepository
-    .getOpeningDraft(slug, locale)
-    .catch(() => null);
-  const hiddenScenes = new Set(
-    (draft?.composition ?? [])
-      .filter((entry) => entry.hidden)
-      .map((entry) => entry.scene),
+  const scheduled = sessions.flatMap((session) =>
+    session.startsAt && session.endsAt
+      ? [
+          {
+            start: session.startsAt,
+            end: session.endsAt,
+            ...(session.room ? { room: session.room } : {}),
+          },
+        ]
+      : [],
   );
-  const scenes = [...content.scenes];
-  if (
-    !scenes.some((scene) => scene.type === 'venue' && scene.enabled) &&
-    !hiddenScenes.has('venue')
-  ) {
-    scenes.push({
-      id: 'cinematic-venue',
-      type: 'venue',
-      title: 'Venue',
-      enabled: true,
-      content: {
-        details: [
-          ...(draft?.venue.accessibility ? [{ id: 'access' }] : []),
-          ...(draft?.venue.emergency ? [{ id: 'emergency' }] : []),
-        ],
-      },
-    });
-  }
-  if (
-    !scenes.some(
-      (scene) => scene.type === 'registration-cta' && scene.enabled,
-    ) &&
-    !hiddenScenes.has('closing')
-  ) {
-    scenes.push({
-      id: 'cinematic-join',
-      type: 'registration-cta',
-      title: 'Join',
-      enabled: true,
-      content: {},
-    });
-  }
-  const inspected = { ...content, scenes };
+  const facts = journeyReadinessFacts(scenes, draft, scheduled);
 
   const health = computeEventHealth(
-    toEventHealthInput(inspected, {
+    toEventHealthInput(facts, {
       phase: event.phase,
       publishStatus: event.launched ? 'published' : 'draft',
       capabilities: event.capabilities,
@@ -99,7 +96,7 @@ export const reviewLaunch = async (
       missingTranslations: 0,
       translationCompleteness: 100,
       mediaCompleteness: 100,
-      experienceFindings: inspectExperience(inspected.scenes),
+      experienceFindings: notesAsFindings(inspectJourney(scenes)),
     }),
   );
   return { event, health, canLaunch: isLaunchable(health) };

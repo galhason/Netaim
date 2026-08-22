@@ -5,14 +5,28 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, useReducedMotion } from 'motion/react';
 import type { Locale } from '@/config/locales';
+import { chooseLocaleAction } from '@/features/account/actions/choose-locale';
 import { CINEMATIC_UI, SITE_NAV_LINKS } from '../constants/cinematic-content';
 import type { NavSection } from '../types/cinematic';
+
+/*
+ * Who is looking, as far as the nav needs to know. Just a display name —
+ * never the account, never the email. This is resolved per request and
+ * must never travel inside a cached experience descriptor, or one
+ * visitor's name would be served to the next.
+ */
+export interface NavViewer {
+  name: string;
+}
 
 interface CinematicNavProps {
   locale: Locale;
   registerHref: string;
   meHref: string;
   brand: string;
+  /* `null` means nobody is signed in; `undefined` means not resolved. */
+  viewer?: NavViewer | null;
+  signInHref?: string;
   /*
    * On the landing the nav waits for the hero to speak before it fades
    * in; on inner pages there is no hero, so it should appear at once.
@@ -44,6 +58,8 @@ const CinematicNav = ({
   registerHref,
   meHref,
   brand,
+  viewer = null,
+  signInHref,
   immediate = false,
 }: CinematicNavProps) => {
   const [solid, setSolid] = useState(false);
@@ -51,15 +67,12 @@ const CinematicNav = ({
   const other: Locale = locale === 'he' ? 'en' : 'he';
   const pathname = usePathname();
   /*
-   * The language toggle keeps the visitor on the current page in the
-   * other locale — swap only the leading locale segment. Jumping to the
-   * site root instead threw a visitor back to the landing (and took the
-   * page they were reading with it).
+   * Switching language is a preference, not a link: the choice is saved
+   * (on the account when signed in) and only then does the visitor land
+   * on the same page in the other language. A plain link would be sent
+   * straight back by the middleware, which honours the saved language.
    */
-  const localeHref =
-    pathname && /^\/(he|en)(\/|$)/.test(pathname)
-      ? pathname.replace(/^\/(he|en)/, `/${other}`)
-      : `/${other}`;
+  const currentPath = pathname ?? `/${locale}`;
 
   const home = `/${locale}`;
   const isActive = (path: string): boolean => {
@@ -92,15 +105,20 @@ const CinematicNav = ({
         solid ? 'border-b cine-hair bg-surface/85 backdrop-blur-md' : ''
       }`}
     >
-      <nav className="mx-auto flex h-[88px] max-w-7xl items-center justify-between px-6 md:px-14">
+      {/*
+       * The English labels are longer than the Hebrew ones, so the row is
+       * given the full editorial width and gaps that open up only when
+       * there is room for them. Nothing is allowed to wrap or collide.
+       */}
+      <nav className="mx-auto flex h-[88px] max-w-[1560px] items-center justify-between gap-6 px-6 md:px-10 lg:px-14">
         <Link
           href={home}
-          className="font-display text-lg font-medium tracking-[0.32em] text-text-primary"
+          className="flex-none whitespace-nowrap font-display text-lg font-medium tracking-[0.22em] text-text-primary lg:tracking-[0.32em]"
         >
           {brand}
         </Link>
 
-        <div className="hidden items-center gap-9 md:flex">
+        <div className="hidden items-center gap-5 md:flex lg:gap-7 xl:gap-9">
           {SITE_NAV_LINKS.map((link) => {
             const active = isActive(link.path);
             return (
@@ -108,7 +126,7 @@ const CinematicNav = ({
                 key={link.key}
                 href={`${home}${link.path}`}
                 aria-current={active ? 'page' : undefined}
-                className={`text-sm tracking-wide transition-colors hover:text-text-primary ${
+                className={`whitespace-nowrap text-sm tracking-wide transition-colors hover:text-text-primary ${
                   active ? 'text-accent' : 'text-text-secondary'
                 }`}
               >
@@ -118,25 +136,57 @@ const CinematicNav = ({
           })}
         </div>
 
-        <div className="flex items-center gap-5">
-          <Link
-            href={localeHref}
-            className="text-sm text-text-secondary transition-colors hover:text-text-primary"
-          >
-            {other === 'he' ? 'עברית' : 'EN'}
-          </Link>
-          <Link
-            href={meHref}
-            className="hidden text-sm text-text-secondary transition-colors hover:text-text-primary sm:inline"
-          >
-            {CINEMATIC_UI.myArea[locale]}
-          </Link>
-          <Link
-            href={registerHref}
-            className="inline-flex min-h-10 items-center rounded-full border border-accent px-6 text-sm font-medium text-accent transition-colors hover:bg-brand hover:text-brand-contrast"
-          >
-            {CINEMATIC_UI.registerShort[locale]}
-          </Link>
+        <div className="flex flex-none items-center gap-4 lg:gap-5">
+          <form action={chooseLocaleAction} className="flex">
+            <input type="hidden" name="to" value={other} />
+            <input type="hidden" name="next" value={currentPath} />
+            <button
+              type="submit"
+              className="inline-flex min-h-11 cursor-pointer items-center text-sm text-text-secondary transition-colors hover:text-text-primary"
+            >
+              {other === 'he' ? 'עברית' : 'EN'}
+            </button>
+          </form>
+          {viewer ? (
+            /*
+             * Signed in: the name is the destination. No "register"
+             * button — someone already inside should not be asked to
+             * join, and the nav saying so is how a guest knows the site
+             * remembers them.
+             */
+            <Link
+              href={meHref}
+              className="group inline-flex min-h-10 items-center gap-2.5 whitespace-nowrap rounded-full border border-accent/40 px-4 text-sm text-text-secondary transition-colors hover:border-accent hover:text-text-primary lg:px-5"
+            >
+              <span
+                aria-hidden="true"
+                className="grid size-6 flex-none place-items-center rounded-full bg-accent/15 text-[0.7rem] font-semibold text-accent"
+              >
+                {viewer.name.trim().charAt(0) || '·'}
+              </span>
+              <span className="hidden sm:inline">
+                {viewer.name.trim() || CINEMATIC_UI.myArea[locale]}
+              </span>
+              <span className="sr-only">
+                {CINEMATIC_UI.signedInAs[locale]}
+              </span>
+            </Link>
+          ) : (
+            <>
+              <Link
+                href={signInHref ?? meHref}
+                className="hidden whitespace-nowrap text-sm text-text-secondary transition-colors hover:text-text-primary sm:inline"
+              >
+                {CINEMATIC_UI.signIn[locale]}
+              </Link>
+              <Link
+                href={registerHref}
+                className="inline-flex min-h-10 items-center whitespace-nowrap rounded-full border border-accent px-5 text-sm font-medium text-accent transition-colors hover:bg-brand hover:text-brand-contrast lg:px-6"
+              >
+                {CINEMATIC_UI.registerShort[locale]}
+              </Link>
+            </>
+          )}
         </div>
       </nav>
     </motion.header>

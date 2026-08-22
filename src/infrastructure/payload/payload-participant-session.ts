@@ -1,4 +1,6 @@
 import { relationshipId } from '@/auth';
+import { BRAND_LATIN } from '@/config/brand';
+import { isSupportedLocale } from '@/config/locales';
 import type { ParticipantSessionRepository } from '@/features/registration/types/identity';
 import type { ParticipantSummary } from '@/features/registration/types/registration';
 import { getSystemPayload } from './payload-context';
@@ -58,7 +60,14 @@ const platformOrganizationId = async (
     (await payload.create({
       collection: 'organizations',
       data: {
-        name: process.env.PLATFORM_ORG_NAME ?? 'Hason',
+        name: process.env.PLATFORM_ORG_NAME ?? BRAND_LATIN,
+        /*
+         * The slug default is deliberately unchanged by the brand
+         * rename. It is a stored key, not a label: an existing database
+         * already holds a row under it, and a new default would create
+         * a second organization beside the real one rather than rename
+         * anything. Renaming the tenant is a data operation.
+         */
         slug: process.env.PLATFORM_ORG_SLUG ?? 'hason',
       },
       overrideAccess: true,
@@ -105,7 +114,7 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
       });
     },
 
-    openAccount: async (email, name, passwordHash) => {
+    openAccount: async (email, name, passwordHash, preferredLocale) => {
       const payload = await getSystemPayload();
       const organization = await platformOrganizationId(payload);
       const existing = await payload.find({
@@ -121,7 +130,13 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
       try {
         const doc = await payload.create({
           collection: 'participants',
-          data: { organization, name, email, passwordHash },
+          data: {
+            organization,
+            name,
+            email,
+            passwordHash,
+            preferredLocale,
+          },
           overrideAccess: true,
         });
         return {
@@ -200,7 +215,7 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
         (await payload.create({
           collection: 'organizations',
           data: {
-            name: process.env.PLATFORM_ORG_NAME ?? 'Hason',
+            name: process.env.PLATFORM_ORG_NAME ?? BRAND_LATIN,
             slug: process.env.PLATFORM_ORG_SLUG ?? 'hason',
           },
           overrideAccess: true,
@@ -277,6 +292,91 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
       });
       const participant = await resolveParticipant(payload, session.participant);
       return participant ? { participant } : null;
+    },
+
+    openSession: async (participantId, tokenHash, expiresAt) => {
+      const payload = await getSystemPayload();
+      const account = await payload
+        .findByID({
+          collection: 'participants',
+          id: participantId,
+          depth: 0,
+          overrideAccess: true,
+        })
+        .catch(() => null);
+      const organization = relationshipId(
+        (account as ParticipantRow | null)?.organization,
+      );
+      if (!organization) {
+        return;
+      }
+      await payload.create({
+        collection: 'account-sessions',
+        data: {
+          organization: Number(organization),
+          participant: Number(participantId),
+          tokenHash,
+          expiresAt,
+        },
+        overrideAccess: true,
+      });
+    },
+
+    resolveSession: async (tokenHash, now) => {
+      const payload = await getSystemPayload();
+      const found = await payload
+        .find({
+          collection: 'account-sessions',
+          where: {
+            and: [
+              { tokenHash: { equals: tokenHash } },
+              { revokedAt: { exists: false } },
+              { expiresAt: { greater_than: now } },
+            ],
+          },
+          limit: 1,
+          /*
+           * `depth: 1` brings the participant back with the session, so
+           * verifying the cookie stays a single query.
+           */
+          depth: 1,
+          overrideAccess: true,
+        })
+        .catch(() => null);
+      const session = found?.docs[0] as SessionRow | undefined;
+      if (!session) {
+        return null;
+      }
+      return resolveParticipant(payload, session.participant);
+    },
+
+    revokeSession: async (tokenHash, at) => {
+      const payload = await getSystemPayload();
+      await payload
+        .update({
+          collection: 'account-sessions',
+          where: { tokenHash: { equals: tokenHash } },
+          data: { revokedAt: at },
+          overrideAccess: true,
+        })
+        .catch(() => undefined);
+    },
+
+    revokeAllSessions: async (participantId, at) => {
+      const payload = await getSystemPayload();
+      await payload
+        .update({
+          collection: 'account-sessions',
+          where: {
+            and: [
+              { participant: { equals: Number(participantId) } },
+              { revokedAt: { exists: false } },
+            ],
+          },
+          data: { revokedAt: at },
+          overrideAccess: true,
+        })
+        .catch(() => undefined);
     },
 
     participantDetails: async (id) => {
@@ -375,6 +475,33 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
             ? { interests: input.interests }
             : {}),
         },
+      });
+    },
+    /*
+     * Site language preference. Read on sign-in to seed the cookie the
+     * middleware reads; written from registration and from the profile.
+     */
+    localePreference: async (id) => {
+      const payload = await getSystemPayload();
+      const doc = await payload
+        .findByID({
+          collection: 'participants',
+          id,
+          depth: 0,
+          overrideAccess: true,
+        })
+        .catch(() => null);
+      const stored = (doc as { preferredLocale?: string | null } | null)
+        ?.preferredLocale;
+      return stored && isSupportedLocale(stored) ? stored : null;
+    },
+    setLocalePreference: async (id, locale) => {
+      const payload = await getSystemPayload();
+      await payload.update({
+        collection: 'participants',
+        id,
+        overrideAccess: true,
+        data: { preferredLocale: locale },
       });
     },
     participantById: async (id) => {

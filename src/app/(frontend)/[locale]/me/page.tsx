@@ -1,10 +1,14 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
-import { isSupportedLocale } from '@/config/locales';
+import { brandFor } from '@/config/brand';
+import { isSupportedLocale, type Locale } from '@/config/locales';
+import { CinematicNav } from '@/features/cinematic';
 import {
   ACCOUNT_STATUS_LABELS,
   ACCOUNT_UI,
+  JOINED_CONFERENCE_FANOUT,
+  LanguageRadioGroup,
   getMyAccount,
 } from '@/features/account';
 import type { AccountConference } from '@/features/account';
@@ -20,7 +24,7 @@ import {
   loungeQuiet,
 } from '@/features/attendee';
 import { myConnections, myUnreadByConnection } from '@/features/networking';
-import { listPlatformParticipants } from '@/infrastructure';
+import { listDirectoryParticipants } from '@/infrastructure';
 import { PASSWORD_POLICY_TEXT } from '@/features/registration';
 import { getActiveConferenceSlug } from '@/features/events';
 import { listAgenda, myActivities } from '@/features/program';
@@ -232,6 +236,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
                       {PASSWORD_POLICY_TEXT[locale]}
                     </span>
                   </label>
+                  <LanguageRadioGroup locale={locale} />
                   <button type="submit" className={`${loungePrimary} mt-2`}>
                     {ui.openAccount[locale]}
                   </button>
@@ -379,6 +384,11 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
               <LoungeNote tone="accent">{ui.needName[locale]}</LoungeNote>
             </div>
           ) : null}
+          {state === 'tooMany' ? (
+            <div className="lounge-rise mt-5 [animation-delay:60ms]">
+              <LoungeNote tone="accent">{ui.tooManyLinks[locale]}</LoungeNote>
+            </div>
+          ) : null}
           {state === 'failed' ? (
             <div className="lounge-rise mt-5 [animation-delay:60ms]">
               <LoungeNote tone="accent">
@@ -427,9 +437,17 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
     const content = chosen
       ? await getAttendeeExperience(chosen.slug, locale).catch(() => null)
       : null;
-    const platformPeople = content
-      ? []
-      : (await listPlatformParticipants().catch(() => []))
+    /*
+     * The conference is the site, so the directory is the site's own
+     * conference — not a list of ones this account happens to hold.
+     */
+    const directorySlug = await getActiveConferenceSlug(locale).catch(
+      () => null,
+    );
+    const platformPeople =
+      content || !directorySlug
+        ? []
+        : (await listDirectoryParticipants(directorySlug).catch(() => []))
           .filter(
             (person) =>
               person.participantId !== account.id &&
@@ -453,7 +471,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
     const allLinks = (
       await Promise.all(
         account.joined
-          .slice(0, 5)
+          .slice(0, JOINED_CONFERENCE_FANOUT)
           .map((conference) => myConnections(conference.slug).catch(() => [])),
       )
     ).flat();
@@ -510,7 +528,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
     }
     const sessionSlugs = [
       ...new Set([
-        ...account.joined.slice(0, 5).map((conference) => conference.slug),
+        ...account.joined.slice(0, JOINED_CONFERENCE_FANOUT).map((conference) => conference.slug),
         ...(activeSlug ? [activeSlug] : []),
       ]),
     ];
@@ -600,6 +618,21 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
         }}
         homeHref={`/${locale}/me`}
         profileHref={`/${locale}/me/profile`}
+        siteNav={
+          <div className="cinematic">
+            <CinematicNav
+              locale={locale as Locale}
+              registerHref={
+                chosen ? `/${locale}/events/${chosen.slug}/register` : `/${locale}`
+              }
+              meHref={`/${locale}/me`}
+              brand={brandFor(locale as Locale)}
+              /* This branch only renders for a signed-in account. */
+              viewer={{ name: account.name || account.email }}
+              immediate
+            />
+          </div>
+        }
       />
     );
   }
@@ -814,5 +847,12 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
     </main>
   );
 };
+
+/*
+ * The guest's own session decides what this page shows — the banner and
+ * pop-up announcements addressed to them, and their sign-in state. It is
+ * rendered per request; a build-time snapshot would freeze both.
+ */
+export const dynamic = 'force-dynamic';
 
 export default AccountPage;

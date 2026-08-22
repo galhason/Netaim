@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale } from '@/config/locales';
+import { ACCOUNT_UI, LanguageSwitchForm } from '@/features/account';
 import {
   LOUNGE_UI,
   LoungeNote,
@@ -219,6 +220,27 @@ const AccountProfilePage = async ({
               </LoungeNote>
             </div>
           ) : null}
+        </div>
+
+        {/*
+          * Site language: a small, permanent control — the choice is kept
+          * on the account, so it holds on every device and every visit.
+          */}
+        <div className="lounge-rise mt-5 flex flex-wrap items-center gap-x-6 gap-y-4 rounded-3xl bg-white px-7 py-5 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:30ms]">
+          <div className="min-w-0">
+            <h2 className="font-display text-base font-semibold">
+              {ACCOUNT_UI.languageLabel[locale]}
+            </h2>
+            <p className="mt-0.5 text-xs text-[var(--l-soft)]">
+              {ACCOUNT_UI.languageChoiceHint[locale]}
+            </p>
+          </div>
+          <div className="ms-auto w-full max-w-[16rem]">
+            <LanguageSwitchForm
+              locale={locale}
+              next={`/${locale}/me/profile`}
+            />
+          </div>
         </div>
 
         {editing ? (
@@ -572,5 +594,8 @@ const AccountProfilePage = async ({
     </main>
   );
 };
+
+/* The guest's own session decides this page; never a build snapshot. */
+export const dynamic = 'force-dynamic';
 
 export default AccountProfilePage;

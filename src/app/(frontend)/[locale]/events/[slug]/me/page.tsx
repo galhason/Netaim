@@ -51,4 +51,11 @@ const AttendeePage = async ({ params }: AttendeePageProps) => {
   );
 };
 
+/*
+ * The guest's own session decides what this page shows — the banner and
+ * pop-up announcements addressed to them, and their sign-in state. It is
+ * rendered per request; a build-time snapshot would freeze both.
+ */
+export const dynamic = 'force-dynamic';
+
 export default AttendeePage;

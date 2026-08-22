@@ -1,8 +1,15 @@
 export {
+  actorFor,
+  authorized,
   getStudioAccess,
   getStudioCreator,
   requireCapability,
 } from './services/studio-auth';
+export {
+  formText,
+  optionalText,
+  toIsoDateTime,
+} from './utils/form-values';
 export type { StudioAccess } from './services/studio-auth';
 export { getStudioHome } from './services/studio-home';
 export { buildHomeDigest } from './utils/home-digest';
@@ -110,3 +117,4 @@ export {
   CheckboxField,
   SaveButton,
 } from './components/form-fields';
+export { auditLabel } from './constants/audit-labels';

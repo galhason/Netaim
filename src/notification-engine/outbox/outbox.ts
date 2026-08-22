@@ -25,8 +25,29 @@ export interface NotificationView {
  * The outbox persists every queued message (Platform-Engines §2.10).
  * Delivery failure never blocks the emitting domain transaction.
  */
+/* A failed message, with what retry needs to decide about it. */
+export interface PendingDelivery {
+  id: string;
+  participantId: string;
+  eventSlug: string;
+  type: string;
+  locale: string;
+  subject: string;
+  body: string;
+  attempts: number;
+  lastAttemptAt: number;
+}
+
 export interface NotificationOutboxRepository {
   enqueue: (record: NotificationRecord) => Promise<void>;
+  /* Failed messages, oldest first, for the dispatcher to reconsider. */
+  listFailed: (limit: number) => Promise<PendingDelivery[]>;
+  /* Records the outcome of one more attempt. */
+  markAttempt: (
+    id: string,
+    status: DeliveryStatus,
+    error?: string,
+  ) => Promise<void>;
   listByEvent: (slug: string) => Promise<NotificationView[]>;
   /*
    * The guest-facing feed: broadcasts (no recipient) plus messages

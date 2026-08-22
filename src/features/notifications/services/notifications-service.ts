@@ -61,6 +61,13 @@ const MAX_SUBJECT = 140;
 const MAX_BODY = 2000;
 
 /*
+ * How many outbox rows are written concurrently. Wide enough that a
+ * large announcement is not serial, narrow enough that it cannot drain
+ * the connection pool out from under every other request.
+ */
+const ENQUEUE_BATCH = 25;
+
+/*
  * One announcement, spoken in every language the platform speaks
  * (Constitution: he/en are equals): each completed version becomes its
  * own outbox row carrying its locale, and every reader surface serves
@@ -78,6 +85,7 @@ export interface BroadcastInput {
   kind?: BroadcastKind;
   /* when set, only the registrants of this activity receive it */
   targetSessionId?: string;
+  targetParticipantId?: string;
 }
 
 export const broadcastAnnouncement = async (
@@ -95,7 +103,9 @@ export const broadcastAnnouncement = async (
   }
   const type = broadcastTypeOf(input.kind ?? 'feed');
   let recipients: string[] = [''];
-  if (input.targetSessionId) {
+  if (input.targetParticipantId) {
+    recipients = [input.targetParticipantId];
+  } else if (input.targetSessionId) {
     recipients = await sessionRegistrationRepository
       .participantsBySession(input.targetSessionId)
       .catch(() => [] as string[]);
@@ -103,19 +113,84 @@ export const broadcastAnnouncement = async (
       return false;
     }
   }
-  for (const participantId of recipients) {
-    for (const version of versions) {
-      await notificationOutbox.enqueue({
-        eventSlug: input.eventSlug,
-        type,
-        locale: version.locale,
-        subject: version.subject,
-        body: version.body,
-        status: 'sent',
-        participantId,
-      });
-    }
+  /*
+   * A nested await used to issue one insert per recipient per locale,
+   * in sequence: announcing to a 600-person workshop in two languages
+   * meant 1,200 serial round trips, with the organizer's request open
+   * for all of them. The messages are independent, so they are built
+   * first and written in bounded parallel batches — bounded because
+   * releasing 1,200 at once would exhaust the connection pool and take
+   * the rest of the platform down with it.
+   */
+  const messages = recipients.flatMap((participantId) =>
+    versions.map((version) => ({
+      eventSlug: input.eventSlug,
+      type,
+      locale: version.locale,
+      subject: version.subject,
+      body: version.body,
+      status: 'sent' as const,
+      participantId,
+    })),
+  );
+
+  for (let index = 0; index < messages.length; index += ENQUEUE_BATCH) {
+    await Promise.all(
+      messages
+        .slice(index, index + ENQUEUE_BATCH)
+        .map((message) =>
+          notificationOutbox.enqueue(message).catch(() => undefined),
+        ),
+    );
   }
+  return true;
+};
+
+/*
+ * A note addressed to one person, from the platform rather than the
+ * production.
+ *
+ * `broadcastAnnouncement` is the organizer's voice: it always writes the
+ * `announcement` type, and every announcement surface — the ticker, the
+ * pop-up, the Updates card — reads that type on purpose. A connection
+ * request is not news from the production, and dressing it as one would
+ * put "someone wants to connect" in the same banner as a room change.
+ *
+ * So these carry their own type and land in the personal feed only. The
+ * enqueue mechanics are shared, and there is no batching here because
+ * the audience is exactly one.
+ */
+export const notifyParticipant = async (input: {
+  eventSlug: string;
+  participantId: string;
+  type: string;
+  versions: BroadcastVersion[];
+}): Promise<boolean> => {
+  const versions = input.versions
+    .map((version) => ({
+      locale: version.locale === 'en' ? 'en' : 'he',
+      subject: version.subject.trim().slice(0, MAX_SUBJECT),
+      body: version.body.trim().slice(0, MAX_BODY),
+    }))
+    .filter((version) => version.subject !== '' && version.body !== '');
+  if (!input.eventSlug || !input.participantId || versions.length === 0) {
+    return false;
+  }
+  await Promise.all(
+    versions.map((version) =>
+      notificationOutbox
+        .enqueue({
+          eventSlug: input.eventSlug,
+          type: input.type,
+          locale: version.locale,
+          subject: version.subject,
+          body: version.body,
+          status: 'sent' as const,
+          participantId: input.participantId,
+        })
+        .catch(() => undefined),
+    ),
+  );
   return true;
 };
 

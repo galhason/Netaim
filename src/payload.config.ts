@@ -7,6 +7,8 @@ import { s3Storage } from '@payloadcms/storage-s3';
 import { FALLBACK_LOCALE, SUPPORTED_LOCALES } from '@/config/locales';
 import {
   AccountGrants,
+  AccountSessions,
+  AuditLog,
   Events,
   Experiences,
   Media,
@@ -17,6 +19,7 @@ import {
   Notifications,
   Organizations,
   ParticipantSessions,
+  RateLimits,
   Participants,
   OpeningPage,
   PlatformSettings,
@@ -69,11 +72,22 @@ export default buildConfig({
   secret: process.env.PAYLOAD_SECRET ?? '',
   db: postgresAdapter({
     /*
-     * On a fresh test server there are no migrations yet, so allow the
-     * adapter to sync the schema on boot when PAYLOAD_DB_PUSH=true. Real
-     * production later swaps this for a generated migration workflow.
+     * Schema changes come from migrations, and only from migrations.
+     *
+     * This was written as a spread that added `push: true` when
+     * PAYLOAD_DB_PUSH was set and added nothing otherwise — which left
+     * the adapter's own default in charge, and that default is *on*
+     * outside production. So every `npm run dev` quietly reshaped the
+     * database while the environment variable read as off. That is how
+     * the schema stayed ahead of a migration history that did not exist:
+     * nobody chose it, and nothing said it was happening.
+     *
+     * Stating it explicitly closes that. Setting PAYLOAD_DB_PUSH=true is
+     * now the only way to sync a schema, it is a deliberate act, and
+     * `src/config/env.ts` already refuses to boot with it under
+     * NODE_ENV=production.
      */
-    ...(process.env.PAYLOAD_DB_PUSH === 'true' ? { push: true } : {}),
+    push: process.env.PAYLOAD_DB_PUSH === 'true',
     pool: {
       connectionString: process.env.DATABASE_URL ?? '',
     },
@@ -93,7 +107,10 @@ export default buildConfig({
     Registrations,
     RegistrationSettings,
     ParticipantSessions,
+    AccountSessions,
     Notifications,
+    RateLimits,
+    AuditLog,
     Rooms,
     Sessions,
     SessionRegistrations,

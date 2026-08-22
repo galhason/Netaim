@@ -3,6 +3,8 @@ import {
   activeConferenceSlug,
   setActiveConference as setActiveConferenceRepo,
 } from '@/infrastructure';
+import { cacheTags, cachedContent } from '@/shared/cache/content-cache';
+import { publishedActiveConference } from '@/shared/cache/publish';
 import { listPortalEvents } from './portal-service';
 import type { PortalEvent } from '../types/event-repository';
 
@@ -18,7 +20,7 @@ const startValue = (event: PortalEvent): number => {
  * first, then the nearest upcoming — so the public entrance is never
  * blank while conferences exist.
  */
-export const getActiveConferenceSlug = async (
+const resolveActiveConferenceSlug = async (
   locale: Locale,
 ): Promise<string | null> => {
   const chosen = await activeConferenceSlug().catch(() => null);
@@ -36,5 +38,25 @@ export const getActiveConferenceSlug = async (
   return sorted[0]?.slug ?? null;
 };
 
-export const setActiveConference = (slug: string | null): Promise<void> =>
-  setActiveConferenceRepo(slug);
+/*
+ * Every request to the front door resolves this, and when the pointer is
+ * unset it lists and sorts every published conference to do it. Cached
+ * under its own tag: naming a different conference the live site clears
+ * it, and so does publishing one, since publishing can change which
+ * conference the fallback would pick.
+ */
+export const getActiveConferenceSlug = (
+  locale: Locale,
+): Promise<string | null> =>
+  cachedContent(
+    resolveActiveConferenceSlug,
+    ['active-conference', locale],
+    [cacheTags.activeConference],
+  )(locale);
+
+export const setActiveConference = async (
+  slug: string | null,
+): Promise<void> => {
+  await setActiveConferenceRepo(slug);
+  publishedActiveConference();
+};

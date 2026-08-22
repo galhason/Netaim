@@ -82,7 +82,7 @@ const forParticipant = async (
       ],
     },
     depth: 1,
-    limit: 500,
+    pagination: false,
     sort: 'startsAt',
     overrideAccess: true,
   });

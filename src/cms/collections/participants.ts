@@ -62,8 +62,24 @@ export const Participants: CollectionConfig = {
     },
     {
       /*
+       * The language the participant chose at registration. While they are
+       * signed in every page is served in this language.
+       */
+      name: 'preferredLocale',
+      type: 'select',
+      options: [
+        { label: 'Hebrew', value: 'he' },
+        { label: 'English', value: 'en' },
+      ],
+      defaultValue: 'he',
+      admin: {
+        description: 'Site language while this participant is signed in',
+      },
+    },
+    {
+      /*
        * Connection Framework v1.0: the participant owns every channel.
-       * These open only to connections they approved — HASON Messages
+       * These open only to connections they approved — Netaim Messages
        * is always on and never stored; phone and email default OFF.
        */
       name: 'contactPrefs',

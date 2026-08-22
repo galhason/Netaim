@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from '@/config/locales';
-import { setStudioLocaleAction } from '@/app/(studio)/studio/(classic)/actions';
+import { setStudioLocaleAction } from '@/app/(studio)/studio/actions';
 import { STUDIO_AREAS, STUDIO_MESSAGES } from '../constants/navigation';
 
 interface StudioSidebarProps {

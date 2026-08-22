@@ -8,6 +8,7 @@ import {
 } from '@/features/cinematic';
 import { getActiveConferenceSlug } from '@/features/events';
 import { ConferenceSpotlight } from '@/features/notifications';
+import { currentParticipant, myAreaHref } from '@/features/registration';
 import '@/scenes';
 
 interface ConferenceLandingPageProps {
@@ -38,6 +39,22 @@ const ConferenceLandingPage = async ({
     ? await getConferenceExperience(slug, locale as Locale)
     : null;
 
+  /*
+   * Resolved per request and handed to the stage as render context. It
+   * never enters the descriptor, which is cached and shared.
+   */
+  const me = await currentParticipant().catch(() => null);
+  /*
+   * Where this guest's own area is. Depends on whether they have joined
+   * this conference, so it is resolved here beside their name and never
+   * inside the cached descriptor.
+   */
+  const meHref = me
+    ? await myAreaHref(locale as Locale, slug ?? undefined).catch(
+        () => `/${locale}/me`,
+      )
+    : null;
+
   if (!slug || !experience) {
     return <ConferenceLandingEmpty locale={locale as Locale} />;
   }
@@ -46,8 +63,11 @@ const ConferenceLandingPage = async ({
     <>
       <ConferenceSpotlight slug={slug} locale={locale as Locale} />
       <ExperienceStage
-        experience={buildConferenceDescriptor(experience)}
+        experience={buildConferenceDescriptor(experience, locale as Locale)}
         locale={locale as Locale}
+        viewer={
+          me ? { name: me.name || me.email, ...(meHref ? { href: meHref } : {}) } : null
+        }
       />
     </>
   );
@@ -75,5 +95,12 @@ const ConferenceLandingEmpty = ({ locale }: { locale: Locale }) => (
     </p>
   </main>
 );
+
+/*
+ * The guest's own session decides what this page shows — the banner and
+ * pop-up announcements addressed to them, and their sign-in state. It is
+ * rendered per request; a build-time snapshot would freeze both.
+ */
+export const dynamic = 'force-dynamic';
 
 export default ConferenceLandingPage;

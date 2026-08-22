@@ -2,7 +2,12 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale } from '@/config/locales';
-import { getMyAccount } from '@/features/account';
+import {
+  ACCOUNT_UI,
+  JOINED_CONFERENCE_FANOUT,
+  fanoutTruncates,
+  getMyAccount,
+} from '@/features/account';
 import { LOUNGE_UI } from '@/features/attendee';
 import { myConnections, myMeetings } from '@/features/networking';
 import { listMyAnnouncements } from '@/features/notifications';
@@ -45,7 +50,7 @@ const MessagesPage = async ({ params }: MessagesPageProps) => {
     redirect(`/${locale}/me`);
   }
 
-  const slugs = account.joined.map((conference) => conference.slug).slice(0, 5);
+  const slugs = account.joined.map((conference) => conference.slug).slice(0, JOINED_CONFERENCE_FANOUT);
   const titleOf = new Map(
     account.joined.map((conference) => [conference.slug, conference.title]),
   );
@@ -96,6 +101,9 @@ const MessagesPage = async ({ params }: MessagesPageProps) => {
 
   const empty =
     requests.length === 0 && liveMeetings.length === 0 && feed.length === 0;
+  /* This screen reaches into a bounded number of conferences; say so
+     rather than let a sixth one quietly not be here. */
+  const truncated = fanoutTruncates(account.joined);
 
   return (
     <main
@@ -132,6 +140,11 @@ const MessagesPage = async ({ params }: MessagesPageProps) => {
       </section>
 
       <div className="mx-auto -mt-6 flex max-w-3xl flex-col gap-8 px-6">
+        {truncated ? (
+          <p className="text-center text-xs text-[var(--l-soft)]">
+            {ACCOUNT_UI.fanoutNote[locale]}
+          </p>
+        ) : null}
         {empty ? (
           <p className={`${card} text-center text-sm text-[var(--l-soft)]`}>
             {LOUNGE_UI.noMessages[locale]}
@@ -351,5 +364,14 @@ const MessagesPage = async ({ params }: MessagesPageProps) => {
     </main>
   );
 };
+
+/*
+ * The response depends on who is asking, so it is rendered per request
+ * and never prerendered or shared. Declared rather than left to Next to
+ * infer from a cookie read: an inferred guard disappears the moment a
+ * refactor moves that read behind a helper, and the failure would be a
+ * privacy leak that nothing announces.
+ */
+export const dynamic = 'force-dynamic';
 
 export default MessagesPage;

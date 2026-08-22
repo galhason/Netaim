@@ -74,5 +74,37 @@ export const RegistrationSettings: CollectionConfig = {
       type: 'checkbox',
       defaultValue: false,
     },
+    {
+      /*
+       * What this conference says in its registration emails, when it
+       * wants to say something other than the platform's wording.
+       *
+       * Every field is optional and every field falls back on its own:
+       * leaving the confirmation subject empty keeps the platform's
+       * subject, and a message the organizer never opened keeps its own
+       * words entirely. A blank field has never meant "send nothing".
+       *
+       * Localized, so an organizer writes Hebrew and English separately
+       * and a guest is written to in the language they chose.
+       */
+      name: 'emailTemplates',
+      type: 'group',
+      fields: [
+        'confirmed',
+        'pending',
+        'waitlisted',
+        'approved',
+        'declined',
+        'promoted',
+        'cancelled',
+      ].map((moment) => ({
+        name: moment,
+        type: 'group' as const,
+        fields: [
+          { name: 'subject', type: 'text' as const, localized: true },
+          { name: 'body', type: 'textarea' as const, localized: true },
+        ],
+      })),
+    },
   ],
 };

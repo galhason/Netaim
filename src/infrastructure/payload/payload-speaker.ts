@@ -123,7 +123,7 @@ export const payloadSpeakerRepository: SpeakerRepository = {
       locale,
       depth: 2,
       sort: 'name',
-      limit: 500,
+      pagination: false,
       overrideAccess: true,
     });
     return (result.docs as unknown as SpeakerRow[]).map(resolveRow);
@@ -324,7 +324,7 @@ export const payloadSpeakerRepository: SpeakerRepository = {
         locale,
         depth: 0,
         sort: 'startsAt',
-        limit: 200,
+        pagination: false,
         overrideAccess: true,
       })
       .catch(() => null);

@@ -13,6 +13,12 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   en: 'EN',
 };
 
+/*
+ * Mirrors the signed-in participant's language preference so the edge
+ * middleware (which cannot reach the database) can honour it.
+ */
+export const LOCALE_PREFERENCE_COOKIE = 'participant_locale';
+
 export type TextDirection = 'rtl' | 'ltr';
 
 const LOCALE_DIRECTIONS: Record<Locale, TextDirection> = {

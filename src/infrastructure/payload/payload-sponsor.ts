@@ -55,7 +55,7 @@ export const payloadSponsorRepository: SponsorRepository = {
       collection: 'sponsors',
       where: { event: { equals: eventRow.id } },
       depth: 1,
-      limit: 200,
+      pagination: false,
       overrideAccess: true,
     });
     return (result.docs as unknown as SponsorRow[])

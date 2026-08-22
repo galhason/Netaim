@@ -6,7 +6,7 @@ import { GUIDING_TONES, type GuidingTone } from '../utils/guiding-tones';
 import ShaderCanvas from './shader-canvas';
 
 /*
- * The Guiding Light — Hason's global motion signature. One soft,
+ * The Guiding Light — Netaim's global motion signature. One soft,
  * motivated light source lives over the whole page: it begins above the
  * viewport, and as the visitor scrolls they walk through it — it drifts
  * to the side, sinks, and hands one scene to the next, so the lighting

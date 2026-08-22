@@ -72,5 +72,33 @@ export const Notifications: CollectionConfig = {
       name: 'sentAt',
       type: 'date',
     },
+    {
+      /*
+       * How many times delivery has been tried. A mail relay refusing
+       * for a minute must not cost a guest their confirmation, so a
+       * failure is retried rather than forgotten — and bounded, so a
+       * permanently bad address is not retried forever.
+       *
+       * Deliberately NOT `required`. This column is added to a table
+       * that already holds rows, and a NOT NULL column cannot be added
+       * to one unattended — which is why a schema push silently skipped
+       * it while creating brand-new tables beside it without trouble.
+       * Every reader treats a missing value as zero.
+       */
+      name: 'attempts',
+      type: 'number',
+      defaultValue: 0,
+      index: true,
+    },
+    {
+      /*
+       * Why the last attempt failed, for the operator reading the
+       * outbox. Never the recipient's address: this field is visible in
+       * the Studio, and an error log full of addresses is a mailing
+       * list nobody meant to publish.
+       */
+      name: 'lastError',
+      type: 'text',
+    },
   ],
 };

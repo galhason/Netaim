@@ -113,7 +113,7 @@ export const payloadRegistrationRepository: RegistrationRepository = {
       user,
       depth: 1,
       sort: 'submittedAt',
-      limit: 500,
+      pagination: false,
     });
     return (result.docs as unknown as RegistrationRow[]).map(toSummary);
   },
@@ -273,7 +273,41 @@ interface SettingsRow {
   collectPhone?: boolean | null;
   collectAccessibility?: boolean | null;
   collectDietary?: boolean | null;
+  emailTemplates?: Record<
+    string,
+    { subject?: string | null; body?: string | null } | null
+  > | null;
 }
+
+/*
+ * Payload returns every group field, present or not, so a conference
+ * that customised nothing arrives as seven empty pairs. They are
+ * dropped here rather than carried forward, so the engine sees an
+ * override only where an organizer actually wrote something.
+ */
+const toTemplateOverrides = (
+  row: SettingsRow,
+): RegistrationSettingsDTO['emailTemplates'] => {
+  const source = row.emailTemplates;
+  if (!source) {
+    return undefined;
+  }
+  const written: Record<string, { subject?: string; body?: string }> = {};
+  for (const [moment, value] of Object.entries(source)) {
+    const subject = value?.subject?.trim() ?? '';
+    const body = value?.body?.trim() ?? '';
+    if (subject === '' && body === '') {
+      continue;
+    }
+    written[`registration.${moment}`] = {
+      ...(subject ? { subject } : {}),
+      ...(body ? { body } : {}),
+    };
+  }
+  return Object.keys(written).length > 0
+    ? (written as RegistrationSettingsDTO['emailTemplates'])
+    : undefined;
+};
 
 const toSettings = (row: SettingsRow): RegistrationSettingsDTO => ({
   mode: row.mode,
@@ -285,6 +319,7 @@ const toSettings = (row: SettingsRow): RegistrationSettingsDTO => ({
   collectPhone: Boolean(row.collectPhone),
   collectAccessibility: Boolean(row.collectAccessibility),
   collectDietary: Boolean(row.collectDietary),
+  emailTemplates: toTemplateOverrides(row),
 });
 
 export const payloadRegistrationSettingsRepository: RegistrationSettingsRepository =
@@ -450,22 +485,211 @@ export const payloadListEventParticipants = async (
   return fellows;
 };
 
-export const payloadListPlatformParticipants = async (): Promise<
-  FellowParticipant[]
-> => {
+/*
+ * The people directory: everyone who asked to be findable, in the
+ * conferences the viewer is themselves part of.
+ *
+ * Both halves of that sentence are the point.
+ *
+ * **Asked to be findable.** A participant appears only where they have a
+ * networking profile with `visible` ticked. This replaces a query that
+ * read the `participants` collection directly and returned everyone who
+ * was not blocked — so a guest's name, organization, role, interests and
+ * photograph were shown to strangers while the page told them their
+ * profile appeared "only if you choose to show it". The checkbox existed
+ * and did nothing here.
+ *
+ * **In the viewer's own conferences.** That earlier query had no
+ * organization filter either, so participants of one public body were
+ * listed to participants of another. Every other read on this platform
+ * is scoped to an organization and an integration test enforces it;
+ * this one was outside that discipline. Scoping by shared conference
+ * gives the same protection and is the truer rule: a directory is the
+ * room you are both in.
+ */
+/*
+ * The people sitting in the same rooms as this guest, and which rooms.
+ *
+ * A shared activity is the strongest reason the platform can offer for
+ * one person to write to another — far better than a shared interest
+ * tag. It is also a fact the guest can check: they will recognise the
+ * workshop's name.
+ */
+export interface ActivityPeer {
+  participantId: string;
+  activities: string[];
+}
+
+export const payloadSharedActivityPeers = async (
+  eventSlug: string,
+  participantId: string,
+  locale: string,
+): Promise<ActivityPeer[]> => {
+  if (!eventSlug || !participantId) {
+    return [];
+  }
   const payload = await getSystemPayload();
-  const found = await payload.find({
-    collection: 'participants',
-    where: {
-      and: [
-        { blocked: { not_equals: true } },
-        { anonymizedAt: { exists: false } },
-      ],
-    },
-    sort: '-createdAt',
-    limit: 50,
-    depth: 1,
+  const events = await payload.find({
+    collection: 'events',
+    where: { slug: { equals: eventSlug } },
+    limit: 1,
+    depth: 0,
     overrideAccess: true,
   });
-  return (found.docs as unknown as FellowRow[]).map(toFellow);
+  const event = events.docs[0];
+  if (!event) {
+    return [];
+  }
+
+  const mine = await payload.find({
+    collection: 'session-registrations',
+    where: {
+      and: [
+        { event: { equals: Number(event.id) } },
+        { participant: { equals: participantId } },
+        { status: { in: ACTIVE_FELLOW_STATUSES } },
+      ],
+    },
+    depth: 0,
+    pagination: false,
+    overrideAccess: true,
+  });
+  const sessionIds = [
+    ...new Set(mine.docs.map((row) => Number(relationshipId(row.session)))),
+  ].filter((id) => Number.isFinite(id));
+  if (sessionIds.length === 0) {
+    return [];
+  }
+
+  /*
+   * Titles are read in the reader's own language: a recommendation that
+   * names the workshop in the wrong one explains nothing.
+   */
+  const sessions = await payload.find({
+    collection: 'sessions',
+    where: { id: { in: sessionIds } },
+    depth: 0,
+    pagination: false,
+    locale,
+    overrideAccess: true,
+  });
+  const titleOf = new Map(
+    sessions.docs.map((row) => [String(row.id), String(row.title ?? '')]),
+  );
+
+  const others = await payload.find({
+    collection: 'session-registrations',
+    where: {
+      and: [
+        { session: { in: sessionIds } },
+        { status: { in: ACTIVE_FELLOW_STATUSES } },
+      ],
+    },
+    depth: 0,
+    pagination: false,
+    overrideAccess: true,
+  });
+
+  const shared = new Map<string, Set<string>>();
+  for (const row of others.docs) {
+    const peerId = String(relationshipId(row.participant));
+    if (peerId === String(participantId)) {
+      continue;
+    }
+    const title = titleOf.get(String(relationshipId(row.session)));
+    if (!title) {
+      continue;
+    }
+    const titles = shared.get(peerId) ?? new Set<string>();
+    titles.add(title);
+    shared.set(peerId, titles);
+  }
+
+  return [...shared.entries()]
+    .map(([id, titles]) => ({ participantId: id, activities: [...titles] }))
+    .sort((a, b) => b.activities.length - a.activities.length);
+};
+
+export const payloadListDirectoryParticipants = async (
+  eventSlug: string,
+): Promise<FellowParticipant[]> => {
+  if (!eventSlug) {
+    return [];
+  }
+  const payload = await getSystemPayload();
+  const events = await payload.find({
+    collection: 'events',
+    where: { slug: { equals: eventSlug } },
+    limit: 1,
+    depth: 0,
+    overrideAccess: true,
+  });
+  const event = events.docs[0];
+  if (!event) {
+    return [];
+  }
+  const eventId = Number(event.id);
+
+  /*
+   * Holding a place in an activity is what makes someone a participant
+   * here. The conference is the site rather than something joined from a
+   * list, so an event-level registration is not the signal — and looking
+   * for one is why the directory was empty for people who had signed up
+   * for workshops and were plainly attending.
+   */
+  const places = await payload.find({
+    collection: 'session-registrations',
+    where: {
+      and: [
+        { event: { equals: eventId } },
+        { status: { in: ACTIVE_FELLOW_STATUSES } },
+      ],
+    },
+    depth: 0,
+    pagination: false,
+    overrideAccess: true,
+  });
+  const attending = new Set(
+    places.docs.map((place) => String(relationshipId(place.participant))),
+  );
+  if (attending.size === 0) {
+    return [];
+  }
+
+  const profiles = await payload.find({
+    collection: 'networking-profiles',
+    where: {
+      and: [{ event: { equals: eventId } }, { visible: { equals: true } }],
+    },
+    depth: 1,
+    pagination: false,
+    overrideAccess: true,
+  });
+
+  const seen = new Set<string>();
+  const fellows: FellowParticipant[] = [];
+  for (const profile of profiles.docs) {
+    const participant = (profile as { participant?: unknown }).participant;
+    if (typeof participant !== 'object' || participant === null) {
+      continue;
+    }
+    const row = participant as unknown as FellowRow;
+    if (!attending.has(String(row.id))) {
+      continue;
+    }
+    /*
+     * Consent is not the only gate: a blocked or anonymised account must
+     * disappear from the directory even though its profile row survives.
+     */
+    if (row.blocked === true || row.anonymizedAt) {
+      continue;
+    }
+    const id = String(row.id);
+    if (seen.has(id)) {
+      continue;
+    }
+    seen.add(id);
+    fellows.push(toFellow(row));
+  }
+  return fellows.sort((a, b) => a.name.localeCompare(b.name));
 };

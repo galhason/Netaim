@@ -17,10 +17,38 @@ export type RuntimeMode = 'read' | 'preview' | 'edit' | 'presentation';
  */
 export type ScenePlacement = 'flow' | 'overlay' | 'closing';
 
+/*
+ * Who is looking, as far as a scene needs to know — a display name and
+ * nothing else. `null` means nobody is signed in.
+ *
+ * This travels beside `mode` and `locale` rather than on `content`, and
+ * that distinction is the whole point: `content` comes from the
+ * descriptor, which is cached and shared across visitors, so a name
+ * placed there would be served to the next person. Render context is
+ * resolved per request; content is not.
+ */
+export interface SceneViewer {
+  name: string;
+  /*
+   * Where this viewer's own area is.
+   *
+   * It travels with the name because it is the same kind of fact: it
+   * depends on who is asking. A conference's lounge opens only to
+   * someone registered for that conference and redirects everyone else
+   * to its registration form, so the destination cannot be decided by
+   * the descriptor — which is cached and shared, and therefore knows
+   * nobody. Deciding it there is how a signed-in guest came to be shown
+   * their own name and sent to a sign-up form when they clicked it.
+   */
+  href?: string;
+}
+
 export interface SceneComponentProps<TContent = unknown> {
   content: TContent;
   mode: RuntimeMode;
   locale: Locale;
+  /* Render context, never cached. See `SceneViewer`. */
+  viewer?: SceneViewer | null;
   /*
    * The three presentation axes (Experience Engine v3): a variant
    * chooses the layout, density chooses how tightly it breathes,

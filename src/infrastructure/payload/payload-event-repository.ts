@@ -76,6 +76,9 @@ const toOpeningDraft = (event: Event): EventOpeningDraft => ({
   },
   venue: {
     name: event.opening?.venue?.name ?? undefined,
+    address: event.opening?.venue?.address ?? undefined,
+    mapUrl: event.opening?.venue?.mapUrl ?? undefined,
+    mapLabel: event.opening?.venue?.mapLabel ?? undefined,
     narrative: event.opening?.venue?.narrative ?? undefined,
     accessibility: event.opening?.venue?.accessibilityInfo ?? undefined,
     emergency: event.opening?.venue?.emergencyInfo ?? undefined,
@@ -243,16 +246,27 @@ export const payloadEventRepository: EventRepository = {
       .find({
         collection: 'networking-connections',
         where: { event: { equals: eventId } },
-        limit: 1000,
+        /*
+         * Was capped at 1000. A conference that made more connections
+         * than that left orphaned chat rows behind and the delete then
+         * failed on the foreign key, so the conference could not be
+         * removed at all. `pagination: false` takes them all.
+         */
+        pagination: false,
         depth: 0,
         overrideAccess: true,
       })
       .catch(() => ({ docs: [] as { id: number | string }[] }));
-    for (const connection of connections.docs) {
+    /*
+     * One delete covering every connection, instead of one delete per
+     * connection issued in sequence.
+     */
+    const connectionIds = connections.docs.map((row) => Number(row.id));
+    if (connectionIds.length > 0) {
       await payload
         .delete({
           collection: 'networking-chat-messages',
-          where: { connection: { equals: Number(connection.id) } },
+          where: { connection: { in: connectionIds } },
           overrideAccess: true,
         })
         .catch(() => undefined);
@@ -289,30 +303,38 @@ export const payloadEventRepository: EventRepository = {
       .find({
         collection: 'users',
         where: { 'grants.event': { equals: eventId } },
-        limit: 1000,
+        /* A capped read here would leave a grant holding the key. */
+        pagination: false,
         depth: 0,
         overrideAccess: true,
       })
       .catch(() => null);
-    for (const staff of scopedStaff?.docs ?? []) {
-      if (!Array.isArray(staff.grants)) {
-        continue;
-      }
-      const grants = staff.grants.filter((grant) => {
-        const ref = (grant as { event?: unknown }).event;
-        const id =
-          ref && typeof ref === 'object' ? (ref as { id?: unknown }).id : ref;
-        return id == null || Number(id) !== eventId;
-      });
-      await payload
-        .update({
-          collection: 'users',
-          id: staff.id,
-          data: { grants },
-          overrideAccess: true,
-        })
-        .catch(() => undefined);
-    }
+    /*
+     * Each account keeps a different set of grants, so this is one
+     * update per account by necessity — but they are independent, so
+     * they need not be serial.
+     */
+    await Promise.all(
+      (scopedStaff?.docs ?? []).map(async (staff) => {
+        if (!Array.isArray(staff.grants)) {
+          return;
+        }
+        const grants = staff.grants.filter((grant) => {
+          const ref = (grant as { event?: unknown }).event;
+          const id =
+            ref && typeof ref === 'object' ? (ref as { id?: unknown }).id : ref;
+          return id == null || Number(id) !== eventId;
+        });
+        await payload
+          .update({
+            collection: 'users',
+            id: staff.id,
+            data: { grants },
+            overrideAccess: true,
+          })
+          .catch(() => undefined);
+      }),
+    );
     await payload.delete({
       collection: 'events',
       id: event.id,
@@ -490,6 +512,9 @@ export const payloadEventRepository: EventRepository = {
           },
           venue: {
             name: openingText(input.venueName),
+            address: openingText(input.venueAddress),
+            mapUrl: openingText(input.venueMapUrl),
+            mapLabel: openingText(input.venueMapLabel),
             narrative: openingText(input.venueNarrative),
             accessibilityInfo: openingText(input.venueAccessibility),
             emergencyInfo: openingText(input.venueEmergency),

@@ -1,7 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from '@/config/locales';
-import { findEvent, getEventOpeningDraft, listMedia } from '@/features/events';
+import {
+  findEvent,
+  getEventOpeningDraft,
+  listMedia,
+  reviewLaunch,
+} from '@/features/events';
 import { listAgenda } from '@/features/program';
 import {
   CONFERENCE_SCENE_SEQUENCE,
@@ -40,7 +45,7 @@ import {
   addSessionAction,
   deleteSessionAction,
   updateSessionAction,
-} from '../../../(classic)/actions';
+} from '../../../actions';
 import {
   addConferenceSpeakerAction,
   consoleLaunchExperienceAction,
@@ -120,11 +125,18 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
   const contentLocale: Locale =
     contentParam === 'en' || contentParam === 'he' ? contentParam : 'he';
 
-  const [draft, media, summary, agenda] = await Promise.all([
+  /*
+   * Readiness is reviewed here rather than linked to: the launch button
+   * is on this screen, so the reasons it may refuse belong on it too.
+   * The review is read in the Studio's own language, like every other
+   * label — it is guidance for the organizer, not conference content.
+   */
+  const [draft, media, summary, agenda, review] = await Promise.all([
     getEventOpeningDraft(slug, contentLocale),
     listMedia().catch(() => []),
     findEvent(slug).catch(() => null),
     listAgenda(slug, contentLocale).catch(() => []),
+    reviewLaunch(slug, locale).catch(() => null),
   ]);
 
   if (!draft) {
@@ -259,6 +271,17 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
           aria-label={CONSOLE_UI.contentLanguage[locale]}
           className="flex items-center gap-3 text-xs"
         >
+          {review ? (
+            <a
+              href="#readiness"
+              className="flex items-baseline gap-1.5 text-[var(--c-text-soft)] transition-colors hover:text-[var(--c-text)]"
+            >
+              <span className="tabular-nums font-medium text-[var(--c-text)]">
+                {review.health.readinessScore}%
+              </span>
+              <span>{CONSOLE_UI.readiness[locale]}</span>
+            </a>
+          ) : null}
           <form action={consoleLaunchExperienceAction}>
             <input type="hidden" name="slug" value={slug} />
             <input type="hidden" name="contentLocale" value={contentLocale} />
@@ -300,14 +323,76 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
           {locale === 'he'
             ? `ההעלאה נעצרה — ${blockers ?? '?'} חסמים בבדיקת המוכנות. `
             : `Launch stopped — ${blockers ?? '?'} readiness blockers. `}
-          <Link
-            href={`/studio/events/${slug}`}
-            className="underline underline-offset-4"
-          >
-            {locale === 'he' ? 'לפירוט ולתיקון' : 'See details'}
-          </Link>
+          <a href="#readiness" className="underline underline-offset-4">
+            {CONSOLE_UI.seeBlockers[locale]}
+          </a>
         </p>
       ) : null}
+      {/*
+        What stands between this conference and the public, in full. It
+        was a count and a link into the studio being retired; a number
+        alone tells an organizer they are blocked without telling them
+        by what.
+      */}
+      <section
+        id="readiness"
+        className="mx-4 mt-3 rounded-xl border border-[var(--c-line)] bg-[var(--c-glass)]"
+      >
+        {review ? (
+          review.health.requiredActions.length > 0 ? (
+            <details>
+              <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 text-xs text-[var(--c-text-soft)] transition-colors hover:text-[var(--c-text)]">
+                <span className="tabular-nums font-medium text-[var(--c-text)]">
+                  {review.health.readinessScore}%
+                </span>
+                <span>{CONSOLE_UI.requiredActions[locale]}</span>
+                <span className="tabular-nums text-[var(--c-text-faint)]">
+                  {review.health.requiredActions.length}
+                </span>
+              </summary>
+              <ul className="border-t border-[var(--c-line)]">
+                {review.health.requiredActions.map((finding) => (
+                  <li
+                    key={finding.id}
+                    className="flex flex-col gap-0.5 border-b border-[var(--c-line)] px-4 py-3 last:border-b-0"
+                  >
+                    <p className="flex items-baseline gap-2 text-xs text-[var(--c-text)]">
+                      <span
+                        aria-hidden="true"
+                        className={
+                          finding.severity === 'blocker'
+                            ? 'text-[#E39A8B]'
+                            : 'text-[var(--c-bronze)]'
+                        }
+                      >
+                        ●
+                      </span>
+                      {finding.message[locale]}
+                    </p>
+                    <p className="text-[11px] text-[var(--c-text-faint)]">
+                      {finding.action[locale]}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+              <p className="px-4 py-2.5 text-[11px] text-[var(--c-text-faint)]">
+                {CONSOLE_UI.readinessBlocked[locale]}
+              </p>
+            </details>
+          ) : (
+            <p className="flex items-center gap-2 px-4 py-2.5 text-xs text-[var(--c-text-soft)]">
+              <span className="tabular-nums font-medium text-[var(--c-text)]">
+                {review.health.readinessScore}%
+              </span>
+              {CONSOLE_UI.readinessClear[locale]}
+            </p>
+          )
+        ) : (
+          <p className="px-4 py-2.5 text-xs text-[var(--c-text-faint)]">
+            {CONSOLE_UI.readinessUnavailable[locale]}
+          </p>
+        )}
+      </section>
       <div className="flex h-full min-h-0 gap-4 p-4">
         <aside className="flex w-48 flex-none flex-col gap-1 overflow-y-auto rounded-xl border border-[var(--c-line)] bg-[var(--c-glass)] p-3">
           <p className="mb-2 px-1 text-[10px] font-medium tracking-[0.2em] text-[var(--c-text-faint)]">
@@ -625,6 +710,23 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                     ) : null}
                     {session.waitlistEnabled ? (
                       <input type="hidden" name="waitlistEnabled" value="on" />
+                    ) : null}
+                    {/*
+                      Carried through because the action writes the whole
+                      session, not a patch: a field this form does not
+                      submit is written as empty. Track and language are
+                      edited in the Activity Studio, and were being
+                      cleared by every save made here.
+                    */}
+                    {session.track ? (
+                      <input type="hidden" name="track" value={session.track} />
+                    ) : null}
+                    {session.language ? (
+                      <input
+                        type="hidden"
+                        name="language"
+                        value={session.language}
+                      />
                     ) : null}
                     <CTextField
                       name="title"
@@ -1213,6 +1315,29 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                     label={label('venueName', locale)}
                     defaultValue={draft.venue.name}
                   />
+                  <CTextField
+                    name="venueAddress"
+                    label={locale === 'he' ? 'כתובת' : 'Address'}
+                    defaultValue={draft.venue.address}
+                  />
+                  <CTextField
+                    name="venueMapUrl"
+                    label={
+                      locale === 'he'
+                        ? 'קישור מפה (לא חובה)'
+                        : 'Map link (optional)'
+                    }
+                    defaultValue={draft.venue.mapUrl}
+                  />
+                  <CTextField
+                    name="venueMapLabel"
+                    label={
+                      locale === 'he'
+                        ? 'טקסט כפתור הניווט'
+                        : 'Navigation button text'
+                    }
+                    defaultValue={draft.venue.mapLabel}
+                  />
                   <CTextAreaField
                     name="venueNarrative"
                     label={label('venueNarrative', locale)}
@@ -1401,5 +1526,14 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
     </ConsoleShell>
   );
 };
+
+/*
+ * The response depends on who is asking, so it is rendered per request
+ * and never prerendered or shared. Declared rather than left to Next to
+ * infer from a cookie read: an inferred guard disappears the moment a
+ * refactor moves that read behind a helper, and the failure would be a
+ * privacy leak that nothing announces.
+ */
+export const dynamic = 'force-dynamic';
 
 export default ConsoleEventPage;

@@ -1,7 +1,6 @@
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
-import { getConferenceExperience } from '@/features/cinematic';
-import { Glyph } from '@/features/cinematic/components/icons';
+import { getConferenceExperience, Glyph } from '@/features/cinematic';
 import { getActiveConferenceSlug } from '@/features/events';
 import { SectionHeader, EmptyState } from '@/features/conference';
 import type { CinematicIcon } from '@/features/cinematic/types/cinematic';
@@ -77,12 +76,29 @@ const InfoPage = async ({ params }: InfoPageProps) => {
 
   const facts = venue.facts.slice(0, 4);
   const subtitle = venue.subtitle?.trim();
+  const address = venue.address?.trim();
+  /*
+   * What a map is asked to find. The written address when the editor
+   * gave one; otherwise the venue's name and the conference's location,
+   * which is what this page had before and is often only a city.
+   */
   const query = encodeURIComponent(
-    [venue.name, subtitle].filter(Boolean).join(', '),
+    address || [venue.name, subtitle].filter(Boolean).join(', '),
   );
-  const mapsHref = `https://www.google.com/maps/search/?api=1&query=${query}`;
+  const generatedMaps = `https://www.google.com/maps/search/?api=1&query=${query}`;
+  /*
+   * A pinned link wins over a generated search: the editor supplied it
+   * precisely because the search finds the wrong place.
+   */
+  const mapUrl = venue.mapUrl?.trim();
+  const mapsHref = mapUrl || generatedMaps;
+  const mapsLabel =
+    (mapUrl && venue.mapLabel?.trim()) ||
+    (he ? 'פתיחה ב-Google Maps' : 'Open in Google Maps');
   const wazeHref = `https://waze.com/ul?q=${query}&navigate=yes`;
   const arrivalDate = experience?.arrival?.date;
+  const accessibility = venue.accessibility?.trim();
+  const emergency = venue.emergency?.trim();
 
   return (
     <main className="pb-24">
@@ -103,10 +119,10 @@ const InfoPage = async ({ params }: InfoPageProps) => {
             <h1 className="mt-2 max-w-3xl font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-white md:text-6xl">
               {venue.name}
             </h1>
-            {subtitle ? (
+            {address || subtitle ? (
               <p className="mt-3 inline-flex items-center gap-2 text-lg text-white/85">
                 <PinIcon className="size-5 flex-none text-white/70" />
-                {subtitle}
+                {address ?? subtitle}
               </p>
             ) : null}
           </div>
@@ -160,6 +176,44 @@ const InfoPage = async ({ params }: InfoPageProps) => {
         </section>
       ) : null}
 
+      {/*
+        Accessibility and emergency information. A conference cannot go
+        live until both are written — the readiness rules make them
+        blockers — and until now nothing published them. They belong on
+        the page a guest opens before travelling, not in the record the
+        gate reads.
+      */}
+      {accessibility || emergency ? (
+        <section className="mx-auto max-w-6xl px-6 pt-12 md:px-10">
+          <SectionHeader
+            eyebrow={he ? 'שיהיה נוח ובטוח' : 'Comfort and safety'}
+            title={he ? 'נגישות ומידע חירום' : 'Accessibility and safety'}
+          />
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {accessibility ? (
+              <article className="rounded-[var(--x-r-card)] border border-[var(--x-line)] bg-[var(--x-surface)] p-6 shadow-[var(--x-shadow)]">
+                <h2 className="font-display text-base font-bold text-[var(--x-ink)]">
+                  {he ? 'נגישות' : 'Accessibility'}
+                </h2>
+                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[var(--x-soft)]">
+                  {accessibility}
+                </p>
+              </article>
+            ) : null}
+            {emergency ? (
+              <article className="rounded-[var(--x-r-card)] border border-[var(--x-line)] bg-[var(--x-surface)] p-6 shadow-[var(--x-shadow)]">
+                <h2 className="font-display text-base font-bold text-[var(--x-ink)]">
+                  {he ? 'מידע חירום' : 'In an emergency'}
+                </h2>
+                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[var(--x-soft)]">
+                  {emergency}
+                </p>
+              </article>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
       {/* Directions */}
       <section className="mx-auto max-w-6xl px-6 pt-12 md:px-10">
         <div
@@ -190,7 +244,9 @@ const InfoPage = async ({ params }: InfoPageProps) => {
                 <p className="mt-1 font-display text-xl font-bold text-white">
                   {venue.name}
                 </p>
-                {subtitle ? (
+                {address ? (
+                  <p className="mt-0.5 text-sm text-white/70">{address}</p>
+                ) : subtitle ? (
                   <p className="mt-0.5 text-sm text-white/70">{subtitle}</p>
                 ) : null}
               </div>
@@ -202,7 +258,7 @@ const InfoPage = async ({ params }: InfoPageProps) => {
                 rel="noreferrer"
                 className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-white px-5 text-sm font-semibold text-[#0d1626] transition-transform hover:-translate-y-0.5"
               >
-                {he ? 'פתיחה ב-Google Maps' : 'Open in Google Maps'}
+                {mapsLabel}
               </a>
               <a
                 href={wazeHref}

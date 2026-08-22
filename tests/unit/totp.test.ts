@@ -43,6 +43,6 @@ describe('totp', () => {
     const url = otpauthUrl('gal@example.com', secret);
     expect(url).toContain('otpauth://totp/');
     expect(url).toContain(secret);
-    expect(url).toContain('issuer=HASON');
+    expect(url).toContain('issuer=Netaim');
   });
 });

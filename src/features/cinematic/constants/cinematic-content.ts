@@ -98,6 +98,10 @@ export const CINEMATIC_UI = {
   scrollHint: { he: 'המסע מתחיל בגלילה', en: 'The journey begins below' },
   toStudio: { he: 'כניסה לסטודיו', en: 'Enter Studio' },
   myArea: { he: 'האזור האישי', en: 'My Space' },
+  /* The nav when nobody is signed in. */
+  signIn: { he: 'התחברות', en: 'Sign in' },
+  /* The nav when someone is. The name follows. */
+  signedInAs: { he: 'מחובר/ת', en: 'Signed in' },
   momentsEyebrow: { he: 'כך זה מרגיש', en: 'How it feels' },
   momentsTitle: { he: 'דמיינו את עצמכם שם', en: 'Imagine yourself there' },
   speakersEyebrow: { he: 'המרצים המובילים', en: 'Featured speakers' },

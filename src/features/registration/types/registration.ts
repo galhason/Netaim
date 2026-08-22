@@ -1,3 +1,4 @@
+import type { RegistrationTemplateOverrides } from '@/notification-engine';
 import type { Locale } from '@/config/locales';
 import type {
   RegistrationMode,
@@ -12,6 +13,12 @@ export interface RegistrationSettingsDTO {
   closesAt?: string;
   waitlistEnabled: boolean;
   confirmationMessage?: string;
+  /*
+   * What this conference says in its registration emails instead of the
+   * platform's wording. Absent, or a blank field inside it, means the
+   * platform's words stand.
+   */
+  emailTemplates?: RegistrationTemplateOverrides;
   collectPhone: boolean;
   collectAccessibility: boolean;
   collectDietary: boolean;

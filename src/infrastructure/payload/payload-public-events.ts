@@ -93,7 +93,12 @@ export const toOpeningContent = (event: Event): EventOpeningContent => {
     })),
     venue: {
       name: opening?.venue?.name ?? undefined,
+      address: opening?.venue?.address ?? undefined,
+      mapUrl: opening?.venue?.mapUrl ?? undefined,
+      mapLabel: opening?.venue?.mapLabel ?? undefined,
       narrative: opening?.venue?.narrative ?? undefined,
+      accessibility: opening?.venue?.accessibilityInfo ?? undefined,
+      emergency: opening?.venue?.emergencyInfo ?? undefined,
       imageUrl: mediaUrl(opening?.venue?.image),
       facts: (opening?.venue?.facts ?? []).map((fact) => ({
         label: fact.label ?? undefined,

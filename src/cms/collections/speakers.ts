@@ -5,7 +5,7 @@ import { orgContentAccess } from '../access-presets';
  * A Speaker is one conference's roster entry for a voice on stage. It is
  * hybrid by design: it may LINK an existing platform account (a
  * participant) and lend that account's identity live, or it may hold its
- * own EXTERNAL details for a guest with no HASON account. When an account
+ * own EXTERNAL details for a guest with no Netaim account. When an account
  * is linked, the manual fields act as per-conference overrides — the same
  * account-or-manual pattern the opening speakers already use — so a
  * profile edit propagates to every activity without touching the speaker.

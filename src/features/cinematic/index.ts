@@ -42,6 +42,12 @@ export { default as ConferenceSpeakersScene } from './components/speakers-scene'
 export { default as ConferenceProgramScene } from './components/program-scene';
 export { default as ConferenceVenueScene } from './components/venue-scene';
 export { default as ConferenceClosingScene } from './components/closing-scene';
+/*
+ * Pieces other surfaces compose with. Exported here so nothing reaches
+ * into `components/` directly (Dependency Rules §3).
+ */
+export { Glyph } from './components/icons';
+export { default as SessionCover } from './components/session-cover';
 export type {
   ArrivalScene as ArrivalSceneData,
   StoryScene as StorySceneData,

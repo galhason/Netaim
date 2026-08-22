@@ -1,20 +1,17 @@
-import {
-  createHash,
-  createHmac,
-  randomBytes,
-  scryptSync,
-  timingSafeEqual,
-} from 'crypto';
+import { createHash, randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { cookies } from 'next/headers';
-import type { Locale } from '@/config/locales';
-import { notificationOutbox, participantSessionRepository } from '@/infrastructure';
-import { isStrongPassword } from '../schemas/password';
+import { LOCALE_PREFERENCE_COOKIE, type Locale } from '@/config/locales';
+import { participantSessionRepository, sendNotification } from '@/infrastructure';
 import {
-  lockedFor,
-  recordFailure,
-  recordSuccess,
-  throttleKey,
-} from './signin-throttle';
+  SESSION_COOKIE,
+  SESSION_TTL_SECONDS,
+  mintSession,
+  readSessionCookie,
+  signedToken,
+  verifySignedToken,
+} from '@/shared';
+import { checkRateLimit, clearRateLimit } from '@/features/access';
+import { isStrongPassword } from '../schemas/password';
 import { generateTotpSecret, otpauthUrl, verifyTotp } from './totp';
 import type { ParticipantSummary } from '../types/registration';
 
@@ -24,21 +21,25 @@ import type { ParticipantSummary } from '../types/registration';
  * cookie. Government SSO later is an Identity-Engine strategy — this
  * contract does not change.
  */
+const LINK_TTL_MS = 15 * 60 * 1000;
+
 /*
  * `||` and not `??`: an empty REGISTRATION_LINK_SECRET line in .env
- * must fall through to PAYLOAD_SECRET, never sign with ''.
+ * must fall through to PAYLOAD_SECRET, never hash with ''.
  */
-const SECRET =
-  process.env.REGISTRATION_LINK_SECRET || process.env.PAYLOAD_SECRET || '';
-const SESSION_COOKIE = 'participant_session';
-const LINK_TTL_MS = 15 * 60 * 1000;
-const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
+const hashSecret = (): string => {
+  const value =
+    process.env.REGISTRATION_LINK_SECRET || process.env.PAYLOAD_SECRET || '';
+  if (!value) {
+    throw new Error(
+      'Cannot hash link tokens: set REGISTRATION_LINK_SECRET or PAYLOAD_SECRET.',
+    );
+  }
+  return value;
+};
 
 const tokenHashOf = (raw: string): string =>
-  createHash('sha256').update(`${raw}${SECRET}`).digest('hex');
-
-const sign = (value: string): string =>
-  createHmac('sha256', SECRET).update(value).digest('hex');
+  createHash('sha256').update(`${raw}${hashSecret()}`).digest('hex');
 
 const serverUrl = (): string => process.env.NEXT_PUBLIC_SERVER_URL ?? '';
 
@@ -78,19 +79,19 @@ export const signInWithPassword = async (
   password: string,
 ): Promise<PasswordSignInResult> => {
   /*
-   * Throttle before touching credentials: five failures close the
-   * door for a while, whether or not the account exists.
+   * Throttle before touching credentials: the allowance is spent
+   * whether or not the account exists, so the limiter cannot be used to
+   * discover which addresses are registered. The counter is shared and
+   * durable — a deploy no longer hands a guesser a clean slate.
    */
-  const key = throttleKey(email);
-  const now = Date.now();
-  if (lockedFor(key, now) > 0) {
+  const attempt = await checkRateLimit('sign-in', email);
+  if (!attempt.allowed) {
     return { ok: false, reason: 'locked' };
   }
   const credentials = await participantSessionRepository
     .credentialsByEmail(email)
     .catch(() => null);
   if (!credentials) {
-    recordFailure(key, now);
     return { ok: false, reason: 'wrong' };
   }
   if (credentials.blocked) {
@@ -100,7 +101,6 @@ export const signInWithPassword = async (
     return { ok: false, reason: 'noPassword' };
   }
   if (!verifyPassword(password, credentials.passwordHash)) {
-    recordFailure(key, now);
     return { ok: false, reason: 'wrong' };
   }
   const participant = await participantSessionRepository.participantById(
@@ -109,7 +109,7 @@ export const signInWithPassword = async (
   if (!participant) {
     return { ok: false, reason: 'blocked' };
   }
-  recordSuccess(key);
+  await clearRateLimit('sign-in', email);
   if (credentials.totpEnabled) {
     /*
      * 2FA: the session waits for the authenticator. The ticket only
@@ -123,21 +123,20 @@ export const signInWithPassword = async (
 
 /*
  * The TOTP ticket: a signed, expiring claim that the password step
- * passed. The `totp.` prefix keeps it useless as anything else.
+ * passed. The `totp` purpose keeps it useless as anything else.
  */
 const TOTP_TICKET_TTL_MS = 5 * 60 * 1000;
 
-const totpTicket = (participantId: string): string => {
-  const expiresAt = Date.now() + TOTP_TICKET_TTL_MS;
-  return `${participantId}.${expiresAt}.${sign(`totp.${participantId}.${expiresAt}`)}`;
-};
+const totpTicket = (participantId: string): string =>
+  signedToken('totp', [participantId, String(Date.now() + TOTP_TICKET_TTL_MS)]);
 
 const consumeTotpTicket = (ticket: string): string | null => {
-  const [id, expiry, signature] = ticket.split('.');
-  if (!id || !expiry || !signature) {
+  const parts = verifySignedToken('totp', ticket, 2);
+  if (!parts) {
     return null;
   }
-  if (sign(`totp.${id}.${expiry}`) !== signature) {
+  const [id, expiry] = parts;
+  if (!expiry) {
     return null;
   }
   return Number(expiry) > Date.now() ? id : null;
@@ -153,9 +152,14 @@ export const completeTotpSignIn = async (
   if (!participantId) {
     return 'expired';
   }
-  const key = `totp:${participantId}`;
-  const now = Date.now();
-  if (lockedFor(key, now) > 0) {
+  /*
+   * The second factor gets its own allowance: six digits are guessable
+   * in a way a password is not, and the ticket already proves the first
+   * round passed.
+   */
+  const subject = `totp:${participantId}`;
+  const attempt = await checkRateLimit('sign-in', subject);
+  if (!attempt.allowed) {
     return 'locked';
   }
   const state = await participantSessionRepository
@@ -164,11 +168,10 @@ export const completeTotpSignIn = async (
   if (!state?.secret || !state.enabledAt) {
     return 'expired';
   }
-  if (!verifyTotp(state.secret, code, now)) {
-    recordFailure(key, now);
+  if (!verifyTotp(state.secret, code, Date.now())) {
     return 'wrong';
   }
-  recordSuccess(key);
+  await clearRateLimit('sign-in', subject);
   await establishSession(participantId);
   return 'ok';
 };
@@ -267,12 +270,13 @@ export const openAccountWithPassword = async (
   email: string,
   name: string,
   password: string,
+  preferredLocale: Locale,
 ): Promise<OpenAccountOutcome> => {
   if (!isStrongPassword(password)) {
     return { ok: false, reason: 'weakPassword' };
   }
   const result = await participantSessionRepository
-    .openAccount(email, name, hashPassword(password))
+    .openAccount(email, name, hashPassword(password), preferredLocale)
     .catch(() => null);
   if (!result) {
     return { ok: false, reason: 'failed' };
@@ -322,7 +326,7 @@ export const requestMagicLink = async (
     return;
   }
   const link = `${serverUrl()}/${locale}/events/${slug}/enter?token=${raw}`;
-  await notificationOutbox.enqueue({
+  await sendNotification({
     participantId: issued.participant.id,
     eventSlug: slug,
     type: 'participant.signin',
@@ -331,7 +335,6 @@ export const requestMagicLink = async (
       locale === 'he' ? 'הכניסה לאזור האישי' : 'Your personal area sign-in',
     body:
       (locale === 'he' ? 'קישור הכניסה שלך: ' : 'Your sign-in link: ') + link,
-    status: 'queued',
   });
 };
 
@@ -344,13 +347,31 @@ export const requestMagicLink = async (
  */
 export type AccountLinkResult =
   | { ok: true; link: string; created: boolean }
-  | { ok: false; reason: 'needName' | 'failed'; detail?: string };
+  | {
+      ok: false;
+      reason: 'needName' | 'failed' | 'tooMany';
+      detail?: string;
+      retryAfterSeconds?: number;
+    };
 
 export const requestAccountLink = async (
   email: string,
   name: string | null,
   locale: Locale,
 ): Promise<AccountLinkResult> => {
+  /*
+   * Issuing a link costs an email and creates an account on first use,
+   * so the endpoint is worth abusing twice over: as a mail relay and as
+   * a way to fill the participants table. Five an hour per address.
+   */
+  const attempt = await checkRateLimit('magic-link', email);
+  if (!attempt.allowed) {
+    return {
+      ok: false,
+      reason: 'tooMany',
+      retryAfterSeconds: attempt.retryAfterSeconds,
+    };
+  }
   const raw = randomBytes(32).toString('hex');
   const expiresAt = new Date(Date.now() + LINK_TTL_MS).toISOString();
 
@@ -374,19 +395,21 @@ export const requestAccountLink = async (
     return { ok: false, reason: 'needName' };
   }
   const link = `${serverUrl()}/${locale}/enter?token=${raw}`;
-  await notificationOutbox
-    .enqueue({
-      participantId: issued.participant.id,
-      eventSlug: '',
-      type: 'participant.signin',
-      locale,
-      subject:
-        locale === 'he' ? 'הכניסה לאזור האישי' : 'Your personal area sign-in',
-      body:
-        (locale === 'he' ? 'קישור הכניסה שלך: ' : 'Your sign-in link: ') + link,
-      status: 'queued',
-    })
-    .catch(() => undefined);
+  /*
+   * Never awaited into a failure: a mail server being unreachable must
+   * not tell the visitor their account does not exist. The outbox has
+   * the record and the dispatcher will retry.
+   */
+  await sendNotification({
+    participantId: issued.participant.id,
+    eventSlug: '',
+    type: 'participant.signin',
+    locale,
+    subject:
+      locale === 'he' ? 'הכניסה לאזור האישי' : 'Your personal area sign-in',
+    body:
+      (locale === 'he' ? 'קישור הכניסה שלך: ' : 'Your sign-in link: ') + link,
+  }).catch(() => undefined);
   return { ok: true, link, created: issued.created };
 };
 
@@ -400,9 +423,19 @@ export const consumeMagicLink = async (
   return result ? result.participant : null;
 };
 
-export const establishSession = async (participantId: string): Promise<void> => {
+/*
+ * The language preference mirrored for the edge middleware, which cannot
+ * reach the database. Written whenever a session starts or the choice
+ * changes; removed when the account has no preference, so one account's
+ * language can never leak into the next.
+ */
+const writeLocaleCookie = async (locale: Locale | null): Promise<void> => {
   const store = await cookies();
-  store.set(SESSION_COOKIE, `${participantId}.${sign(participantId)}`, {
+  if (!locale) {
+    store.delete(LOCALE_PREFERENCE_COOKIE);
+    return;
+  }
+  store.set(LOCALE_PREFERENCE_COOKIE, locale, {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
@@ -411,55 +444,106 @@ export const establishSession = async (participantId: string): Promise<void> => 
   });
 };
 
+export const establishSession = async (participantId: string): Promise<void> => {
+  const store = await cookies();
+  const session = mintSession(Date.now());
+  /*
+   * The record first. If it fails, the cookie is never written and the
+   * visitor is simply not signed in — the honest outcome. Setting the
+   * cookie first would hand out a credential that resolves to nothing.
+   */
+  await participantSessionRepository.openSession(
+    participantId,
+    session.tokenHash,
+    new Date(session.expiresAt).toISOString(),
+  );
+  store.set(SESSION_COOKIE, session.cookie, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: SESSION_TTL_SECONDS,
+  });
+  const preference = await participantSessionRepository
+    .localePreference(participantId)
+    .catch(() => null);
+  await writeLocaleCookie(preference);
+};
+
 export const currentParticipant =
   async (): Promise<ParticipantSummary | null> => {
     const store = await cookies();
-    const raw = store.get(SESSION_COOKIE)?.value;
-    if (!raw) {
+    const tokenHash = readSessionCookie(
+      store.get(SESSION_COOKIE)?.value,
+      Date.now(),
+    );
+    if (!tokenHash) {
       return null;
     }
-    const [id, signature] = raw.split('.');
-    if (!id || !signature || sign(id) !== signature) {
-      return null;
-    }
-    return participantSessionRepository.participantById(id);
+    return participantSessionRepository.resolveSession(
+      tokenHash,
+      new Date().toISOString(),
+    );
   };
 
+/*
+ * Signing out ends the session, and only then forgets the cookie. The
+ * order matters: revoking first means that even if the browser keeps the
+ * value — or someone already copied it — it resolves to nothing.
+ */
 export const clearSession = async (): Promise<void> => {
   const store = await cookies();
+  const tokenHash = readSessionCookie(
+    store.get(SESSION_COOKIE)?.value,
+    Date.now(),
+  );
+  if (tokenHash) {
+    await participantSessionRepository
+      .revokeSession(tokenHash, new Date().toISOString())
+      .catch(() => undefined);
+  }
   store.delete(SESSION_COOKIE);
+  store.delete(LOCALE_PREFERENCE_COOKIE);
+};
+
+/*
+ * Ends every live sign-in for the account. The answer to a lost phone,
+ * and the thing a password or 2FA change should trigger.
+ */
+export const clearAllSessions = async (participantId: string): Promise<void> => {
+  await participantSessionRepository
+    .revokeAllSessions(participantId, new Date().toISOString())
+    .catch(() => undefined);
+};
+
+/*
+ * The permanent language choice: stored on the account when signed in,
+ * and always mirrored into the cookie the middleware reads.
+ */
+export const saveMyLocalePreference = async (locale: Locale): Promise<void> => {
+  const me = await currentParticipant();
+  if (me) {
+    await participantSessionRepository
+      .setLocalePreference(me.id, locale)
+      .catch(() => undefined);
+  }
+  await writeLocaleCookie(locale);
+};
+
+export const myLocalePreference = async (): Promise<Locale | null> => {
+  const store = await cookies();
+  const raw = store.get(LOCALE_PREFERENCE_COOKIE)?.value;
+  return raw === 'he' || raw === 'en' ? raw : null;
 };
 
 /*
  * The entrance token projected onto the ticket QR — a signed
  * registration id that a gate scanner can verify offline (the scanner
- * itself is a sequenced follow-up).
+ * itself is a sequenced follow-up). The `entrance` purpose is what keeps
+ * a printed badge from being pasted in as a session cookie.
  */
 export const entranceToken = (registrationId: string): string =>
-  `${registrationId}.${sign(registrationId)}`;
-
-/*
- * QR Connect (Conference QR Connect): the badge QR carries only a
- * signed participant identifier — never personal information. The
- * `connect.` prefix keeps this token useless as a session cookie.
- */
-export const myConnectBadgeToken = async (): Promise<string | null> => {
-  const me = await currentParticipant();
-  if (!me) {
-    return null;
-  }
-  return `${me.id}.${sign(`connect.${me.id}`)}`;
-};
-
-export const resolveConnectToken = async (
-  token: string,
-): Promise<ParticipantSummary | null> => {
-  const [id, signature] = token.split('.');
-  if (!id || !signature || sign(`connect.${id}`) !== signature) {
-    return null;
-  }
-  return participantSessionRepository.participantById(id);
-};
+  signedToken('entrance', [registrationId]);
 
 /*
  * Verifies an entrance token at the gate (offline-capable: it needs only
@@ -467,9 +551,6 @@ export const resolveConnectToken = async (
  * is valid, otherwise null.
  */
 export const verifyEntranceToken = (token: string): string | null => {
-  const [id, signature] = token.split('.');
-  if (!id || !signature || sign(id) !== signature) {
-    return null;
-  }
-  return id;
+  const parts = verifySignedToken('entrance', token, 1);
+  return parts ? parts[0] : null;
 };

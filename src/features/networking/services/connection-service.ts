@@ -1,9 +1,10 @@
+import { BRAND_LATIN } from '@/config/brand';
 import {
   connectionRepository,
   participantSessionRepository,
   registrationRepository,
 } from '@/infrastructure';
-import { currentParticipant, resolveConnectToken } from '@/features/registration';
+import { currentParticipant } from '@/features/registration';
 import {
   manageConnection,
   respondToConnection,
@@ -11,6 +12,10 @@ import {
   type ConnectionResponse,
 } from '@/networking-engine';
 import type { ConnectionSummary, MyConnection } from '../types/connection';
+import {
+  noticeConnectionAccepted,
+  noticeConnectionRequested,
+} from './networking-notices';
 
 export const requestConnection = async (
   slug: string,
@@ -21,6 +26,27 @@ export const requestConnection = async (
   if (!me || me.id === addresseeId) {
     return null;
   }
+  /*
+   * The conference is proof that these two share a room, so it cannot be
+   * taken on the form's word. It arrives from a hidden input, and a
+   * request filed in a conference neither party attends would reach
+   * someone who never agreed to be reachable — and would sit in their
+   * list under the name of an event they have nothing to do with.
+   *
+   * The QR path already resolved the shared conference on the server;
+   * this is the same rule for the path that did not.
+   */
+  const [mine, theirs] = await Promise.all([
+    registrationRepository
+      .eventSlugsForParticipant(me.id)
+      .catch((): string[] => []),
+    registrationRepository
+      .eventSlugsForParticipant(addresseeId)
+      .catch((): string[] => []),
+  ]);
+  if (!mine.includes(slug) || !theirs.includes(slug)) {
+    return null;
+  }
   const existing = await connectionRepository.findActiveBetween(
     slug,
     me.id,
@@ -29,7 +55,18 @@ export const requestConnection = async (
   if (existing) {
     return existing;
   }
-  return connectionRepository.create(slug, me.id, addresseeId, message);
+  const created = await connectionRepository.create(
+    slug,
+    me.id,
+    addresseeId,
+    message,
+  );
+  /*
+   * Told, never blocked: the connection stands whether or not the note
+   * reaches them.
+   */
+  await noticeConnectionRequested(slug, addresseeId, me.name);
+  return created;
 };
 
 export const respondToRequest = async (
@@ -48,12 +85,28 @@ export const respondToRequest = async (
   if (!result.ok) {
     return connection;
   }
-  return connectionRepository.setStatus(connectionId, result.status);
+  const updated = await connectionRepository.setStatus(
+    connectionId,
+    result.status,
+  );
+  /*
+   * Only acceptance is announced. A decline is a quiet no — telling
+   * someone they were turned down adds nothing they can act on, and the
+   * request simply leaving their list says it gently enough.
+   */
+  if (result.status === 'accepted') {
+    await noticeConnectionAccepted(
+      connection.slug,
+      connection.requesterId,
+      me.name,
+    );
+  }
+  return updated;
 };
 
 /*
  * Connection Framework v1.0: what an accepted connection actually
- * opens. HASON Messages is always on; every other channel obeys the
+ * opens. Netaim Messages is always on; every other channel obeys the
  * OTHER side's own preferences, re-read on every call so a change
  * applies immediately. Deny by default at every step.
  */
@@ -133,6 +186,14 @@ export const manageMyConnection = async (
   if (action === 'unmute' && connection.mutedBy && connection.mutedBy !== me.id) {
     return false;
   }
+  /*
+   * Only the person who asked may take the question back. For the
+   * addressee the answer is decline, which is a different act and says a
+   * different thing to the other side.
+   */
+  if (action === 'withdraw' && connection.requesterId !== me.id) {
+    return false;
+  }
   const result = manageConnection(connection.status, action);
   if (!result.ok) {
     return false;
@@ -168,90 +229,6 @@ export const whatsappLinkFor = async (
     digits = `972${digits.slice(1)}`;
   }
   return digits.length >= 8 ? `https://wa.me/${digits}` : null;
-};
-
-/*
- * QR Connect: a scanned badge token becomes a connection request in the
- * first conference both participants belong to. The token holds only a
- * signed identifier; everything personal waits for approval.
- */
-export type QrConnectResult =
-  | { ok: true; slug: string }
-  | { ok: false; reason: 'signedOut' | 'invalid' | 'self' | 'noShared' };
-
-export const connectToParticipant = async (
-  targetId: string,
-  message?: string,
-): Promise<QrConnectResult> => {
-  const me = await currentParticipant();
-  if (!me) {
-    return { ok: false, reason: 'signedOut' };
-  }
-  if (!targetId) {
-    return { ok: false, reason: 'invalid' };
-  }
-  if (targetId === me.id) {
-    return { ok: false, reason: 'self' };
-  }
-  const empty: string[] = [];
-  const [mySlugs, theirSlugs] = await Promise.all([
-    registrationRepository.eventSlugsForParticipant(me.id).catch(() => empty),
-    registrationRepository
-      .eventSlugsForParticipant(targetId)
-      .catch(() => empty),
-  ]);
-  const shared = mySlugs.find((slug) => theirSlugs.includes(slug));
-  if (!shared) {
-    return { ok: false, reason: 'noShared' };
-  }
-  await requestConnection(shared, targetId, message);
-  return { ok: true, slug: shared };
-};
-
-export const connectByToken = async (
-  token: string,
-  message?: string,
-): Promise<QrConnectResult> => {
-  const target = await resolveConnectToken(token);
-  if (!target) {
-    return { ok: false, reason: 'invalid' };
-  }
-  return connectToParticipant(target.id, message);
-};
-
-/*
- * What a scanned badge shows before anything happens: the public card
- * only — name, organization, role, portrait. Nothing personal leaves
- * until the other side approves.
- */
-export interface ConnectPreview {
-  name: string;
-  orgName?: string;
-  roleTitle?: string;
-  photoUrl?: string;
-  self: boolean;
-  signedIn: boolean;
-}
-
-export const connectPreview = async (
-  token: string,
-): Promise<ConnectPreview | null> => {
-  const target = await resolveConnectToken(token);
-  if (!target) {
-    return null;
-  }
-  const me = await currentParticipant().catch(() => null);
-  const details = await participantSessionRepository
-    .participantDetails(target.id)
-    .catch(() => null);
-  return {
-    name: target.name,
-    orgName: details?.organization,
-    roleTitle: details?.role,
-    photoUrl: details?.photoUrl,
-    self: me?.id === target.id,
-    signedIn: Boolean(me),
-  };
 };
 
 /*
@@ -305,10 +282,53 @@ export const connectionContactCard = async (
     ...(other.prefs.phone && other.phone
       ? [`TEL;TYPE=CELL:${escapeVCard(other.phone)}`]
       : []),
-    'NOTE:Hason',
+    `NOTE:${BRAND_LATIN}`,
     'END:VCARD',
   ].join('\r\n');
   return { fileName: `contact-${connection.id}.vcf`, vcard };
+};
+
+/*
+ * Connecting from the directory: the first conference both participants
+ * belong to is resolved on the server, so the request is always filed in
+ * a room they actually share.
+ *
+ * This once had a second entrance — a signed badge token, scanned from a
+ * QR code. It was withdrawn as a product decision: a printed handle that
+ * never expired and could not be revoked, for a gesture two taps in the
+ * directory already do.
+ */
+export type ConnectResult =
+  | { ok: true; slug: string }
+  | { ok: false; reason: 'signedOut' | 'invalid' | 'self' | 'noShared' };
+
+export const connectToParticipant = async (
+  targetId: string,
+  message?: string,
+): Promise<ConnectResult> => {
+  const me = await currentParticipant();
+  if (!me) {
+    return { ok: false, reason: 'signedOut' };
+  }
+  if (!targetId) {
+    return { ok: false, reason: 'invalid' };
+  }
+  if (targetId === me.id) {
+    return { ok: false, reason: 'self' };
+  }
+  const empty: string[] = [];
+  const [mySlugs, theirSlugs] = await Promise.all([
+    registrationRepository.eventSlugsForParticipant(me.id).catch(() => empty),
+    registrationRepository
+      .eventSlugsForParticipant(targetId)
+      .catch(() => empty),
+  ]);
+  const shared = mySlugs.find((slug) => theirSlugs.includes(slug));
+  if (!shared) {
+    return { ok: false, reason: 'noShared' };
+  }
+  await requestConnection(shared, targetId, message);
+  return { ok: true, slug: shared };
 };
 
 export const myConnections = async (

@@ -88,6 +88,30 @@ export const Events: CollectionConfig = {
       type: 'text',
       localized: true,
     },
+    /*
+     * The clock the conference runs on.
+     *
+     * Every schedule time is stored as an instant and read back in this
+     * zone, so a producer typing 14:00 and a guest reading 14:00 mean the
+     * same moment — whichever country the conference is held in and
+     * wherever the server happens to run. Not localized: a timezone is
+     * the same fact in both languages.
+     */
+    {
+      name: 'timezone',
+      type: 'select',
+      defaultValue: 'Asia/Jerusalem',
+      options: [
+        { label: 'ישראל · Jerusalem (UTC+2/+3)', value: 'Asia/Jerusalem' },
+        { label: 'מרכז אירופה · Berlin, Prague, Paris', value: 'Europe/Berlin' },
+        { label: 'לונדון · London', value: 'Europe/London' },
+        { label: 'ניו יורק · New York', value: 'America/New_York' },
+        { label: 'שיקגו · Chicago', value: 'America/Chicago' },
+        { label: 'לוס אנג׳לס · Los Angeles', value: 'America/Los_Angeles' },
+        { label: 'דובאי · Dubai', value: 'Asia/Dubai' },
+        { label: 'UTC', value: 'UTC' },
+      ],
+    },
     {
       name: 'teaser',
       type: 'text',
@@ -177,6 +201,21 @@ export const Events: CollectionConfig = {
           type: 'group',
           fields: [
             { name: 'name', type: 'text', localized: true },
+            /*
+             * The street address, written out. The information page builds
+             * its map and navigation links from this; without it those
+             * links fall back to the conference's `location`, which is
+             * often a city or a building's nickname and navigates nowhere
+             * useful.
+             */
+            { name: 'address', type: 'text', localized: true },
+            /*
+             * An optional pinned map link, for when the generated search
+             * finds the wrong place — a new building, a side entrance, a
+             * venue that shares its name with somewhere else.
+             */
+            { name: 'mapUrl', type: 'text' },
+            { name: 'mapLabel', type: 'text', localized: true },
             { name: 'narrative', type: 'textarea', localized: true },
             { name: 'accessibilityInfo', type: 'textarea', localized: true },
             { name: 'emergencyInfo', type: 'textarea', localized: true },
