@@ -42,6 +42,8 @@ const FIELD_LABELS = {
   titleAccent: { he: 'כותרת מודגשת', en: 'Accent title' },
   subtitle: { he: 'כותרת משנה', en: 'Subtitle' },
   image: { he: 'תמונה', en: 'Image' },
+  /* A section's media field takes either kind; the hero still does not. */
+  sectionMedia: { he: 'תמונה או סרטון', en: 'Image or video' },
   eventsTitle: { he: 'כותרת המדור', en: 'Section title' },
   eventsSubtitle: { he: 'תיאור המדור', en: 'Section subtitle' },
   eyebrow: { he: 'שורת פתיח', en: 'Eyebrow' },
@@ -84,7 +86,7 @@ const ConsoleHomepage = async ({ searchParams }: ConsoleHomepageProps) => {
 
   return (
     <ConsoleShell
-      locale={locale}
+    locale={locale}
       userName={creator?.name ?? ''}
       breadcrumb={
         <>
@@ -283,6 +285,7 @@ const ConsoleHomepage = async ({ searchParams }: ConsoleHomepageProps) => {
                     media={media}
                     emptyLabel={noImage}
                     kind="image"
+                    locale={locale}
                   />
                   <CMediaPicker
                     name="heroVideoId"
@@ -291,6 +294,7 @@ const ConsoleHomepage = async ({ searchParams }: ConsoleHomepageProps) => {
                     media={media}
                     emptyLabel={noVideo}
                     kind="video"
+                    locale={locale}
                   />
                   <p className="-mt-2 text-[10px] leading-relaxed text-[var(--c-text-faint)]">
                     {FIELD_LABELS.videoHint[locale]}
@@ -330,11 +334,11 @@ const ConsoleHomepage = async ({ searchParams }: ConsoleHomepageProps) => {
                   />
                   <CMediaPicker
                     name="storyImageId"
-                    label={FIELD_LABELS.image[locale]}
+                    label={FIELD_LABELS.sectionMedia[locale]}
                     defaultValue={draft?.story.imageId}
                     media={media}
                     emptyLabel={noImage}
-                    kind="image"
+                    locale={locale}
                   />
                 </>
               ) : null}

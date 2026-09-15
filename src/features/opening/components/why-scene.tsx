@@ -19,6 +19,7 @@ const WhyScene = ({ why }: WhySceneProps) => (
       <div className="md:col-span-6 md:col-start-7">
         <ParallaxImage
           src={why.image}
+          {...(why.video ? { video: why.video } : {})}
           sizes="(max-width: 768px) 100vw, 52vw"
           className="aspect-[16/11] w-full md:h-[64vh]"
         />

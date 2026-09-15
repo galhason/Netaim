@@ -7,7 +7,7 @@ import type {
 import type { Event, Participant } from '@/payload-types';
 import { isGuidingTone } from '@/shared';
 import { getSystemPayload } from './payload-context';
-import { mediaUrl } from './payload-media';
+import { mediaUrl, sceneMedia } from './payload-media';
 
 
 
@@ -73,18 +73,18 @@ export const toOpeningContent = (event: Event): EventOpeningContent => {
       eyebrow: opening?.story?.eyebrow ?? undefined,
       title: opening?.story?.title ?? undefined,
       paragraph: opening?.story?.paragraph ?? undefined,
-      imageUrl: mediaUrl(opening?.story?.image),
+      ...sceneMedia(opening?.story?.image),
     },
     quote: {
       text: opening?.quote?.text ?? undefined,
       attribution: opening?.quote?.attribution ?? undefined,
       role: opening?.quote?.role ?? undefined,
-      imageUrl: mediaUrl(opening?.quote?.image),
+      ...sceneMedia(opening?.quote?.image),
       statValue: opening?.quote?.statValue ?? undefined,
       statLabel: opening?.quote?.statLabel ?? undefined,
     },
     moments: (opening?.moments ?? []).map((moment) => ({
-      imageUrl: mediaUrl(moment.image),
+      ...sceneMedia(moment.image),
       caption: moment.caption ?? undefined,
     })),
     speakers: toOpeningSpeakers(event),
@@ -100,7 +100,7 @@ export const toOpeningContent = (event: Event): EventOpeningContent => {
       narrative: opening?.venue?.narrative ?? undefined,
       accessibility: opening?.venue?.accessibilityInfo ?? undefined,
       emergency: opening?.venue?.emergencyInfo ?? undefined,
-      imageUrl: mediaUrl(opening?.venue?.image),
+      ...sceneMedia(opening?.venue?.image),
       facts: (opening?.venue?.facts ?? []).map((fact) => ({
         label: fact.label ?? undefined,
         icon: fact.icon ?? undefined,
@@ -109,7 +109,7 @@ export const toOpeningContent = (event: Event): EventOpeningContent => {
     },
     closing: {
       line: opening?.closing?.line ?? undefined,
-      imageUrl: mediaUrl(opening?.closing?.image),
+      ...sceneMedia(opening?.closing?.image),
     },
   };
 };

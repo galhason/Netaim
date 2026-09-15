@@ -47,11 +47,15 @@ export interface OpeningWhy {
   title: string;
   paragraph: string;
   image: string;
+  /* The same field, holding a film: `image` is then its poster. */
+  video?: string;
 }
 
 export interface OpeningMoments {
   title: string;
   images: string[];
+  /* One entry per image, aligned by position; undefined means a still. */
+  videos?: (string | undefined)[];
 }
 
 export interface OpeningClosing {

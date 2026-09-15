@@ -22,6 +22,7 @@ const WhyScene = ({ why, minimal }: WhySceneProps) => (
         <div className="cine-float overflow-hidden rounded-3xl">
           <ParallaxImage
             src={why.image}
+            {...(why.video ? { video: why.video } : {})}
             sizes="(max-width: 768px) 100vw, 38vw"
             className="aspect-[3/4] w-full md:h-[56vh]"
           />

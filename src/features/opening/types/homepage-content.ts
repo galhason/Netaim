@@ -29,9 +29,15 @@ export interface HomepageContent {
     title?: string;
     paragraph?: string;
     imageUrl?: string;
+    videoUrl?: string;
     imageId?: string;
   };
-  moments: { title?: string; imageUrls: string[]; imageIds: string[] };
+  moments: {
+    title?: string;
+    imageUrls: string[];
+    videoUrls: (string | undefined)[];
+    imageIds: string[];
+  };
   closing: { title?: string; subtitle?: string; cta?: string };
 }
 

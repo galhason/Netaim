@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useRef } from 'react';
 import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react';
+import BackgroundVideo from './background-video';
 
 interface ParallaxImageProps {
   src: string;
@@ -10,6 +11,15 @@ interface ParallaxImageProps {
   className?: string;
   alt?: string;
   priority?: boolean;
+  /*
+   * The same frame, holding a film instead of a photograph. `src` is
+   * then the film's poster — what is painted immediately, what stays
+   * under reduced motion, and what remains if autoplay is refused —
+   * and it may be empty, which is why the still is rendered only when
+   * there is one. The parallax applies to both, so a section does not
+   * move differently depending on which kind of file it was given.
+   */
+  video?: string;
 }
 
 /*
@@ -27,6 +37,7 @@ const ParallaxImage = ({
   className,
   alt = '',
   priority = false,
+  video,
 }: ParallaxImageProps) => {
   const ref = useRef<HTMLDivElement | null>(null);
   const reduce = useReducedMotion();
@@ -43,14 +54,23 @@ const ParallaxImage = ({
   return (
     <div ref={ref} className={`relative overflow-hidden ${className ?? ''}`}>
       <motion.div style={{ y }} className="absolute -inset-[8%]">
-        <Image
-          src={src}
-          alt={alt}
-          fill
-          sizes={sizes}
-          priority={priority}
-          className="object-cover"
-        />
+        {src ? (
+          <Image
+            src={src}
+            alt={alt}
+            fill
+            sizes={sizes}
+            priority={priority}
+            className="object-cover"
+          />
+        ) : null}
+        {video ? (
+          <BackgroundVideo
+            src={video}
+            {...(src ? { poster: src } : {})}
+            className="absolute inset-0 size-full object-cover"
+          />
+        ) : null}
       </motion.div>
     </div>
   );

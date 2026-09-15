@@ -134,6 +134,7 @@ const StoryScene = ({ story }: StorySceneProps) => {
               <div className="cine-float relative">
                 <ParallaxImage
                   src={story.image}
+                  {...(story.video ? { video: story.video } : {})}
                   sizes="(max-width: 1024px) 100vw, 55vw"
                   className="aspect-[16/10] w-full rounded-[1.75rem] shadow-[0_44px_120px_-30px_rgba(0,0,0,0.78)]"
                 />

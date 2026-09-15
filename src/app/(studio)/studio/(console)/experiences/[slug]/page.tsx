@@ -242,7 +242,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
 
   return (
     <ConsoleShell
-      locale={locale}
+    locale={locale}
       userName={creator?.name ?? ''}
       breadcrumb={
         <>
@@ -1111,6 +1111,8 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                     label={locale === 'he' ? 'תמונה' : 'Photo'}
                     media={media}
                     emptyLabel={noImage}
+                    locale={locale}
+                    kind="image"
                   />
                   <button
                     type="submit"
@@ -1249,6 +1251,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                     media={media}
                     emptyLabel={noImage}
                     kind="image"
+                    locale={locale}
                   />
                   <CMediaPicker
                     name="heroVideoId"
@@ -1257,6 +1260,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                     media={media}
                     emptyLabel={label('noVideo', locale)}
                     kind="video"
+                    locale={locale}
                   />
                   <p className="-mt-2 text-[10px] leading-relaxed text-[var(--c-text-faint)]">
                     {label('heroVideoHint', locale)}
@@ -1267,6 +1271,8 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                     defaultValue={draft.posterId}
                     media={media}
                     emptyLabel={noImage}
+                    locale={locale}
+                    kind="image"
                   />
                   <label className="flex items-center gap-2 text-sm text-[var(--c-text-soft)]">
                     <input
@@ -1302,6 +1308,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                     defaultValue={draft.story.imageId}
                     media={media}
                     emptyLabel={noImage}
+                    locale={locale}
                   />
                 </>
               ) : null}
@@ -1338,6 +1345,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                     defaultValue={draft.quote.imageId}
                     media={media}
                     emptyLabel={noImage}
+                    locale={locale}
                   />
                 </>
               ) : null}
@@ -1441,6 +1449,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                     defaultValue={draft.venue.imageId}
                     media={media}
                     emptyLabel={noImage}
+                    locale={locale}
                   />
                 </>
               ) : null}
@@ -1497,6 +1506,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                     defaultValue={draft.closing.imageId}
                     media={media}
                     emptyLabel={noImage}
+                    locale={locale}
                   />
                 </>
               ) : null}

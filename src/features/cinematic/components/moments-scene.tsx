@@ -41,6 +41,7 @@ const MomentsScene = ({ moments, locale, grid, density }: MomentsSceneProps) => 
           >
             <ParallaxImage
               src={moment.image}
+              {...(moment.video ? { video: moment.video } : {})}
               sizes="(max-width: 768px) 100vw, 44vw"
               className="aspect-[16/10] w-full"
             />
@@ -68,6 +69,7 @@ const MomentsScene = ({ moments, locale, grid, density }: MomentsSceneProps) => 
           >
             <ParallaxImage
               src={moment.image}
+              {...(moment.video ? { video: moment.video } : {})}
               sizes="20rem"
               className="aspect-[4/3] w-full transition-transform duration-700 ease-out group-hover:scale-[1.04]"
             />

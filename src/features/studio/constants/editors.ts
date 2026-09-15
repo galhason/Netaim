@@ -39,7 +39,12 @@ export const EDITOR_MESSAGES: Record<string, Record<Locale, string>> = {
   storyEyebrow: { he: 'שורת פתיחה קטנה', en: 'Eyebrow line' },
   storyTitle: { he: 'כותרת', en: 'Title' },
   storyParagraph: { he: 'פסקה', en: 'Paragraph' },
-  storyImage: { he: 'תמונה', en: 'Image' },
+  /*
+   * Named for what it takes. The field accepts either kind of file —
+   * the library says which arrived — so calling it "image" told an
+   * editor the opposite of the truth.
+   */
+  storyImage: { he: 'תמונה או סרטון', en: 'Image or video' },
   momentsTitle: { he: 'כותרת', en: 'Title' },
   closingTitle: { he: 'שורת הסיום', en: 'Closing line' },
   closingSubtitle: { he: 'משפט משלים', en: 'Second line' },

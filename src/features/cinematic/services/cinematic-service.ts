@@ -257,10 +257,16 @@ const assembleExperience = (
     Boolean(value && (ICONS as string[]).includes(value));
 
   const composition = opening?.composition ?? [];
+  /*
+   * A moment may be a film. It counts as present when it has either a
+   * still or a film — filtering on the still alone dropped every video
+   * moment silently, which is the failure this whole pass is about.
+   */
   const cmsMoments = (opening?.moments ?? [])
-    .filter((moment) => moment.imageUrl)
+    .filter((moment) => moment.imageUrl || moment.videoUrl)
     .map((moment, index) => ({
       image: moment.imageUrl ?? '',
+      ...(moment.videoUrl ? { video: moment.videoUrl } : {}),
       caption:
         moment.caption ?? fallback.moments[index % fallback.moments.length]?.caption ?? '',
     }));
@@ -314,6 +320,7 @@ const assembleExperience = (
       title: opening?.story.title ?? fallback.story.title,
       paragraph: opening?.story.paragraph ?? fallback.story.paragraph,
       image: opening?.story.imageUrl ?? fallback.story.image,
+      ...(opening?.story.videoUrl ? { video: opening.story.videoUrl } : {}),
       values: fallback.story.values,
     },
     why: {
@@ -321,6 +328,7 @@ const assembleExperience = (
       attribution: opening?.quote.attribution ?? fallback.why.attribution,
       role: opening?.quote.role ?? fallback.why.role,
       image: opening?.quote.imageUrl ?? fallback.why.image,
+      ...(opening?.quote.videoUrl ? { video: opening.quote.videoUrl } : {}),
       statistic,
     },
     moments: cmsMoments.length > 0 ? cmsMoments : fallback.moments,
@@ -339,11 +347,13 @@ const assembleExperience = (
       emergency: opening?.venue.emergency,
       narrative: opening?.venue.narrative ?? fallback.venue.narrative,
       image: opening?.venue.imageUrl ?? fallback.venue.image,
+      ...(opening?.venue.videoUrl ? { video: opening.venue.videoUrl } : {}),
       facts: cmsFacts.length > 0 ? cmsFacts : fallback.venue.facts,
     },
     closing: {
       line: opening?.closing.line ?? fallback.closing.line,
       image: opening?.closing.imageUrl ?? fallback.closing.image,
+      ...(opening?.closing.videoUrl ? { video: opening.closing.videoUrl } : {}),
     },
     speakers,
     program: program.length > 0 ? program : fallback.program,

@@ -5,7 +5,7 @@ import { motion, useReducedMotion, type Variants } from 'motion/react';
 import type { Locale } from '@/config/locales';
 import type { VenueScene as VenueSceneData } from '../types/cinematic';
 import { Glyph } from './icons';
-import { RevealText } from '@/shared';
+import { BackgroundVideo, RevealText } from '@/shared';
 
 interface VenueSceneProps {
   venue: VenueSceneData;
@@ -120,13 +120,22 @@ const VenueScene = ({ venue, locale }: VenueSceneProps) => {
             transition={{ duration: 0.9, ease: EASE }}
           >
             <div className="group relative aspect-[4/5] w-full overflow-hidden rounded-[28px] shadow-[0_30px_80px_-30px_rgba(0,0,0,0.85)] ring-1 ring-accent/20">
-              <Image
-                src={venue.image}
-                alt={venue.name}
-                fill
-                sizes="(max-width: 1024px) 100vw, 40vw"
-                className="object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]"
-              />
+              {venue.image ? (
+                <Image
+                  src={venue.image}
+                  alt={venue.name}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 40vw"
+                  className="object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]"
+                />
+              ) : null}
+              {venue.video ? (
+                <BackgroundVideo
+                  src={venue.video}
+                  {...(venue.image ? { poster: venue.image } : {})}
+                  className="absolute inset-0 size-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]"
+                />
+              ) : null}
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 bg-gradient-to-t from-surface/25 to-transparent"

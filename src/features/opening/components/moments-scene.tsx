@@ -32,14 +32,18 @@ const MomentsScene = ({ moments }: MomentsSceneProps) => (
       />
     </Reveal>
     <div className="grid auto-rows-[24vh] grid-cols-2 gap-1.5 md:auto-rows-[26vh] md:grid-cols-4">
-      {moments.images.map((image, index) => (
-        <ParallaxImage
-          key={image}
-          src={image}
-          sizes="(max-width: 768px) 50vw, 25vw"
-          className={`size-full ${MOSAIC_SPANS[index % MOSAIC_SPANS.length] ?? ''}`}
-        />
-      ))}
+      {moments.images.map((image, index) => {
+        const video = moments.videos?.[index];
+        return (
+          <ParallaxImage
+            key={image || video || index}
+            src={image}
+            {...(video ? { video } : {})}
+            sizes="(max-width: 768px) 50vw, 25vw"
+            className={`size-full ${MOSAIC_SPANS[index % MOSAIC_SPANS.length] ?? ''}`}
+          />
+        );
+      })}
     </div>
   </section>
 );

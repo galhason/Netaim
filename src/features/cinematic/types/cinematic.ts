@@ -38,6 +38,11 @@ export interface StoryScene {
   title: string;
   paragraph: string;
   image: string;
+  /*
+   * The same field may hold a film instead of a photograph: `image` is
+   * then the film's poster (or absent), and `video` is what plays.
+   */
+  video?: string;
   values?: { icon: string; title: string; subtitle: string }[];
 }
 
@@ -51,11 +56,13 @@ export interface WhyScene {
   attribution: string;
   role: string;
   image: string;
+  video?: string;
   statistic?: WhyStatistic;
 }
 
 export interface MomentItem {
   image: string;
+  video?: string;
   caption: string;
 }
 
@@ -102,12 +109,14 @@ export interface VenueScene {
   accessibility?: string;
   emergency?: string;
   image: string;
+  video?: string;
   facts: VenueFact[];
 }
 
 export interface ClosingScene {
   line: string;
   image: string;
+  video?: string;
 }
 
 export interface CountdownScene {

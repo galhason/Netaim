@@ -237,6 +237,15 @@ export interface SceneCompositionEntry {
   emphasis?: string;
 }
 
+/*
+ * Every section's media comes as a pair.
+ *
+ * One field in the Studio, either kind of file: when the editor chose a
+ * photograph, `imageUrl` is it and `videoUrl` is absent; when they chose
+ * a film, `videoUrl` is it and `imageUrl` is the film's poster, if one
+ * was attached. A section that only knows how to draw a photograph goes
+ * on working unchanged, because `imageUrl` still means the still.
+ */
 export interface EventOpeningContent {
   composition: SceneCompositionEntry[];
   arrivalEyebrow?: string;
@@ -245,16 +254,18 @@ export interface EventOpeningContent {
     title?: string;
     paragraph?: string;
     imageUrl?: string;
+    videoUrl?: string;
   };
   quote: {
     text?: string;
     attribution?: string;
     role?: string;
     imageUrl?: string;
+    videoUrl?: string;
     statValue?: string;
     statLabel?: string;
   };
-  moments: { imageUrl?: string; caption?: string }[];
+  moments: { imageUrl?: string; videoUrl?: string; caption?: string }[];
   speakers: { name?: string; role?: string; photoUrl?: string }[];
   venue: {
     name?: string;
@@ -272,8 +283,9 @@ export interface EventOpeningContent {
     accessibility?: string;
     emergency?: string;
     imageUrl?: string;
+    videoUrl?: string;
     facts: { label?: string; icon?: string; description?: string }[];
   };
-  closing: { line?: string; imageUrl?: string };
+  closing: { line?: string; imageUrl?: string; videoUrl?: string };
   programDays: { theme?: string; description?: string }[];
 }

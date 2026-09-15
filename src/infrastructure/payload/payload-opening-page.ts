@@ -5,7 +5,7 @@ import type {
   HomepageContentInput,
 } from '@/features/opening/types/homepage-content';
 import { actorContext, getSystemPayload } from './payload-context';
-import { mediaId, mediaUrl, toMediaRelation } from './payload-media';
+import { mediaId, mediaUrl, sceneMedia, toMediaRelation } from './payload-media';
 
 /*
  * The homepage global. Reads use system access (the visitor is
@@ -39,6 +39,10 @@ const readHomepage = async (
   if (!page) {
     return null;
   }
+  const momentMedia = (page.moments?.items ?? [])
+    .map((item) => sceneMedia(item.image))
+    .filter((media) => media.imageUrl || media.videoUrl);
+
   return {
     composition: (page.composition ?? []).map((row) => ({
       scene: row.scene,
@@ -61,14 +65,18 @@ const readHomepage = async (
       eyebrow: page.story?.eyebrow ?? undefined,
       title: page.story?.title ?? undefined,
       paragraph: page.story?.paragraph ?? undefined,
-      imageUrl: mediaUrl(page.story?.image),
+      ...sceneMedia(page.story?.image),
       imageId: mediaId(page.story?.image),
     },
     moments: {
       title: page.moments?.title ?? undefined,
-      imageUrls: (page.moments?.items ?? [])
-        .map((item) => mediaUrl(item.image))
-        .filter((url): url is string => Boolean(url)),
+      /*
+       * Kept aligned on purpose: two arrays, same length, same order.
+       * Filtering the stills alone would drop a film that has no poster
+       * and slide every caption one place along.
+       */
+      imageUrls: momentMedia.map((media) => media.imageUrl ?? ''),
+      videoUrls: momentMedia.map((media) => media.videoUrl),
       imageIds: (page.moments?.items ?? [])
         .map((item) => mediaId(item.image))
         .filter((id): id is string => Boolean(id)),

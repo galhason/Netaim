@@ -78,3 +78,94 @@ describe('the upload ceiling is one number', () => {
     }
   });
 });
+
+/*
+ * A film belongs wherever a photograph does.
+ *
+ * The first pass put video in the hero and nowhere else, because each
+ * section drew a photograph and only a photograph. Adding a second
+ * field beside every image would have meant a new column, a new picker
+ * and a new decision per section; instead one field takes either kind
+ * and the library says which it got. These cases hold that seam: the
+ * adapter must report both, and the shared frame must draw both.
+ */
+describe('every section takes either kind of file', () => {
+  it('reports the kind from one field', () => {
+    const helper = readFileSync(
+      'src/infrastructure/payload/payload-media.ts',
+      'utf8',
+    );
+    expect(helper.includes('export const sceneMedia')).toBe(true);
+    expect(
+      helper.includes("media.mimeType?.startsWith('video/')"),
+      'the field cannot know; the library does',
+    ).toBe(true);
+  });
+
+  it('uses that seam in every conference section', () => {
+    const adapter = readFileSync(
+      'src/infrastructure/payload/payload-public-events.ts',
+      'utf8',
+    );
+    for (const section of ['story', 'quote', 'venue', 'closing']) {
+      expect(
+        adapter.includes(`...sceneMedia(opening?.${section}?.image)`),
+        `${section} still reads the still only`,
+      ).toBe(true);
+    }
+    expect(adapter.includes('...sceneMedia(moment.image)')).toBe(true);
+  });
+
+  it('draws a film in the frame the sections share', () => {
+    const frame = readFileSync(
+      'src/shared/components/parallax-image.tsx',
+      'utf8',
+    );
+    expect(frame.includes('BackgroundVideo')).toBe(true);
+    expect(
+      frame.includes('{src ? ('),
+      'a film without a poster has no still to draw',
+    ).toBe(true);
+  });
+
+  it('keeps a moment aligned with its caption', () => {
+    const adapter = readFileSync(
+      'src/infrastructure/payload/payload-opening-page.ts',
+      'utf8',
+    );
+    expect(
+      adapter.includes('.filter((media) => media.imageUrl || media.videoUrl)'),
+      'filtering on the still alone drops a poster-less film and shifts every caption',
+    ).toBe(true);
+  });
+});
+
+describe('a file can be added from the field that needs it', () => {
+  const picker = readFileSync(
+    'src/features/studio/components/console/console-fields.tsx',
+    'utf8',
+  );
+
+  it('uploads without leaving the page', () => {
+    expect(picker.includes("fetch('/studio/media/upload'")).toBe(true);
+  });
+
+  it('uploads through a route handler, not a Server Action', () => {
+    expect(
+      picker.includes('uploadToLibraryAction'),
+      'an action refreshes the route, which remounts the picker and drops the selection',
+    ).toBe(false);
+  });
+
+  it('selects what was just uploaded', () => {
+    expect(picker.includes('setChosen(outcome.media.id)')).toBe(true);
+  });
+
+  it('offers only what the field can hold', () => {
+    expect(picker.includes("ACCEPT[kind ?? 'either']")).toBe(true);
+  });
+
+  it('says why a file was refused', () => {
+    expect(picker.includes('setRefusal(')).toBe(true);
+  });
+});

@@ -67,6 +67,9 @@ export const getOpening = async (locale: Locale): Promise<OpeningContent> => {
             page.moments.imageUrls.length > 0
               ? page.moments.imageUrls
               : fallback.moments.images,
+          ...(page.moments.imageUrls.length > 0
+            ? { videos: page.moments.videoUrls }
+            : {}),
         },
         closing: {
           ...fallback.closing,
