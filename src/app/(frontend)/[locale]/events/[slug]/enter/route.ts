@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { consumeMagicLink, establishSession } from '@/features/registration';
+import { siteOrigin } from '@/shared';
 
 interface RouteContext {
   params: Promise<{ locale: string; slug: string }>;
@@ -14,7 +15,7 @@ export const GET = async (request: NextRequest, { params }: RouteContext) => {
   const token = request.nextUrl.searchParams.get('token');
   const destination = new URL(
     `/${locale}/events/${slug}/me`,
-    request.nextUrl.origin,
+    siteOrigin(request),
   );
 
   if (token) {

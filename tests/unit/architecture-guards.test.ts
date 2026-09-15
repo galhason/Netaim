@@ -158,3 +158,27 @@ describe('the composition root imports no feature barrel', () => {
     ).toEqual([]);
   });
 });
+
+/*
+ * A redirect never points at the machine the server happens to be on.
+ *
+ * Behind Nginx and Cloudflare the request origin is 127.0.0.1:3000, so
+ * an absolute redirect built from it sends the visitor to localhost.
+ * The first magic link from the live server did exactly that. Every
+ * absolute redirect goes through `siteOrigin`, which prefers the
+ * deployed address.
+ */
+describe('no redirect is built from the request origin', () => {
+  it('uses the deployed address instead', () => {
+    const offenders = walk(FRONTEND_DIR)
+      .filter((file) => file.endsWith('route.ts'))
+      .filter((file) => {
+        const text = readFileSync(file, 'utf8');
+        return /nextUrl\.origin/.test(text) && !text.includes('siteOrigin');
+      });
+    expect(
+      offenders,
+      'an absolute redirect from the request origin lands on localhost in production',
+    ).toEqual([]);
+  });
+});

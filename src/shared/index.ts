@@ -1,4 +1,5 @@
 export { assertNever } from './utils/assert';
+export { siteOrigin } from './utils/site-origin';
 export {
   TOKEN_PURPOSES,
   signPayload,
