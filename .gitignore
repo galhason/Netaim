@@ -1,17 +1,27 @@
 node_modules/
 .next/
-out/
-build/
+/out/
+/build/
 .env
 .env.*
 !.env.example
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
-media/
+
+# Uploaded files, at the project root only.
+#
+# This rule used to read `media/`, with no leading slash, which in git
+# means "any directory called media, at any depth". It therefore also
+# ignored src/app/(studio)/studio/(console)/media — the Studio's own
+# media library — and the classic one beside it. Both existed on the
+# machine they were written on and in no clone: the server built a site
+# with no media page at all, and answered 404 for a route the sidebar
+# linked to. The leading slash is the whole fix.
+/media/
 
 # scratch
-_to_delete/
+/_to_delete/
 
 # Runtime logs (see LOG_DIR and src/shared/logging/file-transport.ts)
-logs/
+/logs/
