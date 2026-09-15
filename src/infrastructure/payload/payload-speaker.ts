@@ -136,26 +136,27 @@ export const payloadSpeakerRepository: SpeakerRepository = {
       return null;
     }
     const resolved = resolveRow(row);
-    /* Bio default: the linked account's networking-profile bio, resolved
-     * only here (the speaker page), never in list paths. Override wins. */
+    /*
+     * Bio default: the linked account's own bio, resolved only here (the
+     * speaker page) and never in list paths. An override always wins.
+     *
+     * This used to read the speaker's networking profile for this one
+     * conference, which meant a speaker at two events could have a bio
+     * on one page and none on the other, from the same person. The bio
+     * is the account's now, so there is one to find.
+     */
     if (!resolved.bio && resolved.accountId) {
-      const profile = await payload
-        .find({
-          collection: 'networking-profiles',
-          where: {
-            and: [
-              { participant: { equals: resolved.accountId } },
-              ...(row.event ? [{ event: { equals: relationshipId(row.event as never) } }] : []),
-            ],
-          },
+      const account = await payload
+        .findByID({
+          collection: 'participants',
+          id: resolved.accountId,
           depth: 0,
-          limit: 1,
           overrideAccess: true,
         })
         .catch(() => null);
-      const bio = profile?.docs[0] as { bio?: string | null } | undefined;
-      if (bio?.bio) {
-        resolved.bio = bio.bio.trim() || undefined;
+      const bio = (account as { bio?: string | null } | null)?.bio;
+      if (bio) {
+        resolved.bio = bio.trim() || undefined;
       }
     }
     return resolved;

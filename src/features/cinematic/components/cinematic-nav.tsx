@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 import { motion, useReducedMotion } from 'motion/react';
 import type { Locale } from '@/config/locales';
 import { chooseLocaleAction } from '@/features/account/actions/choose-locale';
+import { signOutAction } from '@/features/account/actions/sign-out';
+import NavBell from '@/features/notifications/components/nav-bell';
 import { CINEMATIC_UI, SITE_NAV_LINKS } from '../constants/cinematic-content';
 import type { NavSection } from '../types/cinematic';
 
@@ -101,7 +103,7 @@ const CinematicNav = ({
         delay: reduce || immediate ? 0 : NAV_ENTER_DELAY,
         ease: [0.16, 1, 0.3, 1],
       }}
-      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-700 ${
+      className={`fixed inset-x-0 top-[var(--announcement-h,0px)] z-50 transition-colors duration-700 ${
         solid ? 'border-b cine-hair bg-surface/85 backdrop-blur-md' : ''
       }`}
     >
@@ -147,6 +149,7 @@ const CinematicNav = ({
               {other === 'he' ? 'עברית' : 'EN'}
             </button>
           </form>
+          {viewer ? <NavBell locale={locale} /> : null}
           {viewer ? (
             /*
              * Signed in: the name is the destination. No "register"
@@ -171,6 +174,39 @@ const CinematicNav = ({
                 {CINEMATIC_UI.signedInAs[locale]}
               </span>
             </Link>
+          ) : null}
+          {viewer ? (
+            /*
+             * The way out, beside the name. A door that can be entered
+             * must be visibly leavable — on a shared or borrowed
+             * screen this is the control that matters most, so it is
+             * in the bar itself, not behind a menu. The word shows
+             * from tablet width up; on a phone the icon stands alone
+             * with its name for a screen reader.
+             */
+            <form action={signOutAction} className="flex">
+              <input type="hidden" name="locale" value={locale} />
+              <button
+                type="submit"
+                aria-label={CINEMATIC_UI.signOut[locale]}
+                title={CINEMATIC_UI.signOut[locale]}
+                className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full px-2 text-sm text-text-secondary transition-colors hover:text-text-primary lg:px-3"
+              >
+                <svg
+                  viewBox="0 0 20 20"
+                  aria-hidden="true"
+                  className="size-4 rtl:-scale-x-100"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M8 4H4.5A1.5 1.5 0 0 0 3 5.5v9A1.5 1.5 0 0 0 4.5 16H8M12.5 6.5 16 10l-3.5 3.5M16 10H7.5" />
+                </svg>
+                <span className="hidden lg:inline">{CINEMATIC_UI.signOut[locale]}</span>
+              </button>
+            </form>
           ) : (
             <>
               <Link

@@ -13,7 +13,17 @@ import {
   ConsoleShell,
   getStudioCreator,
   getStudioLocale,
+  requireCapability,
 } from '@/features/studio';
+import { countOpenReports } from '@/features/networking';
+
+/*
+ * Open safety reports, for the badge on the rail. Counted only for the
+ * people who may act on them: a number is information too, and a role
+ * that cannot open the screen has no business knowing it is not empty.
+ */
+const openReportsFor = async (): Promise<number> =>
+  (await requireCapability('participants:manage')) ? countOpenReports() : 0;
 
 /*
  * The Experience Control Center: not a dashboard — a poster wall. The
@@ -23,10 +33,11 @@ import {
 const ConsolePage = async () => {
   const locale = await getStudioLocale();
   const creator = await getStudioCreator();
-  const [opening, events, activeSlug] = await Promise.all([
+  const [opening, events, activeSlug, openReports] = await Promise.all([
     getOpening(locale),
     listEvents().catch(() => []),
     getActiveConferenceSlug(locale).catch(() => null),
+    openReportsFor().catch(() => 0),
   ]);
   const posterBySlug = new Map(
     opening.posters
@@ -38,6 +49,7 @@ const ConsolePage = async () => {
     <ConsoleShell
       locale={locale}
       userName={creator?.name ?? ''}
+      openReports={openReports}
       breadcrumb={
         <span className="font-medium text-[var(--c-text)]">
           {CONSOLE_UI.experiences[locale]}

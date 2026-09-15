@@ -129,3 +129,32 @@ describe('constitution guards', () => {
     }
   });
 });
+
+/*
+ * The composition root may not import a feature's front door at runtime.
+ *
+ * A feature barrel re-exports that feature's services, and those
+ * services import `@/infrastructure` — so a value import of
+ * `@/features/x` from inside the infrastructure layer closes a circle.
+ * The bundler does not refuse it; it evaluates half of one module and
+ * hands the other half back uninitialised, and the whole site answers
+ * 500 with "Cannot access '…' before initialization". That is exactly
+ * how the logistics adapter broke the homepage.
+ *
+ * `import type` is exempt: it is erased before anything runs. Everything
+ * else reaches past the barrel to the module it actually wants.
+ */
+const FEATURE_BARREL_VALUE_IMPORT =
+  /^\s*import\s+(?!type\s)[^;]*?from\s+'@\/features\/[a-z-]+';/m;
+
+describe('the composition root imports no feature barrel', () => {
+  it('reaches modules directly instead of closing an import circle', () => {
+    const offenders = walk('src/infrastructure').filter((file) =>
+      FEATURE_BARREL_VALUE_IMPORT.test(readFileSync(file, 'utf8')),
+    );
+    expect(
+      offenders,
+      'a runtime import of @/features/<name> from infrastructure is a cycle',
+    ).toEqual([]);
+  });
+});

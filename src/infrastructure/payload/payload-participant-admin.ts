@@ -149,8 +149,7 @@ export const payloadDeleteParticipantAccount = async (
     collection:
       | 'registrations'
       | 'session-registrations'
-      | 'participant-sessions'
-      | 'networking-profiles',
+      | 'participant-sessions',
   ) => {
     await payload
       .delete({
@@ -165,7 +164,6 @@ export const payloadDeleteParticipantAccount = async (
   await sweep('registrations');
   await sweep('session-registrations');
   await sweep('participant-sessions');
-  await sweep('networking-profiles');
   await payload
     .delete({
       collection: 'networking-connections',

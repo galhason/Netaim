@@ -86,13 +86,30 @@ export const Participants: CollectionConfig = {
       type: 'group',
       admin: {
         description:
-          'Which channels open to approved connections. Private by default.',
+          'Which channels open to approved connections, and whether this person is listed among the participants of conferences they attend.',
       },
       fields: [
         { name: 'whatsapp', type: 'checkbox', defaultValue: true },
-        { name: 'phone', type: 'checkbox', defaultValue: false },
-        { name: 'email', type: 'checkbox', defaultValue: false },
+        /*
+         * PRD §5.2 — mutual disclosure: once a connection request is
+         * accepted, phone and email are revealed to both sides. They
+         * are therefore open by default and a person may close either
+         * from the profile; nothing is shown to anyone before acceptance.
+         */
+        { name: 'phone', type: 'checkbox', defaultValue: true },
+        { name: 'email', type: 'checkbox', defaultValue: true },
         { name: 'meetings', type: 'checkbox', defaultValue: true },
+        /*
+         * Opt-in, per the client's PRD (§5.1): a person appears in the
+         * participants directory only after answering "yes" — the
+         * question is asked on the registration form itself, so the
+         * choice is made knowingly rather than discovered. What a "yes"
+         * shows is only the name, role and organisation the person
+         * already gave; the contact channels above stay closed either
+         * way. The answer lives on the person, not on a conference, so
+         * changing it in the profile applies everywhere at once.
+         */
+        { name: 'directory', type: 'checkbox', defaultValue: false },
       ],
     },
     {
@@ -117,6 +134,36 @@ export const Participants: CollectionConfig = {
       admin: {
         description: 'Comma-separated interests shown on the profile card',
       },
+    },
+    /*
+     * How this person introduces themselves in a participants list.
+     *
+     * These lived on a per-conference `networking-profiles` row, which
+     * meant a guest attending two conferences had two half-filled
+     * introductions and no way to know which one a stranger was
+     * reading — while the fields beside them here (interests, role,
+     * organisation) were already answered once for the account. One
+     * profile, shown wherever the person is.
+     */
+    {
+      name: 'headline',
+      type: 'text',
+      admin: {
+        description: 'One line — the role and organisation as they say it',
+      },
+    },
+    {
+      name: 'bio',
+      type: 'textarea',
+    },
+    {
+      name: 'links',
+      type: 'array',
+      admin: { description: 'A couple of places to find this person' },
+      fields: [
+        { name: 'label', type: 'text' },
+        { name: 'url', type: 'text' },
+      ],
     },
     {
       name: 'photo',

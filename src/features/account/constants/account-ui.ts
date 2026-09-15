@@ -10,13 +10,15 @@ export const ACCOUNT_UI = {
   },
   signIn: { he: 'כניסה', en: 'Sign in' },
   passwordLabel: { he: 'סיסמה', en: 'Password' },
-  openAccountTitle: { he: 'פתיחת חשבון', en: 'Open an account' },
-  openAccountIntro: {
-    he: 'חשבון אחד לפלטפורמה — ומכל הכנסים נהנים איתו.',
-    en: 'One account for the platform — every conference opens with it.',
+  /*
+   * The account is made at the conference, not here. The wording says
+   * where to go rather than offering a second way in — there used to be
+   * one, and it skipped every question the conference actually asks.
+   */
+  noAccountYet: {
+    he: 'עוד לא נרשמתם? להרשמה לכנס',
+    en: 'Not registered yet? Register for the conference',
   },
-  openAccount: { he: 'לפתוח חשבון', en: 'Open account' },
-  noAccountYet: { he: 'אין לכם חשבון? פתחו אחד', en: 'No account yet? Open one' },
   haveAccount: { he: 'כבר יש חשבון? כניסה', en: 'Have an account? Sign in' },
   forgotPassword: { he: 'שכחתי סיסמה', en: 'Forgot password' },
   resetTitle: { he: 'שחזור כניסה', en: 'Recover access' },

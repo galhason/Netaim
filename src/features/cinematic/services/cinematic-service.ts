@@ -31,8 +31,12 @@ import type {
 
 const SPEAKER_LIMIT = 8;
 
-const speakerPhoto = (index: number): string =>
-  `https://i.pravatar.cc/640?img=${(index % 70) + 1}`;
+/*
+ * A speaker without a photograph shows no photograph — the scene falls
+ * back to a gradient. Inventing a face for a named person is a
+ * misrepresentation, not a placeholder (production audit).
+ */
+const NO_PORTRAIT = '';
 
 const timeLabel = (iso?: string): string => {
   if (!iso) {
@@ -132,7 +136,7 @@ const buildSpeakers = (
       seen.set(session.speaker, {
         name: session.speaker,
         topic: session.title,
-        photo: speakerPhoto(seen.size),
+        photo: NO_PORTRAIT,
       });
     }
   }
@@ -215,10 +219,10 @@ const assembleExperience = (
    * chosen ones.
    */
   const chosenSpeakers: SpeakerItem[] = (opening?.speakers ?? [])
-    .map((speaker, index) => ({
+    .map((speaker) => ({
       name: (speaker.name ?? '').trim(),
       role: speaker.role,
-      photo: speaker.photoUrl ?? speakerPhoto(index),
+      photo: speaker.photoUrl ?? NO_PORTRAIT,
     }))
     .filter((speaker) => speaker.name.length > 0)
     .slice(0, SPEAKER_LIMIT);

@@ -81,6 +81,20 @@ export const createRegistrationNotifier =
       FALLBACK_LOCALE,
       overrides,
     );
+    /*
+     * One door out of every registration notice, into the space the
+     * notice is about. Only when the deployment knows its own address —
+     * a button pointing at a relative path is a broken button in a mail
+     * client, so with no configured URL the email simply has none.
+     */
+    const base = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, '');
+    const cta = base
+      ? {
+          label:
+            FALLBACK_LOCALE === 'he' ? 'לאזור האישי שלי' : 'Go to my space',
+          href: `${base}/${FALLBACK_LOCALE}/me`,
+        }
+      : undefined;
     const message = {
       participantId: event.participantId,
       eventSlug: event.eventSlug,
@@ -88,6 +102,7 @@ export const createRegistrationNotifier =
       locale: FALLBACK_LOCALE,
       subject: rendered.subject,
       body: rendered.body,
+      ...(cta ? { cta } : {}),
     };
     /*
      * The address is resolved for delivery and then discarded — it is

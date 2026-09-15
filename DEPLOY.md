@@ -1,6 +1,7 @@
 # העלאה לשרת — HASON / נטעים
 
-מדריך מלא להעלאת הפרויקט לשרת **Hetzner (Ubuntu)** בכתובת `https://galhason.duckdns.org`.
+מדריך מלא להעלאת הפרויקט לשרת **Hetzner CPX42 (Ubuntu)** בכתובת `https://netaim26.org`.
+ה-DNS של הדומיין מנוהל ב-**Cloudflare**, והמייל (אימות הרשמה, אישורים, התראות) יוצא דרך **Google Workspace**.
 
 הסטאק בשרת: **Node 20 + PM2 + Nginx + Certbot (HTTPS) + PostgreSQL מקומי**.
 אין Vercel, אין Netlify, אין Neon — הכול רץ על השרת שלך.
@@ -17,6 +18,15 @@
    Nginx יושב מלפנים ומעביר את התעבורה מפורט 443 (HTTPS) לאפליקציה שרצה על 127.0.0.1:3000.
 
 **חשוב:** את כל פקודות ה-git צריך להריץ אתה — בטרמינל שלך ובטרמינל של השרת. אני לא יכול להריץ אותן בשבילך.
+
+### 0.1 סדר העלייה לאוויר (פעם ראשונה)
+
+1. **מייל קודם.** Cloudflare: SPF + DMARC (א.11). Google: אימות דו-שלבי ב-`gal@`, "Send mail as" לכינוי `noreply@`, סיסמת אפליקציה. `.env` מקומי → הרשמה עם כתובת אמיתית → הקוד מגיע, ו-"Show original" ב-Gmail מראה SPF/DKIM/DMARC PASS.
+2. **git.** במחשב: `npm run typecheck && npm run lint && npm run build`, ואז commit + push (ב.1). כל העבודה מאז `c41a9e4` יושבת רק על הדיסק שלך עד לרגע הזה.
+3. **השרת.** חלק א' מא.1 עד א.10 — עם ה-Proxy של Cloudflare **כבוי** על רשומות ה-A.
+4. **תעודה.** א.12, ואז להדליק את ה-Proxy ולבחור Full (strict).
+5. **כניסה ראשונה** (א.13): משתמש-על ב-`/admin`, לסמן כנס כ-live בסטודיו, ואז `PAYLOAD_DB_PUSH=false` ו-`pm2 restart hason`.
+6. **הרשמה אמיתית מהאתר החי** — לפני שמפרסמים קישור.
 
 ---
 
@@ -111,11 +121,12 @@ cd /var/www/hason
 
 זה השלב הכי חשוב. הקובץ הזה **לא נמצא ב-git** (הוא ב-`.gitignore`) — צריך ליצור אותו ידנית על השרת.
 
-קודם צור שני סודות חזקים:
+קודם צור שלושה סודות חזקים:
 
 ```bash
 openssl rand -base64 32    # → PAYLOAD_SECRET
 openssl rand -base64 32    # → PREVIEW_SECRET
+openssl rand -base64 32    # → DISPATCH_SECRET
 ```
 
 עכשיו:
@@ -130,11 +141,22 @@ nano /var/www/hason/.env
 DATABASE_URL=postgresql://hason:SUPER_SECRET_PASSWORD@localhost:5432/hason
 PAYLOAD_SECRET=<הסוד-הראשון-שיצרת>
 PREVIEW_SECRET=<הסוד-השני-שיצרת>
-NEXT_PUBLIC_SERVER_URL=https://galhason.duckdns.org
+NEXT_PUBLIC_SERVER_URL=https://netaim26.org
 DEMO_CONTENT=false
 CONTENT_ENGINE_ADMIN=false
 PAYLOAD_DB_PUSH=true
 NODE_ENV=production
+
+# מייל — Google Workspace (ראה חלק ג')
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=gal@netaim26.org
+SMTP_PASSWORD=<סיסמת-האפליקציה-מ-Google, 16 תווים>
+SMTP_FROM=noreply@netaim26.org
+SMTP_REPLY_TO=gal@netaim26.org
+NEXT_PUBLIC_PRIVACY_EMAIL=gal@netaim26.org
+DISPATCH_SECRET=<הסוד-השלישי-שיצרת>
 ```
 
 שמירה: `Ctrl+O` → `Enter` → `Ctrl+X`.
@@ -186,7 +208,7 @@ nano /etc/nginx/sites-available/hason
 ```nginx
 server {
     listen 80;
-    server_name galhason.duckdns.org;
+    server_name netaim26.org www.netaim26.org;
 
     # העלאות מדיה ל-Payload — בלי זה תמונות גדולות ייחסמו
     client_max_body_size 50M;
@@ -215,30 +237,43 @@ nginx -t          # חייב להחזיר "syntax is ok" + "test is successful"
 systemctl reload nginx
 ```
 
-### א.11 DuckDNS — הדומיין
+### א.11 Cloudflare — הדומיין
 
-ודא שברשומת ה-DuckDNS שלך (`galhason`) מוגדרת כתובת ה-IP של השרת. לשרת עם IP קבוע (כמו ב-Hetzner) מספיק לעדכן פעם אחת באתר `duckdns.org`.
+ה-DNS של `netaim26.org` יושב ב-Cloudflare. ברשומות (DNS → Records) צריכות להיות:
 
-בדיקה מהמחשב שלך: `nslookup galhason.duckdns.org` — צריך להחזיר את ה-IP של השרת.
+| סוג | שם | ערך | Proxy |
+|---|---|---|---|
+| A | `@` | ה-IP של שרת Hetzner | **כבוי (אפור)** בזמן הוצאת התעודה, ואז דלוק (כתום) |
+| A | `www` | ה-IP של שרת Hetzner | כמו `@` |
+| MX | `@` | `smtp.google.com` (עדיפות 1) | DNS only |
+| TXT | `@` | `v=spf1 include:_spf.google.com ~all` | DNS only |
+| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:gal@netaim26.org` | DNS only |
+| TXT | `google._domainkey` | מפתח ה-DKIM מ-Google Admin | DNS only |
+
+בדיקה מהמחשב שלך: `nslookup netaim26.org` — צריך להחזיר את ה-IP של השרת (כשה-Proxy כבוי) או כתובות של Cloudflare (כשהוא דלוק).
+
+ב-SSL/TLS של Cloudflare בחר **Full (strict)** ודלק **Always Use HTTPS**. במצב "Flexible" האתר ייכנס ללולאת הפניות.
 
 ### א.12 HTTPS עם Certbot
 
+עם ה-Proxy של Cloudflare **כבוי** (אפור) על `@` ו-`www`:
+
 ```bash
 apt install -y certbot python3-certbot-nginx
-certbot --nginx -d galhason.duckdns.org
+certbot --nginx -d netaim26.org -d www.netaim26.org
 ```
 
 Certbot ישאל למייל, יבקש אישור לתנאים, וישאל אם להפנות HTTP ל-HTTPS — **ענה כן**. הוא יערוך את קובץ ה-Nginx בעצמו ויוסיף את בלוק ה-443.
 
-חידוש אוטומטי כבר מוגדר. אפשר לבדוק אותו: `certbot renew --dry-run`
+אחרי שהתעודה הונפקה — הדלק את ה-Proxy (כתום) על שתי רשומות ה-A. החידוש האוטומטי ממשיך לעבוד גם דרך ה-Proxy כי מצב ה-SSL הוא Full (strict). אפשר לבדוק: `certbot renew --dry-run`
 
 ### א.13 כניסה ראשונה
 
 עכשיו האתר באוויר:
 
-- **האתר הציבורי:** `https://galhason.duckdns.org/he`
-- **פאנל Payload:** `https://galhason.duckdns.org/admin` — הכניסה הראשונה יוצרת את משתמש-העל. תשמור את הפרטים.
-- **הסטודיו:** `https://galhason.duckdns.org/studio`
+- **האתר הציבורי:** `https://netaim26.org/he`
+- **פאנל Payload:** `https://netaim26.org/admin` — הכניסה הראשונה יוצרת את משתמש-העל. תשמור את הפרטים.
+- **הסטודיו:** `https://netaim26.org/studio`
 
 ---
 
@@ -291,7 +326,7 @@ pm2 logs hason --lines 50
 |---|---|---|
 | `DATABASE_URL` | ✅ | חיבור ל-PostgreSQL המקומי: `postgresql://hason:PASS@localhost:5432/hason` |
 | `PAYLOAD_SECRET` | ✅ | מפתח ההצפנה של Payload. **שינוי שלו מנתק את כל הסשנים הקיימים** |
-| `NEXT_PUBLIC_SERVER_URL` | ✅ | `https://galhason.duckdns.org`. משמש לקישורים מוחלטים ולקישורי כניסה |
+| `NEXT_PUBLIC_SERVER_URL` | ✅ | `https://netaim26.org`. משמש לקישורים מוחלטים ולקישורי כניסה |
 | `PREVIEW_SECRET` | ✅ | סוד לתצוגה מקדימה של תוכן טיוטה |
 | `DEMO_CONTENT` | ✅ | `false` בפרודקשן — אחרת יוצג תוכן דמו |
 | `PAYLOAD_DB_PUSH` | ✅ | `true` בהעלאה ראשונה ובכל שינוי סכימה, אחרת `false` |
@@ -299,6 +334,34 @@ pm2 logs hason --lines 50
 | `REGISTRATION_LINK_SECRET` | | סוד לקישורי הרשמה ללא סיסמה. אם ריק — נופל חזרה ל-`PAYLOAD_SECRET` |
 | `MONDAY_API_TOKEN` / `MONDAY_BOARD_ID` | | אינטגרציית monday.com. השאר ריק כדי לכבות |
 | `S3_*` | | לא בשימוש בהתקנה הזאת — המדיה נשמרת על דיסק השרת |
+| `RETENTION_DAYS` | | כמה ימים אחרי סיום הכנס נמחקים נתוני המשתתפים. ברירת מחדל: 7. **חייב להתאים למה שכתוב במדיניות הפרטיות** |
+| `RETENTION_SECRET` | | סוד לנתיב הקריאה בלבד `/api/retention` (רשות — המחיקה עצמה היא פקודה ידנית). בלעדיו הנתיב סגור |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` | ✅ | `smtp.gmail.com` / `587` / `false` (STARTTLS). Google Workspace |
+| `SMTP_USER` / `SMTP_PASSWORD` | ✅ | החשבון האמיתי (`gal@netaim26.org`) ו**סיסמת אפליקציה** שלו (לא סיסמת החשבון). דורש אימות דו-שלבי בחשבון |
+| `SMTP_FROM` | ✅ | כתובת בלבד, בלי שם תצוגה. `noreply@netaim26.org` הוא **כינוי** של החשבון — כדי ש-Google לא יחליף אותו ב-`gal@`, הכינוי חייב להופיע ב-Gmail של `gal@` תחת Settings → Accounts → "Send mail as" |
+| `SMTP_REPLY_TO` | | לאן יגיעו תשובות של משתתפים — `gal@netaim26.org` (אפשר להחליף לכינוי `info@` כשיהיה) |
+| `NEXT_PUBLIC_PRIVACY_EMAIL` | | הכתובת שמופיעה במדיניות הפרטיות. `gal@netaim26.org`, או כינוי `privacy@` אם תיצור |
+| `DISPATCH_SECRET` | ✅ עם SMTP | סוד ל-`/api/notifications/dispatch` (שליחה חוזרת של מיילים שנכשלו). לפחות 32 תווים |
+
+> **חובה: SMTP חייב לעבוד לפני שההרשמה נפתחת.**
+> מאז שנוסף אימות כתובת המייל, ההרשמה לא מסתיימת בלי שהקוד יגיע —
+> אדם שלא מקבל מייל לא יכול להירשם. `SMTP_HOST` ו-`SMTP_FROM` הם
+> המינימום, ו-`DISPATCH_SECRET` נדרש לצידם. בדקו שמייל אמיתי מגיע
+> לתיבה אמיתית (לא רק שהשרת עולה) לפני פרסום קישור ההרשמה.
+
+### סכימה: טבלת `email_verifications`
+
+ההרשמה מחזיקה את הפרטים בטבלה נפרדת בין הטופס לבין יצירת החשבון. אם
+ההעלאה נעשית עם `PAYLOAD_DB_PUSH=true` הטבלה נוצרת מעצמה. על מסד קיים
+שלא רוצים לדחוף אליו סכימה, הריצו במקום זאת:
+
+```bash
+psql "$DATABASE_URL" -f scripts/sql/001-email-verifications.sql
+```
+
+הקובץ יוצר גם את עמודת הקשר ב-`payload_locked_documents_rels`. בלעדיה
+הכתיבה הראשונה נכשלת עם `column ... does not exist` — הטבלה לבדה אינה
+מספיקה.
 
 ---
 
@@ -332,6 +395,54 @@ tar -czf /root/backups/media-$(date +%F).tgz -C /var/www/hason media
 ```bash
 psql -U hason -h localhost -d hason < /root/backups/hason-2026-07-25.sql
 ```
+
+---
+
+## חלק ד2' — מדיניות שמירת מידע (Retention)
+
+**הכלל:** נתוני המשתתפים נשמרים לצורך הכנס בלבד, ונמחקים **7 ימים אחרי שהכנס נגמר**.
+
+**המחיקה ידנית בכוונה.** אין cron, אין טיימר, ואין נתיב HTTP שמוחק. אתה מריץ אותה, בפקודה, כשאתה מחליט. מחיקה שכל בקשה או שורת cron יכולה להפעיל היא מחיקה שיום אחד תרוץ כשאף אחד לא התכוון — והאנשים שהיא מוחקת לא חוזרים.
+
+### לראות מה עומד למחיקה
+
+```bash
+npm run retention:status
+```
+
+מדפיס אילו כנסים עברו את התאריך, מה כל אחד עדיין מחזיק, ואת הפקודה המדויקת למחיקה. **לא מוחק כלום.** אם שום כנס לא עבר את התאריך — יראה את התאריכים הקרובים.
+
+### למחוק כנס
+
+```bash
+npm run retention:purge -- <slug> --confirm
+```
+
+שני הדברים נדרשים: שם הכנס **וגם** `--confirm`. בלי `--confirm` הפקודה רק מציגה מה עומד להימחק ועוצרת. כנס שלא עבר את התאריך לא יימחק גם עם `--confirm`.
+
+### מה נמחק
+
+הודעות הצ׳אט, החיבורים, הפגישות, ההתראות שנשלחו, ההרשמות לסדנאות וההרשמות לכנס. לאחר מכן כל חשבון שלא נשאר רשום לשום כנס אחר נמחק לגמרי — יחד עם הסשנים, החסימות והדיווחים שלו.
+
+**מה לא נמחק:** רשומת הכנס עצמה (היא לא מידע אישי), וחשבונות של אנשי צוות שמחזיקים הרשאה לסטודיו — אחרת הצוות היה ננעל מחוץ למערכת שלו שבוע אחרי הכנס. המספר מדווח בנפרד כ-`accounts kept (staff)`.
+
+**כנס בלי תאריך התחלה וסיום לעולם לא נמחק** — המערכת לא מנחשת תאריך ומוחקת על סמך הניחוש.
+
+### בדיקה מרחוק (רשות)
+
+אם מוגדר `RETENTION_SECRET`, יש גם נתיב לקריאה בלבד שמחזיר את אותה רשימה — שימושי למוניטור. **הוא לא מוחק; אין בו POST.**
+
+```bash
+curl -s -H "Authorization: Bearer $RETENTION_SECRET" http://127.0.0.1:3000/api/retention
+```
+
+בלי הסוד הנתיב סגור לחלוטין.
+
+### תיעוד
+
+כל מחיקה נרשמת ביומן הפעולות תחת `privacy.retentionPurge` עם המספרים בלבד — בלי שמות. יומן של שכחה לא אמור להיות המקום האחרון שבו השמות עדיין מופיעים.
+
+**לפני כל מחיקה — גיבוי:** `pg_dump -U hason -h localhost hason > /root/backups/pre-purge-$(date +%F).sql`
 
 ---
 

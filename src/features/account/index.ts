@@ -6,6 +6,7 @@ export {
 } from './services/account-service';
 export { ACCOUNT_UI, ACCOUNT_STATUS_LABELS } from './constants/account-ui';
 export { chooseLocaleAction } from './actions/choose-locale';
+export { signOutAction, signOutEverywhereAction } from './actions/sign-out';
 export {
   LanguageRadioGroup,
   LanguageSwitchForm,

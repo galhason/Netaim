@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /*
  * The ticker channel (PRD §4.1): one line from the production pinned
@@ -26,6 +26,7 @@ const AnnouncementBanner = ({
   closeLabel,
 }: AnnouncementBannerProps) => {
   const [open, setOpen] = useState(false);
+  const line = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     try {
@@ -34,6 +35,29 @@ const AnnouncementBanner = ({
       setOpen(true);
     }
   }, [id]);
+
+  /*
+   * The site bar is fixed to the top of the viewport; while this line
+   * is showing, the bar must sit under it rather than behind it. The
+   * line publishes its own height as a variable the bar reads, and
+   * withdraws it when it closes — so nothing else needs to know.
+   */
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!open || !line.current) {
+      root.style.removeProperty('--announcement-h');
+      return;
+    }
+    const publish = () =>
+      root.style.setProperty('--announcement-h', `${line.current?.offsetHeight ?? 0}px`);
+    publish();
+    const watch = new ResizeObserver(publish);
+    watch.observe(line.current);
+    return () => {
+      watch.disconnect();
+      root.style.removeProperty('--announcement-h');
+    };
+  }, [open]);
 
   const dismiss = () => {
     try {
@@ -50,6 +74,7 @@ const AnnouncementBanner = ({
 
   return (
     <div
+      ref={line}
       role="status"
       className="sticky top-0 z-[90] flex items-center justify-center gap-3 bg-[#B8860B] px-4 py-2.5 text-center text-sm font-medium text-[#1A1204] shadow-[0_6px_18px_rgba(0,0,0,0.25)]"
     >

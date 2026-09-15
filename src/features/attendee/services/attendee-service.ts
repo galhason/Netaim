@@ -5,8 +5,7 @@ import {
   isDemoContentEnabled,
   listSpeakersPublic,
 } from '@/features/events';
-import { listDirectory } from '@/features/networking';
-import { listEventParticipants } from '@/infrastructure';
+import { listDirectoryParticipants } from '@/infrastructure';
 import { listMyAnnouncements } from '@/features/notifications';
 import { listAgenda, myWorkshops } from '@/features/program';
 import {
@@ -38,7 +37,6 @@ export const getAttendeeExperience = async (
       agenda,
       workshops,
       notifications,
-      directory,
       attendees,
       speakers,
     ] = await Promise.all([
@@ -48,8 +46,7 @@ export const getAttendeeExperience = async (
       listAgenda(slug, locale).catch(() => []),
       myWorkshops(slug).catch(() => []),
       listMyAnnouncements(slug).catch(() => []),
-      listDirectory(slug).catch(() => []),
-      listEventParticipants(slug).catch(() => []),
+      listDirectoryParticipants(slug).catch(() => []),
       listSpeakersPublic().catch(() => []),
     ]);
     return buildParticipantExperience({
@@ -60,14 +57,12 @@ export const getAttendeeExperience = async (
       agenda,
       workshops,
       notifications,
-      directory,
       attendees,
       speakers,
       participantId: participant?.id,
       participantEmail: participant?.email,
       participantName: registration.participantName,
       status: registration.status,
-      entranceToken: registration.entranceToken,
     });
   }
 

@@ -11,10 +11,10 @@ const demoAttendee: Record<Locale, AttendeeExperienceContent> = {
   he: {
     slug: 'demo',
     speakers: [
-      { id: 's1', name: 'פרופ׳ דנה ברק', role: 'חוקרת בינה מלאכותית', photoUrl: 'https://i.pravatar.cc/640?img=32' },
-      { id: 's2', name: 'אלון שדה', role: 'משרד הדיגיטל', photoUrl: 'https://i.pravatar.cc/640?img=12' },
-      { id: 's3', name: 'רות אליאב', role: 'עיריית חיפה', photoUrl: 'https://i.pravatar.cc/640?img=47' },
-      { id: 's4', name: 'נעם פרידמן', role: 'רשות החדשנות', photoUrl: 'https://i.pravatar.cc/640?img=68' },
+      { id: 's1', name: 'פרופ׳ דנה ברק', role: 'חוקרת בינה מלאכותית', photoUrl: undefined },
+      { id: 's2', name: 'אלון שדה', role: 'משרד הדיגיטל', photoUrl: undefined },
+      { id: 's3', name: 'רות אליאב', role: 'עיריית חיפה', photoUrl: undefined },
+      { id: 's4', name: 'נעם פרידמן', role: 'רשות החדשנות', photoUrl: undefined },
     ],
     brandName: 'נטעים',
     navigation: [
@@ -39,7 +39,7 @@ const demoAttendee: Record<Locale, AttendeeExperienceContent> = {
       summary: 'יום אחד של מפגשים, סדנאות ושיחות פתוחות עם אנשי המגזר הציבורי. ההרשמה שלך מאושרת — נשאר רק להגיע.',
       statusLabel: 'סטטוס הרשמה',
       statusValue: 'מאושרת',
-      image: { url: 'https://picsum.photos/seed/hason-lounge-dusk/2400/1200', alt: 'מרכז הכנסים' },
+      image: { url: '/placeholder/scene.jpg', alt: 'מרכז הכנסים' },
       updates: [
         {
           id: 'update-1',
@@ -137,22 +137,6 @@ const demoAttendee: Record<Locale, AttendeeExperienceContent> = {
         },
       ],
     },
-    entrance: {
-      label: 'הכניסה שלי',
-      heading: 'הכול מוכן בכניסה',
-      text: 'הציגי את הקוד בכניסה למתחם. הוא שמור גם במכשיר וזמין ללא אינטרנט.',
-      qrValue: 'נטעים-DEMO-2026-D-COHEN-0001',
-      qrCaption: 'קוד הכניסה האישי שלך',
-      statusLabel: 'סטטוס כרטיס',
-      statusValue: 'מאושר לכניסה',
-      details: [
-        { id: 'arrival', label: 'שעת הגעה מומלצת', value: '08:30–09:00' },
-        { id: 'gate', label: 'כניסה', value: 'שער ראשי, קומת הכניסה' },
-        { id: 'help', label: 'עזרה במקום', value: 'עמדת המידע ליד שער הכניסה' },
-        { id: 'emergency', label: 'חירום', value: 'צוות האבטחה בכל אולם' },
-      ],
-      offlineNote: 'העמוד נשמר לצפייה גם ללא חיבור לרשת.',
-    },
     after: {
       label: 'אחרי האירוע',
       heading: 'מה שנשאר איתך',
@@ -183,10 +167,10 @@ const demoAttendee: Record<Locale, AttendeeExperienceContent> = {
   en: {
     slug: 'demo',
     speakers: [
-      { id: 's1', name: 'Prof. Dana Barak', role: 'AI Researcher', photoUrl: 'https://i.pravatar.cc/640?img=32' },
-      { id: 's2', name: 'Alon Sade', role: 'Digital Ministry', photoUrl: 'https://i.pravatar.cc/640?img=12' },
-      { id: 's3', name: 'Ruth Eliav', role: 'Haifa Municipality', photoUrl: 'https://i.pravatar.cc/640?img=47' },
-      { id: 's4', name: 'Noam Friedman', role: 'Innovation Authority', photoUrl: 'https://i.pravatar.cc/640?img=68' },
+      { id: 's1', name: 'Prof. Dana Barak', role: 'AI Researcher', photoUrl: undefined },
+      { id: 's2', name: 'Alon Sade', role: 'Digital Ministry', photoUrl: undefined },
+      { id: 's3', name: 'Ruth Eliav', role: 'Haifa Municipality', photoUrl: undefined },
+      { id: 's4', name: 'Noam Friedman', role: 'Innovation Authority', photoUrl: undefined },
     ],
     brandName: 'נטעים',
     navigation: [
@@ -211,7 +195,7 @@ const demoAttendee: Record<Locale, AttendeeExperienceContent> = {
       summary: 'One day of sessions, workshops and open conversations with public-sector peers. Your registration is confirmed — all that remains is to arrive.',
       statusLabel: 'Registration status',
       statusValue: 'Confirmed',
-      image: { url: 'https://picsum.photos/seed/hason-lounge-dusk/2400/1200', alt: 'The convention center' },
+      image: { url: '/placeholder/scene.jpg', alt: 'The convention center' },
       updates: [
         {
           id: 'update-1',
@@ -308,22 +292,6 @@ const demoAttendee: Record<Locale, AttendeeExperienceContent> = {
           reason: 'On the panel you marked — catch him right after.',
         },
       ],
-    },
-    entrance: {
-      label: 'My entrance',
-      heading: 'Everything is ready at the door',
-      text: 'Show this code at the venue entrance. It is stored on your device and works without internet.',
-      qrValue: 'נטעים-DEMO-2026-D-COHEN-0001',
-      qrCaption: 'Your personal entrance code',
-      statusLabel: 'Ticket status',
-      statusValue: 'Approved for entry',
-      details: [
-        { id: 'arrival', label: 'Recommended arrival', value: '08:30–09:00' },
-        { id: 'gate', label: 'Entrance', value: 'Main gate, ground floor' },
-        { id: 'help', label: 'Help on site', value: 'Information desk by the gate' },
-        { id: 'emergency', label: 'Emergency', value: 'Security staff in every hall' },
-      ],
-      offlineNote: 'This page is saved for offline viewing.',
     },
     after: {
       label: 'After the event',

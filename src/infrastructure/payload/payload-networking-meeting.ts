@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import type { Where } from 'payload';
 import { relationshipId } from '@/auth';
 import type { MeetingStatus } from '@/networking-engine';
@@ -46,10 +47,18 @@ interface EventRef {
   organization: number | string | { id: number | string };
 }
 
-const eventBySlug = async (
-  payload: Awaited<ReturnType<typeof getSystemPayload>>,
-  slug: string,
-): Promise<EventRef | null> => {
+/*
+ * The conference a slug names, resolved once per request.
+ *
+ * Every operation here begins by turning a slug into an event row, and
+ * a single personal page calls several of them for the same conference
+ * — so the same one-row lookup ran twenty times to answer one request.
+ * `cache` is request-scoped: repeated asks within one render share an
+ * answer, and a conference edited a moment ago is still read fresh by
+ * the next request.
+ */
+const eventBySlug = cache(async (slug: string): Promise<EventRef | null> => {
+  const payload = await getSystemPayload();
   const result = await payload.find({
     collection: 'events',
     where: { slug: { equals: slug } },
@@ -59,7 +68,7 @@ const eventBySlug = async (
   });
   const row = result.docs[0] as EventRef | undefined;
   return row ?? null;
-};
+});
 
 const forParticipant = async (
   slug: string,
@@ -67,7 +76,7 @@ const forParticipant = async (
   extra: Where[],
 ): Promise<MeetingSummary[]> => {
   const payload = await getSystemPayload();
-  const event = await eventBySlug(payload, slug);
+  const event = await eventBySlug(slug);
   if (!event) {
     return [];
   }
@@ -111,7 +120,7 @@ export const payloadMeetingRepository: MeetingRepository = {
 
   create: async (slug, hostId, guestId, startsAt, endsAt, location) => {
     const payload = await getSystemPayload();
-    const event = await eventBySlug(payload, slug);
+    const event = await eventBySlug(slug);
     if (!event) {
       throw new Error('Event not found');
     }

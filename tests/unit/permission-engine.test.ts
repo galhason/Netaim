@@ -13,7 +13,7 @@ describe('permission engine', () => {
   it('lets an unscoped owner pass everywhere', () => {
     expect(can([owner], 'platform:manage')).toBe(true);
     expect(can([owner], 'events:manage', 'any-conference')).toBe(true);
-    expect(can([owner], 'checkin:operate')).toBe(true);
+    expect(can([owner], 'participants:manage')).toBe(true);
   });
 
   it('scopes a conference grant to its conference only', () => {
@@ -28,8 +28,8 @@ describe('permission engine', () => {
   });
 
   it('refuses capabilities outside the role bundle', () => {
-    expect(can([door], 'checkin:operate')).toBe(true);
     expect(can([door], 'participants:read')).toBe(true);
+    expect(can([door], 'participants:manage')).toBe(false);
     expect(can([door], 'events:manage')).toBe(false);
     expect(can([door], 'platform:manage')).toBe(false);
   });
@@ -44,10 +44,11 @@ describe('permission engine', () => {
   it('collects the capabilities a scope allows', () => {
     const held = capabilitiesOf([scopedEditor, door], 'summit-2026');
     expect(held).toContain('events:manage');
-    expect(held).toContain('checkin:operate');
+    expect(held).toContain('participants:read');
     expect(held).not.toContain('platform:manage');
     const elsewhere = capabilitiesOf([scopedEditor, door], 'another-conf');
     expect(elsewhere).not.toContain('events:manage');
-    expect(elsewhere).toContain('checkin:operate');
+    /* The door grant is unscoped, so what it carries holds everywhere. */
+    expect(elsewhere).toContain('participants:read');
   });
 });

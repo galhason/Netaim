@@ -240,9 +240,12 @@ const LoungeView = ({
   const home = homeHref ?? `${base}/me`;
   const profile = profileHref ?? `${base}/me/profile`;
   const scheduleHref = `/${locale}/program`;
-  const networkingHref = content.slug
-    ? `${base}/networking`
-    : `${platformBase}/networking`;
+  /*
+   * One community, whichever conference the guest came from. The
+   * per-conference networking page was retired; pointing at it would
+   * only cost a redirect.
+   */
+  const networkingHref = `${platformBase}/networking`;
   const workshopsHref = `/${locale}/program`;
   const messagesHref = content.slug
     ? `${base}/me/messages`
@@ -345,8 +348,13 @@ const LoungeView = ({
       badge: pending + (unreadMessages ?? 0),
     },
     { key: 'speakers', label: LOUNGE_UI.speakers[locale], href: speakersHref },
-    { key: 'map', label: LOUNGE_UI.mapVenue[locale], href: venueHref },
-    { key: 'resources', label: LOUNGE_UI.resources[locale], href: workshopsHref },
+    /*
+     * Not here by decision: "Map & venue" and "Resources". The venue
+     * lives on the conference's own pages and the picture card below
+     * still links to it; "Resources" only pointed at the programme,
+     * which the menu already has as "Schedule". Six entries, each a
+     * real place.
+     */
   ];
 
   return (
@@ -462,25 +470,6 @@ const LoungeView = ({
               <span>{content.welcome.eventDateLabel}</span>
               <span aria-hidden="true" className="h-4 w-px bg-white/30" />
               <span>{content.welcome.venueLine}</span>
-              <span className="ms-auto flex items-center gap-4">
-                <Link
-                  href={
-                    content.slug
-                      ? `/${locale === 'he' ? 'en' : 'he'}/events/${content.slug}/me`
-                      : `/${locale === 'he' ? 'en' : 'he'}/me`
-                  }
-                  className="flex items-center gap-1.5 transition-opacity hover:opacity-80"
-                >
-                  <NavIcon path="M12 3.5a8.5 8.5 0 1 1 0 17 8.5 8.5 0 0 1 0-17zM3.5 12h17M12 3.5c2.3 2.2 3.5 5.1 3.5 8.5s-1.2 6.3-3.5 8.5c-2.3-2.2-3.5-5.1-3.5-8.5s1.2-6.3 3.5-8.5z" />
-                  {locale === 'he' ? 'EN' : 'עב'}
-                </Link>
-                <span className="relative">
-                  <NavIcon path="M12 4.5a5 5 0 0 1 5 5v3l1.5 2.5h-13L7 12.5v-3a5 5 0 0 1 5-5zM10 18a2 2 0 0 0 4 0" />
-                  {content.myEvent.updates.length > 0 ? (
-                    <span className="absolute -end-0.5 -top-0.5 size-2 rounded-full bg-[var(--l-bronze-soft)]" />
-                  ) : null}
-                </span>
-              </span>
             </div>
 
             <div className="mt-10 md:mt-14">

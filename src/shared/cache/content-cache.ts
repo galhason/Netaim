@@ -28,7 +28,28 @@ export const cacheTags = {
   /* Organization-wide people and sponsor lists. */
   speakers: 'org:speakers',
   sponsors: 'org:sponsors',
+  /*
+   * Who appears in one conference's participant directory.
+   *
+   * Unlike the tags above this one names people rather than published
+   * content, so it is invalidated the moment someone changes whether
+   * they are listed — and its entry is also given a short life of its
+   * own, so that even a path that forgets to invalidate cannot keep
+   * showing someone who has just taken themselves out.
+   */
+  directory: (slug: string): string => `directory:${slug}`,
 } as const;
+
+/*
+ * How long a directory listing may live without being told to go.
+ *
+ * Short on purpose. Everything else cached here is published content,
+ * where a stale minute is a cosmetic problem; this one is a list of
+ * people who each hold a switch that removes them from it. Tag
+ * invalidation is the mechanism and it is immediate — this is the
+ * ceiling on how long a missed invalidation could possibly last.
+ */
+export const DIRECTORY_MAX_AGE_SECONDS = 30;
 
 /*
  * A conservative ceiling. Invalidation is by tag and immediate, so this

@@ -10,7 +10,6 @@ export const CAPABILITIES = [
   'registrations:manage',
   'participants:read',
   'participants:manage',
-  'checkin:operate',
   'content:read',
 ] as const;
 

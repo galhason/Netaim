@@ -40,7 +40,7 @@ export const buildPlatformLounge = (
       statusLabel: he ? 'הסטטוס שלך' : 'Your status',
       statusValue: he ? 'חשבון פעיל' : 'Active account',
       image: {
-        url: 'https://picsum.photos/seed/hason-lounge-dusk/2400/1200',
+        url: '/placeholder/scene.jpg',
         alt: 'נטעים',
       },
       updates: [],
@@ -51,14 +51,6 @@ export const buildPlatformLounge = (
     },
     networking: {
       people,
-    },
-    entrance: {
-      heading: he ? 'הכניסה שלך' : 'Your entrance',
-      qrValue: '',
-      qrCaption: '',
-      statusLabel: he ? 'כרטיס' : 'Ticket',
-      statusValue: he ? 'אין עדיין' : 'None yet',
-      details: [],
     },
     after: {
       resources: [],

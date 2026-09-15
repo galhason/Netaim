@@ -96,7 +96,7 @@ describe('registration email templates', () => {
 
   it('keeps the platform wording reachable for a form to show', () => {
     const platform = defaultRegistrationTemplate('registration.confirmed', 'en');
-    expect(platform.subject).toBe('You are registered');
+    expect(platform.subject).toBe('Your registration is confirmed');
     /* An override must not mutate the source it fell back to. */
     renderRegistrationNotification('registration.confirmed', 'en', {
       'registration.confirmed': { subject: 'Changed' },

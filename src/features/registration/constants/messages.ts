@@ -71,9 +71,19 @@ export const REGISTRATION_MESSAGES = {
       en: 'Organization / institution',
     },
     role: { he: 'תפקיד בארגון', en: 'Role in the organization' },
-    networkingOptIn: {
-      he: 'האם תרצה/י להופיע במדריך המשתתפים ולאפשר החלפת פרטי קשר?',
-      en: 'Would you like to appear in the participant directory and exchange contact details?',
+    /*
+     * Not a question any more. Everyone taking part is listed, so the
+     * form's job is to say so plainly and point at the switch — an
+     * unasked default that is never mentioned is the kind a person
+     * discovers by finding themselves in a list.
+     */
+    directoryQuestion: {
+      he: 'האם ברצונך להופיע במדריך המשתתפים של הכנס ולאפשר החלפת פרטי קשר?',
+      en: 'Would you like to appear in the participants directory and exchange contact details?',
+    },
+    directoryHint: {
+      he: 'מוצגים רק שם, תפקיד וארגון. פרטי הקשר נשארים סגורים עד שתאשרו התחברות, ואפשר לשנות את הבחירה בכל רגע מהפרופיל.',
+      en: 'Only your name, role and organisation are shown. Contact details stay closed until you approve a connection, and you can change this choice at any time from your profile.',
     },
     dietary: { he: 'העדפות תזונה', en: 'Dietary requirements' },
     submit: { he: 'לשמור מקום', en: 'Save my place' },
@@ -96,10 +106,10 @@ export const REGISTRATION_MESSAGES = {
     },
   },
   confirmed: {
-    heading: { he: 'מקומך שמור', en: 'Your place is saved' },
+    heading: { he: 'נרשמת בהצלחה', en: 'You are registered' },
     text: {
-      he: 'נרשמת לאירוע. קוד הכניסה יחכה באזור האישי, ונעדכן אותך בכל מה שחשוב.',
-      en: 'You are registered. Your entrance code will be in your personal area, and we will keep you posted on everything that matters.',
+      he: 'מקומך שמור. באזור האישי מחכים לכם הלו״ז, הסדנאות והאנשים — ונעדכן אתכם בכל שינוי.',
+      en: 'Your place is saved. Your schedule, the workshops and the people are waiting in your space — and we will tell you about any change.',
     },
   },
   pending: {

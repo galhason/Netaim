@@ -6,6 +6,11 @@ import type { ParticipantSummary } from './registration';
  * token, hashes it, and passes only the hash to the repository; the raw
  * token lives only in the emailed link. Single-use, expiring.
  */
+export interface ProfileLink {
+  label: string;
+  url: string;
+}
+
 export interface ParticipantDetailsInput {
   name?: string;
   phone?: string;
@@ -14,6 +19,10 @@ export interface ParticipantDetailsInput {
   organization?: string;
   role?: string;
   interests?: string;
+  /* How this person introduces themselves, wherever they are listed. */
+  headline?: string;
+  bio?: string;
+  links?: ProfileLink[];
 }
 
 export interface ParticipantDetailsView extends ParticipantDetailsInput {
@@ -31,6 +40,8 @@ export interface ContactPreferences {
   phone: boolean;
   email: boolean;
   meetings: boolean;
+  /* Listed among the participants of conferences this person attends. */
+  directory: boolean;
 }
 
 export interface ContactProfile {

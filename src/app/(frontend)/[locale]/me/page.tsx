@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
@@ -8,8 +8,8 @@ import {
   ACCOUNT_STATUS_LABELS,
   ACCOUNT_UI,
   JOINED_CONFERENCE_FANOUT,
-  LanguageRadioGroup,
   getMyAccount,
+  signOutAction,
 } from '@/features/account';
 import type { AccountConference } from '@/features/account';
 import {
@@ -17,28 +17,18 @@ import {
   LoungeView,
   buildPlatformLounge,
   getAttendeeExperience,
-  loungeField,
   loungeGhost,
-  loungeLabel,
   loungePrimary,
   loungeQuiet,
 } from '@/features/attendee';
 import { myConnections, myUnreadByConnection } from '@/features/networking';
 import { listDirectoryParticipants } from '@/infrastructure';
-import { PASSWORD_POLICY_TEXT } from '@/features/registration';
 import { getActiveConferenceSlug } from '@/features/events';
 import { listAgenda, myActivities } from '@/features/program';
 import type { SessionSummary } from '@/features/program';
 import { formatDayLabel, formatTimeLabel } from '@/shared';
-import {
-  joinConferenceAction,
-  leaveConferenceAction,
-  openAccountAction,
-  requestAccountLinkAction,
-  signInAction,
-  signOutAction,
-  totpSignInAction,
-} from './actions';
+import { joinConferenceAction, leaveConferenceAction } from './actions';
+import SignInScreen from './sign-in-screen';
 
 /*
  * The door into the Personal Lounge. One conference — the guest walks
@@ -121,298 +111,54 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
   const he = locale === 'he';
 
   if (!account) {
+    /*
+     * Where someone without an account is sent: the live conference's
+     * registration form. Resolved rather than hard-coded, so the link
+     * follows whichever conference the Studio has named as live.
+     */
+    const openSlug = await getActiveConferenceSlug(locale).catch(() => null);
+    const registerHref = openSlug
+      ? `/${locale}/events/${openSlug}/register`
+      : null;
+    /*
+     * An old link or bookmark to the retired form lands on the real one
+     * rather than on a page that quietly does nothing.
+     */
+    if (view === 'open' && registerHref) {
+      redirect(registerHref);
+    }
+    /*
+     * The same screen in the other language, with the moment carried
+     * along: a person half-way through the second factor, or reading
+     * why the sign-in failed, stays exactly there.
+     */
+    const other: Locale = locale === 'he' ? 'en' : 'he';
+    const carried = new URLSearchParams();
+    for (const [key, value] of Object.entries({
+      view,
+      state,
+      ticket,
+      totpError,
+      link,
+      detail,
+    })) {
+      if (value) carried.set(key, value);
+    }
+    const query = carried.toString();
+    const switchHref = `/${other}/me${query ? `?${query}` : ''}`;
+
     return (
-      <main
-        id="main-content"
-        className="lounge relative min-h-dvh bg-[var(--l-bg)] font-body text-[var(--l-ink)]"
-      >
-        <div className="relative h-64 md:h-72">
-          <Atmosphere />
-          <div className="relative mx-auto flex h-full max-w-xl flex-col px-6">
-            <div className="flex items-center justify-between pt-6 text-white/85">
-              <Link
-                href={`/${locale}`}
-                className="text-sm transition-opacity hover:opacity-75"
-              >
-                ← {he ? 'לדף הבית' : 'Home'}
-              </Link>
-              <span className="font-display text-sm font-semibold tracking-[0.3em]">
-                נטעים
-              </span>
-            </div>
-            <div className="mt-auto pb-16 text-white">
-              <p className="text-xs font-medium tracking-[0.18em] text-[var(--l-bronze-soft,#d8b98a)]">
-                {ui.title[locale]}
-              </p>
-              <h1 className="mt-2 font-display text-3xl font-semibold md:text-4xl">
-                {view === 'open'
-                  ? ui.openAccountTitle[locale]
-                  : view === 'reset'
-                    ? ui.resetTitle[locale]
-                    : ui.signInTitle[locale]}
-              </h1>
-            </div>
-          </div>
-        </div>
-
-        <div className="mx-auto max-w-xl px-6 pb-16">
-          <div className="lounge-rise -mt-9 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(35,40,47,0.08)]">
-            {state === 'totp' && ticket ? (
-              <>
-                <p className="text-[15px] text-[var(--l-soft)]">
-                  {ui.totpIntro[locale]}
-                </p>
-                <form
-                  action={totpSignInAction}
-                  className="mt-6 flex flex-col gap-4"
-                >
-                  <input type="hidden" name="locale" value={locale} />
-                  <input type="hidden" name="ticket" value={ticket} />
-                  <label>
-                    <span className={loungeLabel}>{ui.totpCodeLabel[locale]}</span>
-                    <input
-                      name="code"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      pattern="[0-9]*"
-                      maxLength={6}
-                      required
-                      autoFocus
-                      className={`${loungeField} text-center font-display text-2xl tracking-[0.5em]`}
-                    />
-                  </label>
-                  {totpError === 'wrong' ? (
-                    <LoungeNote tone="accent">{ui.totpWrong[locale]}</LoungeNote>
-                  ) : null}
-                  <button type="submit" className={loungePrimary}>
-                    {ui.totpSubmit[locale]}
-                  </button>
-                </form>
-              </>
-            ) : view === 'open' ? (
-              <>
-                <p className="text-[15px] text-[var(--l-soft)]">
-                  {ui.openAccountIntro[locale]}
-                </p>
-                <form
-                  action={openAccountAction}
-                  className="mt-6 flex flex-col gap-4"
-                >
-                  <input type="hidden" name="locale" value={locale} />
-                  <label>
-                    <span className={loungeLabel}>
-                      {ui.fullNameLabel[locale]}
-                    </span>
-                    <input
-                      type="text"
-                      name="name"
-                      required
-                      autoComplete="name"
-                      className={loungeField}
-                    />
-                  </label>
-                  <label>
-                    <span className={loungeLabel}>{ui.emailLabel[locale]}</span>
-                    <input
-                      type="email"
-                      name="email"
-                      required
-                      autoComplete="email"
-                      className={loungeField}
-                    />
-                  </label>
-                  <label>
-                    <span className={loungeLabel}>
-                      {ui.passwordLabel[locale]}
-                    </span>
-                    <input
-                      type="password"
-                      name="password"
-                      required
-                      autoComplete="new-password"
-                      className={loungeField}
-                    />
-                    <span className="mt-1.5 block text-xs text-[var(--l-faint)]">
-                      {PASSWORD_POLICY_TEXT[locale]}
-                    </span>
-                  </label>
-                  <LanguageRadioGroup locale={locale} />
-                  <button type="submit" className={`${loungePrimary} mt-2`}>
-                    {ui.openAccount[locale]}
-                  </button>
-                </form>
-                <p className="mt-5 text-sm">
-                  <Link
-                    href={`/${locale}/me`}
-                    className="text-[var(--l-bronze)] underline underline-offset-4"
-                  >
-                    {ui.haveAccount[locale]}
-                  </Link>
-                </p>
-              </>
-            ) : view === 'reset' ? (
-              <>
-                <p className="text-[15px] text-[var(--l-soft)]">
-                  {ui.resetIntro[locale]}
-                </p>
-                <form
-                  action={requestAccountLinkAction}
-                  className="mt-6 flex flex-col gap-4"
-                >
-                  <input type="hidden" name="locale" value={locale} />
-                  <label>
-                    <span className={loungeLabel}>{ui.emailLabel[locale]}</span>
-                    <input
-                      type="email"
-                      name="email"
-                      required
-                      autoComplete="email"
-                      className={loungeField}
-                    />
-                  </label>
-                  <button type="submit" className={`${loungePrimary} mt-2`}>
-                    {ui.sendLink[locale]}
-                  </button>
-                </form>
-                <p className="mt-5 text-sm">
-                  <Link
-                    href={`/${locale}/me`}
-                    className="text-[var(--l-bronze)] underline underline-offset-4"
-                  >
-                    {ui.haveAccount[locale]}
-                  </Link>
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="text-[15px] text-[var(--l-soft)]">
-                  {ui.signInIntro[locale]}
-                </p>
-                <form
-                  action={signInAction}
-                  className="mt-6 flex flex-col gap-4"
-                >
-                  <input type="hidden" name="locale" value={locale} />
-                  <label>
-                    <span className={loungeLabel}>{ui.emailLabel[locale]}</span>
-                    <input
-                      type="email"
-                      name="email"
-                      required
-                      autoComplete="email"
-                      className={loungeField}
-                    />
-                  </label>
-                  <label>
-                    <span className={loungeLabel}>
-                      {ui.passwordLabel[locale]}
-                    </span>
-                    <input
-                      type="password"
-                      name="password"
-                      required
-                      autoComplete="current-password"
-                      className={loungeField}
-                    />
-                  </label>
-                  <button type="submit" className={`${loungePrimary} mt-2`}>
-                    {ui.signIn[locale]}
-                  </button>
-                </form>
-                <p className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm">
-                  <Link
-                    href={`/${locale}/me?view=open`}
-                    className="text-[var(--l-bronze)] underline underline-offset-4"
-                  >
-                    {ui.noAccountYet[locale]}
-                  </Link>
-                  <Link
-                    href={`/${locale}/me?view=reset`}
-                    className="text-[var(--l-soft)] underline underline-offset-4 transition-colors hover:text-[var(--l-ink)]"
-                  >
-                    {ui.forgotPassword[locale]}
-                  </Link>
-                </p>
-              </>
-            )}
-          </div>
-
-          {state === 'wrong' ? (
-            <div className="lounge-rise mt-5 [animation-delay:60ms]">
-              <LoungeNote tone="accent">{ui.wrongCredentials[locale]}</LoungeNote>
-            </div>
-          ) : null}
-          {state === 'blocked' ? (
-            <div className="lounge-rise mt-5 [animation-delay:60ms]">
-              <LoungeNote tone="accent">{ui.accountBlocked[locale]}</LoungeNote>
-            </div>
-          ) : null}
-          {state === 'noPassword' ? (
-            <div className="lounge-rise mt-5 [animation-delay:60ms]">
-              <LoungeNote tone="accent">{ui.noPasswordYet[locale]}</LoungeNote>
-            </div>
-          ) : null}
-          {state === 'locked' ? (
-            <div className="lounge-rise mt-5 [animation-delay:60ms]">
-              <LoungeNote tone="accent">{ui.signInLocked[locale]}</LoungeNote>
-            </div>
-          ) : null}
-          {state === 'exists' ? (
-            <div className="lounge-rise mt-5 [animation-delay:60ms]">
-              <LoungeNote tone="accent">{ui.accountExists[locale]}</LoungeNote>
-            </div>
-          ) : null}
-          {state === 'weakPassword' ? (
-            <div className="lounge-rise mt-5 [animation-delay:60ms]">
-              <LoungeNote tone="accent">
-                {ui.weakPassword[locale]} {PASSWORD_POLICY_TEXT[locale]}
-              </LoungeNote>
-            </div>
-          ) : null}
-          {state === 'missing' ? (
-            <div className="lounge-rise mt-5 [animation-delay:60ms]">
-              <LoungeNote tone="accent">{ui.missingFields[locale]}</LoungeNote>
-            </div>
-          ) : null}
-          {state === 'sent' ? (
-            <div className="lounge-rise mt-5 [animation-delay:60ms]">
-              <LoungeNote tone="good">{ui.linkSent[locale]}</LoungeNote>
-            </div>
-          ) : null}
-          {state === 'needName' ? (
-            <div className="lounge-rise mt-5 [animation-delay:60ms]">
-              <LoungeNote tone="accent">{ui.needName[locale]}</LoungeNote>
-            </div>
-          ) : null}
-          {state === 'tooMany' ? (
-            <div className="lounge-rise mt-5 [animation-delay:60ms]">
-              <LoungeNote tone="accent">{ui.tooManyLinks[locale]}</LoungeNote>
-            </div>
-          ) : null}
-          {state === 'failed' ? (
-            <div className="lounge-rise mt-5 [animation-delay:60ms]">
-              <LoungeNote tone="accent">
-                {he
-                  ? 'הכניסה נכשלה מסיבה טכנית.'
-                  : 'Sign-in failed for a technical reason.'}
-                {detail ? (
-                  <span className="mt-2 block break-all text-xs text-[var(--l-soft)]">
-                    {detail}
-                  </span>
-                ) : null}
-              </LoungeNote>
-            </div>
-          ) : null}
-          {link ? (
-            <div className="lounge-rise mt-4 rounded-2xl bg-white p-4 text-xs text-[var(--l-soft)] [animation-delay:120ms]">
-              {ui.devLink[locale]}{' '}
-              <a href={link} className="break-all text-[var(--l-bronze)] underline">
-                {link}
-              </a>
-            </div>
-          ) : null}
-        </div>
-      </main>
+      <SignInScreen
+        locale={locale}
+        view={view}
+        state={state}
+        ticket={ticket}
+        totpError={totpError}
+        link={link}
+        detail={detail}
+        registerHref={registerHref}
+        switchHref={switchHref}
+      />
     );
   }
 

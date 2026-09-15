@@ -6,11 +6,14 @@ import {
   beginTotpEnrollment,
   confirmTotpEnrollment,
   disableTotp,
+  myRegisteredEventSlugs,
   saveMyContactPreferences,
   setMyPassword,
   updateMyDetails,
   updateMyPhoto,
 } from '@/features/registration';
+import { getActiveConferenceSlug } from '@/features/events';
+import { publishedDirectory } from '@/shared/cache/publish';
 
 const optional = (value: FormDataEntryValue | null): string | undefined => {
   const text = typeof value === 'string' ? value.trim() : '';
@@ -21,6 +24,34 @@ const optional = (value: FormDataEntryValue | null): string | undefined => {
  * The profile is the account's, not a conference's: saving it here
  * updates the guest everywhere they are registered.
  */
+/*
+ * A link a person typed is a link someone else may click, so only two
+ * schemes are ever stored: https, and http for the rare internal
+ * address that still has no certificate. Anything else — javascript:,
+ * data:, a typo — is dropped rather than corrected, because a stored
+ * `javascript:` URL is a cross-site scripting payload waiting for the
+ * day something renders it as an anchor. A bare domain
+ * ("example.org") is given https:// instead of being refused; that is
+ * plainly what the person meant.
+ */
+const safeLink = (raw: string | undefined): string => {
+  const value = (raw ?? '').trim();
+  if (value === '') {
+    return '';
+  }
+  const candidate = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(value)
+    ? value
+    : `https://${value}`;
+  try {
+    const url = new URL(candidate);
+    return url.protocol === 'https:' || url.protocol === 'http:'
+      ? url.toString()
+      : '';
+  } catch {
+    return '';
+  }
+};
+
 export const saveAccountProfileAction = async (formData: FormData) => {
   const raw = String(formData.get('locale') ?? 'he');
   const locale = isSupportedLocale(raw) ? raw : 'he';
@@ -33,7 +64,32 @@ export const saveAccountProfileAction = async (formData: FormData) => {
     dietary: optional(formData.get('dietary')),
     accessibility: optional(formData.get('accessibility')),
     interests: optional(formData.get('interests')),
+    headline: optional(formData.get('headline')),
+    bio: optional(formData.get('bio')),
+    /*
+     * The two link rows are read as a pair and rewritten whole: a link
+     * whose address was cleared is a link the person removed, and
+     * merging row by row would keep it alive forever.
+     */
+    links: [0, 1]
+      .map((index) => ({
+        label: optional(formData.get(`linkLabel${index}`)) ?? '',
+        url: safeLink(optional(formData.get(`linkUrl${index}`))),
+      }))
+      .filter((link) => link.url.length > 0),
   });
+
+  /*
+   * Name, organisation and role are exactly what a directory tile shows,
+   * so an edit here changes the shared listing and it has to be dropped.
+   */
+  const [slugs, active] = await Promise.all([
+    myRegisteredEventSlugs().catch((): string[] => []),
+    getActiveConferenceSlug(locale).catch(() => null),
+  ]);
+  for (const slug of new Set([...slugs, ...(active ? [active] : [])])) {
+    publishedDirectory(slug);
+  }
 
   redirect(`/${locale}/me/profile?saved=1`);
 };
@@ -52,7 +108,26 @@ export const saveContactPrefsAction = async (formData: FormData) => {
     phone: formData.get('phonePref') === 'on',
     email: formData.get('emailPref') === 'on',
     meetings: formData.get('meetings') === 'on',
+    directory: formData.get('directory') === 'on',
   });
+
+  /*
+   * The directory this person just joined or left is assembled once and
+   * shared between viewers, so it has to be told. Every conference they
+   * hold a place in, and the live one besides — a guest who signed up
+   * for a workshop without an event-level registration appears in the
+   * live conference's directory without appearing in that list.
+   *
+   * Someone switching themselves off expects to be gone now. This is
+   * what makes that true rather than true within half a minute.
+   */
+  const [slugs, active] = await Promise.all([
+    myRegisteredEventSlugs().catch((): string[] => []),
+    getActiveConferenceSlug(locale).catch(() => null),
+  ]);
+  for (const slug of new Set([...slugs, ...(active ? [active] : [])])) {
+    publishedDirectory(slug);
+  }
 
   redirect(`/${locale}/me/profile?saved=1`);
 };

@@ -3,16 +3,23 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale } from '@/config/locales';
-import { ACCOUNT_UI, LanguageSwitchForm } from '@/features/account';
+import {
+  ACCOUNT_UI,
+  LanguageSwitchForm,
+  signOutAction,
+  signOutEverywhereAction,
+} from '@/features/account';
 import {
   LOUNGE_UI,
   LoungeNote,
   loungeField,
   loungeLabel,
+  loungeGhost,
   loungePrimary,
   loungeQuiet,
 } from '@/features/attendee';
 import {
+  DietarySelect,
   PASSWORD_POLICY_TEXT,
   getMyDetails,
   myContactPreferences,
@@ -108,9 +115,23 @@ const AccountProfilePage = async ({
             >
               ← {LOUNGE_UI.myExperience[locale]}
             </Link>
-            <span className="font-display text-sm font-semibold tracking-[0.3em]">
-              נטעים
-            </span>
+            <div className="flex items-center gap-5">
+              <span className="font-display text-sm font-semibold tracking-[0.3em]">
+                נטעים
+              </span>
+              <form action={signOutAction}>
+                <input type="hidden" name="locale" value={locale} />
+                <button
+                  type="submit"
+                  className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 text-sm text-white/80 transition-colors hover:text-white"
+                >
+                  <svg viewBox="0 0 20 20" aria-hidden="true" className="size-4 rtl:-scale-x-100" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 4H4.5A1.5 1.5 0 0 0 3 5.5v9A1.5 1.5 0 0 0 4.5 16H8M12.5 6.5 16 10l-3.5 3.5M16 10H7.5" />
+                  </svg>
+                  {ACCOUNT_UI.signOut[locale]}
+                </button>
+              </form>
+            </div>
           </div>
           <div className="mt-auto pb-14 text-white">
             <p className="text-xs font-medium tracking-[0.18em] text-[var(--l-bronze-soft,#d8b98a)]">
@@ -243,6 +264,77 @@ const AccountProfilePage = async ({
           </div>
         </div>
 
+        {/*
+          * Directory visibility — the opt-in, one glance and one click,
+          * right on the profile's front page (PRD §5.1). The button
+          * flips only this choice: the other contact preferences ride
+          * along as hidden fields exactly as they are, because the save
+          * action reads the whole set and an absent field means "off".
+          * The full checkbox panel remains in the edit view.
+          */}
+        {!editing ? (
+          <div className="lounge-rise mt-5 flex flex-wrap items-center gap-x-6 gap-y-4 rounded-3xl bg-white px-7 py-5 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:45ms]">
+            <div className="min-w-0 flex-1 basis-60">
+              <h2 className="flex items-center gap-2 font-display text-base font-semibold">
+                <span
+                  aria-hidden="true"
+                  className={`size-2 rounded-full ${
+                    contact?.prefs.directory === true
+                      ? 'bg-[#67A97C]'
+                      : 'bg-[var(--l-soft)]/50'
+                  }`}
+                />
+                {he
+                  ? 'הצגה בספריית המשתתפים'
+                  : 'Listing in the participants directory'}
+              </h2>
+              <p className="mt-0.5 text-xs text-[var(--l-soft)]">
+                {contact?.prefs.directory === true
+                  ? he
+                    ? 'אתם מוצגים למשתתפי הכנסים שלכם — שם, תפקיד וארגון בלבד. פרטי הקשר נשארים סגורים עד שתאשרו התחברות.'
+                    : 'You are shown to fellow participants — name, role and organisation only. Contact details stay closed until you approve a connection.'
+                  : he
+                    ? 'אתם לא מוצגים בספריית המשתתפים ולא ניתן לשלוח לכם בקשות התחברות.'
+                    : 'You are not shown in the participants directory, and nobody can send you connection requests.'}
+              </p>
+            </div>
+            <form action={saveContactPrefsAction} className="ms-auto flex-none">
+              <input type="hidden" name="locale" value={locale} />
+              {contact?.prefs.whatsapp !== false ? (
+                <input type="hidden" name="whatsapp" value="on" />
+              ) : null}
+              {contact?.prefs.phone !== false ? (
+                <input type="hidden" name="phonePref" value="on" />
+              ) : null}
+              {contact?.prefs.email !== false ? (
+                <input type="hidden" name="emailPref" value="on" />
+              ) : null}
+              {contact?.prefs.meetings !== false ? (
+                <input type="hidden" name="meetings" value="on" />
+              ) : null}
+              {contact?.prefs.directory === true ? null : (
+                <input type="hidden" name="directory" value="on" />
+              )}
+              <button
+                type="submit"
+                className={
+                  contact?.prefs.directory === true
+                    ? 'inline-flex min-h-11 items-center rounded-full border border-[var(--l-line,rgba(35,40,47,0.14))] px-5 text-sm font-medium text-[var(--l-soft)] transition-colors hover:border-[var(--l-bronze)] hover:text-[var(--l-ink,#23282f)]'
+                    : 'inline-flex min-h-11 items-center rounded-full bg-[var(--l-bronze)] px-5 text-sm font-medium text-white transition-colors hover:opacity-90'
+                }
+              >
+                {contact?.prefs.directory === true
+                  ? he
+                    ? 'להסתיר אותי מהספרייה'
+                    : 'Hide me from the directory'
+                  : he
+                    ? 'להציג אותי בספרייה'
+                    : 'Show me in the directory'}
+              </button>
+            </form>
+          </div>
+        ) : null}
+
         {editing ? (
           <>
             <div className="lounge-rise mt-5 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:60ms]">
@@ -323,9 +415,9 @@ const AccountProfilePage = async ({
                   <span className={loungeLabel}>
                     {LOUNGE_UI.fieldDietary[locale]}
                   </span>
-                  <input
-                    name="dietary"
-                    defaultValue={details.dietary}
+                  <DietarySelect
+                    locale={locale}
+                    value={details.dietary}
                     className={loungeField}
                   />
                 </label>
@@ -340,6 +432,64 @@ const AccountProfilePage = async ({
                     className={loungeField}
                   />
                 </label>
+                {/*
+                  * How you introduce yourself in a participants list.
+                  * These lived on a separate form, once per conference,
+                  * so a guest attending two had two half-filled
+                  * introductions and no way to know which a stranger was
+                  * reading. One profile, shown wherever you are.
+                  */}
+                <label className="sm:col-span-2">
+                  <span className={loungeLabel}>
+                    {he ? 'כותרת — איך תציגו את עצמכם' : 'Headline — how you introduce yourself'}
+                  </span>
+                  <input
+                    name="headline"
+                    defaultValue={details.headline}
+                    placeholder={
+                      he
+                        ? 'מנהלת חינוך, עיריית באר שבע'
+                        : 'Head of education, City of Beer Sheva'
+                    }
+                    className={loungeField}
+                  />
+                </label>
+                <label className="sm:col-span-2">
+                  <span className={loungeLabel}>
+                    {he ? 'כמה מילים עליי' : 'A few words about me'}
+                  </span>
+                  <textarea
+                    name="bio"
+                    rows={3}
+                    defaultValue={details.bio}
+                    className={`${loungeField} resize-none`}
+                  />
+                </label>
+                {[0, 1].map((index) => (
+                  <div key={index} className="grid gap-3 sm:col-span-2 sm:grid-cols-[1fr_2fr]">
+                    <label>
+                      <span className={loungeLabel}>
+                        {he ? `קישור ${index + 1} — שם` : `Link ${index + 1} — label`}
+                      </span>
+                      <input
+                        name={`linkLabel${index}`}
+                        defaultValue={details.links?.[index]?.label ?? ''}
+                        className={loungeField}
+                      />
+                    </label>
+                    <label>
+                      <span className={loungeLabel}>
+                        {he ? 'כתובת' : 'URL'}
+                      </span>
+                      <input
+                        name={`linkUrl${index}`}
+                        defaultValue={details.links?.[index]?.url ?? ''}
+                        dir="ltr"
+                        className={loungeField}
+                      />
+                    </label>
+                  </div>
+                ))}
                 <label className="sm:col-span-2">
                   <span className={loungeLabel}>
                     {LOUNGE_UI.fieldAccessibility[locale]}
@@ -365,20 +515,41 @@ const AccountProfilePage = async ({
               </form>
             </div>
 
-            <div className="lounge-rise mt-5 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:150ms]">
+            <div
+              id="privacy"
+              className="lounge-rise mt-5 scroll-mt-24 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:150ms]"
+            >
               <h2 className="font-display text-xl font-semibold">
                 {he ? 'פרטיות ויצירת קשר' : 'Privacy & contact'}
               </h2>
               <p className="mt-1.5 text-sm text-[var(--l-soft)]">
                 {he
-                  ? 'מה נפתח למי שאישרתם התחברות. השינויים חלים מיד.'
-                  : 'What opens to connections you approved. Changes apply immediately.'}
+                  ? 'מי רואה אתכם, ומה נפתח למי שאישרתם התחברות. השינויים חלים מיד.'
+                  : 'Who can see you, and what opens to connections you approved. Changes apply immediately.'}
               </p>
               <form
                 action={saveContactPrefsAction}
                 className="mt-5 flex flex-col gap-3"
               >
                 <input type="hidden" name="locale" value={locale} />
+                <label className="flex items-start gap-3 text-sm">
+                  <input
+                    type="checkbox"
+                    name="directory"
+                    defaultChecked={contact?.prefs.directory === true}
+                    className="mt-0.5 size-4 accent-[var(--l-bronze)]"
+                  />
+                  <span>
+                    {he
+                      ? 'להופיע ברשימת המשתתפים של הכנסים שאני משתתף/ת בהם'
+                      : 'Appear in the participants list of conferences I attend'}
+                    <span className="mt-0.5 block text-xs text-[var(--l-soft)]">
+                      {he
+                        ? 'מוצגים השם, התפקיד והארגון שמסרתם. פרטי הקשר נשארים סגורים עד שתאשרו התחברות.'
+                        : 'Your name, role and organisation are shown. Contact details stay closed until you approve a connection.'}
+                    </span>
+                  </span>
+                </label>
                 <label className="flex items-center gap-3 text-sm text-[var(--l-soft)]">
                   <input
                     type="checkbox"
@@ -401,7 +572,7 @@ const AccountProfilePage = async ({
                   <input
                     type="checkbox"
                     name="phonePref"
-                    defaultChecked={contact?.prefs.phone === true}
+                    defaultChecked={contact?.prefs.phone !== false}
                     className="size-4 accent-[var(--l-bronze)]"
                   />
                   {he
@@ -412,7 +583,7 @@ const AccountProfilePage = async ({
                   <input
                     type="checkbox"
                     name="emailPref"
-                    defaultChecked={contact?.prefs.email === true}
+                    defaultChecked={contact?.prefs.email !== false}
                     className="size-4 accent-[var(--l-bronze)]"
                   />
                   {he
@@ -590,6 +761,39 @@ const AccountProfilePage = async ({
             </div>
           </>
         ) : null}
+
+        {/*
+          * The way out, as a card of its own at the foot of the
+          * profile — where a person looks after checking their details
+          * on a screen that is not theirs. Two buttons for two
+          * situations: leaving this device, and cutting every session
+          * the account holds when a phone is lost or a password may
+          * have travelled.
+          */}
+        <div className="lounge-rise mt-5 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:240ms]">
+          <h2 className="font-display text-xl font-semibold">
+            {he ? 'יציאה מהחשבון' : 'Sign out'}
+          </h2>
+          <p className="mt-1.5 text-sm text-[var(--l-soft)]">
+            {he
+              ? 'התנתקות במכשיר הזה בלבד, או מכל המכשירים שבהם החשבון פתוח — למשל אחרי שימוש במחשב משותף או אם הטלפון אבד.'
+              : 'Sign out on this device only, or on every device where the account is open — after using a shared computer, say, or if a phone was lost.'}
+          </p>
+          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <form action={signOutAction}>
+              <input type="hidden" name="locale" value={locale} />
+              <button type="submit" className={loungeQuiet}>
+                {he ? 'התנתקות במכשיר הזה' : 'Sign out on this device'}
+              </button>
+            </form>
+            <form action={signOutEverywhereAction}>
+              <input type="hidden" name="locale" value={locale} />
+              <button type="submit" className={loungeGhost}>
+                {he ? 'התנתקות מכל המכשירים' : 'Sign out everywhere'}
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
     </main>
   );

@@ -87,8 +87,8 @@ describe('rate limit policy', () => {
   });
 
   it('gives every action its own allowance', () => {
-    /* The door desk scans continuously; sign-in must stay tight. */
-    expect(RATE_LIMITS['check-in'].attempts).toBeGreaterThan(
+    /* A room full of people chats continuously; sign-in must stay tight. */
+    expect(RATE_LIMITS['chat-message'].attempts).toBeGreaterThan(
       RATE_LIMITS['sign-in'].attempts,
     );
     for (const policy of Object.values(RATE_LIMITS)) {

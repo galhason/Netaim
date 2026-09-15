@@ -5,6 +5,14 @@ export interface OutboxMessage {
   locale: string;
   subject: string;
   body: string;
+  /*
+   * Presentation, carried with the message but never persisted: the
+   * outbox writes subject and body only, so what a channel does with
+   * these is a delivery concern. `body` always says the same thing in
+   * words, so a text-only reader loses nothing.
+   */
+  highlight?: { label: string; value: string };
+  cta?: { label: string; href: string };
 }
 
 export type DeliveryStatus = 'queued' | 'sent' | 'failed';

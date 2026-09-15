@@ -26,7 +26,7 @@ const ContactPage = async ({ params }: ContactPageProps) => {
   const dateLabel = event ? formatLongDate(event.startsAt, lang) : '';
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col px-6 pb-28 pt-32 md:px-10">
+    <main id="main-content" className="mx-auto flex max-w-3xl flex-col px-6 pb-28 pt-32 md:px-10">
       <p className="text-xs font-medium uppercase tracking-[0.34em] text-accent">
         {lang === 'he' ? 'צור קשר' : 'Contact'}
       </p>

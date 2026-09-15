@@ -175,7 +175,7 @@ const ProgramExperience = ({
         : null;
 
   return (
-    <main className="experience min-h-dvh bg-[var(--x-bg)]">
+    <main id="main-content" className="experience min-h-dvh bg-[var(--x-bg)]">
       <ToastProvider
         initial={noticeText ? { message: noticeText, tone: 'warn' } : undefined}
       >

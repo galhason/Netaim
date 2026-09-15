@@ -45,7 +45,7 @@ const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
   const role = [speaker.jobTitle, speaker.company].filter(Boolean).join(' · ');
 
   return (
-    <main className="experience min-h-dvh bg-[var(--x-bg)]">
+    <main id="main-content" className="experience min-h-dvh bg-[var(--x-bg)]">
       {/* Cover hero */}
       <div
         className="relative h-48 overflow-hidden md:h-56"

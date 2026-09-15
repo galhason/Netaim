@@ -1,3 +1,8 @@
+import {
+  DIRECTORY_MAX_AGE_SECONDS,
+  cacheTags,
+  cachedContent,
+} from '@/shared/cache/content-cache';
 import { FALLBACK_LOCALE } from '@/config/locales';
 import type { ContentSource } from '@/features/events';
 import type {
@@ -35,6 +40,8 @@ import {
   payloadUpdateParticipantAdmin,
   payloadDeleteParticipantAccount,
 } from './payload/payload-participant-admin';
+import type { EventLogisticsSource } from '@/features/studio/types/logistics';
+import { payloadEventLogistics } from './payload/payload-logistics';
 import { chooseContentSource } from './selection';
 import { payloadContentSource } from './payload/payload-content-source';
 import { payloadIdentityGateway } from './payload/payload-identity';
@@ -71,13 +78,16 @@ export type {
   ActivityPeer,
   FellowParticipant,
 } from './payload/payload-registration';
+import type { FellowParticipant } from './payload/payload-registration';
 import { payloadParticipantSessionRepository } from './payload/payload-participant-session';
 import { payloadAccountGrantRepository } from './payload/payload-grant';
 import { payloadRateLimitRepository } from './payload/payload-rate-limit';
+import { payloadEmailVerificationRepository } from './payload/payload-email-verification';
 import { payloadAuditRepository } from './payload/payload-audit';
 import type { AuditRepository } from '@/features/access/types/audit';
 export { checkDatabase } from './payload/payload-health';
 import type { RateLimitRepository } from '@/features/access/types/rate-limit';
+import type { EmailVerificationRepository } from '@/features/registration/types/email-verification';
 import { payloadNotificationOutboxRepository } from './payload/payload-notification';
 import {
   payloadSessionRepository,
@@ -85,11 +95,24 @@ import {
 } from './payload/payload-session';
 import { payloadSpeakerRepository } from './payload/payload-speaker';
 import { payloadSponsorRepository } from './payload/payload-sponsor';
-import { payloadNetworkingProfileRepository } from './payload/payload-networking';
 import { payloadConnectionRepository } from './payload/payload-networking-connection';
 import { payloadChatRepository } from './payload/payload-networking-chat';
+import {
+  payloadBlockRepository,
+  payloadReportRepository,
+} from './payload/payload-networking-safety';
+import type {
+  BlockRepository,
+  ReportRepository,
+} from '@/features/networking/types/safety';
 import type { ChatRepository } from '@/features/networking/types/chat';
 import { payloadMeetingRepository } from './payload/payload-networking-meeting';
+export {
+  networkingEventBoard,
+  type NetworkingEventBoard,
+  type StudioConnectionRow,
+  type StudioMeetingRow,
+} from './payload/payload-networking-studio';
 import { createMondayRegistrationSubscriber } from './monday/monday-registration-subscriber';
 import type {
   SessionRepository,
@@ -97,7 +120,6 @@ import type {
 } from '@/features/program/types/session';
 import type { SpeakerRepository } from '@/features/speakers/types/speaker';
 import type { SponsorRepository } from '@/features/sponsors/types/sponsor';
-import type { NetworkingProfileRepository } from '@/features/networking/types/networking';
 import type { ConnectionRepository } from '@/features/networking/types/connection';
 import type { MeetingRepository } from '@/features/networking/types/meeting';
 import { subscribeRegistration } from '@/foundation/event-bus';
@@ -130,6 +152,7 @@ export const listParticipantsAdmin: ParticipantAdminSource =
 export const updateParticipantAdmin: ParticipantAdminWriter =
   payloadUpdateParticipantAdmin;
 export const deleteParticipantAdmin = payloadDeleteParticipantAccount;
+export const eventLogisticsSource: EventLogisticsSource = payloadEventLogistics;
 export const searchParticipantAccounts: AccountSearchSource =
   payloadSearchAccounts;
 export { readExperienceDocument } from './documents/experience-documents';
@@ -188,7 +211,32 @@ export const organizationRepository: OrganizationRepository =
 export const profileRepository: ProfileRepository = payloadProfileRepository;
 
 export const listEventParticipants = payloadListEventParticipants;
-export const listDirectoryParticipants = payloadListDirectoryParticipants;
+/*
+ * The conference directory, assembled once and shared.
+ *
+ * This is the heaviest read on the personal pages and the only one whose
+ * answer is the same for everybody: the people taking part who asked to
+ * be findable. Per request it loads every attending account with its
+ * organization and photo — at four hundred people that was most of the
+ * processor time of a single page view, repeated for every viewer of
+ * the same unchanging list.
+ *
+ * So it is cached by conference, across visitors. Two things keep that
+ * honest. It is keyed by slug alone and reads no cookie, so no one ever
+ * sees a list assembled for someone else. And the entry is dropped the
+ * moment somebody joins, leaves, or changes whether they are listed,
+ * with a thirty-second ceiling underneath as a floor on how long a
+ * missed invalidation could show a person who has opted out.
+ */
+export const listDirectoryParticipants = (
+  eventSlug: string,
+): Promise<FellowParticipant[]> =>
+  cachedContent(
+    payloadListDirectoryParticipants,
+    ['directory-participants', eventSlug],
+    [cacheTags.directory(eventSlug)],
+    DIRECTORY_MAX_AGE_SECONDS,
+  )(eventSlug);
 export const sharedActivityPeers = payloadSharedActivityPeers;
 
 export const registrationRepository: RegistrationRepository =
@@ -196,6 +244,9 @@ export const registrationRepository: RegistrationRepository =
 
 export const registrationSettingsRepository: RegistrationSettingsRepository =
   payloadRegistrationSettingsRepository;
+
+export const emailVerificationRepository: EmailVerificationRepository =
+  payloadEmailVerificationRepository;
 
 export const participantSessionRepository: ParticipantSessionRepository =
   payloadParticipantSessionRepository;
@@ -207,6 +258,16 @@ export const rateLimitRepository: RateLimitRepository =
   payloadRateLimitRepository;
 
 export const auditRepository: AuditRepository = payloadAuditRepository;
+
+/*
+ * Retention: the scheduled forgetting of a finished conference.
+ */
+export {
+  conferencesDueForPurge,
+  purgeConferenceData,
+  type PurgeCandidate,
+  type PurgeReport,
+} from './payload/payload-retention';
 
 /*
  * The channel the platform actually sends through. SMTP when a relay is
@@ -262,13 +323,14 @@ export const sessionRegistrationRepository: SessionRegistrationRepository =
 
 export const sponsorRepository: SponsorRepository = payloadSponsorRepository;
 
-export const networkingProfileRepository: NetworkingProfileRepository =
-  payloadNetworkingProfileRepository;
-
 export const connectionRepository: ConnectionRepository =
   payloadConnectionRepository;
 
 export const chatRepository: ChatRepository = payloadChatRepository;
+
+export const blockRepository: BlockRepository = payloadBlockRepository;
+
+export const reportRepository: ReportRepository = payloadReportRepository;
 
 export const meetingRepository: MeetingRepository = payloadMeetingRepository;
 

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale } from '@/config/locales';
 import { LOUNGE_UI } from '@/features/attendee';
-import { getMyDetails } from '@/features/registration';
+import { DietarySelect, getMyDetails } from '@/features/registration';
 import { saveMyProfileAction } from './actions';
 
 /*
@@ -105,9 +105,9 @@ const ProfilePage = async ({ params, searchParams }: ProfilePageProps) => {
             </label>
             <label>
               <span className={LABEL_CLASS}>{LOUNGE_UI.fieldDietary[locale]}</span>
-              <input
-                name="dietary"
-                defaultValue={details.dietary}
+              <DietarySelect
+                locale={locale}
+                value={details.dietary}
                 className={FIELD_CLASS}
               />
             </label>

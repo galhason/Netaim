@@ -29,7 +29,6 @@ export const WORKSPACE_AREAS: WorkspaceArea[] = [
     label: { he: 'נרשמים', en: 'Registrants' },
   },
   { id: 'program', segment: 'program', label: { he: 'תוכנית', en: 'Program' } },
-  { id: 'checkin', segment: 'check-in', label: { he: 'קבלה', en: 'Check-in' } },
   {
     id: 'notifications',
     segment: 'notifications',

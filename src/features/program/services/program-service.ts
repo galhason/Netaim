@@ -23,6 +23,10 @@ import {
   workshopStatus,
   type WorkshopStatus,
 } from '../constants/workshop-status';
+import {
+  announceSessionCancelled,
+  announceSessionChange,
+} from './session-change-notices';
 
 export interface SessionSituation {
   session: SessionSummary;
@@ -78,15 +82,64 @@ export const createSession = (
   input: CreateSessionInput,
 ): Promise<SessionSummary> => sessionRepository.create(slug, input, locale);
 
-export const updateSession = (
+/*
+ * Both titles, so a note about this activity can speak each reader's
+ * language. Read together; a missing translation falls back to the
+ * other so nobody gets an empty subject.
+ */
+const titlesOf = async (
+  sessionId: string,
+): Promise<{ he: string; en: string; eventSlug: string } | null> => {
+  const [he, en] = await Promise.all([
+    sessionRepository.getById(sessionId, 'he').catch(() => null),
+    sessionRepository.getById(sessionId, 'en').catch(() => null),
+  ]);
+  const any = he ?? en;
+  if (!any) {
+    return null;
+  }
+  return {
+    he: he?.title || en?.title || '',
+    en: en?.title || he?.title || '',
+    eventSlug: any.eventSlug ?? '',
+  };
+};
+
+/*
+ * An edit that moves the activity in time or place tells the people
+ * who hold a seat in it (PRD §4). The comparison is made on what was
+ * stored before and after — not on the form — so every Studio path
+ * that lands here is covered, and a save that changed only the
+ * description says nothing.
+ */
+export const updateSession = async (
   sessionId: string,
   locale: Locale,
   input: Partial<CreateSessionInput>,
-): Promise<SessionSummary | null> =>
-  sessionRepository.update(sessionId, input, locale);
+): Promise<SessionSummary | null> => {
+  const before = await sessionRepository.getById(sessionId, locale).catch(() => null);
+  const after = await sessionRepository.update(sessionId, input, locale);
+  if (before && after) {
+    const titles = await titlesOf(sessionId);
+    if (titles && titles.eventSlug) {
+      await announceSessionChange(titles.eventSlug, sessionId, titles, before, after);
+    }
+  }
+  return after;
+};
 
-export const deleteSession = (sessionId: string): Promise<boolean> =>
-  sessionRepository.remove(sessionId);
+/*
+ * Removing an activity cancels it for everyone in it. They are told
+ * first — while their registrations still exist to be found — and the
+ * activity leaves afterwards.
+ */
+export const deleteSession = async (sessionId: string): Promise<boolean> => {
+  const titles = await titlesOf(sessionId);
+  if (titles && titles.eventSlug) {
+    await announceSessionCancelled(titles.eventSlug, sessionId, titles);
+  }
+  return sessionRepository.remove(sessionId);
+};
 
 export const getSessionSituation = async (
   sessionId: string,

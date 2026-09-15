@@ -8,7 +8,9 @@ import {
   getParticipantsAdmin,
   getStudioCreator,
   getStudioLocale,
+  requireCapability,
 } from '@/features/studio';
+import { countOpenReports } from '@/features/networking';
 import { ROLES, ROLE_LABELS } from '@/permission-engine';
 import {
   cancelParticipantRegistrationAction,
@@ -46,10 +48,13 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
   const { grants: grantsState, move: moveState } = await searchParams;
   const locale = await getStudioLocale();
   const creator = await getStudioCreator();
-  const [participants, allGrants, events] = await Promise.all([
+  const [participants, allGrants, events, openReports] = await Promise.all([
     getParticipantsAdmin().catch(() => []),
     listAllGrants(),
     listEvents().catch(() => []),
+    requireCapability('participants:manage')
+      .then((access) => (access ? countOpenReports() : 0))
+      .catch(() => 0),
   ]);
 
   const grantsByAccount = new Map<string, AccountGrantView[]>();
@@ -63,6 +68,7 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
     <ConsoleShell
       locale={locale}
       userName={creator?.name ?? ''}
+      openReports={openReports}
       breadcrumb={
         <span className="font-medium text-[var(--c-text)]">
           {CONSOLE_UI.participantsTitle[locale]}

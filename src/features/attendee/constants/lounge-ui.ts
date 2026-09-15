@@ -8,7 +8,7 @@ export const LOUNGE_UI = {
   myExperience: { he: 'המסע שלי', en: 'My Journey' },
   schedule: { he: 'לוח הזמנים', en: 'Schedule' },
   networking: { he: 'נטוורקינג', en: 'Networking' },
-  messages: { he: 'הודעות', en: 'Messages' },
+  messages: { he: 'התראות', en: 'Notifications' },
   speakers: { he: 'דוברים', en: 'Speakers' },
   mapVenue: { he: 'מפה ומקום', en: 'Map & Venue' },
   resources: { he: 'חומרים', en: 'Resources' },
@@ -164,7 +164,6 @@ export const LOUNGE_UI = {
   saveProfile: { he: 'שמירה', en: 'Save' },
   profileSaved: { he: 'נשמר. נתראה בכנס.', en: 'Saved. See you there.' },
   backToLounge: { he: 'חזרה לחוויה שלי', en: 'Back to My Experience' },
-  checkInOpen: { he: 'הצ׳ק-אין פתוח', en: 'Check-in is open' },
   showPassAtGate: {
     he: 'הציגו את הכרטיס בכניסה — נתראה בפנים.',
     en: 'Show your pass at the entrance — see you inside.',

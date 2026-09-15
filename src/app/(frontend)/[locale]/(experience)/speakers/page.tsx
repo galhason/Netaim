@@ -49,7 +49,7 @@ const SpeakersPage = async ({ params }: SpeakersPageProps) => {
   );
 
   return (
-    <main className="mx-auto max-w-6xl px-6 pb-24 pt-28 md:px-10 md:pt-32">
+    <main id="main-content" className="mx-auto max-w-6xl px-6 pb-24 pt-28 md:px-10 md:pt-32">
       <header className="mb-8 md:mb-10">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--x-primary)]">
           {he ? 'הדוברים' : 'Speakers'}

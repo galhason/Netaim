@@ -152,6 +152,45 @@ export const CONSOLE_UI = {
     he: 'כל מי שנרשם — הכנסים שלהם, המצב שלהם, והדלת.',
     en: 'Everyone who registered — their conferences, their state, and the door.',
   },
+  /* Logistics: the roster a caterer and a front desk work from. */
+  logisticsTitle: { he: 'לוגיסטיקה', en: 'Logistics' },
+  logisticsSub: {
+    he: 'מי מגיע לכנס — שם, אימייל, טלפון והעדפת מזון, וסיכום למטבח.',
+    en: 'Who is coming — name, email, phone and food preference, with the kitchen\u2019s totals.',
+  },
+  logisticsChooseEvent: { he: 'כנס', en: 'Conference' },
+  logisticsShow: { he: 'הצגה', en: 'Show' },
+  logisticsNoEvents: {
+    he: 'אין עדיין כנס להציג.',
+    en: 'There is no conference to show yet.',
+  },
+  logisticsEmpty: {
+    he: 'עוד לא נרשם אף אחד לכנס הזה.',
+    en: 'Nobody has joined this conference yet.',
+  },
+  logisticsDenied: {
+    he: 'לצפייה בלוגיסטיקה דרושה הרשאת ניהול הרשמות.',
+    en: 'Viewing logistics requires the registrations management permission.',
+  },
+  logisticsTotal: { he: 'סה״כ משתתפים', en: 'Participants' },
+  logisticsMeals: { he: 'סיכום מזון', en: 'Food summary' },
+  logisticsUnspecified: { he: 'לא צוין / אחר', en: 'Not specified / other' },
+  logisticsPeople: { he: 'משתתפים', en: 'people' },
+  logisticsPerson: { he: 'משתתף/ת', en: 'person' },
+  logisticsAccessibility: { he: 'נגישות', en: 'Accessibility' },
+  logisticsAccessibilityCount: {
+    he: 'ציינו צורך נגישות',
+    en: 'noted an accessibility need',
+  },
+  logisticsExport: { he: 'הורדת קובץ', en: 'Download CSV' },
+  logisticsColName: { he: 'שם', en: 'Name' },
+  logisticsColEmail: { he: 'אימייל', en: 'Email' },
+  logisticsColPhone: { he: 'טלפון', en: 'Phone' },
+  logisticsColDietary: { he: 'העדפת מזון', en: 'Food preference' },
+  logisticsColOrganization: { he: 'ארגון', en: 'Organization' },
+  logisticsColAccessibility: { he: 'נגישות', en: 'Accessibility' },
+  logisticsViaForm: { he: 'נרשם/ה לכנס', en: 'Registered' },
+  logisticsViaActivities: { he: 'דרך פעילויות', en: 'Via activities' },
   blockedTag: { he: 'חסום/ה', en: 'Blocked' },
   block: { he: 'חסימה', en: 'Block' },
   unblock: { he: 'ביטול חסימה', en: 'Unblock' },
@@ -196,6 +235,68 @@ export const CONSOLE_UI = {
     he: 'מצב בימאי — הסטודיו זז הצידה',
     en: 'Director Mode — the Studio steps aside',
   },
+  /* Safety — reports raised by guests about other guests. */
+  reportsTitle: { he: 'דיווחי בטיחות', en: 'Safety reports' },
+  reportsSub: {
+    he: 'דיווחים שאורחים הגישו על אורחים אחרים. כל דיווח נשאר כאן עד שמישהו מהצוות מטפל בו.',
+    en: 'Reports guests filed about other guests. Each one stays here until someone on the team handles it.',
+  },
+  reportsEmpty: {
+    he: 'אין דיווחים. זה הסימן הטוב.',
+    en: 'No reports. That is the good sign.',
+  },
+  reportsOpenCount: { he: 'פתוחים', en: 'Open' },
+  reportsReporter: { he: 'מדווח/ת', en: 'Reported by' },
+  reportsReported: { he: 'הדיווח על', en: 'Reported' },
+  reportsReason: { he: 'סיבה', en: 'Reason' },
+  reportsDetails: { he: 'פירוט', en: 'Details' },
+  reportsHandledBy: { he: 'טופל על ידי', en: 'Handled by' },
+  reportsAlsoBlocked: { he: 'המדווח/ת גם חסם/ה', en: 'Reporter also blocked them' },
+  reportsOpenAccount: { he: 'לכרטיס המשתתף', en: 'Open account' },
+  reportsMarkReviewing: { he: 'בטיפול', en: 'Reviewing' },
+  reportsMarkResolved: { he: 'טופל', en: 'Resolved' },
+  reportsMarkDismissed: { he: 'נדחה', en: 'Dismissed' },
+  reportsMarkOpen: { he: 'החזרה לפתוח', en: 'Reopen' },
+  reportsNav: { he: 'דיווחי בטיחות', en: 'Safety reports' },
+
+  /* Networking — the production's view of the community page. */
+  networkingNav: { he: 'נטוורקינג', en: 'Networking' },
+  networkingTitle: { he: 'נטוורקינג', en: 'Networking' },
+  networkingSub: {
+    he: 'מבט־על על קהילת הכנס: מי מוצג בספרייה, מי התחבר, אילו פגישות נקבעו — בלי תוכן ההודעות, שנשאר פרטי.',
+    en: "The community at a glance: who is listed, who connected, what meetings stand — never message contents, which stay private.",
+  },
+  networkingNoConference: {
+    he: 'אין כנס פעיל, ולכן אין עדיין קהילה להציג.',
+    en: 'No active conference yet, so there is no community to show.',
+  },
+  networkingStatListed: { he: 'מוצגים בספרייה', en: 'Listed in the directory' },
+  networkingStatOpen: { he: 'פתוחים לפגישות', en: 'Open to meetings' },
+  networkingStatConnections: { he: 'חיבורים פעילים', en: 'Active connections' },
+  networkingStatPending: { he: 'בקשות ממתינות', en: 'Pending requests' },
+  networkingStatMeetings: { he: 'פגישות מתוכננות', en: 'Planned meetings' },
+  networkingStatMessages: { he: 'הודעות בצ׳אט', en: 'Chat messages' },
+  networkingRecent: { he: 'חיבורים אחרונים', en: 'Recent connections' },
+  networkingRecentEmpty: {
+    he: 'עוד לא נוצרו חיבורים.',
+    en: 'No connections made yet.',
+  },
+  networkingMeetings: { he: 'פגישות', en: 'Meetings' },
+  networkingMeetingsEmpty: {
+    he: 'עוד לא נקבעו פגישות.',
+    en: 'No meetings scheduled yet.',
+  },
+  networkingViewPage: { he: 'לצפייה בדף הקהילה', en: 'View the community page' },
+  networkingCompose: { he: 'לשלוח הכרזה', en: 'Send an announcement' },
+  networkingOpenReports: { he: 'לדיווחי הבטיחות', en: 'Open safety reports' },
+  networkingConnAccepted: { he: 'התחברו', en: 'Connected' },
+  networkingConnPending: { he: 'ממתינה', en: 'Pending' },
+  networkingConnDeclined: { he: 'נדחתה', en: 'Declined' },
+  networkingConnRemoved: { he: 'הוסרה', en: 'Removed' },
+  networkingMeetConfirmed: { he: 'מאושרת', en: 'Confirmed' },
+  networkingMeetProposed: { he: 'מוצעת', en: 'Proposed' },
+  networkingMeetCancelled: { he: 'בוטלה', en: 'Cancelled' },
+
   groupMain: { he: 'ראשי', en: 'MAIN' },
   groupWorkspace: { he: 'סביבת עבודה', en: 'WORKSPACE' },
   groupOrg: { he: 'הארגון', en: 'ORGANIZATION' },
@@ -252,7 +353,6 @@ export const CONSOLE_UI = {
     he: 'לחיצה על סצנה בקנבס פותחת אותה באינספקטור',
     en: 'Click a scene on the canvas to open it in the inspector',
   },
-  checkinNav: { he: 'צ׳ק-אין', en: 'Check-in' },
   broadcastCompose: { he: 'הודעה חדשה לכנס', en: 'New conference message' },
   broadcastConference: { he: 'כנס', en: 'Conference' },
   broadcastLanguage: { he: 'שפת ההודעה', en: 'Message language' },
@@ -463,4 +563,23 @@ export const REGISTRATION_STATUS_LABELS: Record<string, Record<Locale, string>> 
   attended: { he: 'נכח', en: 'Attended' },
   expired: { he: 'פג תוקף', en: 'Expired' },
   noShow: { he: 'לא הגיע', en: 'No-show' },
+};
+
+/*
+ * A report's reason and its state, in the operator's language. The
+ * stored token stays English and stable; only the reading changes.
+ */
+export const REPORT_REASON_LABELS: Record<string, Record<Locale, string>> = {
+  harassment: { he: 'הטרדה', en: 'Harassment' },
+  spam: { he: 'ספאם או שיווק', en: 'Spam' },
+  impersonation: { he: 'התחזות', en: 'Impersonation' },
+  inappropriate: { he: 'תוכן לא הולם', en: 'Inappropriate content' },
+  other: { he: 'אחר', en: 'Other' },
+};
+
+export const REPORT_STATUS_LABELS: Record<string, Record<Locale, string>> = {
+  open: { he: 'פתוח', en: 'Open' },
+  reviewing: { he: 'בטיפול', en: 'Reviewing' },
+  resolved: { he: 'טופל', en: 'Resolved' },
+  dismissed: { he: 'נדחה', en: 'Dismissed' },
 };

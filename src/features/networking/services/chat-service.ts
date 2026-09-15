@@ -1,6 +1,8 @@
 import { chatRepository, connectionRepository } from '@/infrastructure';
+import { checkRateLimit } from '@/features/access';
 import { currentParticipant } from '@/features/registration';
 import type { ChatMessage } from '../types/chat';
+import { blockedBetween } from './safety-service';
 
 /*
  * Netaim Messages, person to person (Connection Framework v1.0): the
@@ -25,6 +27,18 @@ const livingConnectionFor = async (connectionId: string, meId: string) => {
     (connection.status !== 'accepted' && connection.status !== 'muted') ||
     (connection.requesterId !== meId && connection.addresseeId !== meId)
   ) {
+    return null;
+  }
+  /*
+   * Mute silences the counter and keeps the words; a block ends the
+   * conversation. Checked on read as well as on write, so a thread left
+   * open in a tab stops answering too.
+   */
+  const other =
+    connection.requesterId === meId
+      ? connection.addresseeId
+      : connection.requesterId;
+  if (await blockedBetween(meId, other)) {
     return null;
   }
   return connection;
@@ -59,6 +73,55 @@ export const myChatThread = async (
   };
 };
 
+/*
+ * What has been said since the reader's last message — the read behind
+ * a thread that is open on someone's screen.
+ *
+ * A conversation that only updates when the page is reloaded is not a
+ * conversation, and this platform has no socket to push over. So the
+ * open thread asks, and the answer is shaped to make asking cheap: a
+ * cursor rather than the whole history, and `null` the moment the
+ * connection stops being one the reader may hold — a thread left open
+ * in a tab after a block must go quiet on its own rather than keep
+ * answering because nobody navigated.
+ */
+export interface ChatUpdate {
+  messages: (ChatMessage & { mine: boolean })[];
+}
+
+export const chatSince = async (
+  connectionId: string,
+  afterId: string,
+): Promise<ChatUpdate | null> => {
+  const me = await currentParticipant();
+  if (!me) {
+    return null;
+  }
+  const connection = await livingConnectionFor(connectionId, me.id);
+  if (!connection) {
+    return null;
+  }
+  const messages = await chatRepository.listSince(
+    connectionId,
+    afterId,
+    THREAD_LIMIT,
+  );
+  /*
+   * Reading is what marks read, so the stamp follows arrival rather
+   * than the clock: an idle thread polling every few seconds must not
+   * write to the database each time it finds nothing.
+   */
+  if (messages.some((message) => message.senderId !== me.id)) {
+    await chatRepository.markRead(connectionId, me.id).catch(() => undefined);
+  }
+  return {
+    messages: messages.map((message) => ({
+      ...message,
+      mine: message.senderId === me.id,
+    })),
+  };
+};
+
 export const sendChatMessage = async (
   connectionId: string,
   body: string,
@@ -77,6 +140,43 @@ export const sendChatMessage = async (
   }
   const sent = await chatRepository.send(connectionId, me.id, text);
   return sent !== null;
+};
+
+/*
+ * The same act, returning what was written. The form path only needs to
+ * know whether it worked; a thread that is drawing its own bubbles
+ * needs the message, and inventing one on the client would give it an
+ * id and a timestamp the server never agreed to.
+ */
+export const sendChatMessageReturning = async (
+  connectionId: string,
+  body: string,
+): Promise<(ChatMessage & { mine: boolean }) | null> => {
+  const me = await currentParticipant();
+  if (!me) {
+    return null;
+  }
+  const text = body.trim().slice(0, MAX_BODY);
+  if (!text) {
+    return null;
+  }
+  const connection = await livingConnectionFor(connectionId, me.id);
+  if (!connection) {
+    return null;
+  }
+  /*
+   * A flood is a safety problem, not a performance one: one person can
+   * bury another under messages faster than the other can block them.
+   * The allowance is far above a real conversation and far below a
+   * script. Counted per sender, after membership is proven, so a
+   * stranger cannot burn someone else's allowance.
+   */
+  const pace = await checkRateLimit('chat-message', me.id);
+  if (!pace.allowed) {
+    return null;
+  }
+  const sent = await chatRepository.send(connectionId, me.id, text);
+  return sent ? { ...sent, mine: true } : null;
 };
 
 /*
@@ -104,4 +204,60 @@ export const myUnreadByConnection = async (
     }),
   );
   return counts;
+};
+
+/*
+ * The inbox view of the room: one line per living connection — who,
+ * the last thing said, whether it was mine, and how much of theirs I
+ * have not read. Unread first, then most recent. Connections with no
+ * words yet still appear, so a person can see who they may write to.
+ */
+export interface ConversationPreview {
+  connectionId: string;
+  otherId: string;
+  otherName: string;
+  unread: number;
+  last: (ChatMessage & { mine: boolean }) | null;
+}
+
+export const myConversations = async (
+  connections: {
+    id: string;
+    otherId: string;
+    otherName: string;
+    status: string;
+    muted?: boolean;
+  }[],
+): Promise<ConversationPreview[]> => {
+  const me = await currentParticipant();
+  if (!me) {
+    return [];
+  }
+  const living = connections.filter(
+    (connection) => connection.status === 'accepted' || connection.muted,
+  );
+  const previews = await Promise.all(
+    living.map(async (connection) => {
+      const [latest, unread] = await Promise.all([
+        chatRepository.listForConnection(connection.id, 1).catch(() => []),
+        connection.muted
+          ? Promise.resolve(0)
+          : chatRepository.unreadCount(connection.id, me.id).catch(() => 0),
+      ]);
+      const last = latest[0] ?? null;
+      return {
+        connectionId: connection.id,
+        otherId: connection.otherId,
+        otherName: connection.otherName,
+        unread,
+        last: last ? { ...last, mine: last.senderId === me.id } : null,
+      };
+    }),
+  );
+  return previews.sort((a, b) => {
+    if ((b.unread > 0) !== (a.unread > 0)) {
+      return b.unread > 0 ? 1 : -1;
+    }
+    return (b.last?.createdAt ?? '').localeCompare(a.last?.createdAt ?? '');
+  });
 };

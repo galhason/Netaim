@@ -3,9 +3,8 @@ import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { connectionChannels, myChatThread } from '@/features/networking';
-import { formatTimeLabel } from '@/shared';
 import { sendChatAction } from './actions';
-import ChatRefresh from './chat-refresh';
+import ChatLive from './chat-live';
 
 /*
  * The Netaim Messages thread (Connection Framework v1.0): the default
@@ -23,6 +22,14 @@ const TEXT = {
   empty: {
     he: 'עוד אין הודעות. אמרו שלום — זה תמיד עובד.',
     en: 'No messages yet. Say hello — it always works.',
+  },
+  closed: {
+    he: 'השיחה הזו נסגרה.',
+    en: 'This conversation is closed.',
+  },
+  failed: {
+    he: 'ההודעה לא נשלחה. בדקו את החיבור ונסו שוב.',
+    en: 'The message was not sent. Check your connection and try again.',
   },
   whatsapp: { he: 'WhatsApp', en: 'WhatsApp' },
   call: { he: 'טלפון', en: 'Phone' },
@@ -48,7 +55,6 @@ const ChatPage = async ({ params }: ChatPageProps) => {
       id="main-content"
       className="lounge flex min-h-dvh flex-col bg-[var(--l-bg)] font-body text-[var(--l-ink)]"
     >
-      <ChatRefresh />
       <header className="sticky top-0 z-10 bg-[var(--l-navy)] text-white">
         <div className="mx-auto flex max-w-2xl items-center gap-4 px-5 py-4">
           <Link
@@ -96,65 +102,35 @@ const ChatPage = async ({ params }: ChatPageProps) => {
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-2 px-5 py-6">
-        {thread.messages.length === 0 ? (
-          <p className="m-auto rounded-2xl bg-white px-5 py-4 text-sm text-[var(--l-soft)] shadow-[0_10px_30px_rgba(35,40,47,0.06)]">
-            {TEXT.empty[locale]}
-          </p>
-        ) : (
-          thread.messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.mine ? 'justify-end' : 'justify-start'}`}
-            >
-              <span
-                className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-[0_6px_18px_rgba(35,40,47,0.07)] ${
-                  message.mine
-                    ? 'rounded-ee-md bg-[var(--l-navy)] text-white'
-                    : 'rounded-es-md bg-white'
-                }`}
-              >
-                <span className="block whitespace-pre-wrap break-words">
-                  {message.body}
-                </span>
-                <span
-                  className={`mt-1 block text-[10px] ${
-                    message.mine ? 'text-white/55' : 'text-[var(--l-faint)]'
-                  }`}
-                >
-                  {formatTimeLabel(message.createdAt, locale)}
-                </span>
-              </span>
-            </div>
-          ))
-        )}
-      </div>
-
-      <footer className="sticky bottom-0 border-t border-[var(--l-hair)] bg-[var(--l-bg)]/95 backdrop-blur">
-        <form
-          action={sendChatAction}
-          className="mx-auto flex max-w-2xl items-end gap-2 px-5 py-4"
-        >
-          <input type="hidden" name="locale" value={locale} />
-          <input type="hidden" name="connectionId" value={connectionId} />
-          <textarea
-            name="body"
-            rows={1}
-            required
-            maxLength={2000}
-            placeholder={TEXT.placeholder[locale]}
-            className="min-h-12 flex-1 resize-none rounded-2xl border border-[var(--l-hair)] bg-white px-4 py-3 text-sm"
-          />
-          <button
-            type="submit"
-            className="inline-flex min-h-12 items-center rounded-2xl bg-[var(--l-navy)] px-6 text-sm font-medium text-white transition-colors hover:bg-[#16263c]"
-          >
-            {TEXT.send[locale]}
-          </button>
-        </form>
-      </footer>
+      <ChatLive
+        connectionId={connectionId}
+        locale={locale}
+        fallback={sendChatAction}
+        initial={thread.messages.map((message) => ({
+          id: message.id,
+          body: message.body,
+          mine: message.mine,
+          createdAt: message.createdAt,
+        }))}
+        text={{
+          empty: TEXT.empty[locale],
+          placeholder: TEXT.placeholder[locale],
+          send: TEXT.send[locale],
+          closed: TEXT.closed[locale],
+          failed: TEXT.failed[locale],
+        }}
+      />
     </main>
   );
 };
+
+/*
+ * The response is one person's conversation, so it is rendered per
+ * request and never prerendered or shared. Declared rather than left to
+ * Next to infer from a cookie read several calls down: an inferred
+ * guard disappears the moment a refactor moves that read behind a
+ * helper, and the failure would be one guest served another's thread.
+ */
+export const dynamic = 'force-dynamic';
 
 export default ChatPage;

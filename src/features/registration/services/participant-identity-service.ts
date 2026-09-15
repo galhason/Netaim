@@ -1,5 +1,6 @@
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { cookies } from 'next/headers';
+import { cache } from 'react';
 import { LOCALE_PREFERENCE_COOKIE, type Locale } from '@/config/locales';
 import { participantSessionRepository, sendNotification } from '@/infrastructure';
 import {
@@ -66,6 +67,33 @@ const verifyPassword = (raw: string, stored: string): boolean => {
   const a = Buffer.from(derived, 'hex');
   const b = Buffer.from(expected, 'hex');
   return a.length === b.length && timingSafeEqual(a, b);
+};
+
+/*
+ * Whether this address already belongs to an account.
+ *
+ * Registration asks before it sends a code, because an address can
+ * become an account exactly once: the form that creates accounts must
+ * not be a way to file a second registration over someone's existing
+ * one, overwrite their profile, or reset their password. Somebody who
+ * already has an account and wants another conference signs in and
+ * joins it from their own space.
+ *
+ * Yes, this tells a visitor that an address is taken — every
+ * registration form does, and the alternative is a person who cannot
+ * be told why their code never arrives. The answer costs nothing an
+ * attacker could not learn by trying to sign in, and the screen that
+ * carries it sends them to recovery rather than leaving them stuck.
+ */
+export const emailHasAccount = async (email: string): Promise<boolean> => {
+  const address = email.trim().toLowerCase();
+  if (!address) {
+    return false;
+  }
+  const found = await participantSessionRepository
+    .credentialsByEmail(address)
+    .catch(() => null);
+  return found !== null;
 };
 
 export type PasswordSignInResult =
@@ -262,31 +290,22 @@ export const disableTotp = async (code: string): Promise<boolean> => {
   return true;
 };
 
-export type OpenAccountOutcome =
-  | { ok: true; participant: ParticipantSummary }
-  | { ok: false; reason: 'exists' | 'weakPassword' | 'failed' };
-
-export const openAccountWithPassword = async (
-  email: string,
-  name: string,
-  password: string,
-  preferredLocale: Locale,
-): Promise<OpenAccountOutcome> => {
-  if (!isStrongPassword(password)) {
-    return { ok: false, reason: 'weakPassword' };
-  }
-  const result = await participantSessionRepository
-    .openAccount(email, name, hashPassword(password), preferredLocale)
-    .catch(() => null);
-  if (!result) {
-    return { ok: false, reason: 'failed' };
-  }
-  if (!result.ok) {
-    return { ok: false, reason: result.reason === 'exists' ? 'exists' : 'failed' };
-  }
-  await establishSession(result.participant.id);
-  return { ok: true, participant: result.participant };
-};
+/*
+ * Opening an account on its own is gone, deliberately.
+ *
+ * `openAccountWithPassword` used to make a full account from a name, an
+ * address and a password, reached from a second form beside the sign-in
+ * box. It asked for none of what a conference actually needs, put the
+ * section 11 notice in front of nobody, never asked the directory
+ * question — and once registration began proving addresses, it was the
+ * one remaining way to hold an account without ever proving one.
+ *
+ * An account here exists in order to attend a conference, so it is made
+ * where someone says they are attending: the conference's own form,
+ * which asks the right questions and sends a code to the address before
+ * anything is written. Removing the function rather than hiding the
+ * form is the point — a door that is merely unlinked is still a door.
+ */
 
 /*
  * Setting a password for the signed-in account — used from the profile
@@ -308,6 +327,28 @@ export const setMyPassword = async (
   );
   return 'ok';
 };
+
+/*
+ * The password a person chose before their address was proven.
+ *
+ * `setMyPassword` works on the signed-in account and takes a plain
+ * password; this one takes the hash and a participant id, because at
+ * registration the password was chosen minutes earlier — hashed on the
+ * way into the pending record — and the account it belongs to has only
+ * just come into existence.
+ */
+export const applyPasswordHash = async (
+  participantId: string,
+  passwordHash: string,
+): Promise<void> => {
+  await participantSessionRepository.setPasswordHash(
+    participantId,
+    passwordHash,
+  );
+};
+
+/* The one-way hash used for a password chosen before an account exists. */
+export const passwordHashFor = (raw: string): string => hashPassword(raw);
 
 export const requestMagicLink = async (
   email: string,
@@ -331,11 +372,47 @@ export const requestMagicLink = async (
     eventSlug: slug,
     type: 'participant.signin',
     locale,
-    subject:
-      locale === 'he' ? 'הכניסה לאזור האישי' : 'Your personal area sign-in',
-    body:
-      (locale === 'he' ? 'קישור הכניסה שלך: ' : 'Your sign-in link: ') + link,
+    ...signInEmail(locale, link),
   });
+};
+
+/*
+ * The sign-in link, in words.
+ *
+ * One wording for both doors — the conference's own link and the
+ * platform's recovery link — because to the person reading it they are
+ * the same event: they asked to get in, and this is how. The address is
+ * written out in the text as well as sitting behind the button, so a
+ * client that strips the HTML still leaves something clickable, and a
+ * reader who distrusts buttons can see where it leads.
+ */
+const signInEmail = (
+  locale: Locale,
+  link: string,
+): { subject: string; body: string; cta: { label: string; href: string } } => {
+  const minutes = Math.round(LINK_TTL_MS / 60_000);
+  const he = locale === 'he';
+  return {
+    subject: he ? 'קישור כניסה לאזור האישי' : 'Your sign-in link',
+    body: he
+      ? [
+          'שלום,',
+          `התקבלה בקשה להיכנס לאזור האישי בנטעים. הקישור הבא יכניס אתכם לחשבון, ללא צורך בסיסמה:`,
+          link,
+          `הקישור תקף למשך ${minutes} דקות וניתן לשימוש פעם אחת בלבד. אחרי הכניסה מומלץ לקבוע סיסמה חדשה בעמוד הפרופיל.`,
+          'אם לא ביקשתם להיכנס, אין צורך לעשות דבר — הקישור יפוג מעצמו, והחשבון נשאר סגור.',
+          'בברכה,\nצוות נטעים',
+        ].join('\n\n')
+      : [
+          'Hello,',
+          'We received a request to sign in to your personal area on Netaim. The following link will take you into your account, with no password needed:',
+          link,
+          `The link is valid for ${minutes} minutes and can be used once. After signing in, we recommend setting a new password on your profile page.`,
+          'If you did not request this, no action is needed — the link expires on its own and the account stays closed.',
+          'Kind regards,\nThe Netaim team',
+        ].join('\n\n'),
+    cta: { label: he ? 'כניסה לאזור האישי' : 'Sign in to my space', href: link },
+  };
 };
 
 /*
@@ -405,10 +482,7 @@ export const requestAccountLink = async (
     eventSlug: '',
     type: 'participant.signin',
     locale,
-    subject:
-      locale === 'he' ? 'הכניסה לאזור האישי' : 'Your personal area sign-in',
-    body:
-      (locale === 'he' ? 'קישור הכניסה שלך: ' : 'Your sign-in link: ') + link,
+    ...signInEmail(locale, link),
   }).catch(() => undefined);
   return { ok: true, link, created: issued.created };
 };
@@ -470,7 +544,27 @@ export const establishSession = async (participantId: string): Promise<void> => 
   await writeLocaleCookie(preference);
 };
 
-export const currentParticipant =
+/*
+ * Who is asking — resolved once per request, however many times it is
+ * asked.
+ *
+ * Nearly every service on a personal page begins by asking this
+ * question independently: the account overview, the connections, the
+ * meetings, the unread counts, the channels of each connection. Each
+ * ask was a fresh trip to the database — the session row, the
+ * participant it belongs to, and that participant's organization — so
+ * one render of the networking page resolved the same session thirteen
+ * times over, and spent more of its processor on building those
+ * repeated queries than on rendering anything.
+ *
+ * React's `cache` is request-scoped: two calls inside one request share
+ * one answer, two requests share nothing. That is exactly the lifetime
+ * a session identity should have — long enough to stop asking twice,
+ * short enough that revoking a session still takes effect on the very
+ * next request. Nothing here is cached between visitors, and nothing
+ * outlives the response.
+ */
+export const currentParticipant = cache(
   async (): Promise<ParticipantSummary | null> => {
     const store = await cookies();
     const tokenHash = readSessionCookie(
@@ -484,7 +578,8 @@ export const currentParticipant =
       tokenHash,
       new Date().toISOString(),
     );
-  };
+  },
+);
 
 /*
  * Signing out ends the session, and only then forgets the cookie. The

@@ -406,6 +406,11 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
         organization: doc.orgName ?? undefined,
         role: doc.roleTitle ?? undefined,
         interests: doc.interests ?? undefined,
+        headline: doc.headline ?? undefined,
+        bio: doc.bio ?? undefined,
+        links: (doc.links ?? [])
+          .map((link) => ({ label: link.label ?? '', url: link.url ?? '' }))
+          .filter((link) => link.url.length > 0),
         photoUrl,
       };
     },
@@ -474,6 +479,16 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
           ...(input.interests !== undefined
             ? { interests: input.interests }
             : {}),
+          ...(input.headline !== undefined ? { headline: input.headline } : {}),
+          ...(input.bio !== undefined ? { bio: input.bio } : {}),
+          ...(input.links !== undefined
+            ? {
+                links: input.links.map((link) => ({
+                  label: link.label,
+                  url: link.url,
+                })),
+              }
+            : {}),
         },
       });
     },
@@ -540,6 +555,7 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
       const row = doc as unknown as ParticipantRow & {
         phone?: string | null;
         contactPrefs?: {
+          directory?: boolean | null;
           whatsapp?: boolean | null;
           phone?: boolean | null;
           email?: boolean | null;
@@ -553,9 +569,10 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
         phone: row.phone ?? undefined,
         prefs: {
           whatsapp: row.contactPrefs?.whatsapp !== false,
-          phone: row.contactPrefs?.phone === true,
-          email: row.contactPrefs?.email === true,
+          phone: row.contactPrefs?.phone !== false,
+          email: row.contactPrefs?.email !== false,
           meetings: row.contactPrefs?.meetings !== false,
+          directory: row.contactPrefs?.directory === true,
         },
       };
     },

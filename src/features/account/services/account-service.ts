@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import type { Locale } from '@/config/locales';
 import { registrationRepository } from '@/infrastructure';
 import { listPortalEvents } from '@/features/events';
@@ -51,7 +52,16 @@ interface Holding {
   registrationId: string | null;
 }
 
-const readHoldings = async (
+/*
+ * What this guest holds across the platform, read once per request.
+ *
+ * Two different questions on one page — the account overview and the
+ * conference picker — both begin here, and the walk is not cheap: every
+ * conference on the platform, each asked whether this person holds a
+ * place in it. Request-scoped, so the second asker pays nothing and a
+ * registration made a moment ago still shows on the next request.
+ */
+const readHoldings = cache(async (
   participantId: string,
   locale: Locale,
 ): Promise<Holding[]> => {
@@ -68,7 +78,7 @@ const readHoldings = async (
       };
     }),
   );
-};
+});
 
 const isActive = (status: RegistrationStatus | null): boolean =>
   status !== null && ACTIVE_STATUSES.includes(status);

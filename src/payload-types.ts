@@ -83,12 +83,14 @@ export interface Config {
     'account-sessions': AccountSession;
     notifications: Notification;
     'rate-limits': RateLimit;
+    'email-verifications': EmailVerification;
     'audit-log': AuditLog;
     rooms: Room;
     sessions: Session;
     'session-registrations': SessionRegistration;
-    'networking-profiles': NetworkingProfile;
     'networking-connections': NetworkingConnection;
+    'networking-blocks': NetworkingBlock;
+    'networking-reports': NetworkingReport;
     'networking-chat-messages': NetworkingChatMessage;
     'networking-meetings': NetworkingMeeting;
     'payload-kv': PayloadKv;
@@ -114,12 +116,14 @@ export interface Config {
     'account-sessions': AccountSessionsSelect<false> | AccountSessionsSelect<true>;
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
     'rate-limits': RateLimitsSelect<false> | RateLimitsSelect<true>;
+    'email-verifications': EmailVerificationsSelect<false> | EmailVerificationsSelect<true>;
     'audit-log': AuditLogSelect<false> | AuditLogSelect<true>;
     rooms: RoomsSelect<false> | RoomsSelect<true>;
     sessions: SessionsSelect<false> | SessionsSelect<true>;
     'session-registrations': SessionRegistrationsSelect<false> | SessionRegistrationsSelect<true>;
-    'networking-profiles': NetworkingProfilesSelect<false> | NetworkingProfilesSelect<true>;
     'networking-connections': NetworkingConnectionsSelect<false> | NetworkingConnectionsSelect<true>;
+    'networking-blocks': NetworkingBlocksSelect<false> | NetworkingBlocksSelect<true>;
+    'networking-reports': NetworkingReportsSelect<false> | NetworkingReportsSelect<true>;
     'networking-chat-messages': NetworkingChatMessagesSelect<false> | NetworkingChatMessagesSelect<true>;
     'networking-meetings': NetworkingMeetingsSelect<false> | NetworkingMeetingsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -445,13 +449,14 @@ export interface Participant {
    */
   preferredLocale?: ('he' | 'en') | null;
   /**
-   * Which channels open to approved connections. Private by default.
+   * Which channels open to approved connections, and whether this person is listed among the participants of conferences they attend.
    */
   contactPrefs?: {
     whatsapp?: boolean | null;
     phone?: boolean | null;
     email?: boolean | null;
     meetings?: boolean | null;
+    directory?: boolean | null;
   };
   accessibilityNeeds?: string | null;
   dietary?: string | null;
@@ -461,6 +466,21 @@ export interface Participant {
    * Comma-separated interests shown on the profile card
    */
   interests?: string | null;
+  /**
+   * One line — the role and organisation as they say it
+   */
+  headline?: string | null;
+  bio?: string | null;
+  /**
+   * A couple of places to find this person
+   */
+  links?:
+    | {
+        label?: string | null;
+        url?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   photo?: (number | null) | Media;
   /**
    * A blocked participant cannot enter the personal lounge
@@ -683,6 +703,28 @@ export interface RateLimit {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-verifications".
+ */
+export interface EmailVerification {
+  id: number;
+  emailHash: string;
+  codeHash: string;
+  pending:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  expiresAt: string;
+  attempts: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "audit-log".
  */
 export interface AuditLog {
@@ -778,30 +820,6 @@ export interface SessionRegistration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "networking-profiles".
- */
-export interface NetworkingProfile {
-  id: number;
-  organization: number | Organization;
-  event: number | Event;
-  participant: number | Participant;
-  headline?: string | null;
-  bio?: string | null;
-  interests?: string | null;
-  links?:
-    | {
-        label?: string | null;
-        url?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  visible?: boolean | null;
-  availableForMeetings?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "networking-connections".
  */
 export interface NetworkingConnection {
@@ -813,6 +831,42 @@ export interface NetworkingConnection {
   status: 'pending' | 'accepted' | 'declined' | 'muted' | 'removed';
   mutedBy?: string | null;
   message?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "networking-blocks".
+ */
+export interface NetworkingBlock {
+  id: number;
+  organization: number | Organization;
+  blocker: number | Participant;
+  blocked: number | Participant;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "networking-reports".
+ */
+export interface NetworkingReport {
+  id: number;
+  organization: number | Organization;
+  event?: (number | null) | Event;
+  reporter: number | Participant;
+  reporterName?: string | null;
+  reporterEmail?: string | null;
+  reported: number | Participant;
+  reportedName?: string | null;
+  reportedEmail?: string | null;
+  reason: 'harassment' | 'spam' | 'impersonation' | 'inappropriate' | 'other';
+  details?: string | null;
+  status: 'open' | 'reviewing' | 'resolved' | 'dismissed';
+  handledBy?: (number | null) | Participant;
+  handledByName?: string | null;
+  handledAt?: string | null;
+  alsoBlocked?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -936,6 +990,10 @@ export interface PayloadLockedDocument {
         value: number | RateLimit;
       } | null)
     | ({
+        relationTo: 'email-verifications';
+        value: number | EmailVerification;
+      } | null)
+    | ({
         relationTo: 'audit-log';
         value: number | AuditLog;
       } | null)
@@ -952,12 +1010,16 @@ export interface PayloadLockedDocument {
         value: number | SessionRegistration;
       } | null)
     | ({
-        relationTo: 'networking-profiles';
-        value: number | NetworkingProfile;
-      } | null)
-    | ({
         relationTo: 'networking-connections';
         value: number | NetworkingConnection;
+      } | null)
+    | ({
+        relationTo: 'networking-blocks';
+        value: number | NetworkingBlock;
+      } | null)
+    | ({
+        relationTo: 'networking-reports';
+        value: number | NetworkingReport;
       } | null)
     | ({
         relationTo: 'networking-chat-messages';
@@ -1262,12 +1324,22 @@ export interface ParticipantsSelect<T extends boolean = true> {
         phone?: T;
         email?: T;
         meetings?: T;
+        directory?: T;
       };
   accessibilityNeeds?: T;
   dietary?: T;
   orgName?: T;
   roleTitle?: T;
   interests?: T;
+  headline?: T;
+  bio?: T;
+  links?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+        id?: T;
+      };
   photo?: T;
   blocked?: T;
   anonymizedAt?: T;
@@ -1431,6 +1503,19 @@ export interface RateLimitsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-verifications_select".
+ */
+export interface EmailVerificationsSelect<T extends boolean = true> {
+  emailHash?: T;
+  codeHash?: T;
+  pending?: T;
+  expiresAt?: T;
+  attempts?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "audit-log_select".
  */
 export interface AuditLogSelect<T extends boolean = true> {
@@ -1505,29 +1590,6 @@ export interface SessionRegistrationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "networking-profiles_select".
- */
-export interface NetworkingProfilesSelect<T extends boolean = true> {
-  organization?: T;
-  event?: T;
-  participant?: T;
-  headline?: T;
-  bio?: T;
-  interests?: T;
-  links?:
-    | T
-    | {
-        label?: T;
-        url?: T;
-        id?: T;
-      };
-  visible?: T;
-  availableForMeetings?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "networking-connections_select".
  */
 export interface NetworkingConnectionsSelect<T extends boolean = true> {
@@ -1538,6 +1600,40 @@ export interface NetworkingConnectionsSelect<T extends boolean = true> {
   status?: T;
   mutedBy?: T;
   message?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "networking-blocks_select".
+ */
+export interface NetworkingBlocksSelect<T extends boolean = true> {
+  organization?: T;
+  blocker?: T;
+  blocked?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "networking-reports_select".
+ */
+export interface NetworkingReportsSelect<T extends boolean = true> {
+  organization?: T;
+  event?: T;
+  reporter?: T;
+  reporterName?: T;
+  reporterEmail?: T;
+  reported?: T;
+  reportedName?: T;
+  reportedEmail?: T;
+  reason?: T;
+  details?: T;
+  status?: T;
+  handledBy?: T;
+  handledByName?: T;
+  handledAt?: T;
+  alsoBlocked?: T;
   updatedAt?: T;
   createdAt?: T;
 }

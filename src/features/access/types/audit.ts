@@ -30,12 +30,18 @@ export const AUDIT_ACTIONS = [
   'participant.blocked',
   'participant.deleted',
 
+  /* Safety */
+  'safety.reportHandled',
+
   /* Who may do what */
   'grant.granted',
   'grant.revoked',
 
   /* Reaching the audience */
   'communication.broadcast',
+
+  /* Forgetting, on schedule */
+  'privacy.retentionPurge',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

@@ -20,10 +20,15 @@
     "migrate:create": "payload migrate:create",
     "migrate": "payload migrate",
     "migrate:status": "payload migrate:status",
+    "retention:status": "node scripts/retention.mjs",
+    "retention:purge": "node scripts/retention.mjs --purge",
+    "why:directory": "node scripts/why-not-in-directory.mjs",
+    "carry:profiles": "node scripts/carry-profiles-to-accounts.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "docker compose up -d postgres-test && TEST_DATABASE_URL=postgres://hason:hason@localhost:5433/hason_test vitest run tests/integration",
-    "gates": "npm run generate:types && npm run typecheck && npm run lint && npm run test && npm run build"
+    "gates": "npm run generate:types && npm run typecheck && npm run lint && npm run test && npm run build",
+    "setup:verification": "node scripts/setup-verification-table.mjs"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "^3.0.0",

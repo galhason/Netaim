@@ -1,3 +1,12 @@
+export { default as DietarySelect } from './components/dietary-select';
+export {
+  DIETARY_KEYS,
+  DIETARY_LABELS,
+  dietaryKeyOf,
+  dietaryLabel,
+  dietaryOptionsFor,
+  type DietaryKey,
+} from './constants/dietary';
 export {
   getRegistrationSettings,
   saveRegistrationSettings,
@@ -21,13 +30,13 @@ export {
   consumeMagicLink,
   establishSession,
   currentParticipant,
+  emailHasAccount,
   clearSession,
   clearAllSessions,
-  entranceToken,
-  verifyEntranceToken,
   signInWithPassword,
-  openAccountWithPassword,
   setMyPassword,
+  applyPasswordHash,
+  passwordHashFor,
   completeTotpSignIn,
   myTotpStatus,
   beginTotpEnrollment,
@@ -42,7 +51,6 @@ export type {
 } from './services/participant-identity-service';
 export type {
   PasswordSignInResult,
-  OpenAccountOutcome,
 } from './services/participant-identity-service';
 export {
   PASSWORD_POLICY_TEXT,
@@ -66,8 +74,6 @@ export type {
   ParticipantDetailsView,
 } from './types/identity';
 export type { ParticipantRegistration } from './services/participant-me-service';
-export { checkInByToken } from './services/check-in-service';
-export type { CheckInResult } from './services/check-in-service';
 export { REGISTRATION_MESSAGES } from './constants/messages';
 export { PUBLIC_STATE_LABELS } from './constants/states';
 export { parseRegisterForm } from './schemas/register-form';
@@ -80,3 +86,27 @@ export type {
   RegisterResult,
   RegistrationCounts,
 } from './types/registration';
+
+export {
+  beginEmailVerification,
+  confirmEmailVerification,
+  reissueEmailVerification,
+  CODE_TTL_MS,
+} from './services/email-verification-service';
+export type {
+  BeginOutcome,
+  ConfirmOutcome,
+} from './services/email-verification-service';
+export type {
+  PendingRegistration,
+} from './types/email-verification';
+export {
+  OnboardingFrame,
+  OnboardingLayout,
+  PromoPanel,
+  Sprout,
+  ArrowOn,
+  ONBOARDING_COPY,
+  onboardingCls,
+  pickCopy,
+} from './components/onboarding-shell';

@@ -86,6 +86,12 @@ export interface BroadcastInput {
   /* when set, only the registrants of this activity receive it */
   targetSessionId?: string;
   targetParticipantId?: string;
+  /*
+   * What the note is about, when a click on it should land somewhere
+   * more exact than the conference page: `activity` sends the reader
+   * to their own schedule, where the moved or cancelled activity is.
+   */
+  topic?: 'activity';
 }
 
 export const broadcastAnnouncement = async (
@@ -101,7 +107,8 @@ export const broadcastAnnouncement = async (
   if (!input.eventSlug || versions.length === 0) {
     return false;
   }
-  const type = broadcastTypeOf(input.kind ?? 'feed');
+  const base = broadcastTypeOf(input.kind ?? 'feed');
+  const type = input.topic ? `${base}.${input.topic}` : base;
   let recipients: string[] = [''];
   if (input.targetParticipantId) {
     recipients = [input.targetParticipantId];
@@ -209,8 +216,9 @@ const inLocale = (
   type: string,
   locale: string,
 ): NotificationView | null =>
-  feed.find((entry) => entry.type === type && entry.locale === locale) ??
-  feed.find((entry) => entry.type === type) ??
+  /* A topic suffix (`announcement.popup.activity`) is still that kind of note. */
+  feed.find((entry) => entry.type.startsWith(type) && entry.locale === locale) ??
+  feed.find((entry) => entry.type.startsWith(type)) ??
   null;
 
 export const mySpotlight = async (

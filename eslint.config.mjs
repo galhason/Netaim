@@ -24,7 +24,7 @@ const config = [
      * is scoped to this folder and nowhere else; the rule still bites
      * everywhere it was meant to.
      */
-    files: ['scripts/**/*.mjs', 'scripts/**/*.js'],
+    files: ['scripts/**/*.mjs', 'scripts/**/*.js', 'scripts/**/*.ts'],
     rules: { 'no-console': 'off' },
   },
   {

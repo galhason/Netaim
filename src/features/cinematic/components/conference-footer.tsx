@@ -16,12 +16,34 @@ const ConferenceFooter = ({ locale, brand }: ConferenceFooterProps) => (
   <footer className="border-t cine-hair">
     <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-10 md:px-12">
       <span className="font-display tracking-[0.3em]">{brand}</span>
-      <Link
-        href="/studio"
-        className="text-sm text-text-secondary transition-colors hover:text-text-primary"
-      >
-        {CINEMATIC_UI.toStudio[locale]}
-      </Link>
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+        {/* Required by the Israeli service-accessibility regulations:
+          * the statement is reachable from every page's footer. */}
+        <Link
+          href={`/${locale}/privacy`}
+          className="text-sm text-text-secondary transition-colors hover:text-text-primary"
+        >
+          {CINEMATIC_UI.privacyPolicy[locale]}
+        </Link>
+        <Link
+          href={`/${locale}/terms`}
+          className="text-sm text-text-secondary transition-colors hover:text-text-primary"
+        >
+          {CINEMATIC_UI.termsOfUse[locale]}
+        </Link>
+        <Link
+          href={`/${locale}/accessibility`}
+          className="text-sm text-text-secondary transition-colors hover:text-text-primary"
+        >
+          {CINEMATIC_UI.accessibilityStatement[locale]}
+        </Link>
+        <Link
+          href="/studio"
+          className="text-sm text-text-secondary transition-colors hover:text-text-primary"
+        >
+          {CINEMATIC_UI.toStudio[locale]}
+        </Link>
+      </div>
     </div>
     <p className="border-t cine-hair py-5 text-center text-xs text-text-secondary/70">
       {`© ${new Date().getFullYear()} ${brand}`}

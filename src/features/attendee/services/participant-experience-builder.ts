@@ -1,6 +1,5 @@
 import type { Locale } from '@/config/locales';
 import type { EventSummary, PortalEvent } from '@/features/events';
-import type { NetworkingProfileSummary } from '@/features/networking';
 import type {
   SessionRegistrationSummary,
   SessionSummary,
@@ -44,13 +43,11 @@ interface BuilderInput {
   participantId?: string;
   participantEmail?: string;
   status: RegistrationStatus;
-  entranceToken: string;
   event: EventSummary | null;
   portal?: PortalEvent | null;
   agenda?: SessionSummary[];
   workshops?: SessionRegistrationSummary[];
   notifications?: NotificationView[];
-  directory?: NetworkingProfileSummary[];
   attendees?: FellowParticipant[];
   speakers?: { id: string; name: string; role?: string; portraitUrl?: string }[];
 }
@@ -107,11 +104,15 @@ const toUpdates = (
 };
 
 /*
- * People around the guest: opted-in networking profiles lead (they
- * asked to be met), then fellow registrants fill the room.
+ * People around the guest.
+ *
+ * This once merged two lists — the opted-in networking profiles first,
+ * then fellow registrants behind them — because the two were built from
+ * different tables and disagreed about who was present. They are one
+ * question now, asked once, so the merge and its ordering rule are
+ * gone with the second list.
  */
 const toPeople = (
-  directory: NetworkingProfileSummary[],
   attendees: FellowParticipant[],
   participantId: string | undefined,
   participantEmail: string | undefined,
@@ -119,20 +120,6 @@ const toPeople = (
 ): AttendeePerson[] => {
   const people: AttendeePerson[] = [];
   const seen = new Set<string>();
-  for (const profile of directory) {
-    if (profile.participantId === participantId) {
-      continue;
-    }
-    seen.add(profile.participantId);
-    people.push({
-      id: profile.id,
-      name: profile.participantName,
-      role: profile.headline,
-      reason:
-        profile.interests ??
-        (locale === 'he' ? 'פתוח/ה להיכרות' : 'Open to meeting'),
-    });
-  }
   for (const attendee of attendees) {
     if (
       attendee.participantId === participantId ||
@@ -148,6 +135,7 @@ const toPeople = (
       id: attendee.participantId,
       name: attendee.name,
       role:
+        attendee.headline ||
         [attendee.roleTitle, attendee.orgName].filter(Boolean).join(' · ') ||
         undefined,
       reason:
@@ -161,7 +149,7 @@ const toPeople = (
 /*
  * Assembles the participant's personal area from their real registration
  * (Registration-Architecture §15). The program, networking and updates
- * light up as their engines fill; the entrance code is real now.
+ * light up as their engines fill.
  */
 export const buildParticipantExperience = ({
   slug,
@@ -170,13 +158,11 @@ export const buildParticipantExperience = ({
   participantId,
   participantEmail,
   status,
-  entranceToken,
   event,
   portal = null,
   agenda = [],
   workshops = [],
   notifications = [],
-  directory = [],
   attendees = [],
   speakers = [],
 }: BuilderInput): AttendeeExperienceContent => {
@@ -205,8 +191,8 @@ export const buildParticipantExperience = ({
       eventDateLabel: formatLongDate(startsAt, locale),
       venueLine: portal?.location ?? '',
       primaryCta: {
-        label: he ? 'לקוד הכניסה שלי' : 'To my entrance code',
-        href: `/${locale}/events/${slug}/me#entrance`,
+        label: he ? 'ללוח הזמנים שלי' : 'To my schedule',
+        href: `/${locale}/events/${slug}/my-activities`,
       },
     },
     myEvent: {
@@ -226,18 +212,7 @@ export const buildParticipantExperience = ({
       moments: toMoments(agenda, workshops, locale),
     },
     networking: {
-      people: toPeople(directory, attendees, participantId, participantEmail, locale),
-    },
-    entrance: {
-      heading: he ? 'הכניסה שלך' : 'Your entrance',
-      qrValue: entranceToken,
-      qrCaption: he ? 'קוד הכניסה שלך' : 'Your entrance code',
-      statusLabel: he ? 'כרטיס' : 'Ticket',
-      statusValue,
-      details: [],
-      offlineNote: he
-        ? 'הקוד זמין גם ללא חיבור לרשת.'
-        : 'Your code works even without a connection.',
+      people: toPeople(attendees, participantId, participantEmail, locale),
     },
     after: {
       resources: [],

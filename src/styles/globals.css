@@ -475,6 +475,49 @@ main [id] {
   --l-navy: #0e1b2e;
   --l-live: #3fa36c;
 }
+/*
+ * The Community — the conference's own small social network. Same warm
+ * daylight family as the Lounge, deepened: an indigo night for the
+ * entrance, and four quiet accent tones that each MEAN something on a
+ * person's ring — gold for a room you shared, blue for a matching
+ * interest, pink for the same organization, green for openness to
+ * meeting. Color is information here, never decoration, which is why
+ * there are exactly these and no more.
+ */
+.community {
+  --n-bg: #f7f5ef;
+  --n-card: #ffffff;
+  --n-ink: #1c2433;
+  --n-soft: #66707f;
+  --n-faint: #98a0ad;
+  --n-hair: #e8e3d8;
+  --n-navy: #172033;
+  --n-deep: #10182a;
+  --n-indigo: #232c4d;
+  --n-purple: #8067d8;
+  --n-purple-soft: #b8a9ff;
+  --n-blue: #5c91db;
+  --n-gold: #c9a45e;
+  --n-gold-soft: #e2c896;
+  --n-pink: #df7eaa;
+  --n-green: #67a97c;
+  --n-cream: #f6efe1;
+}
+
+/*
+ * While live search is in flight, the directory dims a shade instead of
+ * flashing or jumping — the layout holds still and only the answer
+ * changes. Harmless where :has() is unsupported: the page simply skips
+ * the dimming.
+ */
+.community:has(#live-search[data-pending='true']) #directory {
+  opacity: 0.55;
+  transition: opacity 150ms ease;
+}
+.community #directory {
+  transition: opacity 150ms ease;
+}
+
 @keyframes lounge-rise {
   from {
     opacity: 0;
@@ -660,4 +703,178 @@ main [id] {
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 160px 160px;
+}
+
+/*
+ * Accessibility widget adjustments (IS 5568 / EN 301 549). Each is a
+ * class the floating button toggles on <html> and remembers per device.
+ * Text scaling rides the rem root so every layout scales together;
+ * contrast strengthens each surface's own color tokens (a filter on the
+ * root would break fixed positioning); the token overrides sit on the
+ * scope elements because custom properties inherit — a value redefined
+ * closer to the text always wins.
+ */
+html.a11y-font-1 {
+  font-size: 110%;
+}
+html.a11y-font-2 {
+  font-size: 125%;
+}
+
+html.a11y-contrast .cinematic {
+  --color-text-secondary: #ffffff;
+  --color-border: rgb(255 255 255 / 0.4);
+  --color-border-strong: rgb(255 255 255 / 0.55);
+}
+html.a11y-contrast .community {
+  --n-soft: #252d3d;
+  --n-faint: #333d4f;
+  --n-hair: rgba(28, 36, 51, 0.35);
+}
+html.a11y-contrast .lounge {
+  --l-soft: #333a46;
+}
+
+html.a11y-no-motion *,
+html.a11y-no-motion *::before,
+html.a11y-no-motion *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+html.a11y-no-motion video {
+  visibility: hidden;
+}
+
+html.a11y-links a {
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+}
+
+html.a11y-readable body,
+html.a11y-readable body * {
+  font-family: Arial, Helvetica, sans-serif !important;
+  letter-spacing: 0 !important;
+}
+
+/*
+ * Repeated shapes of the networking page, named once.
+ *
+ * The page draws the same handful of shapes many times over — a tile,
+ * an avatar, a status dot, the quiet menu on every person. Written
+ * inline, each repetition carried its whole utility string into the
+ * markup, and then a second time into the React payload beside it: a
+ * hundred kilobytes of the same sentences, for one page.
+ *
+ * `@apply` keeps the definition here in the same utilities the rest of
+ * the codebase is written in, so what renders is byte-for-byte what
+ * rendered before and there is no second styling language to learn —
+ * only one place where the shape is said, and a short name at every
+ * point of use.
+ *
+ * Only shapes that repeat live here. A class used once belongs inline,
+ * where it can be read beside the thing it styles.
+ */
+
+/* The quiet menu on a person: its trigger, its panel, its fields. */
+.n-menu-trigger {
+  @apply grid size-8 cursor-pointer list-none place-items-center rounded-full text-xs text-[var(--n-faint)] transition-colors hover:bg-[var(--n-navy)]/5 hover:text-[var(--n-ink)];
+}
+.n-menu-panel {
+  @apply absolute end-0 top-9 z-20 w-72 rounded-2xl bg-white p-4 text-start shadow-[0_18px_50px_rgba(28,36,51,0.18)] ring-1 ring-[var(--n-hair)];
+}
+/*
+ * A closed menu takes no space.
+ *
+ * The browser stops painting the contents of a closed `<details>`, but
+ * an absolutely positioned child keeps its box in the layout — so
+ * twenty invisible panels, each wider than the tile they belong to,
+ * were pushing the document sideways. The page scrolled horizontally on
+ * a tablet and nobody could see what was doing it. Saying `display:
+ * none` outright removes the box as well as the paint.
+ */
+details:not([open]) > .n-menu-panel {
+  display: none;
+}
+.n-menu-heading {
+  @apply cursor-pointer list-none text-sm font-medium text-[var(--n-ink)];
+}
+.n-field {
+  @apply flex flex-col gap-1 text-xs text-[var(--n-soft)];
+}
+.n-field-input {
+  @apply min-h-10 rounded-xl border border-[var(--n-hair)] px-2 text-sm text-[var(--n-ink)];
+}
+.n-field-area {
+  @apply rounded-xl border border-[var(--n-hair)] p-2 text-sm text-[var(--n-ink)];
+}
+.n-submit-dark {
+  @apply mt-1 inline-flex min-h-10 items-center justify-center rounded-xl bg-[var(--n-navy)] px-4 text-sm font-medium text-white;
+}
+
+/* A person, wherever they appear. */
+.n-open-dot {
+  @apply absolute bottom-0.5 end-0.5 size-3.5 rounded-full border-2 border-[var(--n-bg)] bg-[var(--n-green)];
+}
+.n-meta-chip {
+  @apply inline-flex items-center rounded-full bg-[var(--n-navy)]/5 px-2 py-0.5 text-[10px] font-medium text-[var(--n-soft)];
+}
+
+/* The faces along the top of the page. */
+.n-bubble-link {
+  @apply flex flex-col items-center gap-1.5 rounded-2xl text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--n-purple)];
+}
+.n-bubble-ring {
+  @apply block rounded-full p-[2.5px] bg-[linear-gradient(135deg,var(--n-gold),var(--n-gold-soft))] shadow-[0_6px_18px_rgba(28,36,51,0.14)];
+}
+
+/* Tiles in the directory grid. */
+.n-tile {
+  @apply relative flex h-full flex-col items-center px-2 pb-1.5 pt-2.5 text-center transition-transform duration-200 hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0;
+}
+.n-tile-avatar {
+  @apply grid size-14 place-items-center rounded-full bg-[var(--n-purple)]/10 font-display text-xl font-semibold text-[var(--n-purple)] transition-transform duration-200 group-hover:scale-[1.03] md:size-16;
+}
+
+/* The two button shapes used across the sections. */
+.n-pill-outline {
+  @apply inline-flex min-h-10 items-center rounded-full border border-[var(--n-purple)]/35 px-6 py-0.5 text-[13px] font-medium text-[var(--n-purple)] transition-colors hover:bg-[var(--n-purple)]/10 active:bg-[var(--n-purple)]/15;
+}
+.n-filter-chip {
+  @apply inline-flex min-h-11 flex-none items-center gap-2 rounded-full border px-4 text-xs font-medium transition-colors;
+}
+
+/* A second pass over the same page: the shapes that repeat per person. */
+.n-name {
+  @apply mt-2 w-full truncate font-display text-[15px] font-semibold leading-snug;
+}
+.n-name-sm {
+  @apply block truncate text-[13px] font-semibold leading-snug text-[var(--n-ink)];
+}
+.n-sub {
+  @apply mt-1 block text-xs leading-relaxed text-[var(--n-faint)];
+}
+.n-meta-line {
+  @apply flex items-center gap-2 text-xs text-[var(--n-soft)];
+}
+.n-divider {
+  @apply mt-4 border-t border-[var(--n-hair)] pt-3;
+}
+.n-danger-link {
+  @apply text-sm font-medium text-[#B0442F] underline underline-offset-4;
+}
+.n-quiet-link {
+  @apply min-h-7 text-[10.5px] text-[var(--n-faint)] underline-offset-4 transition-colors hover:text-[var(--n-ink)] hover:underline;
+}
+.n-ring-gold {
+  @apply block rounded-full p-[2.5px] bg-[linear-gradient(135deg,var(--n-gold),var(--n-gold-soft))] shadow-[0_6px_18px_rgba(28,36,51,0.14)];
+}
+.n-ring-green {
+  @apply block rounded-full p-[2px] bg-[linear-gradient(135deg,var(--n-green),#a3cdb0)];
+}
+.n-avatar-lg {
+  @apply size-16 md:size-[4.5rem] grid place-items-center rounded-full bg-[var(--n-navy)]/8 font-display text-xl font-semibold text-[var(--n-navy)];
+}
+.n-open-note {
+  @apply mt-1.5 inline-flex items-center gap-1 text-[10px] font-medium text-[#4c8a60];
 }

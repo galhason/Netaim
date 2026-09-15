@@ -21,9 +21,14 @@ interface NavEntry {
   href?: string;
   label: string;
   soon?: boolean;
+  /* A number worth interrupting for — shown as a badge beside the link. */
+  badge?: number;
 }
 
-const buildGroups = (locale: Locale): { title: string; items: NavEntry[] }[] => [
+const buildGroups = (
+  locale: Locale,
+  openReports: number,
+): { title: string; items: NavEntry[] }[] => [
   {
     title: CONSOLE_UI.groupMain[locale],
     items: [
@@ -31,8 +36,14 @@ const buildGroups = (locale: Locale): { title: string; items: NavEntry[] }[] => 
       { href: '/studio/media', label: CONSOLE_UI.media[locale] },
       { href: '/studio/people', label: CONSOLE_UI.peopleTitle[locale] },
       { href: '/studio/participants', label: CONSOLE_UI.participantsTitle[locale] },
+      { href: '/studio/logistics', label: CONSOLE_UI.logisticsTitle[locale] },
       { href: '/studio/communications', label: CONSOLE_UI.communications[locale] },
-      { href: '/studio/checkin', label: CONSOLE_UI.checkinNav[locale] },
+      {
+        href: '/studio/reports',
+        label: CONSOLE_UI.reportsNav[locale],
+        ...(openReports > 0 ? { badge: openReports } : {}),
+      },
+      { href: '/studio/networking', label: CONSOLE_UI.networkingNav[locale] },
       { href: '/studio/insights', label: CONSOLE_UI.insights[locale] },
       { href: '/studio/history', label: CONSOLE_UI.history[locale] },
     ],
@@ -69,13 +80,15 @@ const Logo = () => (
 
 const NavList = ({
   locale,
+  openReports,
   onNavigate,
 }: {
   locale: Locale;
+  openReports: number;
   onNavigate?: () => void;
 }) => (
   <nav className="flex flex-col">
-    {buildGroups(locale).map((group) => (
+    {buildGroups(locale, openReports).map((group) => (
       <div key={group.title} className="flex flex-col">
         <p className={GROUP}>{group.title}</p>
         {group.items.map((item) =>
@@ -95,6 +108,11 @@ const NavList = ({
               onClick={onNavigate}
             >
               {item.label}
+              {item.badge ? (
+                <span className="ms-auto grid min-w-5 place-items-center rounded-full bg-[#B0442F] px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                  {item.badge}
+                </span>
+              ) : null}
             </Link>
           ),
         )}
@@ -103,7 +121,13 @@ const NavList = ({
   </nav>
 );
 
-const ConsoleSidebar = ({ locale }: { locale: Locale }) => {
+const ConsoleSidebar = ({
+  locale,
+  openReports = 0,
+}: {
+  locale: Locale;
+  openReports?: number;
+}) => {
   const [open, setOpen] = useState(false);
   const he = locale === 'he';
 
@@ -127,7 +151,7 @@ const ConsoleSidebar = ({ locale }: { locale: Locale }) => {
       {/* Desktop rail */}
       <aside className="hidden flex-col bg-[#0C1520] p-3 md:flex">
         <Logo />
-        <NavList locale={locale} />
+        <NavList locale={locale} openReports={openReports} />
       </aside>
 
       {/* Mobile drawer */}
@@ -153,7 +177,11 @@ const ConsoleSidebar = ({ locale }: { locale: Locale }) => {
                 </svg>
               </button>
             </div>
-            <NavList locale={locale} onNavigate={() => setOpen(false)} />
+            <NavList
+              locale={locale}
+              openReports={openReports}
+              onNavigate={() => setOpen(false)}
+            />
           </aside>
         </div>
       ) : null}

@@ -19,14 +19,14 @@ const startValue = (event: PortalEvent): number => {
   return Number.isNaN(parsed) ? Number.MAX_SAFE_INTEGER : parsed;
 };
 
+/* One local neutral frame until the production stills arrive. */
+const PLACEHOLDER_SCENE = '/placeholder/scene.jpg';
+
 const posterImage = (event: PortalEvent): string =>
-  event.posterUrl ??
-  `https://picsum.photos/seed/hason-portal-${event.slug}/900/1350`;
+  event.posterUrl ?? PLACEHOLDER_SCENE;
 
 const heroImage = (event: PortalEvent): string =>
-  event.heroUrl ??
-  event.posterUrl ??
-  `https://picsum.photos/seed/hason-hero-${event.slug}/2400/1400`;
+  event.heroUrl ?? event.posterUrl ?? PLACEHOLDER_SCENE;
 
 /*
  * Assembles the opening experience around one dynamic featured

@@ -52,6 +52,19 @@ export const platformOnlyAccess: CollectionConfig['access'] = {
  * through the system seam, which bypasses this layer by design; the
  * closed create keeps the CMS from being a second way in.
  */
+/*
+ * Abuse reports: the team who can act on a pattern reads them; nobody
+ * writes through the CMS. A guest files one through the service seam,
+ * and the Studio moves its status the same way — so the only path in is
+ * the one that also records who did it.
+ */
+export const moderationAccess: CollectionConfig['access'] = {
+  read: scopedByOrganization('registrations:read'),
+  create: denied,
+  update: denied,
+  delete: denied,
+};
+
 export const auditAccess: CollectionConfig['access'] = {
   read: scopedByOrganization('registrations:read'),
   create: denied,

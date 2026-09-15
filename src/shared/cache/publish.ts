@@ -44,3 +44,13 @@ export const publishedSpeakers = (): void => {
 export const publishedSponsors = (): void => {
   revalidateTag(cacheTags.sponsors);
 };
+
+/*
+ * Someone joined the conference, left it, or changed whether they are
+ * listed in its directory. Called on every path that can change who
+ * appears — the visibility switch above all, because a person taking
+ * themselves out expects to be gone now, not in a minute.
+ */
+export const publishedDirectory = (slug: string): void => {
+  revalidateTag(cacheTags.directory(slug));
+};

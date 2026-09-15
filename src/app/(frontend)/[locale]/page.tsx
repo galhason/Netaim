@@ -7,7 +7,6 @@ import {
   getConferenceExperience,
 } from '@/features/cinematic';
 import { getActiveConferenceSlug } from '@/features/events';
-import { ConferenceSpotlight } from '@/features/notifications';
 import { currentParticipant, myAreaHref } from '@/features/registration';
 import '@/scenes';
 
@@ -61,7 +60,6 @@ const ConferenceLandingPage = async ({
 
   return (
     <>
-      <ConferenceSpotlight slug={slug} locale={locale as Locale} />
       <ExperienceStage
         experience={buildConferenceDescriptor(experience, locale as Locale)}
         locale={locale as Locale}
@@ -79,7 +77,7 @@ const ConferenceLandingPage = async ({
  * active site, this is replaced by the full landing.
  */
 const ConferenceLandingEmpty = ({ locale }: { locale: Locale }) => (
-  <main className="cinematic flex min-h-dvh flex-col items-center justify-center gap-4 bg-surface px-6 text-center">
+  <main id="main-content" className="cinematic flex min-h-dvh flex-col items-center justify-center gap-4 bg-surface px-6 text-center">
     <p className="text-xs font-medium uppercase tracking-[0.34em] text-accent">
       {locale === 'he' ? 'בקרוב' : 'Coming soon'}
     </p>

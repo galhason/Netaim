@@ -10,13 +10,12 @@ import {
   participantSessionRepository,
   registrationRepository,
 } from '@/infrastructure';
-import { currentParticipant, entranceToken } from './participant-identity-service';
+import { currentParticipant } from './participant-identity-service';
 
 export interface ParticipantRegistration {
   participantName: string;
   registrationId: string;
   status: RegistrationStatus;
-  entranceToken: string;
 }
 
 /*
@@ -42,7 +41,6 @@ export const getParticipantRegistration = async (
     participantName: participant.name,
     registrationId: found.registrationId,
     status: found.status,
-    entranceToken: entranceToken(found.registrationId),
   };
 };
 

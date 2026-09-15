@@ -1,8 +1,29 @@
 export {
-  listDirectory,
-  myProfile,
-  saveMyProfile,
-} from './services/networking-service';
+  blockParticipant,
+  blockedBetween,
+  countOpenReports,
+  listReports,
+  myBlockedPeople,
+  myHiddenParticipantIds,
+  reportParticipant,
+  setReportStatus,
+  unblockParticipant,
+} from './services/safety-service';
+export type { ReportOutcome } from './services/safety-service';
+export {
+  REPORT_REASON_VALUES,
+  REPORT_STATUS_VALUES,
+  isReportReason,
+  isReportStatus,
+} from './types/safety';
+export type {
+  BlockedPerson,
+  BlockRepository,
+  ReportRecord,
+  ReportReason,
+  ReportRepository,
+  ReportStatus,
+} from './types/safety';
 export {
   connectToParticipant,
   connectionChannels,
@@ -19,11 +40,14 @@ export type {
   ContactCard,
 } from './services/connection-service';
 export {
+  chatSince,
   myChatThread,
+  myConversations,
   myUnreadByConnection,
   sendChatMessage,
+  sendChatMessageReturning,
 } from './services/chat-service';
-export type { ChatThread } from './services/chat-service';
+export type { ChatThread, ChatUpdate, ConversationPreview } from './services/chat-service';
 export type { ChatMessage, ChatRepository } from './types/chat';
 export {
   proposeMeeting,
@@ -33,12 +57,6 @@ export {
   suggestAnotherTime,
 } from './services/meeting-service';
 export type { MeetingDecision } from './services/meeting-service';
-export type {
-  NetworkingProfileSummary,
-  SaveProfileInput,
-  ProfileLink,
-  NetworkingProfileRepository,
-} from './types/networking';
 export type {
   ConnectionSummary,
   MyConnection,

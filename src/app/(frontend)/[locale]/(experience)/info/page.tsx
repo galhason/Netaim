@@ -60,7 +60,7 @@ const InfoPage = async ({ params }: InfoPageProps) => {
 
   if (!venue) {
     return (
-      <main className="mx-auto max-w-6xl px-6 pb-24 pt-28 md:px-10 md:pt-32">
+      <main id="main-content" className="mx-auto max-w-6xl px-6 pb-24 pt-28 md:px-10 md:pt-32">
         <EmptyState
           icon={<PinIcon className="size-6" />}
           title={he ? 'פרטי ההגעה בדרך' : 'Arrival details on the way'}
@@ -101,7 +101,7 @@ const InfoPage = async ({ params }: InfoPageProps) => {
   const emergency = venue.emergency?.trim();
 
   return (
-    <main className="pb-24">
+    <main id="main-content" className="pb-24">
       {/* Photo hero — the place, as its own image */}
       <section className="relative">
         <div

@@ -97,11 +97,18 @@ export const CINEMATIC_UI = {
   registerShort: { he: 'הרשמה', en: 'Register' },
   scrollHint: { he: 'המסע מתחיל בגלילה', en: 'The journey begins below' },
   toStudio: { he: 'כניסה לסטודיו', en: 'Enter Studio' },
+  accessibilityStatement: {
+    he: 'הצהרת נגישות',
+    en: 'Accessibility statement',
+  },
+  privacyPolicy: { he: 'מדיניות פרטיות', en: 'Privacy policy' },
+  termsOfUse: { he: 'תנאי שימוש', en: 'Terms of use' },
   myArea: { he: 'האזור האישי', en: 'My Space' },
   /* The nav when nobody is signed in. */
   signIn: { he: 'התחברות', en: 'Sign in' },
   /* The nav when someone is. The name follows. */
   signedInAs: { he: 'מחובר/ת', en: 'Signed in' },
+  signOut: { he: 'התנתקות', en: 'Sign out' },
   momentsEyebrow: { he: 'כך זה מרגיש', en: 'How it feels' },
   momentsTitle: { he: 'דמיינו את עצמכם שם', en: 'Imagine yourself there' },
   speakersEyebrow: { he: 'המרצים המובילים', en: 'Featured speakers' },
@@ -145,10 +152,19 @@ export const CINEMATIC_UI = {
   },
 } as const;
 
-const photo = (seed: string, w: number, h: number): string =>
-  `https://picsum.photos/seed/${seed}/${w}/${h}`;
+/*
+ * Placeholder imagery, after the production audit.
+ *
+ * Scenery falls back to one local neutral frame — never a photograph
+ * fetched from a stock service, which put a third-party request on
+ * every page and made the site depend on a host nobody here controls.
+ * Portraits fall back to NOTHING: an invented human face beside a real
+ * name is a misrepresentation, and every portrait surface already
+ * renders a calm gradient when the photograph is absent.
+ */
+const PLACEHOLDER_SCENE = '/placeholder/scene.jpg';
 
-const portrait = (id: number): string => `https://i.pravatar.cc/640?img=${id}`;
+
 
 /*
  * The cinematic fallback: complete emotional copy for every scene, so the
@@ -171,7 +187,7 @@ export const fallbackConference = (locale: Locale): ConferenceExperience => {
     sponsors: [],
     featuredSessions: [],
     arrival: {
-      image: photo('hason-hero', 1600, 2000),
+      image: PLACEHOLDER_SCENE,
       facts: [
         { value: '2', label: he ? 'ימים של השראה' : 'days of inspiration' },
         { value: '80+', label: he ? 'קולות על הבמה' : 'voices on stage' },
@@ -217,7 +233,7 @@ export const fallbackConference = (locale: Locale): ConferenceExperience => {
       paragraph: he
         ? 'כי שינוי אמיתי לא קורה במסמכים. הוא קורה כשאנשים שמאמינים באותו דבר נמצאים באותו חדר, באותו רגע. יומיים אחד בשנה, האנשים שמעצבים את השירות הציבורי של ישראל עוצרים הכל — כדי לדמיין אותו מחדש.'
         : 'Real change does not happen in documents. It happens when people who believe the same thing share the same room, at the same moment. For two days a year, the people shaping Israel’s public service stop everything — to imagine it anew.',
-      image: photo('hason-story', 1800, 1200),
+      image: PLACEHOLDER_SCENE,
     },
     why: {
       quote: he
@@ -225,7 +241,7 @@ export const fallbackConference = (locale: Locale): ConferenceExperience => {
         : 'I left with a list of phone numbers — but mostly with the feeling that I am not alone in this.',
       attribution: he ? 'נועה, מנהלת דיגיטל' : 'Noa, digital director',
       role: he ? 'משתתפת בוועידה הקודמת' : 'Attendee, last summit',
-      image: photo('hason-people', 1600, 2000),
+      image: PLACEHOLDER_SCENE,
       statistic: {
         value: '2,500',
         label: he ? 'שותפים לדרך בשנה שעברה' : 'partners on this road last year',
@@ -233,21 +249,21 @@ export const fallbackConference = (locale: Locale): ConferenceExperience => {
     },
     moments: [
       {
-        image: photo('hason-stage', 2400, 1400),
+        image: PLACEHOLDER_SCENE,
         caption: he ? 'האור עולה על הבמה' : 'The lights rise on the stage',
       },
       {
-        image: photo('hason-crowd', 2400, 1400),
+        image: PLACEHOLDER_SCENE,
         caption: he ? 'אלפיים אנשים, נשימה אחת' : 'Two thousand people, one breath',
       },
       {
-        image: photo('hason-talk', 2400, 1400),
+        image: PLACEHOLDER_SCENE,
         caption: he
           ? 'השיחות שממשיכות אל תוך ההפסקה'
           : 'Conversations that outlive the break',
       },
       {
-        image: photo('hason-coffee', 2400, 1400),
+        image: PLACEHOLDER_SCENE,
         caption: he ? 'קפה, ורעיון שנולד ליד הדלפק' : 'Coffee, and an idea born at the counter',
       },
     ],
@@ -255,27 +271,27 @@ export const fallbackConference = (locale: Locale): ConferenceExperience => {
       {
         name: he ? 'פרופ׳ רון שפירא' : 'Prof. Ron Shapira',
         role: he ? 'חדשנות מערכתית · אוניברסיטת תל אביב' : 'Systemic innovation · Tel Aviv University',
-        photo: portrait(52),
+        photo: '',
       },
       {
         name: he ? 'מיכל כהן' : 'Michal Cohen',
         role: he ? 'מנכ״לית משותפת · Microsoft ישראל' : 'Co-CEO · Microsoft Israel',
-        photo: portrait(5),
+        photo: '',
       },
       {
         name: he ? 'אלון רוזן' : 'Alon Rozen',
         role: he ? 'מנהל דיגיטל ראשי · משרד המשפטים' : 'Chief Digital Officer · Ministry of Justice',
-        photo: portrait(13),
+        photo: '',
       },
       {
         name: he ? 'קרן מאיר בנימין' : 'Keren Meir Benjamin',
         role: he ? 'סמנכ״לית חדשנות · השלטון המקומי' : 'VP Innovation · Local government',
-        photo: portrait(47),
+        photo: '',
       },
       {
         name: he ? 'עו״ד עופר פורר' : 'Ofer Porer, Adv.',
         role: he ? 'יו״ר ועדת המשנה לשירות הציבורי' : 'Public service committee chair',
-        photo: portrait(68),
+        photo: '',
       },
     ],
     program: [
@@ -304,7 +320,7 @@ export const fallbackConference = (locale: Locale): ConferenceExperience => {
       narrative: he
         ? 'בלב ירושלים, במרכז הכנסים הגדול בישראל — מקום שנבנה כדי שאלפי אנשים יוכלו להיפגש בו כאילו הם חדר אחד.'
         : 'In the heart of Jerusalem, at Israel’s largest convention centre — a place built so thousands can meet as if they were one room.',
-      image: photo('hason-venue', 2400, 1500),
+      image: PLACEHOLDER_SCENE,
       facts: [
         { label: he ? 'נגישות מלאה' : 'Fully accessible', icon: 'accessibility' },
         { label: he ? 'רכבת קלה עד הדלת' : 'Light rail to the door', icon: 'transit' },
@@ -316,7 +332,7 @@ export const fallbackConference = (locale: Locale): ConferenceExperience => {
       line: he
         ? 'השאלה היא לא אם השירות הציבורי ישתנה. השאלה היא אם תהיו שם כשזה יקרה.'
         : 'The question is not whether public service will change. The question is whether you will be there when it does.',
-      image: photo('hason-dusk', 2400, 1200),
+      image: PLACEHOLDER_SCENE,
     },
   };
 };

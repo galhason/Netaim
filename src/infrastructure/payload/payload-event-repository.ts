@@ -274,7 +274,6 @@ export const payloadEventRepository: EventRepository = {
     const sweeps = [
       'networking-meetings',
       'networking-connections',
-      'networking-profiles',
       'session-registrations',
       'sessions',
       'registrations',

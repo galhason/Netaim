@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
-import type { ReactNode } from 'react';
+import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
+import { CinematicNav } from '@/features/cinematic';
 import {
   JOINED_CONFERENCE_FANOUT,
   getMyAccount,
@@ -10,56 +11,63 @@ import {
 import { LOUNGE_UI } from '@/features/attendee';
 import { findPortalEvent, getActiveConferenceSlug } from '@/features/events';
 import {
+  connectionChannels,
+  myBlockedPeople,
   myConnections,
+  myHiddenParticipantIds,
+  myMeetings,
   myUnreadByConnection,
+  type ConnectionChannels,
   type MyConnection,
+  type MyMeeting,
 } from '@/features/networking';
-import { getMyDetails } from '@/features/registration';
+import { getMyDetails, myContactPreferences } from '@/features/registration';
 import {
   listDirectoryParticipants,
-  listPublicSpeakers,
   sharedActivityPeers,
   type FellowParticipant,
 } from '@/infrastructure';
-import {
-  manageConnectionAction,
-  respondConnectionAction,
-} from '../../events/[slug]/networking/actions';
-import { platformConnectAction } from './actions';
+import NetworkingHero from './ui/hero';
+import PeopleBubbles, { type Bubble } from './ui/bubbles';
+import RecommendedPeople from './ui/recommended';
+import IncomingRequests from './ui/incoming';
+import NetworkingSearch from './ui/search';
+import ParticipantDirectory from './ui/directory';
+import ConnectionsSection from './ui/connections';
+import MeetingsSection from './ui/meetings';
+import BlockedSection from './ui/blocked';
+import MobileNav from './ui/mobile-nav';
+import { card, personLine, type ReasonTone } from './ui/shared';
 
 /*
- * The conference community (Connection Framework v1.0). One hub, three
- * verbs, in the order a person actually needs them: answer whoever is
- * waiting, find the person you just met, discover who is worth meeting.
- * The room is shown as faces, not as a dashboard of numbers; the
- * organizations are a filter, because that is what they really are.
- * Never a giant list; always by consent.
+ * The conference community — a small social network built around the
+ * conference (Connection Framework v1.0).
+ *
+ * The order answers a person\u2019s actual questions, most urgent first:
+ * who is waiting on me, who should I meet, who is here at all — then
+ * what I already have (connections, meetings) and, folded away last,
+ * whom I removed. Discovery and decision are deliberately two places:
+ * the bubbles up top invite a glance and jump, the directory below
+ * carries the commitment.
+ *
+ * Everything on this page works without JavaScript: search and filters
+ * are GET forms over the same query parameters as always, every act is
+ * a POST server action, and navigation between sections is anchors.
+ * The social feel comes from composition, color-as-meaning and motion
+ * that respects prefers-reduced-motion — never from client state.
  */
 interface NetworkingPageProps {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ q?: string; org?: string; conf?: string; request?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    org?: string;
+    conf?: string;
+    open?: string;
+    count?: string;
+    request?: string;
+    meeting?: string;
+  }>;
 }
-
-const card =
-  'lounge-rise rounded-3xl bg-white shadow-[0_14px_44px_rgba(35,40,47,0.08)] ring-1 ring-[var(--l-hair)]/70';
-
-const liftable =
-  'transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[0_22px_60px_rgba(35,40,47,0.14)]';
-
-const chip =
-  'inline-flex items-center rounded-full bg-[var(--l-bronze)]/12 px-2.5 py-1 text-[11px] font-medium text-[var(--l-bronze)]';
-
-const stateChip =
-  'inline-flex items-center gap-1.5 rounded-full bg-[var(--l-navy)]/6 px-3 py-1 text-[11px] font-medium text-[var(--l-soft)]';
-
-const connectBtn =
-  'inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-[var(--l-bronze)]/50 px-5 text-sm font-medium text-[var(--l-bronze)] transition-colors hover:bg-[var(--l-bronze)]/10';
-
-const railChip =
-  'inline-flex min-h-10 flex-none items-center gap-2 rounded-full border px-4 text-xs font-medium transition-colors';
-
-const ghostBtn =
-  'min-h-8 text-[11px] text-[var(--l-faint)] underline underline-offset-4 transition-colors hover:text-[var(--l-ink)]';
 
 const splitInterests = (value: string | undefined): string[] =>
   (value ?? '')
@@ -73,82 +81,17 @@ const listInterests = (value: string | undefined): string[] =>
     .map((entry) => entry.trim())
     .filter(Boolean);
 
-const SearchIcon = () => (
-  <svg
-    viewBox="0 0 24 24"
-    aria-hidden="true"
-    className="size-4"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-  >
-    <circle cx="11" cy="11" r="6.5" />
-    <path d="m16 16 4 4" />
-  </svg>
-);
-
-const Avatar = ({
-  name,
-  photoUrl,
-  size = 'md',
-}: {
-  name: string;
-  photoUrl?: string;
-  size?: 'sm' | 'md' | 'lg';
-}) => {
-  const dim =
-    size === 'lg' ? 'size-16 text-2xl' : size === 'sm' ? 'size-10 text-sm' : 'size-12 text-lg';
-  return photoUrl ? (
-    // eslint-disable-next-line @next/next/no-img-element -- participant portrait from the media API
-    <img
-      src={photoUrl}
-      alt=""
-      className={`${dim} flex-none rounded-full object-cover ring-1 ring-[var(--l-bronze)]/40`}
-    />
-  ) : (
-    <span
-      className={`${dim} grid flex-none place-items-center rounded-full bg-[var(--l-bronze)]/15 font-display font-semibold text-[var(--l-bronze)]`}
-    >
-      {name.slice(0, 1)}
-    </span>
-  );
-};
-
-const SectionHead = ({
-  he,
-  eyebrow,
-  title,
-  meta,
-  action,
-}: {
-  he: boolean;
-  eyebrow: string;
-  title: string;
-  meta?: string;
-  action?: ReactNode;
-}) => (
-  <div className="mb-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
-    <div>
-      <p
-        className={`text-[11px] font-medium tracking-[0.18em] text-[var(--l-faint)] ${
-          he ? '' : 'uppercase'
-        }`}
-      >
-        {eyebrow}
-      </p>
-      <h2 className="mt-1 font-display text-xl font-semibold md:text-2xl">{title}</h2>
-    </div>
-    {meta ? (
-      <p className="text-xs tabular-nums text-[var(--l-soft)]">{meta}</p>
-    ) : null}
-    {action}
-  </div>
-);
-
 const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => {
   const { locale } = await params;
-  const { q, org, conf, request } = await searchParams;
+  const {
+    q,
+    org,
+    conf,
+    open,
+    count,
+    request,
+    meeting: meetingState,
+  } = await searchParams;
   if (!isSupportedLocale(locale)) {
     notFound();
   }
@@ -186,12 +129,12 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
     ...account.joined.slice(0, JOINED_CONFERENCE_FANOUT),
   ];
 
-  const [allPeople, details, speakers, perSlug, peers] = await Promise.all([
+  const [allPeople, details, myPrefs, perSlug, peers] = await Promise.all([
     directorySlug
       ? listDirectoryParticipants(directorySlug).catch(() => [])
       : Promise.resolve([] as FellowParticipant[]),
     getMyDetails(),
-    listPublicSpeakers().catch(() => []),
+    myContactPreferences().catch(() => null),
     /*
      * Connections are filed against a conference. That is the site's own
      * conference for everyone here, and the fan-out over `account.joined`
@@ -220,11 +163,31 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
     peers.map((peer) => [peer.participantId, peer.activities]),
   );
 
+  /*
+   * Blocking removes a person from the room, in both directions — the
+   * one who blocked never meets them again, and the blocked account
+   * cannot arrive through the directory, the suggestions or the faces.
+   */
+  const [hiddenIds, blockedPeople] = await Promise.all([
+    myHiddenParticipantIds(),
+    myBlockedPeople(),
+  ]);
+
   const people = allPeople.filter(
     (person) =>
       person.participantId !== account.id &&
+      !hiddenIds.has(person.participantId) &&
       (!person.email ||
         person.email.toLowerCase() !== account.email.toLowerCase()),
+  );
+  /*
+   * The same consent-filtered directory listing, keyed by person, so a
+   * connection tile can borrow the photo and headline its owner already
+   * shows the room. Someone who left the directory simply isn't here,
+   * and their tile stays name-only — no new data, no new exposure.
+   */
+  const fellowById = new Map(
+    people.map((person) => [person.participantId, person]),
   );
 
   /* Live connection state, platform-wide */
@@ -250,6 +213,43 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
       })),
   );
   const unread = await myUnreadByConnection(acceptedAll);
+
+  /*
+   * The channels, and the meetings.
+   *
+   * Both used to live on the conference's own networking page, which
+   * meant a guest looking at a connection here was sent somewhere else
+   * to phone them — and meetings had no address on the platform hub at
+   * all. They are read beside the connections that make them possible.
+   *
+   * Channels are resolved per connection rather than per person: what
+   * opens is the other side's decision, and it is theirs to change at
+   * any moment, so it is asked fresh and never cached beside a name.
+   */
+  const [channelPairs, meetingLists] = await Promise.all([
+    Promise.all(
+      acceptedAll.map(async (connection) => {
+        const channels = await connectionChannels(connection.id).catch(
+          () => null,
+        );
+        return [connection.id, channels] as const;
+      }),
+    ),
+    Promise.all(
+      connectionScopes.map(async (conference) => ({
+        conference,
+        meetings: await myMeetings(conference.slug).catch(
+          () => [] as MyMeeting[],
+        ),
+      })),
+    ),
+  ]);
+  const channelsById = new Map<string, ConnectionChannels | null>(channelPairs);
+  const meetings = meetingLists
+    .flatMap(({ conference, meetings: list }) =>
+      list.map((meeting) => ({ ...meeting, slug: conference.slug })),
+    )
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   const unreadTotal = [...unread.values()].reduce((sum, count) => sum + count, 0);
   const activeByOther = new Map<string, 'pending' | 'accepted'>();
   for (const { connections } of perSlug) {
@@ -295,8 +295,16 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
   const organizations = [...orgCounts.entries()].sort((a, b) => b[1] - a[1]);
 
   /* Filters compose: a search never drops the organization, and back */
-  const linkTo = (next: Partial<Record<'q' | 'org' | 'conf', string | undefined>>) => {
-    const merged: Record<string, string | undefined> = { q, org, conf, ...next };
+  const linkTo = (
+    next: Partial<Record<'q' | 'org' | 'conf' | 'open', string | undefined>>,
+  ) => {
+    const merged: Record<string, string | undefined> = {
+      q,
+      org,
+      conf,
+      open,
+      ...next,
+    };
     const search = new URLSearchParams();
     for (const [key, value] of Object.entries(merged)) {
       if (value) {
@@ -312,6 +320,10 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
     if (org && (person.orgName ?? '').trim() !== org) {
       return false;
     }
+    /* The green chip: only people whose door to meetings is open. */
+    if (open && !person.openToMeetings) {
+      return false;
+    }
     if (!query) {
       return true;
     }
@@ -319,12 +331,75 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
       .filter(Boolean)
       .some((field) => String(field).toLowerCase().includes(query));
   });
-  const shown = filtered.slice(0, 24);
+  /*
+   * The explorer's order and its window.
+   *
+   * Browsing (no search) walks a shuffled order so refreshing the page
+   * surfaces different people — but shuffled ONCE per viewer per day,
+   * with a seed derived from who is looking and today's date. The same
+   * seed holds across every "load more", so the list only ever extends
+   * and no face can appear twice. A search is a question with a right
+   * answer, so its results stay in the stable alphabetical order.
+   *
+   * The window itself is the ?count parameter: twelve people, then
+   * twelve more each press, capped to what actually exists. Any change
+   * of search or filter drops ?count and starts the window over.
+   */
+  const PAGE_SIZE = 12;
+  const seedOf = (text: string): number => {
+    let hash = 2166136261;
+    for (let index = 0; index < text.length; index += 1) {
+      hash = Math.imul(hash ^ text.charCodeAt(index), 16777619);
+    }
+    return hash >>> 0;
+  };
+  const shuffled = (list: FellowParticipant[], seed: number) => {
+    let state = seed || 1;
+    const random = () => {
+      state = Math.imul(state ^ (state >>> 15), state | 1) >>> 0;
+      state ^= state + Math.imul(state ^ (state >>> 7), state | 61);
+      return ((state ^ (state >>> 14)) >>> 0) / 4294967296;
+    };
+    const out = [...list];
+    for (let index = out.length - 1; index > 0; index -= 1) {
+      const swap = Math.floor(random() * (index + 1));
+      const held = out[index]!;
+      out[index] = out[swap]!;
+      out[swap] = held;
+    }
+    return out;
+  };
+  const today = new Date().toISOString().slice(0, 10);
+  const ordered = query
+    ? filtered
+    : shuffled(filtered, seedOf(`${account.id}:${today}`));
+
+  const parsedCount = Number(count);
+  const visibleCount = Math.min(
+    Number.isFinite(parsedCount) && parsedCount > PAGE_SIZE
+      ? Math.floor(parsedCount)
+      : PAGE_SIZE,
+    filtered.length,
+  );
+  const shown = ordered.slice(0, visibleCount);
+  /*
+   * The door to more: the same URL with every live parameter and a
+   * grown count, anchored so a browser without JavaScript lands back
+   * at the directory it just extended.
+   */
+  const base = linkTo({});
+  const loadMoreHref =
+    filtered.length > visibleCount
+      ? `${base}${base.includes('?') ? '&' : '?'}count=${Math.min(
+          visibleCount + PAGE_SIZE,
+          filtered.length,
+        )}#directory`
+      : null;
 
   /* Suggestions: shared interests and shared organization, never noise */
   const myInterests = splitInterests(details?.interests);
   const myOrg = (details?.organization ?? '').trim();
-  const suggested = people
+  const scoredAll = people
     .map((person) => {
       const shared = listInterests(person.interests).filter((interest) =>
         myInterests.includes(interest.toLowerCase()),
@@ -345,164 +420,247 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
       };
     })
     .filter((entry) => entry.score > 0 && !activeByOther.has(entry.person.participantId))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 4);
+    .sort((a, b) => b.score - a.score);
+  const suggested = scoredAll.slice(0, 4);
 
-  /* The room, as faces: portraits first, then everyone else */
+  const BANNERS: Record<string, { he: string; en: string }> = {
+    sent: {
+      he: 'בקשת ההתחברות נשלחה. תקבלו הודעה כשהיא תאושר.',
+      en: 'Request sent. We will let you know when it is accepted.',
+    },
+    noShared: {
+      he: 'אין לכם עדיין כנס משותף עם המשתתף הזה, ולכן אי אפשר להתחבר.',
+      en: 'You have no shared conference with this participant yet, so you cannot connect.',
+    },
+    self: {
+      he: 'זה אתם. נסו להתחבר למישהו אחר.',
+      en: 'That is you. Try connecting to someone else.',
+    },
+    blocked: {
+      he: 'המשתתף נחסם. הוא לא יופיע לכם יותר ולא יוכל ליצור אתכם קשר.',
+      en: 'Blocked. They will not appear to you again and cannot reach you.',
+    },
+    unblocked: {
+      he: 'החסימה בוטלה.',
+      en: 'The block was lifted.',
+    },
+    'report-sent': {
+      he: 'הדיווח נשלח לצוות הכנס. תודה — נטפל בזה.',
+      en: 'Your report reached the conference team. Thank you — we will look into it.',
+    },
+    'report-invalid': {
+      he: 'לא ניתן לדווח על המשתתף הזה.',
+      en: 'That participant cannot be reported.',
+    },
+  };
+
+  /*
+   * What just happened to a meeting, said in words. A refusal is the
+   * interesting case: the service turns down a proposal to someone who
+   * closed meetings or is no longer connected, and a form that silently
+   * did nothing would read as a broken button.
+   */
+  const MEETING_BANNERS: Record<string, Record<Locale, string>> = {
+    proposed: {
+      he: 'ההצעה נשלחה. היא תופיע כמאושרת ברגע שהצד השני יאשר.',
+      en: 'The proposal was sent. It becomes confirmed once the other side agrees.',
+    },
+    refused: {
+      he: 'לא ניתן לקבוע את הפגישה — ייתכן שהצד השני סגר קבלת פגישות או שהקשר הוסר.',
+      en: 'The meeting could not be arranged — the other side may have closed meetings, or the connection ended.',
+    },
+    conflict: {
+      he: 'הפגישה מתנגשת עם פגישה מאושרת אחרת.',
+      en: 'This meeting clashes with another confirmed meeting.',
+    },
+  };
+  const meetingBanner = meetingState
+    ? (MEETING_BANNERS[meetingState]?.[locale] ?? null)
+    : null;
+
+  const requestBanner = request
+    ? (BANNERS[request]?.[locale] ??
+      (he
+        ? 'לא הצלחנו לבצע את הפעולה. נסו שוב מכרטיס המשתתף.'
+        : 'We could not complete that. Try again from the participant card.'))
+    : null;
+
+  /*
+   * Why each face is on the screen, in words and in a ring color. The
+   * reason is always the real one — a room you shared outranks an
+   * interest tag outranks an employer, exactly like the score that
+   * ordered them — and never a percentage the platform cannot defend.
+   */
+  const reasonOf = (entry: (typeof scoredAll)[number]): {
+    reason: string;
+    tone: ReasonTone;
+  } =>
+    entry.together.length > 0
+      ? {
+          reason: he
+            ? `אִתכם ב${entry.together[0]}`
+            : `With you at ${entry.together[0]}`,
+          tone: 'gold',
+        }
+      : entry.shared.length > 0
+        ? {
+            reason: he
+              ? `תחום משותף: ${entry.shared[0]}`
+              : `Shared: ${entry.shared[0]}`,
+            tone: 'blue',
+          }
+        : {
+            reason: he ? 'אותו ארגון' : 'Same organization',
+            tone: 'pink',
+          };
+
+  const bubbles: Bubble[] = scoredAll.slice(0, 12).map((entry) => ({
+    person: entry.person,
+    ...reasonOf(entry),
+  }));
+  /*
+   * A young community has few scored matches, and eight empty slots
+   * would make the room look abandoned — worst of all in a tiny test
+   * room where the guest already knows everyone, which once emptied
+   * this rail completely and collapsed the whole discovery layer. So
+   * the rail fills in honesty order: strangers who opened their door
+   * (green), strangers plainly here (purple), and finally the people
+   * you already reached — a connection ("כבר מחוברים") or a request in
+   * flight. The rail shows the room as it is; the reason under each
+   * face never pretends otherwise.
+   */
+  const taken = new Set(bubbles.map((bubble) => bubble.person.participantId));
+  const spare = people.filter(
+    (person) =>
+      !taken.has(person.participantId) &&
+      !activeByOther.has(person.participantId),
+  );
+  for (const person of spare.filter((entry) => entry.openToMeetings)) {
+    if (bubbles.length >= 12) break;
+    taken.add(person.participantId);
+    bubbles.push({
+      person,
+      reason: he ? 'פתוח/ה לפגישות' : 'Open to meetings',
+      tone: 'green',
+    });
+  }
+  for (const person of spare) {
+    if (bubbles.length >= 12) break;
+    if (taken.has(person.participantId)) continue;
+    taken.add(person.participantId);
+    bubbles.push({
+      person,
+      reason: personLine(person) || (he ? 'משתתפ/ת בכנס' : 'At the conference'),
+      tone: 'purple',
+    });
+  }
+  /*
+   * Pending is two different sentences depending on who is waiting.
+   * A request THEY sent deserves the warmer word and the warmer ring —
+   * it is the single most actionable face on the rail.
+   */
+  const waitingOnMe = new Set(incoming.map((pending) => pending.otherId));
+  for (const person of people) {
+    if (bubbles.length >= 12) break;
+    if (taken.has(person.participantId)) continue;
+    const state = activeByOther.get(person.participantId);
+    if (!state) continue;
+    taken.add(person.participantId);
+    const reason =
+      state === 'accepted'
+        ? he
+          ? 'כבר חברים'
+          : 'Connected'
+        : waitingOnMe.has(person.participantId)
+          ? he
+            ? 'מחכה לתשובתכם'
+            : 'Waiting for you'
+          : he
+            ? 'שלחתם בקשה'
+            : 'Request sent';
+    bubbles.push({
+      person,
+      reason,
+      tone:
+        state === 'accepted'
+          ? 'green'
+          : waitingOnMe.has(person.participantId)
+            ? 'gold'
+            : 'purple',
+    });
+  }
+
+  const recommendations = suggested.map((entry) => ({
+    person: entry.person,
+    ...reasonOf(entry),
+  }));
+
+  const openCount = people.filter((person) => person.openToMeetings).length;
+  /* The hero's little crowd: portraits first, five faces at most. */
   const faces = [...people]
     .sort((a, b) => Number(Boolean(b.photoUrl)) - Number(Boolean(a.photoUrl)))
-    .slice(0, 12);
+    .slice(0, 5);
+  const now = Date.now();
+  const nextMeeting =
+    meetings.find(
+      (meeting) =>
+        meeting.status !== 'cancelled' && Date.parse(meeting.startsAt) > now,
+    ) ?? null;
 
-  const requestBanner =
-    request === 'sent'
-      ? he
-        ? 'בקשת ההתחברות נשלחה. תקבלו הודעה כשהיא תאושר.'
-        : 'Request sent. We will let you know when it is accepted.'
-      : request === 'noShared'
-        ? he
-          ? 'אין לכם עדיין כנס משותף עם המשתתף הזה, ולכן אי אפשר להתחבר.'
-          : 'You have no shared conference with this participant yet, so you cannot connect.'
-        : request === 'self'
-          ? he
-            ? 'זה אתם. נסו להתחבר למישהו אחר.'
-            : 'That is you. Try connecting to someone else.'
-          : request
-            ? he
-              ? 'לא הצלחנו לשלוח את הבקשה. נסו שוב מכרטיס המשתתף.'
-              : 'We could not send the request. Try again from the participant card.'
-            : null;
-
-  const connectForm = (participantId: string, label: string) => (
-    <form action={platformConnectAction} className="mt-auto w-full pt-3">
-      <input type="hidden" name="locale" value={locale} />
-      <input type="hidden" name="participantId" value={participantId} />
-      <button type="submit" className={connectBtn}>
-        {label}
-      </button>
-    </form>
-  );
-
-  const connectLabel = he ? 'התחברות' : 'Connect';
-
-  const personLine = (person: FellowParticipant) =>
-    [person.roleTitle, person.orgName].filter(Boolean).join(' · ');
-
-  const stats = [
-    { value: people.length + 1, label: he ? 'משתתפים' : 'Participants' },
-    { value: orgCounts.size, label: he ? 'ארגונים' : 'Organizations' },
-    { value: speakers.length, label: he ? 'מרצים' : 'Speakers' },
-  ];
+  const myself = {
+    name: details?.name ?? account.email,
+    photoUrl: details?.photoUrl,
+    line:
+      details?.headline ??
+      [details?.role, details?.organization].filter(Boolean).join(' · '),
+    open: myPrefs?.prefs.meetings !== false,
+    connections: acceptedAll.length,
+    meetings: meetings.filter((meeting) => meeting.status !== 'cancelled')
+      .length,
+  };
 
   return (
     <main
       id="main-content"
-      className="lounge min-h-dvh bg-[var(--l-bg)] pb-20 font-body text-[var(--l-ink)]"
+      className="community lounge min-h-dvh bg-[var(--n-bg)] pb-28 font-body text-[var(--n-ink)] md:pb-16"
     >
-      {/* Hero — the room, opened with its faces */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[var(--l-navy)]">
-          <span
-            aria-hidden="true"
-            className="absolute -top-32 left-1/2 h-[26rem] w-[48rem] -translate-x-1/2"
-          >
-            <span className="lounge-breathe block size-full rounded-full bg-[radial-gradient(closest-side,rgba(201,169,110,0.34),transparent_70%)]" />
-          </span>
-          <span
-            aria-hidden="true"
-            className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-b from-transparent to-[var(--l-bg)]"
-          />
-        </div>
+      {/*
+        * The site's own navigation — the same CinematicNav every other
+        * page wears, tokens scoped by the `cinematic` class. Two local
+        * overrides, both visual: the fixed grain overlay stays off this
+        * warm page, and the bar keeps its glass surface from the first
+        * pixel, because here it floats over cream, not over a dark hero.
+        */}
+      <div className="cinematic bg-transparent [&::after]:content-none [&>header]:border-b [&>header]:border-white/10 [&>header]:bg-[#08111e]/90 [&>header]:backdrop-blur-md">
+        <CinematicNav
+          locale={locale as Locale}
+          registerHref={`/${locale}`}
+          meHref={`/${locale}/me`}
+          brand={brandFor(locale as Locale)}
+          viewer={{ name: myself.name }}
+          immediate
+        />
+      </div>
+      <NetworkingHero
+        locale={locale as Locale}
+        he={he}
+        num={num}
+        participantCount={people.length + 1}
+        openCount={openCount}
+        faces={faces}
+        myself={myself}
+        nextMeeting={nextMeeting}
+      />
 
-        <div className="relative mx-auto max-w-6xl px-6 pb-24 pt-6 text-white">
-          <div className="flex items-center justify-between text-sm text-white/85">
-            <Link
-              href={`/${locale}/me`}
-              className="inline-flex min-h-10 items-center transition-opacity hover:opacity-75"
-            >
-              ← {LOUNGE_UI.myExperience[locale]}
-            </Link>
-            <span className="font-display font-semibold tracking-[0.3em]">נטעים</span>
-          </div>
-
-          <div className="mt-10 max-w-2xl">
-            <p
-              className={`text-[11px] font-medium tracking-[0.22em] text-[var(--l-bronze-soft)] ${
-                he ? '' : 'uppercase'
-              }`}
-            >
-              {he ? 'הקהילה' : 'The community'}
-            </p>
-            <h1 className="mt-2 font-display text-[2.1rem] font-semibold leading-[1.06] tracking-tight md:text-5xl">
-              {he ? 'קהילת הכנס' : 'The conference community'}
-            </h1>
-            <p className="mt-3 text-white/70 md:text-lg">
-              {he
-                ? 'מי נמצא כאן, את מי כדאי לכם להכיר, ומי מחכה לתשובה שלכם.'
-                : 'Who is here, who you should meet, and who is waiting on your answer.'}
-            </p>
-          </div>
-
-          {faces.length > 0 ? (
-            <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-3">
-              <ul aria-hidden="true" className="flex items-center">
-                {faces.map((person, index) => (
-                  <li
-                    key={person.participantId}
-                    className="lounge-rise relative -ms-3 first:ms-0"
-                    style={{ zIndex: faces.length - index, animationDelay: `${index * 40}ms` }}
-                  >
-                    {person.photoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- participant portrait from the media API
-                      <img
-                        src={person.photoUrl}
-                        alt=""
-                        className="size-11 rounded-full object-cover ring-2 ring-[var(--l-navy)]"
-                      />
-                    ) : (
-                      <span className="grid size-11 place-items-center rounded-full bg-white/12 font-display text-sm font-semibold text-white ring-2 ring-[var(--l-navy)]">
-                        {person.name.slice(0, 1)}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-              <p className="text-sm text-white/70">
-                {he
-                  ? `${num(people.length + 1)} אנשים בקהילה`
-                  : `${num(people.length + 1)} people in the community`}
-              </p>
-            </div>
-          ) : null}
-
-          <dl className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-            {stats.map((stat) => (
-              <div key={stat.label} className="flex items-baseline gap-1.5">
-                <dt className="order-2 text-white/55">{stat.label}</dt>
-                <dd className="order-1 font-display text-base font-semibold tabular-nums text-white">
-                  {num(stat.value)}
-                </dd>
-              </div>
-            ))}
-          </dl>
-
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="#directory"
-              className="inline-flex min-h-11 items-center rounded-xl bg-[var(--l-bronze-soft)] px-5 text-sm font-semibold text-[#1b2436] transition-colors hover:bg-[#d8bb84]"
-            >
-              {he ? 'לעיון במשתתפים' : 'Browse participants'}
-            </Link>
-            <Link
-              href={`/${locale}/me/profile`}
-              className="inline-flex min-h-11 items-center rounded-xl border border-white/25 px-5 text-sm font-medium text-white transition-colors hover:bg-white/10"
-            >
-              {he ? 'הפרופיל שלי' : 'My profile'}
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <div className="mx-auto -mt-12 flex max-w-6xl flex-col gap-10 px-6">
+      {/*
+        * The narrative, in order: DISCOVER (the bubbles, straight after
+        * the hero) → CONNECT (whoever is waiting, then the recommended)
+        * → SEARCH → EXPLORE (the directory) → MANAGE (connections,
+        * meetings, blocked). Search deliberately comes after the
+        * social layer: the first question this page answers is "who
+        * should I meet", never "who can I look up".
+        */}
+      <div className="mx-auto mt-5 flex max-w-6xl flex-col gap-7 px-4 md:mt-6 md:gap-8 md:px-6">
         {requestBanner ? (
           <p
             className={`${card} flex items-center gap-3 p-4 text-sm`}
@@ -510,467 +668,117 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
           >
             <span
               aria-hidden="true"
-              className="size-2 flex-none rounded-full bg-[var(--l-bronze)]"
+              className="size-2 flex-none rounded-full bg-[var(--n-gold)]"
             />
             {requestBanner}
           </p>
         ) : null}
 
-        {/* Waiting on you — the one panel that breaks the white rhythm */}
-        {incoming.length > 0 ? (
-          <section className="lounge-rise rounded-3xl border border-[var(--l-bronze)]/30 bg-[#f7efe0] p-5 shadow-[0_14px_44px_rgba(35,40,47,0.08)] md:p-6">
-            <SectionHead
-              he={he}
-              eyebrow={he ? 'מחכה לכם' : 'Waiting on you'}
-              title={he ? 'בקשות חיבור' : 'Connection requests'}
-              meta={
-                he
-                  ? `${num(incoming.length)} ממתינות`
-                  : `${num(incoming.length)} pending`
-              }
-            />
-            <ul className="flex flex-col gap-3">
-              {incoming.map((pending) => (
-                <li
-                  key={pending.id}
-                  className="flex flex-wrap items-center gap-3 rounded-2xl bg-white p-4 ring-1 ring-[var(--l-hair)]"
-                >
-                  <Avatar name={pending.otherName} size="sm" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold">
-                      {pending.otherName}
-                    </span>
-                    <span className="block text-xs text-[var(--l-faint)]">
-                      {pending.title}
-                    </span>
-                    {pending.message ? (
-                      <span className="mt-2 block border-s-2 border-[var(--l-bronze)]/40 ps-3 text-sm text-[var(--l-soft)]">
-                        {pending.message}
-                      </span>
-                    ) : null}
-                  </span>
-                  <span className="flex flex-none gap-2">
-                    {(['accept', 'decline'] as const).map((response) => (
-                      <form key={response} action={respondConnectionAction}>
-                        <input type="hidden" name="locale" value={locale} />
-                        <input type="hidden" name="slug" value={pending.slug} />
-                        <input type="hidden" name="connectionId" value={pending.id} />
-                        <input type="hidden" name="response" value={response} />
-                        <button
-                          type="submit"
-                          className={
-                            response === 'accept'
-                              ? 'inline-flex min-h-10 items-center rounded-xl bg-[var(--l-navy)] px-5 text-sm font-medium text-white transition-colors hover:bg-[#16263c]'
-                              : 'inline-flex min-h-10 items-center rounded-xl border border-[var(--l-hair)] bg-white px-4 text-sm transition-colors hover:border-[var(--l-bronze)]'
-                          }
-                        >
-                          {response === 'accept'
-                            ? he
-                              ? 'אישור'
-                              : 'Accept'
-                            : he
-                              ? 'דחייה'
-                              : 'Decline'}
-                        </button>
-                      </form>
-                    ))}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
+        <PeopleBubbles he={he} bubbles={bubbles} />
 
-        {/* Find — search, conference, organization, all composing */}
-        <section>
-          <form
-            method="get"
-            className={`${card} flex flex-col gap-3 p-3 sm:flex-row sm:items-center`}
-          >
-            {org ? <input type="hidden" name="org" value={org} /> : null}
-            <label className="relative flex-1">
-              <span className="sr-only">{he ? 'חיפוש משתתפים' : 'Search participants'}</span>
-              <span className="pointer-events-none absolute inset-y-0 start-3.5 flex items-center text-[var(--l-faint)]">
-                <SearchIcon />
-              </span>
-              <input
-                type="search"
-                name="q"
-                defaultValue={q ?? ''}
-                placeholder={he ? 'שם, ארגון או תחום עניין' : 'Name, organization or interest'}
-                className="min-h-11 w-full rounded-xl border border-[var(--l-hair)] bg-white ps-10 pe-4 text-sm transition-colors focus:border-[var(--l-bronze)] focus:outline-none"
-              />
-            </label>
-            {account.joined.length > 1 ? (
-              <label className="flex-none">
-                <span className="sr-only">{he ? 'כנס' : 'Conference'}</span>
-                <select
-                  name="conf"
-                  defaultValue={conf ?? ''}
-                  className="min-h-11 w-full rounded-xl border border-[var(--l-hair)] bg-white px-3 text-sm sm:w-auto"
-                >
-                  <option value="">{he ? 'כל הכנסים' : 'All conferences'}</option>
-                  {account.joined.map((conference) => (
-                    <option key={conference.slug} value={conference.slug}>
-                      {conference.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : null}
-            <button
-              type="submit"
-              className="inline-flex min-h-11 flex-none items-center justify-center rounded-xl bg-[var(--l-navy)] px-6 text-sm font-medium text-white transition-colors hover:bg-[#16263c]"
-            >
-              {he ? 'חיפוש' : 'Search'}
-            </button>
-          </form>
+        <IncomingRequests
+          locale={locale as Locale}
+          he={he}
+          num={num}
+          incoming={incoming}
+        />
 
-          {organizations.length > 0 ? (
-            <div className="-mx-6 mt-3 flex gap-2 overflow-x-auto px-6 pb-1 [scrollbar-width:none]">
-              <Link
-                href={linkTo({ org: undefined })}
-                aria-current={org ? undefined : 'true'}
-                className={`${railChip} ${
-                  org
-                    ? 'border-[var(--l-hair)] bg-white text-[var(--l-soft)] hover:border-[var(--l-bronze)]/50'
-                    : 'border-[var(--l-bronze)] bg-[var(--l-bronze)]/12 text-[var(--l-bronze)]'
-                }`}
-              >
-                {he ? 'כל הארגונים' : 'All organizations'}
-              </Link>
-              {organizations.slice(0, 14).map(([name, count]) => {
-                const active = org === name;
-                return (
-                  <Link
-                    key={name}
-                    href={linkTo({ org: active ? undefined : name })}
-                    aria-current={active ? 'true' : undefined}
-                    className={`${railChip} ${
-                      active
-                        ? 'border-[var(--l-bronze)] bg-[var(--l-bronze)]/12 text-[var(--l-bronze)]'
-                        : 'border-[var(--l-hair)] bg-white text-[var(--l-soft)] hover:border-[var(--l-bronze)]/50'
-                    }`}
-                  >
-                    {name}
-                    <span className="tabular-nums text-[var(--l-faint)]">{num(count)}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : null}
-        </section>
+        <RecommendedPeople
+          locale={locale as Locale}
+          he={he}
+          recommendations={recommendations}
+          directorySlug={directorySlug ?? ''}
+        />
 
-        {/* Discover — the reason is spelled out, not counted */}
-        {suggested.length > 0 ? (
-          <section>
-            <SectionHead
-              he={he}
-              eyebrow={he ? 'על סמך הפרופיל שלכם' : 'Based on your profile'}
-              title={he ? 'אנשים שכדאי להכיר' : 'People worth meeting'}
-            />
-            <ul className="-mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-2 md:overflow-visible md:px-0 xl:grid-cols-4">
-              {suggested.map(({ person, shared, sameOrg, together }, index) => (
-                <li
-                  key={person.participantId}
-                  className="w-64 flex-none snap-start md:w-auto"
-                >
-                  <article
-                    className={`${card} ${liftable} flex h-full flex-col items-center gap-2 p-6 text-center`}
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <Avatar name={person.name} photoUrl={person.photoUrl} size="lg" />
-                    <h3 className="font-display text-lg font-semibold">{person.name}</h3>
-                    {personLine(person) ? (
-                      <p className="text-sm text-[var(--l-soft)]">{personLine(person)}</p>
-                    ) : null}
-                    {together.length > 0 ? (
-                      <p className="mt-1 text-xs font-medium text-[var(--l-bronze)]">
-                        {together.length === 1
-                          ? he
-                            ? `אִתכם ב${together[0]}`
-                            : `With you at ${together[0]}`
-                          : he
-                            ? `אִתכם ב-${num(together.length)} מהפעילויות שלכם`
-                            : `With you at ${num(together.length)} of your activities`}
-                      </p>
-                    ) : null}
-                    <p className="mt-1 flex flex-wrap justify-center gap-1.5">
-                      {shared.slice(0, 3).map((interest) => (
-                        <span key={interest} className={chip}>
-                          {interest}
-                        </span>
-                      ))}
-                      {sameOrg ? (
-                        <span className={chip}>{he ? 'אותו ארגון' : 'Same organization'}</span>
-                      ) : null}
-                    </p>
-                    {connectForm(person.participantId, connectLabel)}
-                  </article>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
+        <NetworkingSearch
+          he={he}
+          basePath={`/${locale}/me/networking`}
+          num={num}
+          q={q}
+          org={org}
+          conf={conf}
+          open={open}
+          joined={account.joined}
+          organizations={organizations}
+          linkTo={linkTo}
+        />
 
-        {/* The directory */}
-        <section id="directory" className="scroll-mt-24">
-          <SectionHead
-            he={he}
-            eyebrow={
-              chosenConf
-                ? chosenConf.title
-                : he
-                  ? 'מי שנרשם לפעילויות'
-                  : 'Everyone signed up for activities'
-            }
-            title={he ? 'משתתפים' : 'Participants'}
-            meta={
-              filtered.length > shown.length
-                ? he
-                  ? `${num(shown.length)} מתוך ${num(filtered.length)}`
-                  : `${num(shown.length)} of ${num(filtered.length)}`
-                : `${num(filtered.length)}`
-            }
-          />
-          {shown.length === 0 ? (
-            <div className={`${card} flex flex-col items-center gap-3 p-10 text-center`}>
-              <p className="font-display text-lg font-semibold">
-                {he ? 'אף אחד לא תואם לחיפוש הזה' : 'Nobody matches this search'}
-              </p>
-              <p className="max-w-sm text-sm text-[var(--l-soft)]">
-                {he
-                  ? 'נסו שם פרטי, שם ארגון או תחום עניין — או נקו את הסינון וגללו את כל הקהילה.'
-                  : 'Try a first name, an organization or an interest — or clear the filters and browse everyone.'}
-              </p>
-              {q || org ? (
-                <Link
-                  href={linkTo({ q: undefined, org: undefined })}
-                  className="inline-flex min-h-11 items-center rounded-xl border border-[var(--l-hair)] bg-white px-5 text-sm font-medium transition-colors hover:border-[var(--l-bronze)]"
-                >
-                  {he ? 'ניקוי הסינון' : 'Clear the filters'}
-                </Link>
-              ) : null}
-            </div>
-          ) : (
-            <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {shown.map((person, index) => {
-                const state = activeByOther.get(person.participantId);
-                const interests = listInterests(person.interests).slice(0, 3);
-                return (
-                  <li key={person.participantId}>
-                    <article
-                      className={`${card} ${liftable} flex h-full flex-col p-5`}
-                      style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
-                    >
-                      <div className="flex items-start gap-4">
-                        <Avatar name={person.name} photoUrl={person.photoUrl} />
-                        <div className="min-w-0 flex-1">
-                          <h3 className="truncate font-display text-lg font-semibold">
-                            {person.name}
-                          </h3>
-                          {personLine(person) ? (
-                            <p className="truncate text-sm text-[var(--l-soft)]">
-                              {personLine(person)}
-                            </p>
-                          ) : null}
-                        </div>
-                      </div>
-                      {interests.length > 0 ? (
-                        <p className="mt-3 flex flex-wrap gap-1.5">
-                          {interests.map((interest) => (
-                            <span key={interest} className={chip}>
-                              {interest}
-                            </span>
-                          ))}
-                        </p>
-                      ) : null}
-                      {state === 'accepted' ? (
-                        <p className="mt-auto pt-3">
-                          <span className={stateChip}>
-                            <span
-                              aria-hidden="true"
-                              className="size-1.5 rounded-full bg-[var(--l-live)]"
-                            />
-                            {he ? 'מחוברים' : 'Connected'}
-                          </span>
-                        </p>
-                      ) : state === 'pending' ? (
-                        <div className="mt-auto flex flex-wrap items-center gap-2 pt-3">
-                          <span className={stateChip}>
-                            {he ? 'ממתין לאישור' : 'Awaiting approval'}
-                          </span>
-                          {pendingOutgoing.get(person.participantId) ? (
-                            <form action={manageConnectionAction}>
-                              <input type="hidden" name="locale" value={locale} />
-                              <input
-                                type="hidden"
-                                name="slug"
-                                value={
-                                  pendingOutgoing.get(person.participantId)?.slug ?? ''
-                                }
-                              />
-                              <input
-                                type="hidden"
-                                name="connectionId"
-                                value={
-                                  pendingOutgoing.get(person.participantId)?.id ?? ''
-                                }
-                              />
-                              <input type="hidden" name="manage" value="withdraw" />
-                              <button type="submit" className={ghostBtn}>
-                                {he ? 'ביטול הבקשה' : 'Cancel request'}
-                              </button>
-                            </form>
-                          ) : null}
-                        </div>
-                      ) : (
-                        connectForm(person.participantId, connectLabel)
-                      )}
-                    </article>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
+        <ParticipantDirectory
+          locale={locale as Locale}
+          he={he}
+          num={num}
+          q={q}
+          org={org}
+          isFiltered={Boolean(query || org || open)}
+          totalCount={people.length}
+          filteredCount={filtered.length}
+          shown={shown}
+          loadMoreHref={loadMoreHref}
+          remaining={filtered.length - visibleCount}
+          directorySlug={directorySlug ?? ''}
+          activeByOther={activeByOther}
+          pendingOutgoing={pendingOutgoing}
+          clearHref={linkTo({ q: undefined, org: undefined, open: undefined })}
+        />
 
-        {/* Keep — the connections you already made */}
         {connectionScopes.length > 0 ? (
           <section>
-            <SectionHead
+            <ConnectionsSection
+              locale={locale as Locale}
               he={he}
-              eyebrow={he ? 'הקשרים שלי' : 'My connections'}
-              title={he ? 'אנשים שאתם מחוברים אליהם' : 'People you are connected to'}
-              action={
-                <Link
-                  href={`/${locale}/me/messages`}
-                  className="inline-flex min-h-10 items-center gap-2 text-sm text-[var(--l-bronze)] underline underline-offset-4"
-                >
-                  {he ? 'כל השיחות' : 'All conversations'}
-                  {unreadTotal > 0 ? (
-                    <span className="grid min-w-5 place-items-center rounded-full bg-[var(--l-bronze)] px-1.5 text-[11px] font-semibold tabular-nums text-white">
-                      {num(unreadTotal)}
-                    </span>
-                  ) : null}
-                </Link>
-              }
+              num={num}
+              connections={acceptedAll}
+              unread={unread}
+              channelsById={channelsById}
+              fellowById={fellowById}
+              directorySlug={directorySlug ?? ''}
             />
-            {acceptedAll.length === 0 ? (
-              <div className={`${card} flex flex-col items-center gap-3 p-10 text-center`}>
-                <p className="font-display text-lg font-semibold">
-                  {he ? 'עוד לא התחברתם לאף אחד' : 'No connections yet'}
-                </p>
-                <p className="max-w-sm text-sm text-[var(--l-soft)]">
-                  {he
-                    ? 'שלחו בקשה למי שמופיע למעלה — הקשר נשמר לכם לכל הכנס.'
-                    : 'Send a request to anyone above — the connection stays with you for the whole conference.'}
-                </p>
-                <Link
-                  href="#directory"
-                  className="inline-flex min-h-11 items-center rounded-xl bg-[var(--l-navy)] px-5 text-sm font-medium text-white transition-colors hover:bg-[#16263c]"
-                >
-                  {he ? 'לעיון במשתתפים' : 'Browse participants'}
-                </Link>
-              </div>
-            ) : (
-              <ul className="grid gap-4 md:grid-cols-2">
-                {acceptedAll.map((connection, index) => (
-                  <li key={connection.id}>
-                    <article
-                      className={`${card} flex h-full flex-col gap-4 p-5`}
-                      style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Avatar name={connection.otherName} size="sm" />
-                        <div className="min-w-0 flex-1">
-                          <h3 className="truncate text-sm font-semibold">
-                            {connection.otherName}
-                          </h3>
-                          <p className="truncate text-xs text-[var(--l-faint)]">
-                            {connection.title}
-                          </p>
-                        </div>
-                        {connection.muted ? (
-                          <span className={stateChip}>{he ? 'מושתק' : 'Muted'}</span>
-                        ) : null}
-                      </div>
-
-                      <div className="mt-auto flex flex-wrap gap-2">
-                        <Link
-                          href={`/${locale}/me/chat/${connection.id}`}
-                          className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--l-navy)] px-4 text-sm font-medium text-white transition-colors hover:bg-[#16263c]"
-                        >
-                          {he ? 'הודעה' : 'Message'}
-                          {(unread.get(connection.id) ?? 0) > 0 ? (
-                            <span className="grid min-w-5 place-items-center rounded-full bg-[var(--l-bronze)] px-1.5 text-[11px] font-semibold tabular-nums text-[#1b2436]">
-                              {num(unread.get(connection.id) ?? 0)}
-                            </span>
-                          ) : null}
-                        </Link>
-                        <Link
-                          href={`/${locale}/events/${connection.slug}/networking`}
-                          className="inline-flex min-h-10 items-center rounded-xl border border-[var(--l-hair)] px-4 text-sm font-medium transition-colors hover:border-[var(--l-bronze)]"
-                        >
-                          {he ? 'ערוצי קשר' : 'Contact channels'}
-                        </Link>
-                      </div>
-
-                      <div className="flex items-center gap-5 border-t border-[var(--l-hair)] pt-3">
-                        <form action={manageConnectionAction}>
-                          <input type="hidden" name="locale" value={locale} />
-                          <input type="hidden" name="slug" value={connection.slug} />
-                          <input type="hidden" name="connectionId" value={connection.id} />
-                          <input
-                            type="hidden"
-                            name="manage"
-                            value={connection.muted ? 'unmute' : 'mute'}
-                          />
-                          <button type="submit" className={ghostBtn}>
-                            {connection.muted
-                              ? he
-                                ? 'ביטול השתקה'
-                                : 'Unmute'
-                              : he
-                                ? 'השתקה'
-                                : 'Mute'}
-                          </button>
-                        </form>
-                        <form action={manageConnectionAction}>
-                          <input type="hidden" name="locale" value={locale} />
-                          <input type="hidden" name="slug" value={connection.slug} />
-                          <input type="hidden" name="connectionId" value={connection.id} />
-                          <input type="hidden" name="manage" value="remove" />
-                          <button type="submit" className={ghostBtn}>
-                            {he ? 'הסרת הקשר' : 'Remove'}
-                          </button>
-                        </form>
-                      </div>
-                    </article>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <MeetingsSection
+              locale={locale as Locale}
+              he={he}
+              accepted={acceptedAll}
+              meetings={meetings}
+              fellowById={fellowById}
+              banner={meetingBanner}
+            />
           </section>
         ) : (
-          <div className={`${card} flex flex-col items-center gap-3 p-10 text-center`}>
+          <div
+            className={`${card} flex flex-col items-center gap-3 p-10 text-center`}
+          >
             <p className="font-display text-lg font-semibold">
-              {he ? 'הקהילה מתחילה בפעילות' : 'The community starts at an activity'}
+              {he
+                ? 'הקהילה מתחילה בפעילות'
+                : 'The community starts at an activity'}
             </p>
-            <p className="max-w-sm text-sm text-[var(--l-soft)]">
+            <p className="max-w-sm text-sm text-[var(--n-soft)]">
               {he
                 ? 'הירשמו לסדנה או להרצאה, ומכאן תכירו את מי שיושב אתכם באותו חדר.'
                 : 'Sign up for a workshop or a talk, and meet the people in the room with you.'}
             </p>
             <Link
               href={`/${locale}/program`}
-              className="inline-flex min-h-11 items-center rounded-xl bg-[var(--l-navy)] px-5 text-sm font-medium text-white transition-colors hover:bg-[#16263c]"
+              className="inline-flex min-h-11 items-center rounded-full bg-[var(--n-navy)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--n-deep)]"
             >
-              {LOUNGE_UI.myExperience[locale]}
+              {LOUNGE_UI.myExperience[locale as Locale]}
             </Link>
           </div>
         )}
+
+        <BlockedSection
+          locale={locale as Locale}
+          he={he}
+          num={num}
+          blockedPeople={blockedPeople}
+        />
       </div>
+
+      <MobileNav
+        locale={locale as Locale}
+        he={he}
+        unreadTotal={unreadTotal}
+        num={num}
+      />
     </main>
   );
 };

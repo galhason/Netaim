@@ -4,6 +4,7 @@ import {
   participantSessionRepository,
   registrationRepository,
 } from '@/infrastructure';
+import { checkRateLimit } from '@/features/access';
 import { currentParticipant } from '@/features/registration';
 import {
   manageConnection,
@@ -16,6 +17,7 @@ import {
   noticeConnectionAccepted,
   noticeConnectionRequested,
 } from './networking-notices';
+import { blockedBetween, myHiddenParticipantIds } from './safety-service';
 
 export const requestConnection = async (
   slug: string,
@@ -35,16 +37,30 @@ export const requestConnection = async (
    *
    * The QR path already resolved the shared conference on the server;
    * this is the same rule for the path that did not.
+   *
+   * Participation is asked for the way the directory asks it — a live
+   * place in one of the conference's activities, or a live event-level
+   * registration. Reading only the second one meant the directory and
+   * this gate disagreed: a guest who had signed up for workshops was
+   * listed among the people to meet, and refused the moment they tried.
    */
   const [mine, theirs] = await Promise.all([
     registrationRepository
-      .eventSlugsForParticipant(me.id)
+      .conferenceSlugsForParticipant(me.id)
       .catch((): string[] => []),
     registrationRepository
-      .eventSlugsForParticipant(addresseeId)
+      .conferenceSlugsForParticipant(addresseeId)
       .catch((): string[] => []),
   ]);
   if (!mine.includes(slug) || !theirs.includes(slug)) {
+    return null;
+  }
+  /*
+   * A block is checked here rather than only in the interface: this is
+   * the one place every request path passes through, and the whole
+   * point of blocking is that no hand-shaped form gets around it.
+   */
+  if (await blockedBetween(me.id, addresseeId)) {
     return null;
   }
   const existing = await connectionRepository.findActiveBetween(
@@ -54,6 +70,18 @@ export const requestConnection = async (
   );
   if (existing) {
     return existing;
+  }
+  /*
+   * Counted only once every gate has passed and a genuinely new request
+   * is about to be filed: re-opening a thread you already have, or
+   * being refused by the block rule, must not spend the allowance. A
+   * person working the room hard sends a few dozen invitations in an
+   * hour; a script sends hundreds, and each one lands as a
+   * notification in somebody's evening.
+   */
+  const pace = await checkRateLimit('connection-request', me.id);
+  if (!pace.allowed) {
+    return null;
   }
   const created = await connectionRepository.create(
     slug,
@@ -79,6 +107,12 @@ export const respondToRequest = async (
   }
   const connection = await connectionRepository.getById(connectionId);
   if (!connection || connection.addresseeId !== me.id) {
+    return null;
+  }
+  if (
+    response === 'accept' &&
+    (await blockedBetween(me.id, connection.requesterId))
+  ) {
     return null;
   }
   const result = respondToConnection(connection.status, response);
@@ -151,6 +185,9 @@ export const connectionChannels = async (
     return null;
   }
   const otherId = otherOf(connection, me.id);
+  if (await blockedBetween(me.id, otherId)) {
+    return null;
+  }
   const other = await participantSessionRepository.contactProfileById(otherId);
   if (!other) {
     return null;
@@ -267,6 +304,9 @@ export const connectionContactCard = async (
     return null;
   }
   const otherId = otherOf(connection, me.id);
+  if (await blockedBetween(me.id, otherId)) {
+    return null;
+  }
   const other = await participantSessionRepository.contactProfileById(otherId);
   if (!other) {
     return null;
@@ -300,7 +340,10 @@ export const connectionContactCard = async (
  */
 export type ConnectResult =
   | { ok: true; slug: string }
-  | { ok: false; reason: 'signedOut' | 'invalid' | 'self' | 'noShared' };
+  | {
+      ok: false;
+      reason: 'signedOut' | 'invalid' | 'self' | 'noShared' | 'blocked';
+    };
 
 export const connectToParticipant = async (
   targetId: string,
@@ -316,11 +359,16 @@ export const connectToParticipant = async (
   if (targetId === me.id) {
     return { ok: false, reason: 'self' };
   }
+  if (await blockedBetween(me.id, targetId)) {
+    return { ok: false, reason: 'blocked' };
+  }
   const empty: string[] = [];
   const [mySlugs, theirSlugs] = await Promise.all([
-    registrationRepository.eventSlugsForParticipant(me.id).catch(() => empty),
     registrationRepository
-      .eventSlugsForParticipant(targetId)
+      .conferenceSlugsForParticipant(me.id)
+      .catch(() => empty),
+    registrationRepository
+      .conferenceSlugsForParticipant(targetId)
       .catch(() => empty),
   ]);
   const shared = mySlugs.find((slug) => theirSlugs.includes(slug));
@@ -338,27 +386,43 @@ export const myConnections = async (
   if (!me) {
     return [];
   }
-  const list = await connectionRepository.listForParticipant(slug, me.id);
-  return list.map((connection) => {
-    const outgoing = connection.requesterId === me.id;
-    const mutedByMe =
-      connection.status === 'muted' && connection.mutedBy === me.id;
-    return {
-      ...connection,
+  const [list, hidden] = await Promise.all([
+    connectionRepository.listForParticipant(slug, me.id),
+    myHiddenParticipantIds(),
+  ]);
+  return list
+    .filter((connection) => {
       /*
-       * Mute is private: to the side that did not mute, the connection
-       * stays plainly accepted — nothing should ever be surprising.
+       * Hidden from both sides, deliberately. The blocked person sees
+       * the connection simply gone — which is what removal looks like
+       * too, and so proves nothing about who did what.
        */
-      status:
-        connection.status === 'muted' && !mutedByMe
-          ? 'accepted'
-          : connection.status,
-      muted: mutedByMe,
-      direction: outgoing ? 'outgoing' : 'incoming',
-      otherId: outgoing ? connection.addresseeId : connection.requesterId,
-      otherName: outgoing
-        ? connection.addresseeName
-        : connection.requesterName,
-    };
-  });
+      const other =
+        connection.requesterId === me.id
+          ? connection.addresseeId
+          : connection.requesterId;
+      return !hidden.has(other);
+    })
+    .map((connection) => {
+      const outgoing = connection.requesterId === me.id;
+      const mutedByMe =
+        connection.status === 'muted' && connection.mutedBy === me.id;
+      return {
+        ...connection,
+        /*
+         * Mute is private: to the side that did not mute, the connection
+         * stays plainly accepted — nothing should ever be surprising.
+         */
+        status:
+          connection.status === 'muted' && !mutedByMe
+            ? 'accepted'
+            : connection.status,
+        muted: mutedByMe,
+        direction: outgoing ? 'outgoing' : 'incoming',
+        otherId: outgoing ? connection.addresseeId : connection.requesterId,
+        otherName: outgoing
+          ? connection.addresseeName
+          : connection.requesterName,
+      };
+    });
 };

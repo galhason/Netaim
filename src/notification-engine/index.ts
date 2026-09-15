@@ -36,3 +36,5 @@ export type {
   RecipientLookup,
   TemplateOverrideLookup,
 } from './notification-service';
+export { htmlFor, renderEmailHtml } from './templates/email-layout';
+export type { EmailLayoutInput } from './templates/email-layout';

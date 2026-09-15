@@ -17,10 +17,24 @@ interface Template {
  */
 const TEMPLATES: Record<RegistrationEventType, Template> = {
   'registration.confirmed': {
-    subject: { he: 'נרשמת בהצלחה', en: 'You are registered' },
+    subject: { he: 'אישור הרשמה לכנס', en: 'Your registration is confirmed' },
     body: {
-      he: 'מקומך שמור. נשלח לך את כל הפרטים לקראת האירוע, וקוד הכניסה יחכה לך באזור האישי.',
-      en: 'Your place is saved. We will send everything you need before the event, and your entrance code will be waiting in your personal area.',
+      he: [
+        'שלום,',
+        'הרשמתכם לכנס התקבלה ומקומכם שמור. תודה שנרשמתם — נשמח לראותכם.',
+        'באזור האישי שלכם אפשר כבר עכשיו:',
+        '• לבחור סדנאות וסיורים — מספר המקומות בכל פעילות מוגבל, והם נתפסים לפי סדר ההרשמה\n• לעקוב אחר לוח הזמנים האישי שלכם\n• להכיר משתתפים אחרים ולקבוע איתם פגישות במהלך הכנס',
+        'נעדכן אתכם בכל שינוי בתוכנית, ונשלח תזכורת לקראת המועד.',
+        'בברכה,\nצוות נטעים',
+      ].join('\n\n'),
+      en: [
+        'Hello,',
+        'Your registration has been received and your place is saved. Thank you for joining us.',
+        'In your personal area you can already:',
+        '• Choose workshops and tours — places in each activity are limited and taken in order\n• Follow your own schedule\n• Meet other participants and arrange to sit down with them during the conference',
+        'We will let you know about any change to the programme, and send a reminder closer to the date.',
+        'Kind regards,\nThe Netaim team',
+      ].join('\n\n'),
     },
   },
   'registration.pending': {
@@ -40,8 +54,8 @@ const TEMPLATES: Record<RegistrationEventType, Template> = {
   'registration.approved': {
     subject: { he: 'הרשמתך אושרה', en: 'Your registration is approved' },
     body: {
-      he: 'שמחים לאשר את מקומך. קוד הכניסה שלך מחכה באזור האישי.',
-      en: 'We are glad to confirm your place. Your entrance code is waiting in your personal area.',
+      he: 'שמחים לאשר את מקומך. הלו״ז והסדנאות מחכים לכם באזור האישי.',
+      en: 'We are glad to confirm your place. Your schedule and the workshops are waiting in your personal area.',
     },
   },
   'registration.declined': {
@@ -54,8 +68,8 @@ const TEMPLATES: Record<RegistrationEventType, Template> = {
   'registration.promoted': {
     subject: { he: 'התפנה לך מקום', en: 'A place opened for you' },
     body: {
-      he: 'התפנה מקום ומקומך אושר מתוך רשימת ההמתנה. קוד הכניסה שלך מחכה באזור האישי.',
-      en: 'A place opened and yours is confirmed from the waiting list. Your entrance code is waiting in your personal area.',
+      he: 'התפנה מקום ומקומך אושר מתוך רשימת ההמתנה. אפשר להשלים את בחירת הסדנאות באזור האישי.',
+      en: 'A place opened and yours is confirmed from the waiting list. You can finish choosing workshops in your personal area.',
     },
   },
   'registration.cancelled': {

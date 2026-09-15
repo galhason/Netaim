@@ -38,6 +38,19 @@ const VISITOR_FUNCTIONS = [
   'listMyWorkshops',
   'myEntrancePass',
   'myLocalePreference',
+  /*
+   * The conversation reads. These were missing, and the gap was not
+   * theoretical: the chat thread — one person's private messages — was
+   * the single personal page in the app without the declaration, and
+   * this list is the reason nothing said so.
+   */
+  'myChatThread',
+  'chatSince',
+  'connectionChannels',
+  'connectionContactCard',
+  'myBlockedPeople',
+  'myHiddenParticipantIds',
+  'myProfile',
 ];
 
 /*

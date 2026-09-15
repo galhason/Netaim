@@ -15,6 +15,18 @@ export interface ChatRepository {
     connectionId: string,
     limit: number,
   ) => Promise<ChatMessage[]>;
+  /*
+   * Everything said after a message the reader already has, oldest
+   * first. The whole point of the cursor is that an open thread asking
+   * every few seconds usually gets an empty array back — re-sending two
+   * hundred messages to discover that nothing happened is what makes
+   * polling expensive enough to have to do slowly.
+   */
+  listSince: (
+    connectionId: string,
+    afterId: string,
+    limit: number,
+  ) => Promise<ChatMessage[]>;
   send: (
     connectionId: string,
     senderId: string,

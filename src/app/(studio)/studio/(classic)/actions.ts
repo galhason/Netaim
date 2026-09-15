@@ -6,7 +6,6 @@ import { isSupportedLocale } from '@/config/locales';
 import { audit } from '@/features/access';
 import { saveComposerContent } from '@/features/composer/services/composer-save-service';
 import { addMedia, addPerson, createEvent } from '@/features/events';
-import { checkInByToken } from '@/features/registration';
 import { addSponsor, isSponsorTier } from '@/features/sponsors';
 import { actorFor, authorized } from '@/features/studio/services/studio-auth';
 import {
@@ -120,43 +119,6 @@ export const saveComposerAction = async (
   publishedEvent(slug);
   revalidatePath(`/studio/events/${slug}/composer`);
   return saved;
-};
-
-type CheckInOutcome = 'checkedin' | 'already' | 'blocked' | 'invalid';
-
-export const checkInAction = async (
-  token: string,
-): Promise<{ outcome: CheckInOutcome; name?: string }> => {
-  const actor = await actorFor('checkin:operate');
-  if (!actor) {
-    return { outcome: 'invalid' };
-  }
-  const trimmed = token.trim();
-  if (!trimmed) {
-    return { outcome: 'invalid' };
-  }
-  const result = await checkInByToken(trimmed);
-  if (!result) {
-    return { outcome: 'invalid' };
-  }
-  const name =
-    result.registration.participant.name ||
-    result.registration.participant.email;
-  if (result.attended) {
-    /*
-     * Only the admission itself is recorded, not every scan: a door
-     * operator sweeps continuously, and a trail of rejected scans would
-     * bury the entries that matter.
-     */
-    await audit(actor, 'registration.checkedIn', undefined, {
-      registrationId: result.registration.id,
-    });
-    return { outcome: 'checkedin', name };
-  }
-  if (result.registration.status === 'attended') {
-    return { outcome: 'already', name };
-  }
-  return { outcome: 'blocked', name };
 };
 
 export const addSponsorAction = async (formData: FormData) => {

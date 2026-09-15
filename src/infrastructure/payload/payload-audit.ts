@@ -86,7 +86,18 @@ export const payloadAuditRepository: AuditRepository = {
          * anonymised or removed — which is exactly why the name and
          * email are copied alongside it rather than joined at read time.
          */
-        actor: Number(entry.actor.id),
+        /*
+         * Not every act has a person behind it: the retention sweep is
+         * performed by a clock. The relationship is optional precisely
+         * for that case — an actor id that is not a participant number
+         * simply leaves it unset, and the denormalised name and email
+         * below still say who (or what) acted. Passing NaN here used to
+         * make the whole write fail silently, so the one act that most
+         * needs a trail — erasure — left none.
+         */
+        ...(Number.isFinite(Number(entry.actor.id))
+          ? { actor: Number(entry.actor.id) }
+          : {}),
         actorName: entry.actor.name,
         actorEmail: entry.actor.email,
         ...(entry.subject ? { subject: entry.subject } : {}),

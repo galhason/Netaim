@@ -8,7 +8,8 @@ export const registerFormSchema = z.object({
   dietary: z.string().trim().min(1).optional(),
   organization: z.string().trim().min(1).optional(),
   role: z.string().trim().min(1).optional(),
-  networkingOptIn: z.boolean().default(false),
+  /* PRD §5.1 — the directory question, answered at registration. */
+  directory: z.boolean(),
 });
 
 export type RegisterFormValues = z.infer<typeof registerFormSchema>;
@@ -25,7 +26,7 @@ export const parseRegisterForm = (data: FormData) =>
     phone: optional(data.get('phone')),
     organization: optional(data.get('organization')),
     role: optional(data.get('role')),
-    networkingOptIn: data.get('networkingOptIn') === 'on',
     accessibility: optional(data.get('accessibility')),
     dietary: optional(data.get('dietary')),
+    directory: data.get('directory') === 'on',
   });

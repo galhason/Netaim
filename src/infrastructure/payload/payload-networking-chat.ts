@@ -40,6 +40,28 @@ export const payloadChatRepository: ChatRepository = {
     return (result.docs as unknown as ChatRow[]).map(toMessage).reverse();
   },
 
+  listSince: async (connectionId, afterId, limit) => {
+    const after = Number(afterId);
+    if (!Number.isFinite(after)) {
+      return [];
+    }
+    const payload = await getSystemPayload();
+    const result = await payload.find({
+      collection: 'networking-chat-messages',
+      where: {
+        and: [
+          { connection: { equals: Number(connectionId) } },
+          { id: { greater_than: after } },
+        ],
+      },
+      sort: 'id',
+      limit,
+      depth: 0,
+      overrideAccess: true,
+    });
+    return (result.docs as unknown as ChatRow[]).map(toMessage);
+  },
+
   send: async (connectionId, senderId, body) => {
     const payload = await getSystemPayload();
     const connection = await payload

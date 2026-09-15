@@ -3,25 +3,34 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
-import { brandFor } from '@/config/brand';
-import { ConferenceFooter, SITE_NAV_LINKS } from '@/features/cinematic';
-import { ExperienceNav } from '@/features/conference';
 import {
+  ArrowOn,
   currentParticipant,
   getRegistrationSituation,
+  dietaryOptionsFor,
+  OnboardingLayout,
+  onboardingCls,
   PASSWORD_POLICY_TEXT,
+  pickCopy,
+  PromoPanel,
   PUBLIC_STATE_LABELS,
   REGISTRATION_MESSAGES,
 } from '@/features/registration';
-import { registerAction, passwordSignInAction } from './actions';
+import RegisterForm from './register-form';
+import VerifyForm from './verify-form';
+import StepProgress from './ui/step-progress';
 
 interface RegisterPageProps {
   params: Promise<{ locale: string; slug: string }>;
   searchParams: Promise<{
     outcome?: string;
     error?: string;
-    signinError?: string;
     with?: string;
+    /* The address awaiting its code — the second half of registration. */
+    verify?: string;
+    resent?: string;
+    undelivered?: string;
+    devCode?: string;
   }>;
 }
 
@@ -36,26 +45,6 @@ const isOutcome = (value: string): value is keyof typeof OUTCOME_COPY =>
 
 const OPEN_STATES = ['open', 'limited', 'waitlist'] as const;
 
-/* PRD §3.1: dietary preference is a fixed choice, never free text. */
-const DIETARY_OPTIONS = [
-  { he: 'רגיל', en: 'Regular' },
-  { he: 'צמחוני', en: 'Vegetarian' },
-  { he: 'טבעוני', en: 'Vegan' },
-  { he: 'ללא גלוטן', en: 'Gluten-free' },
-  { he: 'כשרות מהודרת', en: 'Kosher mehadrin' },
-] as const;
-
-/* Experience form primitives — the daylight counterpart to the lounge set. */
-const xLabel = 'mb-1.5 block text-sm font-medium text-[var(--x-ink)]';
-const xField =
-  'w-full rounded-2xl border border-[var(--x-line)] bg-[var(--x-surface)] px-4 py-3 text-[15px] text-[var(--x-ink)] outline-none transition-[box-shadow,border-color] duration-200 placeholder:text-[var(--x-faint)] focus:border-[var(--x-primary)] focus:ring-4 focus:ring-[var(--x-ring)]';
-const xPrimary =
-  'inline-flex min-h-12 items-center justify-center rounded-2xl bg-[var(--x-primary)] px-6 text-[15px] font-semibold text-white shadow-[0_10px_30px_rgba(110,86,207,0.28)] transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]';
-const xGhost =
-  'inline-flex min-h-11 items-center justify-center rounded-2xl border border-[var(--x-line)] bg-[var(--x-surface)] px-5 text-sm font-semibold text-[var(--x-ink)] transition-colors hover:border-[var(--x-primary)]';
-const cardCls =
-  'rounded-[var(--x-r-card)] border border-[var(--x-line)] bg-[var(--x-surface)] shadow-[var(--x-shadow)]';
-
 const STATE_TONE: Record<string, string> = {
   open: 'bg-[var(--x-ok-wash)] text-[var(--x-ok)]',
   limited: 'bg-[var(--x-warn-wash)] text-[var(--x-warn)]',
@@ -63,33 +52,69 @@ const STATE_TONE: Record<string, string> = {
   closed: 'bg-[#f0f1f4] text-[var(--x-soft)]',
 };
 
-const Shell = ({
+const { card: cardCls, primary: primaryCls, ghost: ghostCls } = onboardingCls;
+
+/*
+ * The page's own copy. Registration is one screen in the site's voice,
+ * so the words live here beside the markup rather than in the shared
+ * message table, which holds what the notifications and the form's
+ * field names say.
+ */
+const COPY = {
+  eyebrow: { he: 'הרשמה', en: 'Registration' },
+  haveAccount: { he: 'כבר יש לך חשבון?', en: 'Already have an account?' },
+  signIn: { he: 'התחברות', en: 'Sign in' },
+  forgot: { he: 'שכחתי סיסמה', en: 'Forgot your password?' },
+  communityLine: { he: 'נטעים מקשרת בין אנשים וארגונים', en: 'Netaim connects people and organisations' },
+  registered: { he: 'משתמשים כבר נרשמו לכנס', en: 'people have already registered' },
+  registeredOne: { he: 'משתמש כבר נרשם לכנס', en: 'person has already registered' },
+  verifyEyebrow: { he: 'שלב 3 מתוך 3', en: 'Step 3 of 3' },
+  doneEyebrow: { he: 'ההרשמה הושלמה', en: 'Registration complete' },
+} as const;
+
+const pick = pickCopy;
+
+const IconCheck = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="size-7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 12.5l4.5 4.5L19 7.5" />
+  </svg>
+);
+
+/* ---------- the community line: who is already here ---------- */
+
+/*
+ * Not the capacity. A count of free places and a progress bar read as
+ * pressure — "hurry" — and the person filling in a form does not need
+ * to be hurried. What they may want to know is that others are here:
+ * the platform's one-line promise, and how many have already signed
+ * up for this conference. The number is real; when nobody has yet,
+ * the line stands alone rather than announce a zero.
+ */
+const CommunityStrip = ({
   locale,
-  slug,
-  userName,
-  children,
+  registered,
 }: {
   locale: Locale;
-  slug: string;
-  userName?: string;
-  children: ReactNode;
+  registered: number;
 }) => (
-  <div className="experience min-h-dvh bg-[var(--x-bg)] text-[var(--x-ink)]">
-    <ExperienceNav
-      locale={locale}
-      links={SITE_NAV_LINKS}
-      brand={brandFor(locale)}
-      registerHref={`/${locale}/events/${slug}/register`}
-      meHref={`/${locale}/me`}
-      userName={userName}
-      {...(userName
-        ? { scheduleHref: `/${locale}/events/${slug}/my-activities` }
-        : {})}
-    />
-    {children}
-    <ConferenceFooter locale={locale} brand={brandFor(locale)} />
-  </div>
+  <>
+    <p className="text-[15px] font-semibold text-[var(--x-ink)]">
+      {pick(locale, COPY.communityLine)}
+    </p>
+    {registered > 0 ? (
+      <p className="mt-2 flex items-baseline gap-2">
+        <span className="font-display text-2xl font-extrabold tabular-nums text-[var(--x-primary)]">
+          {registered.toLocaleString(locale === 'he' ? 'he-IL' : 'en-GB')}
+        </span>
+        <span className="text-sm text-[var(--x-soft)]">
+          {registered === 1 ? pick(locale, COPY.registeredOne) : pick(locale, COPY.registered)}
+        </span>
+      </p>
+    ) : null}
+  </>
 );
+
+/* ---------- the page ---------- */
 
 const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
   const { locale, slug } = await params;
@@ -100,361 +125,327 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
   const lang = locale as Locale;
   const he = lang === 'he';
 
-  const { outcome, error, signinError, with: conflictWith } = await searchParams;
+  const {
+    outcome,
+    error,
+    with: conflictWith,
+    verify,
+    resent,
+    undelivered,
+    devCode,
+  } = await searchParams;
   const situation = await getRegistrationSituation(slug, lang);
   const participant = await currentParticipant().catch(() => null);
   const m = REGISTRATION_MESSAGES;
   const open =
     situation.settings &&
     (OPEN_STATES as readonly string[]).includes(situation.state);
-  const backHref = `/${lang}/events/${slug}`;
-  const backLabel = he ? '→ לעמוד הכנס' : '← Back to the conference';
+  /*
+   * The same screen in the other language, with the step carried along:
+   * a person waiting for a code who switches language stays on the code
+   * screen, not back at an empty form.
+   */
+  const other: Locale = lang === 'he' ? 'en' : 'he';
+  const carried = new URLSearchParams();
+  for (const [key, value] of Object.entries({
+    outcome,
+    error,
+    with: conflictWith,
+    verify,
+    resent,
+    undelivered,
+    devCode,
+  })) {
+    if (value) carried.set(key, value);
+  }
+  const query = carried.toString();
+  const switchHref = `/${other}/events/${slug}/register${query ? `?${query}` : ''}`;
 
+  const stateLabel = PUBLIC_STATE_LABELS[situation.state][lang];
+  const stateTone: string = STATE_TONE[situation.state] ?? STATE_TONE.closed ?? '';
+
+  /*
+   * The layout every state shares: a heading column and a supporting
+   * column, form-side first in document order so it leads in both
+   * reading directions and sits alone at the top on a phone.
+   */
+  const Layout = ({
+    eyebrow,
+    title,
+    intro,
+    children,
+  }: {
+    eyebrow: string;
+    title: string;
+    intro: string;
+    children: ReactNode;
+  }) => (
+    <OnboardingLayout
+      locale={lang}
+      switchHref={switchHref}
+      eyebrow={eyebrow}
+      title={title}
+      intro={intro}
+      aside={
+        <PromoPanel locale={lang}>
+          <CommunityStrip
+            locale={lang}
+            registered={situation.capacity?.confirmed ?? 0}
+          />
+        </PromoPanel>
+      }
+    >
+      {children}
+    </OnboardingLayout>
+  );
+
+  /* ---- done ---- */
   if (outcome && isOutcome(outcome)) {
     return (
-      <Shell locale={lang} slug={slug} userName={participant?.name ?? undefined}>
-        <main className="mx-auto max-w-xl px-6 pb-24 pt-28 md:pt-32">
-          <div className={`${cardCls} p-8 text-center`}>
-            <span
-              aria-hidden="true"
-              className="mx-auto grid size-14 place-items-center rounded-full bg-[var(--x-ok-wash)] text-2xl text-[var(--x-ok)]"
-            >
-              ✓
+      <Layout
+        eyebrow={pick(lang, COPY.doneEyebrow)}
+        title={m.public.heading[lang]}
+        intro={m.public.intro[lang]}
+      >
+        <section className={`${cardCls} p-7 md:p-10`}>
+          <StepProgress locale={lang} current={4} />
+          <div className="mt-10 flex flex-col items-center text-center">
+            <span className="grid size-16 place-items-center rounded-full bg-[var(--x-ok-wash)] text-[var(--x-ok)]">
+              <IconCheck />
             </span>
-            <h1 className="mt-5 font-display text-3xl font-extrabold tracking-tight text-[var(--x-ink)]">
+            <h2 className="mt-5 font-display text-2xl font-bold text-[var(--x-ink)]">
               {OUTCOME_COPY[outcome].heading[lang]}
-            </h1>
-            <p className="mt-3 text-[15px] text-[var(--x-soft)]">
+            </h2>
+            <p className="mt-2 max-w-md text-[15px] leading-relaxed text-[var(--x-soft)]">
               {OUTCOME_COPY[outcome].text[lang]}
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-              <Link
-                href={`/${lang}/events/${slug}/workshops`}
-                className={xPrimary}
-              >
+              <Link href={`/${lang}/events/${slug}/workshops`} className={primaryCls}>
                 {m.toWorkshops[lang]}
               </Link>
-              <Link href={`/${lang}/me`} className={xGhost}>
+              <Link href={`/${lang}/me`} className={ghostCls}>
                 {m.toPersonalArea[lang]}
               </Link>
             </div>
           </div>
-        </main>
-      </Shell>
+        </section>
+      </Layout>
     );
   }
 
-  const cap = situation.capacity;
-  const showBar = open && cap.limit != null && cap.limit > 0;
-  const pct = showBar
-    ? Math.min(100, Math.round((cap.confirmed / (cap.limit as number)) * 100))
-    : 0;
+  /* ---- step three: the address answers ---- */
+  if (verify && open) {
+    return (
+      <Layout
+        eyebrow={pick(lang, COPY.verifyEyebrow)}
+        title={m.public.heading[lang]}
+        intro={m.public.intro[lang]}
+      >
+        <section className={`${cardCls} p-6 md:p-9`}>
+          <StepProgress locale={lang} current={3} />
+          <div className="mx-auto mt-9 max-w-md">
+            <VerifyForm
+              locale={lang}
+              slug={slug}
+              email={verify}
+              error={error ?? undefined}
+              resent={Boolean(resent)}
+              undelivered={Boolean(undelivered)}
+              devCode={devCode}
+              labels={{
+                title: he ? 'אימות כתובת האימייל' : 'Verify your email',
+                sentTo: he ? 'שלחנו קוד בן 6 ספרות אל' : 'We sent a 6-digit code to',
+                validFor: he
+                  ? 'הקוד תקף ל-15 דקות. ההרשמה תושלם רק אחרי שתזינו אותו.'
+                  : 'It is valid for 15 minutes. Registration completes once you enter it.',
+                codeLabel: he ? 'קוד האימות' : 'Verification code',
+                digit: he ? 'ספרה' : 'Digit',
+                submit: he ? 'אימות וסיום ההרשמה' : 'Verify and finish',
+                submitting: he ? 'מאמתים…' : 'Verifying…',
+                resendTitle: he ? 'הקוד לא הגיע?' : "Code didn't arrive?",
+                resendHint: he
+                  ? 'בדקו גם בתיקיית הספאם. אם יש טעות בכתובת — תקנו אותה כאן, והפרטים שכבר מילאתם יישמרו.'
+                  : 'Check your spam folder too. If the address is wrong, correct it here — the details you already filled in are kept.',
+                resend: he ? 'שלחו קוד מחדש' : 'Send a new code',
+                resendIn: he ? 'שליחה חוזרת בעוד' : 'Resend in',
+                addressLabel: he ? 'כתובת המייל' : 'Email address',
+                startOver: he ? 'התחלה מחדש' : 'Start over',
+                resent: he ? 'שלחנו קוד חדש.' : 'A new code is on its way.',
+                undelivered: he
+                  ? 'לא הצלחנו לאשר שההודעה נשלחה. אם הקוד לא מגיע תוך דקה, נסו לשלוח שוב.'
+                  : 'We could not confirm the message went out. If nothing arrives within a minute, send it again.',
+                devCode: he ? 'סביבת פיתוח — הקוד הוא' : 'Development only — the code is',
+                errors: {
+                  wrong: he
+                    ? 'הקוד שגוי. בדקו שוב את ההודעה — יש לכם עוד ניסיונות.'
+                    : 'That code is wrong. Check the message again — you have more tries.',
+                  tooMany: he
+                    ? 'יותר מדי ניסיונות. נסו שוב בעוד שעה, או התחילו מחדש.'
+                    : 'Too many attempts. Try again in an hour, or start over.',
+                },
+              }}
+            />
+          </div>
+        </section>
+      </Layout>
+    );
+  }
 
-  const perks: { he: string; en: string }[] = [
-    { he: 'אישור מיידי במייל', en: 'Instant email confirmation' },
-    { he: 'בחירת הרצאות וסדנאות', en: 'Pick talks and workshops' },
-    { he: 'אזור אישי עם הלו״ז שלך', en: 'A personal area with your schedule' },
-  ];
-
+  /* ---- steps one and two ---- */
   return (
-    <Shell locale={lang} slug={slug} userName={participant?.name ?? undefined}>
-      <main className="mx-auto max-w-5xl px-6 pb-24 pt-28 md:px-10 md:pt-32">
-        <Link
-          href={backHref}
-          className="text-sm font-medium text-[var(--x-soft)] transition-colors hover:text-[var(--x-primary)]"
-        >
-          {backLabel}
-        </Link>
-        <header className="mt-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--x-primary)]">
-            {he ? 'הרשמה' : 'Registration'}
-          </p>
-          <h1 className="mt-2 font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-[var(--x-ink)] md:text-5xl">
-            {m.public.heading[lang]}
-          </h1>
-          <p className="mt-3 max-w-2xl text-lg text-[var(--x-soft)]">
-            {open
-              ? m.public.intro[lang]
-              : PUBLIC_STATE_LABELS[situation.state][lang]}
-          </p>
-        </header>
+    <Layout
+      eyebrow={pick(lang, COPY.eyebrow)}
+      title={m.public.heading[lang]}
+      intro={open ? m.public.intro[lang] : stateLabel}
+    >
+      <section className={`${cardCls} p-6 md:p-9`}>
+        {open ? (
+          <>
+            {/*
+              * Sign-in belongs to /me, where it already lives. Here it
+              * is one line, above the form and subordinate to it — a
+              * returning guest finds it, a new one is not distracted by
+              * a second card of fields.
+              */}
+            <p className="mb-6 flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-sm text-[var(--x-soft)]">
+              <span>{pick(lang, COPY.haveAccount)}</span>
+              <Link
+                href={`/${lang}/me`}
+                className="inline-flex items-center gap-1 font-semibold text-[var(--x-primary)] underline-offset-4 hover:underline"
+              >
+                {pick(lang, COPY.signIn)}
+                <ArrowOn />
+              </Link>
+              <span aria-hidden="true" className="text-[var(--x-line-strong)]">·</span>
+              <Link
+                href={`/${lang}/me?view=reset`}
+                className="underline-offset-4 hover:text-[var(--x-primary)] hover:underline"
+              >
+                {pick(lang, COPY.forgot)}
+              </Link>
+            </p>
 
-        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[1.5fr_1fr] lg:items-start">
-          {/* Form */}
-          {open ? (
-            <form
-              action={registerAction}
-              className={`${cardCls} order-2 flex flex-col gap-5 p-6 md:p-8 lg:order-1`}
+            <RegisterForm
+              locale={lang}
+              slug={slug}
+              collectAccessibility={Boolean(situation.settings?.collectAccessibility)}
+              dietaryOptions={dietaryOptionsFor(lang)}
+              initialError={error}
+              initialConflictWith={conflictWith}
+              labels={{
+                firstName: he ? 'שם פרטי' : 'First name',
+                lastName: he ? 'שם משפחה' : 'Last name',
+                email: m.public.email[lang],
+                phone: m.public.phone[lang],
+                password: he ? 'סיסמה' : 'Password',
+                passwordConfirm: he ? 'אימות סיסמה' : 'Confirm password',
+                passwordHint: PASSWORD_POLICY_TEXT[lang],
+                organization: m.public.organization[lang],
+                role: m.public.role[lang],
+                dietary: m.public.dietary[lang],
+                dietaryPlaceholder: he ? 'בחרו העדפה' : 'Choose a preference',
+                accessibility: m.public.accessibility[lang],
+                accessibilityHint: he
+                  ? 'לא חובה. נשתמש בזה רק כדי להתאים את הכנס עבורכם.'
+                  : 'Optional. We use this only to make the conference work for you.',
+                directoryQuestion: m.public.directoryQuestion[lang],
+                directoryHint: m.public.directoryHint[lang],
+                stepOneTitle: he ? 'פרטים אישיים' : 'Personal details',
+                stepOneIntro: he ? 'נשמח להכיר אותך קצת יותר.' : 'A little about you.',
+                stepTwoTitle: he ? 'הארגון והמוסד' : 'Your organisation',
+                stepTwoIntro: he
+                  ? 'מאיפה אתם מגיעים, ומה נכין לכם.'
+                  : 'Where you come from, and what to prepare for you.',
+                continue: he ? 'המשך' : 'Continue',
+                back: he ? 'חזרה' : 'Back',
+                submit: he ? 'שליחת קוד אימות' : 'Send verification code',
+                submitting: he ? 'שולחים…' : 'Sending…',
+                submitHint: he
+                  ? 'נשלח קוד בן 6 ספרות לכתובת שמילאתם. ההרשמה תושלם אחרי שתזינו אותו.'
+                  : 'A 6-digit code goes to the address you gave. Registration completes once you enter it.',
+                trust: he
+                  ? 'המידע שלכם בטוח ומאובטח אצלנו'
+                  : 'Your information is safe and secure with us',
+                noticeBefore: he
+                  ? 'בשליחת הטופס אתם מאשרים את '
+                  : 'By submitting you accept the ',
+                noticeTerms: he ? 'תנאי השימוש' : 'terms of use',
+                noticeBetween: he ? ' ואת ' : ' and the ',
+                noticePrivacy: he ? 'מדיניות הפרטיות' : 'privacy policy',
+                noticeAfter: he
+                  ? ', ומאשרים שקראתם איזה מידע נאסף, מי רואה אותו וכמה זמן הוא נשמר.'
+                  : ', and confirm you have read what is collected, who can see it and how long it is kept.',
+                conflictBefore: he ? 'הכנס מתנגש בזמן עם' : 'This conference clashes with',
+                conflictAfter: he
+                  ? 'כדי להירשם, בטלו קודם את ההרשמה החופפת באזור האישי.'
+                  : 'To register, first cancel the overlapping registration in your space.',
+                existsSignIn: he ? 'להתחברות' : 'Sign in',
+                existsReset: he ? 'שכחתי סיסמה' : 'Forgot password',
+                checking: he ? 'בודקים…' : 'Checking…',
+                errors: {
+                  invalid: m.public.invalid[lang],
+                  closed: m.public.closed[lang],
+                  exists: he
+                    ? 'כתובת הדוא״ל הזו כבר רשומה במערכת. אפשר להיכנס עם הסיסמה שלכם, ומשם להצטרף לכנס.'
+                    : 'This email address is already registered. Sign in with your password and join the conference from your space.',
+                  conflict: '',
+                  weakPassword: he
+                    ? `הסיסמה חלשה מדי. ${PASSWORD_POLICY_TEXT.he}`
+                    : `Password too weak. ${PASSWORD_POLICY_TEXT.en}`,
+                  passwordMismatch: he
+                    ? 'שתי הסיסמאות אינן זהות. הקלידו אותן שוב.'
+                    : 'The two passwords do not match. Please type them again.',
+                  expired: he
+                    ? 'הקוד פג. מלאו את הפרטים שוב ונשלח קוד חדש.'
+                    : 'The code expired. Fill in the details again and we will send a new one.',
+                  spent: he
+                    ? 'יותר מדי ניסיונות שגויים. מטעמי אבטחה ההרשמה בוטלה — אפשר להתחיל מחדש.'
+                    : 'Too many wrong codes. For safety that registration was discarded — you can start again.',
+                  tooManyCodes: he
+                    ? 'ביקשתם קודים רבים מדי לכתובת הזו. נסו שוב בעוד שעה.'
+                    : 'Too many codes were requested for that address. Try again in an hour.',
+                },
+                fieldErrors: {
+                  required: he ? 'שדה חובה' : 'Required',
+                  email: he ? 'כתובת אימייל לא תקינה' : 'That email address is not valid',
+                  emailTaken: he
+                    ? 'הכתובת הזו כבר רשומה'
+                    : 'This address is already registered',
+                  phone: he ? 'מספר טלפון לא תקין' : 'That phone number is not valid',
+                  password: he
+                    ? `הסיסמה לא עומדת בדרישות. ${PASSWORD_POLICY_TEXT.he}`
+                    : `Password does not meet the policy. ${PASSWORD_POLICY_TEXT.en}`,
+                  passwordMismatch: he
+                    ? 'הסיסמאות אינן זהות'
+                    : 'The passwords do not match',
+                },
+              }}
+            />
+          </>
+        ) : (
+          <div className="flex flex-col items-start gap-4">
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-[var(--x-r-pill)] px-3 py-1 text-xs font-semibold ${stateTone}`}
             >
-              <input type="hidden" name="slug" value={slug} />
-              <input type="hidden" name="locale" value={lang} />
-
-              <label>
-                <span className={xLabel}>{m.public.name[lang]} *</span>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  autoComplete="name"
-                  className={xField}
-                />
-              </label>
-              <label>
-                <span className={xLabel}>{m.public.email[lang]} *</span>
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  autoComplete="email"
-                  className={xField}
-                />
-              </label>
-              <label>
-                <span className={xLabel}>{he ? 'סיסמה' : 'Password'} *</span>
-                <input
-                  type="password"
-                  name="password"
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                  className={xField}
-                />
-                <span className="mt-1 block text-xs text-[var(--x-faint)]">
-                  {PASSWORD_POLICY_TEXT[lang]}
-                </span>
-              </label>
-              <label>
-                <span className={xLabel}>{m.public.phone[lang]} *</span>
-                <input
-                  type="tel"
-                  name="phone"
-                  required
-                  autoComplete="tel"
-                  className={xField}
-                />
-              </label>
-
-              <div className="grid gap-5 sm:grid-cols-2">
-                <label>
-                  <span className={xLabel}>
-                    {m.public.organization[lang]} *
-                  </span>
-                  <input
-                    type="text"
-                    name="organization"
-                    required
-                    className={xField}
-                  />
-                </label>
-                <label>
-                  <span className={xLabel}>{m.public.role[lang]} *</span>
-                  <input
-                    type="text"
-                    name="role"
-                    required
-                    className={xField}
-                  />
-                </label>
-              </div>
-
-              <label>
-                <span className={xLabel}>{m.public.dietary[lang]} *</span>
-                <select
-                  name="dietary"
-                  required
-                  defaultValue=""
-                  className={xField}
-                >
-                  <option value="" disabled>
-                    {he ? 'בחרו העדפה' : 'Choose a preference'}
-                  </option>
-                  {DIETARY_OPTIONS.map((option) => (
-                    <option key={option.en} value={option[lang]}>
-                      {option[lang]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              {situation.settings?.collectAccessibility ? (
-                <label>
-                  <span className={xLabel}>
-                    {m.public.accessibility[lang]}
-                  </span>
-                  <textarea
-                    name="accessibility"
-                    rows={2}
-                    className={`${xField} resize-none`}
-                  />
-                </label>
-              ) : null}
-
-              <label className="flex items-start gap-3 rounded-2xl bg-[var(--x-raise)] p-4 text-sm">
-                <input
-                  type="checkbox"
-                  name="networkingOptIn"
-                  className="mt-0.5 size-4 accent-[var(--x-primary)]"
-                />
-                <span className="text-[var(--x-soft)]">
-                  {m.public.networkingOptIn[lang]}
-                </span>
-              </label>
-
-              {error ? (
-                <p className="rounded-2xl border border-[var(--x-warn)]/30 bg-[var(--x-warn-wash)] px-4 py-3 text-sm text-[var(--x-warn)]">
-                  {error === 'invalid' ? (
-                    m.public.invalid[lang]
-                  ) : error === 'conflict' ? (
-                    <>
-                      {he
-                        ? 'הכנס מתנגש בזמן עם'
-                        : 'This conference clashes with'}{' '}
-                      <strong>{conflictWith}</strong>.{' '}
-                      {he
-                        ? 'כדי להירשם, בטלו קודם את ההרשמה החופפת באזור האישי.'
-                        : 'To register, first cancel the overlapping registration in your space.'}
-                    </>
-                  ) : error === 'weakPassword' ? (
-                    he
-                      ? `הסיסמה חלשה מדי. ${PASSWORD_POLICY_TEXT.he}`
-                      : `Password too weak. ${PASSWORD_POLICY_TEXT.en}`
-                  ) : (
-                    m.public.closed[lang]
-                  )}
-                </p>
-              ) : null}
-
-              <button type="submit" className={`${xPrimary} mt-1`}>
-                {m.public.submit[lang]}
-              </button>
-            </form>
-          ) : null}
-
-          {/* Aside — live state, capacity, what you get */}
-          <aside
-            className={`${open ? 'order-1 lg:order-2' : ''} flex flex-col gap-4 lg:sticky lg:top-24`}
-          >
-            <div className={`${cardCls} p-6`}>
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-[var(--x-r-pill)] px-3 py-1 text-xs font-semibold ${
-                  STATE_TONE[situation.state] ?? STATE_TONE.closed
-                }`}
-              >
-                <span
-                  aria-hidden="true"
-                  className="inline-block size-1.5 rounded-full bg-current"
-                />
-                {PUBLIC_STATE_LABELS[situation.state][lang]}
-              </span>
-
-              {showBar ? (
-                <div className="mt-5">
-                  <div className="flex items-baseline justify-between">
-                    <span className="font-display text-2xl font-extrabold tabular-nums text-[var(--x-ink)]">
-                      {cap.available ?? 0}
-                    </span>
-                    <span className="text-xs text-[var(--x-faint)]">
-                      {he ? 'מקומות פנויים' : 'places left'}
-                    </span>
-                  </div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--x-raise)]">
-                    <div
-                      className="h-full rounded-full bg-[var(--x-primary)] transition-[width] duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <p className="mt-2 text-xs text-[var(--x-faint)]">
-                    {he
-                      ? `${cap.confirmed} מתוך ${cap.limit} כבר נרשמו`
-                      : `${cap.confirmed} of ${cap.limit} already registered`}
-                  </p>
-                </div>
-              ) : null}
-
-              {open ? (
-                <ul className="mt-5 flex flex-col gap-2.5 border-t border-[var(--x-line)] pt-5">
-                  {perks.map((perk) => (
-                    <li
-                      key={perk.en}
-                      className="flex items-center gap-2.5 text-sm text-[var(--x-soft)]"
-                    >
-                      <span
-                        aria-hidden="true"
-                        className="grid size-5 flex-none place-items-center rounded-full bg-[var(--x-ok-wash)] text-[11px] font-bold text-[var(--x-ok)]"
-                      >
-                        ✓
-                      </span>
-                      {perk[lang]}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-
-            {/* Returning guest sign-in */}
-            <div className={`${cardCls} p-6`}>
-              <p className="text-sm font-semibold text-[var(--x-ink)]">
-                {he ? 'כבר יש לך חשבון?' : 'Already have an account?'}
-              </p>
-              <p className="mt-1 text-sm text-[var(--x-soft)]">
-                {he
-                  ? 'התחברו עם האימייל והסיסמה שלכם.'
-                  : 'Sign in with your email and password.'}
-              </p>
-              <form
-                action={passwordSignInAction}
-                className="mt-4 flex flex-col gap-3"
-              >
-                <input type="hidden" name="slug" value={slug} />
-                <input type="hidden" name="locale" value={lang} />
-                <label>
-                  <span className={xLabel}>{m.public.email[lang]}</span>
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    autoComplete="email"
-                    className={xField}
-                  />
-                </label>
-                <label>
-                  <span className={xLabel}>{he ? 'סיסמה' : 'Password'}</span>
-                  <input
-                    type="password"
-                    name="password"
-                    required
-                    autoComplete="current-password"
-                    className={xField}
-                  />
-                </label>
-                {signinError ? (
-                  <p className="rounded-2xl border border-[var(--x-warn)]/30 bg-[var(--x-warn-wash)] px-3 py-2 text-xs text-[var(--x-warn)]">
-                    {signinError === 'wrong'
-                      ? he
-                        ? 'אימייל או סיסמה שגויים.'
-                        : 'Wrong email or password.'
-                      : signinError === 'locked'
-                        ? he
-                          ? 'יותר מדי ניסיונות. נסו שוב מאוחר יותר.'
-                          : 'Too many attempts. Try again later.'
-                        : signinError === 'noPassword'
-                          ? he
-                            ? 'לחשבון הזה אין עדיין סיסמה — הירשמו כדי ליצור אחת.'
-                            : 'This account has no password yet — register to create one.'
-                          : he
-                            ? 'לא הצלחנו להתחבר. בדקו את הפרטים.'
-                            : 'Could not sign in. Check your details.'}
-                  </p>
-                ) : null}
-                <button type="submit" className={xGhost}>
-                  {he ? 'התחברות' : 'Sign in'}
-                </button>
-              </form>
-            </div>
-          </aside>
-        </div>
-      </main>
-    </Shell>
+              <span aria-hidden="true" className="inline-block size-1.5 rounded-full bg-current" />
+              {stateLabel}
+            </span>
+            <p className="text-[15px] leading-relaxed text-[var(--x-soft)]">
+              {m.public.closed[lang]}
+            </p>
+            {participant ? (
+              <Link href={`/${lang}/me`} className={ghostCls}>
+                {m.toPersonalArea[lang]}
+              </Link>
+            ) : (
+              <Link href={`/${lang}/me`} className={ghostCls}>
+                {pick(lang, COPY.signIn)}
+              </Link>
+            )}
+          </div>
+        )}
+      </section>
+    </Layout>
   );
 };
 

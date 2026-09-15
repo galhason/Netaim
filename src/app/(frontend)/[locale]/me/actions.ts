@@ -5,9 +5,7 @@ import { redirect } from 'next/navigation';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { joinConference, leaveConference } from '@/features/account';
 import {
-  clearSession,
   completeTotpSignIn,
-  openAccountWithPassword,
   requestAccountLink,
   signInWithPassword,
 } from '@/features/registration';
@@ -65,31 +63,6 @@ export const totpSignInAction = async (formData: FormData) => {
   redirect(`/${locale}/me?state=wrong`);
 };
 
-export const openAccountAction = async (formData: FormData) => {
-  const locale = readLocale(formData);
-  const email = String(formData.get('email') ?? '')
-    .trim()
-    .toLowerCase();
-  const name = String(formData.get('name') ?? '').trim();
-  const password = String(formData.get('password') ?? '');
-  /* The language chosen on the form is the account's language from now on. */
-  const requested = String(formData.get('preferredLocale') ?? '');
-  const preferred = isSupportedLocale(requested) ? requested : locale;
-  if (!email || !name || !password) {
-    redirect(`/${locale}/me?state=missing&view=open`);
-  }
-  const result = await openAccountWithPassword(
-    email,
-    name,
-    password,
-    preferred,
-  );
-  if (!result.ok) {
-    redirect(`/${locale}/me?state=${result.reason}&view=open`);
-  }
-  redirect(`/${preferred}/me`);
-};
-
 /*
  * Requests a platform sign-in link. The reply never reveals whether an
  * account exists; only a first-time visitor without a name is told a name
@@ -100,26 +73,51 @@ export const requestAccountLinkAction = async (formData: FormData) => {
   const email = String(formData.get('email') ?? '')
     .trim()
     .toLowerCase();
-  const name = String(formData.get('name') ?? '').trim();
   if (!email) {
-    redirect(`/${locale}/me?state=invalid`);
+    redirect(`/${locale}/me?view=reset&state=invalid`);
   }
 
-  const result = await requestAccountLink(email, name || null, locale);
+  /*
+   * Recovery only. `requestAccountLink` will open an account when handed
+   * a name, and this action used to read one out of the form — which
+   * meant that posting a `name` field alongside the address created a
+   * full account here, quietly, with none of the questions the
+   * conference asks. The form never showed that field, but a form is
+   * not a gate: what reaches a server action is whatever was sent.
+   *
+   * Passing null makes this endpoint able to do one thing: mail a
+   * sign-in link to an account that already exists.
+   */
+  const result = await requestAccountLink(email, null, locale);
   const development = process.env.NODE_ENV !== 'production';
 
   if (!result.ok) {
+    /*
+     * An address with no account gets the same answer as one with:
+     * "if that email exists, a link is on its way". Saying "first time
+     * here?" instead turned this box into a way to ask the platform
+     * whether any given person has an account.
+     */
+    if (result.reason === 'needName') {
+      redirect(`/${locale}/me?view=reset&state=sent`);
+    }
     const detail =
       development && result.detail
         ? `&detail=${encodeURIComponent(result.detail)}`
         : '';
-    redirect(`/${locale}/me?state=${result.reason}${detail}`);
+    redirect(`/${locale}/me?view=reset&state=${result.reason}${detail}`);
   }
 
   const devLink = development
     ? `&link=${encodeURIComponent(result.link)}`
     : '';
-  redirect(`/${locale}/me?state=sent${devLink}`);
+  /*
+   * Every outcome of this form stays inside the recovery flow. It used
+   * to answer on the sign-in screen, which meant the person who had
+   * just asked for a link was looking at a password field again, with
+   * the answer to their request as a note above it.
+   */
+  redirect(`/${locale}/me?view=reset&state=sent${devLink}`);
 };
 
 export const joinConferenceAction = async (formData: FormData) => {
@@ -152,8 +150,9 @@ export const leaveConferenceAction = async (formData: FormData) => {
   revalidatePath(`/${locale}/me`);
 };
 
-export const signOutAction = async (formData: FormData) => {
-  const locale = readLocale(formData);
-  await clearSession();
-  redirect(`/${locale}`);
-};
+/*
+ * Sign-out lives with the account feature now (`signOutAction` in
+ * `@/features/account`), because the site navigation and the profile
+ * offer it too; the account screen imports it from there so every
+ * "sign out" behaves the same way.
+ */

@@ -13,6 +13,13 @@ interface ConsoleShellProps {
   userName: string;
   breadcrumb: ReactNode;
   actions?: ReactNode;
+  /*
+   * Open safety reports, shown as a badge on the rail. Passed in by the
+   * pages the team lands on rather than read here: the shell renders on
+   * every console screen, and a count nobody asked for would put a
+   * database read behind each one.
+   */
+  openReports?: number;
   children: ReactNode;
 }
 
@@ -51,10 +58,11 @@ const ConsoleShell = ({
   userName,
   breadcrumb,
   actions,
+  openReports,
   children,
 }: ConsoleShellProps) => (
   <div className="console flex min-h-dvh flex-col bg-[var(--c-void)] font-body text-[var(--c-text)] md:grid md:grid-cols-[200px_1fr]">
-    <ConsoleSidebar locale={locale} />
+    <ConsoleSidebar locale={locale} openReports={openReports ?? 0} />
 
     <div className="flex min-h-0 min-w-0 flex-col">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-[var(--c-line)] px-5 py-3">

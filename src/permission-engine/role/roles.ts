@@ -20,7 +20,6 @@ export const ROLE_CAPABILITIES: Record<Role, readonly Capability[]> = {
     'registrations:manage',
     'participants:read',
     'participants:manage',
-    'checkin:operate',
     'content:read',
   ],
   producer: [
@@ -29,11 +28,11 @@ export const ROLE_CAPABILITIES: Record<Role, readonly Capability[]> = {
     'registrations:manage',
     'participants:read',
     'participants:manage',
-    'checkin:operate',
     'content:read',
   ],
   editor: ['experiences:manage', 'events:manage', 'content:read'],
-  door: ['checkin:operate', 'participants:read'],
+  /* Kept as a stored role; with scanning withdrawn it only reads the list. */
+  door: ['participants:read'],
   viewer: ['content:read'],
 };
 

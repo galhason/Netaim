@@ -6,7 +6,6 @@ import {
   buildConferenceDescriptor,
   getConferenceExperience,
 } from '@/features/cinematic';
-import { ConferenceSpotlight } from '@/features/notifications';
 import { currentParticipant, myAreaHref } from '@/features/registration';
 import '@/scenes';
 
@@ -44,7 +43,6 @@ const EventPage = async ({ params }: EventPageProps) => {
 
   return (
     <>
-      <ConferenceSpotlight slug={slug} locale={locale} />
       <ExperienceStage
         experience={buildConferenceDescriptor(experience, locale)}
         locale={locale}

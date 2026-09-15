@@ -1,8 +1,9 @@
-import type {
-  ChannelAdapter,
-  DeliveryStatus,
-  OutboxMessage,
-  Recipient,
+import {
+  htmlFor,
+  type ChannelAdapter,
+  type DeliveryStatus,
+  type OutboxMessage,
+  type Recipient,
 } from '@/notification-engine';
 import { createLogger } from '@/shared';
 
@@ -64,6 +65,7 @@ type Transport = {
     to: string;
     subject: string;
     text: string;
+    html?: string;
     replyTo?: string;
   }) => Promise<unknown>;
 };
@@ -129,7 +131,14 @@ export const smtpChannel: ChannelAdapter = {
         from: config.from,
         to: recipient.email,
         subject: message.subject,
+        /*
+         * Both parts, always. The text is the message; the HTML is the
+         * same message wearing the platform's clothes. A client that
+         * refuses HTML, a screen reader, and a person who reads mail in
+         * plain text all get the full content from `text` alone.
+         */
         text: message.body,
+        html: htmlFor(message),
         ...(config.replyTo ? { replyTo: config.replyTo } : {}),
       });
       log.info('sent', { type: message.type, eventSlug: message.eventSlug });

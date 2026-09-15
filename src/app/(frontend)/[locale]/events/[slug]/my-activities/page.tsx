@@ -41,7 +41,7 @@ const MySchedulePage = async ({ params, searchParams }: Props) => {
 
   if (!participant) {
     return (
-      <main className="mx-auto flex max-w-lg flex-col items-center gap-4 px-6 py-24 text-center">
+      <main id="main-content" className="mx-auto flex max-w-lg flex-col items-center gap-4 px-6 py-24 text-center">
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-[var(--x-ink)]">
           {SIGN_IN.title[lang]}
         </h1>

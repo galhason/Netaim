@@ -11,6 +11,7 @@ import {
 } from '@/networking-engine';
 import type { MeetingSummary, MyMeeting } from '../types/meeting';
 import { noticeMeetingProposed } from './networking-notices';
+import { blockedBetween } from './safety-service';
 
 export const proposeMeeting = async (
   slug: string,
@@ -44,6 +45,9 @@ export const proposeMeeting = async (
     !connection ||
     (connection.status !== 'accepted' && connection.status !== 'muted')
   ) {
+    return null;
+  }
+  if (await blockedBetween(me.id, guestId)) {
     return null;
   }
   const guest = await participantSessionRepository

@@ -39,10 +39,19 @@ const LABELS: Record<AuditAction, Record<Locale, string>> = {
   },
   'participant.deleted': { he: 'חשבון נמחק', en: 'Account deleted' },
 
+  'safety.reportHandled': {
+    he: 'דיווח בטיחות טופל',
+    en: 'Safety report handled',
+  },
+
   'grant.granted': { he: 'הרשאה הוענקה', en: 'Role granted' },
   'grant.revoked': { he: 'הרשאה נשללה', en: 'Role revoked' },
 
   'communication.broadcast': { he: 'הודעה נשלחה', en: 'Announcement sent' },
+  'privacy.retentionPurge': {
+    he: 'מחיקת נתונים לפי מדיניות שמירה',
+    en: 'Retention purge',
+  },
 };
 
 /*

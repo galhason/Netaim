@@ -22,7 +22,7 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isProduction ? '' : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' blob: data: https://i.pravatar.cc https://picsum.photos${mediaOrigin ? ` ${mediaOrigin}` : ''}`,
+  `img-src 'self' blob: data:${mediaOrigin ? ` ${mediaOrigin}` : ''}`,
   "font-src 'self' data:",
   `connect-src 'self'${mediaOrigin ? ` ${mediaOrigin}` : ''}${isProduction ? '' : ' ws: wss:'}`,
   "media-src 'self'",
@@ -70,26 +70,20 @@ const nextConfig: NextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
     /*
-     * Configured media storage, plus the demo fixture hosts that five
-     * services still fall back to when CMS content carries no photograph
-     * (cinematic-service, opening-service, platform-lounge and the two
-     * demo constant files). Removing these hosts requires deciding what
-     * a portrait without a photograph should render instead — a product
-     * decision, tracked separately. Until then they are the reason a
-     * real event can still show a fabricated face.
+     * Configured media storage only. The stock-photo fixture hosts were
+     * removed in the production compliance pass: scenery now falls back
+     * to a local frame and a portrait without a photograph renders no
+     * portrait at all, so no real name can appear beside an invented
+     * face and no page reaches a third-party image host.
      */
-    remotePatterns: [
-      ...(mediaOrigin
-        ? [
-            {
-              protocol: 'https' as const,
-              hostname: new URL(mediaOrigin).hostname,
-            },
-          ]
-        : []),
-      { protocol: 'https' as const, hostname: 'i.pravatar.cc' },
-      { protocol: 'https' as const, hostname: 'picsum.photos' },
-    ],
+    remotePatterns: mediaOrigin
+      ? [
+          {
+            protocol: 'https' as const,
+            hostname: new URL(mediaOrigin).hostname,
+          },
+        ]
+      : [],
   },
   headers: () =>
     Promise.resolve([

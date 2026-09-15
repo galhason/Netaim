@@ -533,7 +533,7 @@ const MyScheduleDashboard = ({
 
   return (
     <ToastProvider>
-      <main className="mx-auto max-w-6xl px-6 pb-24 pt-8 md:px-10 md:pb-16 md:pt-10">
+      <main id="main-content" className="mx-auto max-w-6xl px-6 pb-24 pt-8 md:px-10 md:pb-16 md:pt-10">
         <ScheduleHero
           locale={locale}
           eventTitle={eventTitle}

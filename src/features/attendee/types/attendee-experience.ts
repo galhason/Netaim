@@ -76,24 +76,6 @@ export interface AttendeeNetworking {
   people: AttendeePerson[];
 }
 
-export interface AttendeeEntranceDetail {
-  id: string;
-  label: string;
-  value: string;
-}
-
-export interface AttendeeEntrance {
-  label?: string;
-  heading?: string;
-  text?: string;
-  qrValue: string;
-  qrCaption: string;
-  statusLabel: string;
-  statusValue: string;
-  details: AttendeeEntranceDetail[];
-  offlineNote?: string;
-}
-
 export interface AttendeeResource {
   id: string;
   kindLabel: string;
@@ -126,7 +108,6 @@ export interface AttendeeExperienceContent {
   myEvent: AttendeeMyEvent;
   myDay: AttendeeMyDay;
   networking: AttendeeNetworking;
-  entrance: AttendeeEntrance;
   after: AttendeeAfter;
 }
 

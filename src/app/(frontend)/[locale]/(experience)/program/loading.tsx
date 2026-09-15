@@ -6,7 +6,7 @@ import { TimelineSkeleton, SidebarSkeleton } from '@/features/conference';
  * flashing. Rendered by Next while the server builds the real page.
  */
 const ProgramLoading = () => (
-  <main className="experience min-h-dvh">
+  <main id="main-content" className="experience min-h-dvh">
     <header className="relative overflow-hidden border-b border-[var(--x-line)]">
       <div
         aria-hidden="true"

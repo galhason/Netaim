@@ -1,9 +1,11 @@
 import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
-import { isSupportedLocale } from '@/config/locales';
+import { brandFor } from '@/config/brand';
+import { isSupportedLocale, type Locale } from '@/config/locales';
 import { LoungeView, getAttendeeExperience } from '@/features/attendee';
-import { ConferenceSpotlight } from '@/features/notifications';
+import { CinematicNav } from '@/features/cinematic';
 import { myConnections } from '@/features/networking';
+import { currentParticipant } from '@/features/registration';
 
 /*
  * The Personal Lounge: after registration the guest does not enter an
@@ -29,6 +31,7 @@ const AttendeePage = async ({ params }: AttendeePageProps) => {
     redirect(`/${locale}/events/${slug}/register`);
   }
 
+  const me = await currentParticipant().catch(() => null);
   const links = await myConnections(slug).catch(() => []);
   const connections = links.filter(
     (connection) => connection.status === 'accepted',
@@ -40,13 +43,31 @@ const AttendeePage = async ({ params }: AttendeePageProps) => {
 
   return (
     <>
-      <ConferenceSpotlight slug={slug} locale={locale} />
       <LoungeView
-      content={content}
-      locale={locale}
-      connections={connections}
-      pending={pending}
-    />
+        content={content}
+        locale={locale}
+        connections={connections}
+        pending={pending}
+        homeHref={`/${locale}/me`}
+        profileHref={`/${locale}/me/profile`}
+        /*
+         * The site's one navigation bar, here as on /me — language,
+         * notifications, the name, and the way out all live in it, so
+         * the Lounge itself carries none of them twice.
+         */
+        siteNav={
+          <div className="cinematic">
+            <CinematicNav
+              locale={locale as Locale}
+              registerHref={`/${locale}/events/${slug}/register`}
+              meHref={`/${locale}/me`}
+              brand={brandFor(locale as Locale)}
+              viewer={me ? { name: me.name || me.email } : null}
+              immediate
+            />
+          </div>
+        }
+      />
     </>
   );
 };

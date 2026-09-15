@@ -66,8 +66,8 @@ export const GENERIC_TEASERS = {
   ],
 } as const;
 
-const photo = (seed: string, w: number, h: number): string =>
-  `https://picsum.photos/seed/${seed}/${w}/${h}`;
+/* One local neutral frame until the production stills arrive. */
+const PLACEHOLDER_SCENE = '/placeholder/scene.jpg';
 
 const fallbackPosters = (locale: Locale): PortalPoster[] => {
   const he = locale === 'he';
@@ -84,7 +84,7 @@ const fallbackPosters = (locale: Locale): PortalPoster[] => {
       teaser: he
         ? 'מקום שבו רעיונות הופכים למציאות.'
         : 'Where ideas become reality.',
-      image: photo('hason-portal-innovation', 900, 1200),
+      image: PLACEHOLDER_SCENE,
       featured: true,
       tone: 'bronze',
     },
@@ -98,7 +98,7 @@ const fallbackPosters = (locale: Locale): PortalPoster[] => {
       teaser: he
         ? 'הדור הבא של קיימות מתחיל כאן.'
         : 'The next generation of sustainability starts here.',
-      image: photo('hason-portal-climate', 900, 1200),
+      image: PLACEHOLDER_SCENE,
       featured: false,
       tone: 'nature',
     },
@@ -110,7 +110,7 @@ const fallbackPosters = (locale: Locale): PortalPoster[] => {
       location: he ? 'תל אביב' : 'Tel Aviv',
       dateLabel: he ? '15 בספטמבר 2026' : '15 September 2026',
       teaser: he ? 'העיר של מחר נבנית היום.' : 'Tomorrow’s city is built today.',
-      image: photo('hason-portal-city', 900, 1200),
+      image: PLACEHOLDER_SCENE,
       featured: false,
       tone: 'innovation',
     },
@@ -122,7 +122,7 @@ const fallbackPosters = (locale: Locale): PortalPoster[] => {
       location: he ? 'באר שבע' : 'Be’er Sheva',
       dateLabel: he ? '12–11 בינואר 2027' : '11–12 January 2027',
       teaser: he ? 'טכנולוגיה בשירות האדם.' : 'Technology in the service of people.',
-      image: photo('hason-portal-ai', 900, 1200),
+      image: PLACEHOLDER_SCENE,
       featured: false,
       tone: 'daylight',
     },
@@ -172,7 +172,7 @@ export const fallbackOpeningContent = (locale: Locale): OpeningContent => {
         '/demo/portrait-2.jpg',
         '/demo/portrait-3.jpg',
         '/demo/portrait-4.jpg',
-        photo('hason-moment-backstage', 900, 900),
+        PLACEHOLDER_SCENE,
       ],
     },
     closing: {

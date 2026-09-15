@@ -23,3 +23,10 @@ export const GET = async (
     },
   });
 };
+
+/*
+ * One person's contact card, handed to one other person. Rendered per
+ * request and never prerendered or shared — a stored copy of this
+ * response is somebody's phone number waiting for the next caller.
+ */
+export const dynamic = 'force-dynamic';

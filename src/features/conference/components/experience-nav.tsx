@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { Locale } from '@/config/locales';
+import { signOutAction } from '@/features/account/actions/sign-out';
 import { Avatar } from '../ui/kit';
 import { IconCalendar, IconSearch } from '../ui/icons';
 
@@ -45,6 +46,21 @@ const Bell = ({ className = '' }: { className?: string }) => (
   </svg>
 );
 
+const Exit = ({ className = '' }: { className?: string }) => (
+  <svg
+    viewBox="0 0 20 20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.8}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    className={`${className} rtl:-scale-x-100`}
+  >
+    <path d="M8 4H4.5A1.5 1.5 0 0 0 3 5.5v9A1.5 1.5 0 0 0 4.5 16H8M12.5 6.5 16 10l-3.5 3.5M16 10H7.5" />
+  </svg>
+);
+
 /*
  * The public wayfinding bar for the conference experience — a calm, solid
  * navy rail that stays the same on every participant page, so the product
@@ -67,6 +83,7 @@ const ExperienceNav = ({
     ? pathname.replace(new RegExp(`^/${locale}(?=/|$)`), `/${other}`)
     : `/${other}`;
   const [open, setOpen] = useState(false);
+  const signOutLabel = locale === 'he' ? 'התנתקות' : 'Sign out';
 
   const isActive = (path: string) => {
     const href = `${home}${path}`;
@@ -150,15 +167,36 @@ const ExperienceNav = ({
           </Link>
 
           {userName ? (
-            <Link
-              href={meHref}
-              className="flex items-center gap-2 rounded-full py-1 ps-1 pe-3 transition-colors hover:bg-white/10"
-            >
-              <Avatar name={userName} size={30} ring={false} />
-              <span className="hidden text-sm font-medium text-white sm:block">
-                {userName}
-              </span>
-            </Link>
+            <>
+              <Link
+                href={meHref}
+                className="flex items-center gap-2 rounded-full py-1 ps-1 pe-3 transition-colors hover:bg-white/10"
+              >
+                <Avatar name={userName} size={30} ring={false} />
+                <span className="hidden text-sm font-medium text-white sm:block">
+                  {userName}
+                </span>
+              </Link>
+              {/*
+                * The way out, beside the name — visible in the bar, not
+                * behind the menu, because on a borrowed screen it is
+                * the control that matters most. On a phone the icon
+                * stands alone, named for a screen reader; the menu
+                * below repeats it in words.
+                */}
+              <form action={signOutAction} className="flex">
+                <input type="hidden" name="locale" value={locale} />
+                <button
+                  type="submit"
+                  aria-label={signOutLabel}
+                  title={signOutLabel}
+                  className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-2 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white md:px-3"
+                >
+                  <Exit className="size-4" />
+                  <span className="hidden md:inline">{signOutLabel}</span>
+                </button>
+              </form>
+            </>
           ) : (
             <Link
               href={registerHref}
@@ -185,6 +223,18 @@ const ExperienceNav = ({
       {open ? (
         <div className="border-t border-white/10 bg-[var(--x-nav)] px-6 pb-4 pt-2 lg:hidden">
           <div className="flex flex-col gap-1">{links}</div>
+          {userName ? (
+            <form action={signOutAction} className="mt-2 border-t border-white/10 pt-2">
+              <input type="hidden" name="locale" value={locale} />
+              <button
+                type="submit"
+                className="inline-flex items-center gap-2 py-1.5 text-sm text-white/70 transition-colors hover:text-white"
+              >
+                <Exit className="size-4" />
+                {signOutLabel}
+              </button>
+            </form>
+          ) : null}
         </div>
       ) : null}
     </header>

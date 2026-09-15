@@ -20,6 +20,10 @@ export type {
 } from './utils/home-digest';
 export { searchStudio } from './services/studio-search';
 export { getStudioLocale } from './services/studio-locale';
+export {
+  getStudioNetworking,
+  type StudioNetworkingView,
+} from './services/studio-networking';
 export { getProductionLog } from './services/studio-activity';
 export {
   cancelParticipantRegistration,
@@ -34,6 +38,16 @@ export type {
   AccountSearchView,
   ParticipantAdminView,
 } from './types/participants';
+export {
+  getEventLogistics,
+  logisticsCsv,
+} from './services/studio-logistics';
+export type {
+  DietaryTally,
+  EventLogistics,
+  EventLogisticsSource,
+  LogisticsRow,
+} from './types/logistics';
 export type { ProductionLogEntry } from './types/activity';
 export type { StudioCreator, StudioIdentityGateway } from './types/creator';
 export type {
@@ -66,6 +80,8 @@ export {
   HOMEPAGE_SCENE_GROUPS,
   CONFERENCE_SCENE_GROUPS,
   REGISTRATION_STATUS_LABELS,
+  REPORT_REASON_LABELS,
+  REPORT_STATUS_LABELS,
 } from './constants/console';
 export type {
   HomepageInspectorGroup,

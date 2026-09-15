@@ -1,4 +1,6 @@
+import { cache } from 'react';
 import { relationshipId } from '@/auth';
+import type { Locale } from '@/config/locales';
 import type { RegistrationStatus } from '@/registration-engine';
 import type {
   ParticipantSummary,
@@ -9,6 +11,12 @@ import type {
   RegistrationSummary,
 } from '@/features/registration/types/registration';
 import { actorContext, getSystemPayload } from './payload-context';
+import {
+  LIVE_STATUSES,
+  mayBeListed,
+  participantsTakingPart,
+  type ListableRow,
+} from './payload-participation';
 
 interface EventRow {
   id: number | string;
@@ -37,10 +45,17 @@ const requireActor = async () => {
   return context;
 };
 
-const eventBySlug = async (
-  payload: Awaited<ReturnType<typeof getSystemPayload>>,
-  slug: string,
-): Promise<EventRow | null> => {
+/*
+ * The conference a slug names, resolved once per request.
+ *
+ * Four readers in this file each opened with the same one-row lookup,
+ * and a personal page calls several of them for the same conference, so
+ * the row was fetched again and again to answer one request. `cache` is
+ * request-scoped: repeated asks inside one render share an answer, and
+ * the next request still reads the conference fresh.
+ */
+const eventBySlug = cache(async (slug: string): Promise<EventRow | null> => {
+  const payload = await getSystemPayload();
   const result = await payload.find({
     collection: 'events',
     where: { slug: { equals: slug } },
@@ -49,7 +64,7 @@ const eventBySlug = async (
     overrideAccess: true,
   });
   return (result.docs[0] as EventRow | undefined) ?? null;
-};
+});
 
 const toParticipant = (value: RegistrationRow['participant']): ParticipantSummary => {
   if (typeof value === 'object') {
@@ -88,7 +103,7 @@ const countStatus = async (
 export const payloadRegistrationRepository: RegistrationRepository = {
   countsByEvent: async (slug) => {
     const payload = await getSystemPayload();
-    const event = await eventBySlug(payload, slug);
+    const event = await eventBySlug(slug);
     if (!event) {
       return { confirmed: 0, pending: 0, waitlisted: 0 };
     }
@@ -102,7 +117,7 @@ export const payloadRegistrationRepository: RegistrationRepository = {
 
   listByEvent: async (slug) => {
     const { payload, user } = await requireActor();
-    const event = await eventBySlug(payload, slug);
+    const event = await eventBySlug(slug);
     if (!event) {
       return [];
     }
@@ -134,7 +149,7 @@ export const payloadRegistrationRepository: RegistrationRepository = {
 
   register: async (slug, participant, status, waitlistPosition) => {
     const payload = await getSystemPayload();
-    const event = await eventBySlug(payload, slug);
+    const event = await eventBySlug(slug);
     if (!event) {
       throw new Error('Event not found');
     }
@@ -164,20 +179,69 @@ export const payloadRegistrationRepository: RegistrationRepository = {
       roleTitle: participant.role,
     };
 
-    const participantDoc = existing.docs[0]
+    const priorRow = existing.docs[0] as
+      | (ParticipantRow & { contactPrefs?: Record<string, unknown> | null })
+      | undefined;
+
+    /*
+     * The directory answer from the form (PRD §5.1, opt-in), written
+     * as one field of the preference set rather than as the whole of
+     * it. Writing the object wholesale erased the channels the person
+     * had opened for themselves — phone, email, WhatsApp, meetings —
+     * every time a registration touched their row.
+     */
+    const contactPrefs = {
+      ...(priorRow?.contactPrefs ?? {}),
+      directory: participant.directory === true,
+    };
+
+    const participantDoc = priorRow
       ? await payload.update({
           collection: 'participants',
-          id: (existing.docs[0] as ParticipantRow).id,
-          data: participantData,
+          id: priorRow.id,
+          data: { ...participantData, contactPrefs },
           overrideAccess: true,
         })
       : await payload.create({
           collection: 'participants',
-          data: participantData,
+          data: { ...participantData, contactPrefs },
           overrideAccess: true,
         });
 
     const participantRow = participantDoc as unknown as ParticipantRow;
+
+    /*
+     * One place per person per conference.
+     *
+     * The public form refuses a known address before it ever gets
+     * here, but this is the rule itself rather than a screen's good
+     * manners: a retry, a double submit or a future caller must not be
+     * able to file a second place against the same conference and
+     * spend two seats of its capacity on one guest. A live row is
+     * returned as it stands; only a cancelled one may be replaced.
+     */
+    const live = await payload.find({
+      collection: 'registrations',
+      where: {
+        and: [
+          { event: { equals: Number(event.id) } },
+          { participant: { equals: Number(participantRow.id) } },
+          { status: { not_equals: 'cancelled' } },
+        ],
+      },
+      limit: 1,
+      depth: 0,
+      overrideAccess: true,
+    });
+    const held = live.docs[0] as RegistrationRow | undefined;
+    if (held) {
+      return {
+        registrationId: String(held.id),
+        participantId: String(participantRow.id),
+        participantName: participant.name,
+        participantEmail: participant.email,
+      } satisfies RegisterPersisted;
+    }
 
     const registration = await payload.create({
       collection: 'registrations',
@@ -238,9 +302,93 @@ export const payloadRegistrationRepository: RegistrationRepository = {
     }
     return slugs;
   },
+  /*
+   * Where this person is genuinely a participant.
+   *
+   * Two proofs, because the platform has two ways of joining and only
+   * one of them was ever asked about. A conference the guest signed up
+   * to as an event still counts; so does one where they only ever took
+   * a place in a workshop — which, since the conference became the site
+   * itself, is how most people arrive. Reading only the first is why a
+   * guest could see a fellow attendee in the directory and be told they
+   * shared no conference when they tried to connect.
+   *
+   * Event ids are collected first and resolved to slugs in one read:
+   * the alternative, expanding the relationship on every row, fetches
+   * the same conference once per registration.
+   */
+  conferenceSlugsForParticipant: async (participantId) => {
+    if (!participantId) {
+      return [];
+    }
+    const payload = await getSystemPayload();
+    const [places, registrations] = await Promise.all([
+      payload
+        .find({
+          collection: 'session-registrations',
+          where: {
+            and: [
+              { participant: { equals: participantId } },
+              { status: { in: LIVE_STATUSES } },
+            ],
+          },
+          depth: 0,
+          pagination: false,
+          overrideAccess: true,
+        })
+        .catch(() => ({ docs: [] as unknown[] })),
+      payload
+        .find({
+          collection: 'registrations',
+          where: {
+            and: [
+              { participant: { equals: participantId } },
+              { status: { in: LIVE_STATUSES } },
+            ],
+          },
+          depth: 0,
+          pagination: false,
+          overrideAccess: true,
+        })
+        .catch(() => ({ docs: [] as unknown[] })),
+    ]);
+
+    const eventIds = new Set<number>();
+    for (const row of [...places.docs, ...registrations.docs]) {
+      const id = Number(
+        relationshipId(
+          (row as { event?: number | string | { id: number | string } | null })
+            .event ?? null,
+        ),
+      );
+      if (Number.isFinite(id)) {
+        eventIds.add(id);
+      }
+    }
+    if (eventIds.size === 0) {
+      return [];
+    }
+
+    const events = await payload.find({
+      collection: 'events',
+      where: { id: { in: [...eventIds] } },
+      depth: 0,
+      pagination: false,
+      overrideAccess: true,
+    });
+    const slugs: string[] = [];
+    for (const event of events.docs) {
+      const slug = (event as { slug?: string | null }).slug;
+      if (slug && !slugs.includes(slug)) {
+        slugs.push(slug);
+      }
+    }
+    return slugs;
+  },
+
   statusForParticipant: async (slug, participantId) => {
     const payload = await getSystemPayload();
-    const event = await eventBySlug(payload, slug);
+    const event = await eventBySlug(slug);
     if (!event) {
       return null;
     }
@@ -326,7 +474,7 @@ export const payloadRegistrationSettingsRepository: RegistrationSettingsReposito
   {
     getByEvent: async (slug, locale) => {
       const payload = await getSystemPayload();
-      const event = await eventBySlug(payload, slug);
+      const event = await eventBySlug(slug);
       if (!event) {
         return null;
       }
@@ -344,7 +492,7 @@ export const payloadRegistrationSettingsRepository: RegistrationSettingsReposito
 
     upsertByEvent: async (slug, locale, settings) => {
       const { payload, user, organizationId } = await requireActor();
-      const event = await eventBySlug(payload, slug);
+      const event = await eventBySlug(slug);
       if (!event) {
         throw new Error('Event not found');
       }
@@ -407,6 +555,15 @@ export interface FellowParticipant {
   orgName?: string;
   roleTitle?: string;
   interests?: string;
+  /* How they introduce themselves, now that it lives on the account. */
+  headline?: string;
+  /*
+   * Derived from the account's own contact preferences
+   * (`contactPrefs.meetings`), never stored beside the listing — the
+   * directory shows the same answer the meeting gate enforces. Absent
+   * means yes, the way the field is defaulted.
+   */
+  openToMeetings: boolean;
   photoUrl?: string;
 }
 
@@ -417,6 +574,8 @@ interface FellowRow {
   orgName?: string | null;
   roleTitle?: string | null;
   interests?: string | null;
+  headline?: string | null;
+  contactPrefs?: { meetings?: boolean | null } | null;
   photo?: number | string | { url?: string | null } | null;
   blocked?: boolean | null;
   anonymizedAt?: string | null;
@@ -429,26 +588,21 @@ const toFellow = (row: FellowRow): FellowParticipant => ({
   orgName: row.orgName ?? undefined,
   roleTitle: row.roleTitle ?? undefined,
   interests: row.interests ?? undefined,
+  headline: row.headline ?? undefined,
+  openToMeetings: row.contactPrefs?.meetings !== false,
   photoUrl:
     row.photo && typeof row.photo === 'object' && row.photo.url
       ? row.photo.url
       : undefined,
 });
 
-const ACTIVE_FELLOW_STATUSES = ['pending', 'confirmed', 'waitlisted', 'attended'];
+const ACTIVE_FELLOW_STATUSES = LIVE_STATUSES;
 
 export const payloadListEventParticipants = async (
   slug: string,
 ): Promise<FellowParticipant[]> => {
   const payload = await getSystemPayload();
-  const events = await payload.find({
-    collection: 'events',
-    where: { slug: { equals: slug } },
-    limit: 1,
-    depth: 0,
-    overrideAccess: true,
-  });
-  const event = events.docs[0];
+  const event = await eventBySlug(slug);
   if (!event) {
     return [];
   }
@@ -523,20 +677,13 @@ export interface ActivityPeer {
 export const payloadSharedActivityPeers = async (
   eventSlug: string,
   participantId: string,
-  locale: string,
+  locale: Locale,
 ): Promise<ActivityPeer[]> => {
   if (!eventSlug || !participantId) {
     return [];
   }
   const payload = await getSystemPayload();
-  const events = await payload.find({
-    collection: 'events',
-    where: { slug: { equals: eventSlug } },
-    limit: 1,
-    depth: 0,
-    overrideAccess: true,
-  });
-  const event = events.docs[0];
+  const event = await eventBySlug(eventSlug);
   if (!event) {
     return [];
   }
@@ -617,78 +764,42 @@ export const payloadListDirectoryParticipants = async (
     return [];
   }
   const payload = await getSystemPayload();
-  const events = await payload.find({
-    collection: 'events',
-    where: { slug: { equals: eventSlug } },
-    limit: 1,
-    depth: 0,
-    overrideAccess: true,
-  });
-  const event = events.docs[0];
+  const event = await eventBySlug(eventSlug);
   if (!event) {
     return [];
   }
   const eventId = Number(event.id);
 
-  /*
-   * Holding a place in an activity is what makes someone a participant
-   * here. The conference is the site rather than something joined from a
-   * list, so an event-level registration is not the signal — and looking
-   * for one is why the directory was empty for people who had signed up
-   * for workshops and were plainly attending.
-   */
-  const places = await payload.find({
-    collection: 'session-registrations',
-    where: {
-      and: [
-        { event: { equals: eventId } },
-        { status: { in: ACTIVE_FELLOW_STATUSES } },
-      ],
-    },
-    depth: 0,
-    pagination: false,
-    overrideAccess: true,
-  });
-  const attending = new Set(
-    places.docs.map((place) => String(relationshipId(place.participant))),
-  );
+  const attending = await participantsTakingPart(payload, eventId);
   if (attending.size === 0) {
     return [];
   }
 
-  const profiles = await payload.find({
-    collection: 'networking-profiles',
-    where: {
-      and: [{ event: { equals: eventId } }, { visible: { equals: true } }],
-    },
+  /*
+   * The people themselves, read straight from the accounts of those
+   * taking part.
+   *
+   * This used to walk the networking profiles instead, which quietly
+   * made a profile row the price of appearing at all — and since a row
+   * is created only by a form most guests never open, the directory was
+   * empty even at a conference with a full programme. The profile is
+   * what a listing *says*, not whether there is one; a guest who never
+   * wrote a headline is still a person in the room.
+   */
+  const people = await payload.find({
+    collection: 'participants',
+    where: { id: { in: [...attending] } },
     depth: 1,
     pagination: false,
     overrideAccess: true,
   });
 
-  const seen = new Set<string>();
   const fellows: FellowParticipant[] = [];
-  for (const profile of profiles.docs) {
-    const participant = (profile as { participant?: unknown }).participant;
-    if (typeof participant !== 'object' || participant === null) {
+  for (const person of people.docs) {
+    const row = person as unknown as FellowRow;
+    if (!mayBeListed(person as ListableRow)) {
       continue;
     }
-    const row = participant as unknown as FellowRow;
-    if (!attending.has(String(row.id))) {
-      continue;
-    }
-    /*
-     * Consent is not the only gate: a blocked or anonymised account must
-     * disappear from the directory even though its profile row survives.
-     */
-    if (row.blocked === true || row.anonymizedAt) {
-      continue;
-    }
-    const id = String(row.id);
-    if (seen.has(id)) {
-      continue;
-    }
-    seen.add(id);
     fellows.push(toFellow(row));
   }
   return fellows.sort((a, b) => a.name.localeCompare(b.name));

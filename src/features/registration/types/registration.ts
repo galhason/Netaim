@@ -52,6 +52,8 @@ export interface RegisterInput {
   dietary?: string;
   organization?: string;
   role?: string;
+  /* the answer to the directory question, chosen on the form */
+  directory?: boolean;
 }
 
 export interface RegisterPersisted {
@@ -75,6 +77,17 @@ export interface RegisterResult {
  */
 export interface RegistrationRepository {
   eventSlugsForParticipant: (participantId: string) => Promise<string[]>;
+  /*
+   * The conferences this person is actually part of.
+   *
+   * Deliberately not the same question as `eventSlugsForParticipant`,
+   * which answers "where did they fill in the registration form" and
+   * counts a cancelled one. Since the conference became the site
+   * (Report 18 §5), holding a place in one of its activities is what
+   * makes someone a participant — most guests never hold an event-level
+   * registration at all. Both proofs count, and only live ones do.
+   */
+  conferenceSlugsForParticipant: (participantId: string) => Promise<string[]>;
   countsByEvent: (slug: string) => Promise<RegistrationCounts>;
   listByEvent: (slug: string) => Promise<RegistrationSummary[]>;
   getById: (registrationId: string) => Promise<RegistrationSummary | null>;
