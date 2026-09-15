@@ -29,14 +29,23 @@ const contentSecurityPolicy = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
-  "frame-ancestors 'none'",
+  /*
+   * 'self', not 'none': the Studio's canvas is an iframe of this very
+   * site — the live Runtime, framed, rather than a screenshot or a
+   * second implementation of it. 'none' forbids that too, so the canvas
+   * came up blank and the workspace lost the thing it is built around.
+   * 'self' still refuses every other origin, which is the whole point
+   * of the header; nothing outside this site can frame a page.
+   */
+  "frame-ancestors 'self'",
   "worker-src 'self' blob:",
   ...(isProduction ? ['upgrade-insecure-requests'] : []),
 ].join('; ');
 
 /*
- * The camera is needed by the QR scanners (participant badge scan and
- * the Studio check-in desk); every other powerful feature is denied.
+ * Every powerful feature is denied. The camera stays at 'self' for a
+ * future capture surface; the QR scanning it was opened for has been
+ * withdrawn.
  */
 const permissionsPolicy = [
   'camera=(self)',
@@ -49,7 +58,8 @@ const permissionsPolicy = [
 
 const securityHeaders = [
   { key: 'Content-Security-Policy', value: contentSecurityPolicy },
-  { key: 'X-Frame-Options', value: 'DENY' },
+  /* The same rule for browsers that predate frame-ancestors. */
+  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: permissionsPolicy },

@@ -349,3 +349,31 @@ describe('the platform tells people what it does with them', () => {
     expect(policy.includes('@/features/privacy')).toBe(true);
   });
 });
+
+/*
+ * The canvas is the live site, framed.
+ *
+ * The Studio does not draw a picture of the conference; it puts the
+ * running site in an iframe beside the inspector, which is the whole
+ * reason the workspace can be trusted to show what visitors will see.
+ * `frame-ancestors 'none'` forbids that — including from this very
+ * origin — and the canvas came up blank on the server with no error
+ * anywhere. 'self' keeps every other site out, which is what the header
+ * is for.
+ */
+describe('the frame policy lets the Studio frame its own site', () => {
+  const config = readFileSync('next.config.ts', 'utf8');
+
+  it("uses frame-ancestors 'self', never 'none'", () => {
+    expect(config.includes(`"frame-ancestors 'self'"`)).toBe(true);
+    expect(config.includes(`"frame-ancestors 'none'"`)).toBe(false);
+  });
+
+  it('keeps the legacy header in step', () => {
+    expect(config.includes(`value: 'SAMEORIGIN'`)).toBe(true);
+    expect(
+      config.includes(`key: 'X-Frame-Options', value: 'DENY'`),
+      'DENY blocks same-origin framing too',
+    ).toBe(false);
+  });
+});
