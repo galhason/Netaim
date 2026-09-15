@@ -416,6 +416,21 @@ export const payloadEventRepository: EventRepository = {
       ? { portal: toPortal(event), opening: toOpeningContent(event) }
       : null;
   },
+  /*
+   * What this language actually holds — not what a visitor would see.
+   *
+   * The platform falls back: an English page with no English text shows
+   * the Hebrew. That is right for a visitor and wrong for an editor,
+   * because the editor's form was then *pre-filled* with the Hebrew,
+   * and saving wrote all of it into English. One save in the English
+   * inspector froze the whole Hebrew page into English, after which the
+   * two could never differ again — which is exactly the complaint that
+   * editing one language changes the other.
+   *
+   * `fallbackLocale: 'null'` asks for this locale alone. An untouched
+   * field stays empty, and empty means "inherit", so the site keeps
+   * showing Hebrew until somebody writes English on purpose.
+   */
   getOpeningDraft: async (slug, locale) => {
     const { payload, user } = await requireActor();
     const result = await payload.find({
@@ -423,6 +438,7 @@ export const payloadEventRepository: EventRepository = {
       overrideAccess: false,
       user,
       locale,
+      fallbackLocale: 'null',
       draft: true,
       where: { slug: { equals: slug } },
       depth: 2,

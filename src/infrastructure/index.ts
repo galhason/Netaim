@@ -53,6 +53,7 @@ import {
 } from './payload/payload-site';
 import {
   payloadHomepageContent,
+  payloadHomepageDraft,
   payloadSaveHomepageComposition,
   payloadSaveHomepageContent,
 } from './payload/payload-opening-page';
@@ -190,6 +191,9 @@ export const activeConferenceSlug: () => Promise<string | null> =
 export const setActiveConference: (slug: string | null) => Promise<void> =
   payloadSetActiveConference;
 export const homepageContent: HomepageContentSource = payloadHomepageContent;
+/* The Studio's reading of the same page: this locale alone. */
+export const homepageDraftContent: HomepageContentSource =
+  payloadHomepageDraft;
 export const saveHomepageComposition: HomepageCompositionWriter =
   payloadSaveHomepageComposition;
 export const saveHomepageContent: HomepageContentWriter =

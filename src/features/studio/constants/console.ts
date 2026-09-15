@@ -40,6 +40,15 @@ export const CONSOLE_UI = {
     en: 'Saving goes live immediately; the draft flow arrives in the next slice.',
   },
   contentLanguage: { he: 'שפת תוכן', en: 'Content language' },
+  /*
+   * Said out loud, because the behaviour is invisible and surprising:
+   * an empty English field is not an empty English page, it is a page
+   * that shows the Hebrew.
+   */
+  inheritedNote: {
+    he: 'עורכים כעת את התוכן באנגלית. שדה שיישאר ריק יציג באתר את הטקסט העברי — כך אפשר לתרגם רק את מה שצריך.',
+    en: 'You are editing the English content. A field left empty shows the Hebrew text on the site — so you can translate only what needs translating.',
+  },
   classicStudio: { he: 'ניהול מתקדם', en: 'Advanced' },
   people: { he: 'אנשים', en: 'People' },
   soon: { he: 'בקרוב', en: 'Soon' },

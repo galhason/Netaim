@@ -13,12 +13,28 @@ import { mediaId, mediaUrl, toMediaRelation } from './payload-media';
  * creator with access control enforced. Empty strings clear a field so
  * the cinematic fallback returns.
  */
-export const payloadHomepageContent = async (
+/*
+ * Two readings of the same page, and the difference matters.
+ *
+ * A visitor gets the fallback: an English page with no English text
+ * shows the Hebrew rather than nothing. An editor must not, because the
+ * inspector pre-fills from what it reads — so the Hebrew arrived in the
+ * English form, and the first save wrote it into English for good.
+ * `asStored` asks for this locale alone, leaving untouched fields empty,
+ * and empty is what keeps the fallback alive.
+ */
+const readHomepage = async (
   locale: Locale,
+  asStored: boolean,
 ): Promise<HomepageContent | null> => {
   const payload = await getSystemPayload();
   const page = await payload
-    .findGlobal({ slug: 'opening-page', locale, depth: 1 })
+    .findGlobal({
+      slug: 'opening-page',
+      locale,
+      ...(asStored ? { fallbackLocale: 'null' as const } : {}),
+      depth: 1,
+    })
     .catch(() => null);
   if (!page) {
     return null;
@@ -64,6 +80,15 @@ export const payloadHomepageContent = async (
     },
   };
 };
+
+export const payloadHomepageContent = (
+  locale: Locale,
+): Promise<HomepageContent | null> => readHomepage(locale, false);
+
+/* The editor's reading: this language, and nothing inherited. */
+export const payloadHomepageDraft = (
+  locale: Locale,
+): Promise<HomepageContent | null> => readHomepage(locale, true);
 
 const text = (value: string | undefined): string | null | undefined => {
   if (value === undefined) {

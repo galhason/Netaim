@@ -23,11 +23,22 @@ interface ConsoleShellProps {
   children: ReactNode;
 }
 
+/*
+ * The language of the Studio itself — the menus and labels, never the
+ * conference. It is named out loud because the inspector carries a
+ * second language switch, for the content being written, and an
+ * unlabelled "עברית / EN" beside another unlabelled "עברית / EN" is how
+ * an editor comes to believe that editing English rewrites Hebrew.
+ */
 const LocaleSwitch = ({ locale }: { locale: Locale }) => (
   <form
     action={setStudioLocaleAction}
     className="flex items-center gap-1.5 text-xs"
+    aria-label={locale === 'he' ? 'שפת הממשק' : 'Interface language'}
   >
+    <span className="text-[9.5px] font-medium tracking-[0.14em] text-[var(--c-text-faint)]">
+      {locale === 'he' ? 'ממשק' : 'UI'}
+    </span>
     {SUPPORTED_LOCALES.map((entry, i) => (
       <span key={entry} className="flex items-center gap-1.5">
         {i > 0 ? (

@@ -102,23 +102,44 @@ const ConsoleHomepage = async ({ searchParams }: ConsoleHomepageProps) => {
           aria-label={CONSOLE_UI.contentLanguage[locale]}
           className="flex items-center gap-2 text-xs"
         >
-          {SUPPORTED_LOCALES.map((entry) => (
-            <a
-              key={entry}
-              href={`/studio/homepage?content=${entry}`}
-              aria-current={entry === contentLocale ? 'true' : undefined}
-              className={
-                entry === contentLocale
-                  ? 'font-medium text-[var(--c-bronze)]'
-                  : 'text-[var(--c-text-soft)] transition-colors hover:text-[var(--c-text)]'
-              }
-            >
-              {LOCALE_LABELS[entry]}
-            </a>
-          ))}
+          {/*
+            * The one control that decides which language is being
+            * written. It used to be a bare pair of links — "עברית / EN"
+            * — sitting a few centimetres from the interface-language
+            * buttons, which are also "עברית / EN". Nothing said which
+            * was which, so an editor switched the interface, kept
+            * writing Hebrew, and watched the English page change too
+            * (it inherits Hebrew until English is written). Hence the
+            * label, the box and the filled state: this is a switch, not
+            * a link, and it says what it switches.
+            */}
+          <span className="flex items-center gap-1.5 rounded-lg border border-[var(--c-line-strong)] bg-[rgba(6,10,16,0.6)] px-2 py-1">
+            <span className="text-[9.5px] font-medium tracking-[0.14em] text-[var(--c-text-faint)]">
+              {CONSOLE_UI.contentLanguage[locale].toUpperCase()}
+            </span>
+            {SUPPORTED_LOCALES.map((entry) => (
+              <a
+                key={entry}
+                href={`/studio/homepage?content=${entry}`}
+                aria-current={entry === contentLocale ? 'true' : undefined}
+                className={
+                  entry === contentLocale
+                    ? 'rounded-md bg-[var(--c-bronze)] px-2 py-0.5 font-semibold text-[#161006]'
+                    : 'rounded-md px-2 py-0.5 text-[var(--c-text-soft)] transition-colors hover:text-[var(--c-text)]'
+                }
+              >
+                {LOCALE_LABELS[entry]}
+              </a>
+            ))}
+          </span>
         </nav>
       }
     >
+      {contentLocale !== 'he' ? (
+        <p className="mx-4 mt-3 rounded-xl border border-[var(--c-bronze)]/40 bg-[var(--c-bronze)]/10 px-4 py-2.5 text-xs text-[var(--c-bronze)]">
+          {CONSOLE_UI.inheritedNote[locale]}
+        </p>
+      ) : null}
       <div className="flex h-full min-h-0 gap-4 p-4">
         <aside className="flex w-40 flex-none flex-col gap-1 overflow-y-auto rounded-xl border border-[var(--c-line)] bg-[var(--c-glass)] p-3">
           <p className="mb-1 px-1 text-[10px] font-medium tracking-[0.2em] text-[var(--c-text-faint)]">

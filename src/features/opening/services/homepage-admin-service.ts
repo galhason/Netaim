@@ -1,6 +1,6 @@
 import type { Locale } from '@/config/locales';
 import {
-  homepageContent,
+  homepageDraftContent,
   saveHomepageComposition,
   saveHomepageContent,
 } from '@/infrastructure';
@@ -10,9 +10,14 @@ import type {
   HomepageContentInput,
 } from '../types/homepage-content';
 
+/*
+ * What the editor sees: this language as it is stored, with nothing
+ * inherited from the other one. The visitor's reading still falls back
+ * — see readHomepage in the adapter for why the two must differ.
+ */
 export const getHomepageDraft = (
   locale: Locale,
-): Promise<HomepageContent | null> => homepageContent(locale);
+): Promise<HomepageContent | null> => homepageDraftContent(locale);
 
 export const saveHomepage = (
   locale: Locale,
