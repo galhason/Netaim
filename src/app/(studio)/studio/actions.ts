@@ -222,6 +222,9 @@ export const saveHomepageAction = async (formData: FormData) => {
     ...(formData.has('heroImageId')
       ? { heroImageId: formText(formData, 'heroImageId') ?? null }
       : {}),
+    ...(formData.has('heroVideoId')
+      ? { heroVideoId: formText(formData, 'heroVideoId') ?? null }
+      : {}),
     eventsTitle: formText(formData, 'eventsTitle'),
     eventsSubtitle: formText(formData, 'eventsSubtitle'),
     storyEyebrow: formText(formData, 'storyEyebrow'),
@@ -267,6 +270,9 @@ export const saveEventOpeningAction = async (formData: FormData) => {
       : {}),
     ...(formData.has('heroImageId')
       ? { heroImageId: formText(formData, 'heroImageId') ?? null }
+      : {}),
+    ...(formData.has('heroVideoId')
+      ? { heroVideoId: formText(formData, 'heroVideoId') ?? null }
       : {}),
     arrivalEyebrow: formText(formData, 'arrivalEyebrow'),
     storyEyebrow: formText(formData, 'storyEyebrow'),

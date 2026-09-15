@@ -19,6 +19,9 @@ export interface HomepageContent {
     subtitle?: string;
     imageUrl?: string;
     imageId?: string;
+    /* A moving background. The still above remains its poster. */
+    videoUrl?: string;
+    videoId?: string;
   };
   events: { title?: string; subtitle?: string };
   story: {
@@ -38,6 +41,7 @@ export interface HomepageContentInput {
   heroTitleAccent?: string;
   heroSubtitle?: string;
   heroImageId?: string | null;
+  heroVideoId?: string | null;
   eventsTitle?: string;
   eventsSubtitle?: string;
   storyEyebrow?: string;

@@ -49,6 +49,12 @@ const FIELD_LABELS = {
   momentsTitle: { he: 'כותרת הרגעים', en: 'Moments title' },
   cta: { he: 'קריאה לפעולה', en: 'Call to action' },
   noImage: { he: 'ללא תמונה', en: 'No image' },
+  video: { he: 'סרטון רקע', en: 'Background video' },
+  noVideo: { he: 'ללא סרטון', en: 'No video' },
+  videoHint: {
+    he: 'מתנגן בלולאה, מושתק, מאחורי הכותרת. התמונה נשארת — היא מה שרואים עד שהסרטון נטען, ומה שרואים במקומו אם המבקר ביקש פחות תנועה.',
+    en: 'Loops silently behind the title. The image stays — it is what shows until the video loads, and instead of it for a visitor who asked for less motion.',
+  },
 } satisfies Record<string, Record<Locale, string>>;
 
 const ConsoleHomepage = async ({ searchParams }: ConsoleHomepageProps) => {
@@ -72,6 +78,7 @@ const ConsoleHomepage = async ({ searchParams }: ConsoleHomepageProps) => {
     ? (HOMEPAGE_SCENE_GROUPS[selectedScene.type] ?? 'none')
     : 'none';
   const noImage = FIELD_LABELS.noImage[locale];
+  const noVideo = FIELD_LABELS.noVideo[locale];
   const sceneHref = (sceneId: string) =>
     `/studio/homepage?content=${contentLocale}&scene=${sceneId}`;
 
@@ -254,7 +261,19 @@ const ConsoleHomepage = async ({ searchParams }: ConsoleHomepageProps) => {
                     defaultValue={draft?.hero.imageId}
                     media={media}
                     emptyLabel={noImage}
+                    kind="image"
                   />
+                  <CMediaPicker
+                    name="heroVideoId"
+                    label={FIELD_LABELS.video[locale]}
+                    defaultValue={draft?.hero.videoId}
+                    media={media}
+                    emptyLabel={noVideo}
+                    kind="video"
+                  />
+                  <p className="-mt-2 text-[10px] leading-relaxed text-[var(--c-text-faint)]">
+                    {FIELD_LABELS.videoHint[locale]}
+                  </p>
                 </>
               ) : null}
               {group === 'events' ? (
@@ -294,6 +313,7 @@ const ConsoleHomepage = async ({ searchParams }: ConsoleHomepageProps) => {
                     defaultValue={draft?.story.imageId}
                     media={media}
                     emptyLabel={noImage}
+                    kind="image"
                   />
                 </>
               ) : null}

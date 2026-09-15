@@ -199,14 +199,43 @@ export const toggleHomepageSceneAction = async (formData: FormData) => {
  */
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
+/*
+ * A background film is not a photograph and cannot share its ceiling:
+ * ten seconds of 1080p is already past ten megabytes. This is the
+ * largest file the chain will carry — the server action's own body
+ * limit in next.config.ts and Nginx's client_max_body_size are set to
+ * the same number, and the smallest of the three is what actually
+ * decides, so they are kept together deliberately.
+ */
+const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
+
+const ACCEPTED_UPLOAD = /^(?:image\/(?:jpeg|png|webp|avif|svg\+xml)|video\/(?:mp4|webm))$/;
+
+const tooBig = (file: File): boolean =>
+  file.size > (file.type.startsWith('video/') ? MAX_VIDEO_BYTES : MAX_UPLOAD_BYTES);
+
+/*
+ * The refusals say so.
+ *
+ * This action used to return quietly on every rejection, so an operator
+ * who chose a file the platform would not take watched the page reload
+ * unchanged and concluded the Studio was broken. Each reason now comes
+ * back in the URL and the library prints it.
+ */
 export const uploadMediaAction = async (formData: FormData) => {
   const file = formData.get('file');
   if (!(await authorized('experiences:manage'))) {
     return;
   }
   const alt = String(formData.get('alt') ?? '').trim();
-  if (!(file instanceof File) || file.size === 0 || file.size > MAX_UPLOAD_BYTES) {
-    return;
+  if (!(file instanceof File) || file.size === 0) {
+    redirect('/studio/media?upload=missing');
+  }
+  if (!ACCEPTED_UPLOAD.test(file.type)) {
+    redirect('/studio/media?upload=type');
+  }
+  if (tooBig(file)) {
+    redirect('/studio/media?upload=size');
   }
   const data = new Uint8Array(await file.arrayBuffer());
   await addMedia({
@@ -214,6 +243,7 @@ export const uploadMediaAction = async (formData: FormData) => {
     alt: alt || file.name,
   });
   revalidatePath('/studio/media');
+  redirect('/studio/media?upload=ok');
 };
 
 /*

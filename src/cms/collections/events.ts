@@ -128,6 +128,12 @@ export const Events: CollectionConfig = {
       relationTo: 'media',
     },
     {
+      /* The conference's moving background; heroImage stays its poster. */
+      name: 'heroVideo',
+      type: 'relationship',
+      relationTo: 'media',
+    },
+    {
       name: 'featured',
       type: 'checkbox',
       defaultValue: false,

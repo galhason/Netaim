@@ -28,6 +28,12 @@ export const EDITOR_MESSAGES: Record<string, Record<Locale, string>> = {
   heroTitleAccent: { he: 'כותרת — שורת ההדגשה', en: 'Title — accent line' },
   heroSubtitle: { he: 'משפט תומך', en: 'Supporting sentence' },
   heroImage: { he: 'תמונת רקע', en: 'Backdrop image' },
+  heroVideo: { he: 'סרטון רקע', en: 'Backdrop video' },
+  heroVideoHint: {
+    he: 'מתנגן בלולאה, מושתק, מאחורי הכותרת. תמונת הרקע נשארת — היא הפוסטר, והיא מה שרואים אם המבקר ביקש פחות תנועה.',
+    en: 'Loops silently behind the title. The backdrop image stays — it is the poster, and what a visitor who asked for less motion sees instead.',
+  },
+  noVideo: { he: 'ללא סרטון', en: 'No video' },
   eventsTitle: { he: 'כותרת המדור', en: 'Section title' },
   eventsSubtitle: { he: 'תת־כותרת', en: 'Subtitle' },
   storyEyebrow: { he: 'שורת פתיחה קטנה', en: 'Eyebrow line' },

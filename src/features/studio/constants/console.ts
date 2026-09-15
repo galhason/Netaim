@@ -416,8 +416,18 @@ export const CONSOLE_UI = {
   momentCaption: { he: 'כיתוב', en: 'Caption' },
   momentCaptions: { he: 'כיתובי הרגעים', en: 'Moment captions' },
   uploadNote: {
-    he: 'עד 10MB לקובץ; הנכס זמין מיד בכל אינספקטור.',
-    en: 'Up to 10MB per file; the asset is available in every inspector immediately.',
+    he: 'תמונות עד 10MB, סרטונים (MP4 או WebM) עד 200MB. הנכס זמין מיד בכל אינספקטור.',
+    en: 'Images up to 10MB, video (MP4 or WebM) up to 200MB. The asset is available in every inspector immediately.',
+  },
+  uploadOk: { he: 'הקובץ נוסף לספרייה.', en: 'Added to the library.' },
+  uploadMissing: { he: 'לא נבחר קובץ.', en: 'No file chosen.' },
+  uploadWrongType: {
+    he: 'הפורמט הזה לא נתמך. תמונות: JPG, PNG, WebP, AVIF, SVG. סרטונים: MP4 או WebM.',
+    en: 'That format is not supported. Images: JPG, PNG, WebP, AVIF, SVG. Video: MP4 or WebM.',
+  },
+  uploadTooLarge: {
+    he: 'הקובץ גדול מדי — תמונות עד 10MB, סרטונים עד 200MB.',
+    en: 'That file is too large — images up to 10MB, video up to 200MB.',
   },
 } satisfies Record<string, Record<Locale, string>>;
 

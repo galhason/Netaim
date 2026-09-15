@@ -38,6 +38,13 @@ export const OpeningPage: GlobalConfig = {
         { name: 'titleAccent', type: 'text', localized: true },
         { name: 'subtitle', type: 'text', localized: true },
         { name: 'image', type: 'relationship', relationTo: 'media' },
+        /*
+         * A moving background, when there is one. The still stays: it is
+         * the poster while the video loads, what a visitor who asked for
+         * less motion sees instead, and the whole background on a
+         * connection too slow for video.
+         */
+        { name: 'video', type: 'relationship', relationTo: 'media' },
       ],
     },
     {

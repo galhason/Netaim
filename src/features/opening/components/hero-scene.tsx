@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import type { Locale } from '@/config/locales';
-import { RevealText } from '@/shared';
+import { BackgroundVideo, RevealText } from '@/shared';
 import { OPENING_UI } from '../constants/opening-content';
 import type { OpeningHero } from '../types/opening';
 import { IconScroll } from './icons';
@@ -28,6 +28,18 @@ const HeroScene = ({ hero, locale }: HeroSceneProps) => (
           sizes="100vw"
           className="object-cover"
         />
+        {/*
+          * The film sits over the still, not instead of it: the still is
+          * what the first moment shows, what a visitor who asked for
+          * less motion keeps, and what remains if autoplay is refused.
+          */}
+        {hero.video ? (
+          <BackgroundVideo
+            src={hero.video}
+            poster={hero.image}
+            className="absolute inset-0 size-full object-cover"
+          />
+        ) : null}
       </div>
       <div className="cine-image-scrim absolute inset-0" />
       <div className="cine-audience absolute inset-0" />

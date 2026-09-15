@@ -73,20 +73,79 @@ interface CMediaItem {
   url: string;
   alt: string;
   filename: string;
+  mimeType?: string;
+  posterUrl?: string;
 }
+
+const isVideo = (item: CMediaItem): boolean =>
+  Boolean(item.mimeType?.startsWith('video/'));
+
+/*
+ * A tile in the library.
+ *
+ * A video has no still to show unless one was attached to it, and a
+ * `<video>` element in a grid of sixty would have the browser opening
+ * sixty connections to draw sixty first frames. So a video without a
+ * poster is a film strip and its filename — enough to choose by, and
+ * nothing is fetched until the page it is chosen for.
+ */
+const MediaTile = ({ item }: { item: CMediaItem }) => {
+  if (isVideo(item) && !item.posterUrl) {
+    return (
+      <span className="flex aspect-video w-full flex-col items-center justify-center gap-1 bg-[rgba(255,255,255,0.04)] px-1 text-center">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          aria-hidden="true"
+          className="text-[var(--c-bronze)]"
+        >
+          <rect x="2" y="5" width="20" height="14" rx="2" />
+          <path d="M10 9.5v5l4.5-2.5z" fill="currentColor" stroke="none" />
+        </svg>
+        <span className="line-clamp-2 text-[9px] leading-tight text-[var(--c-text-faint)]">
+          {item.filename}
+        </span>
+      </span>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- library thumbnails come straight from the media API
+    <img
+      src={item.posterUrl ?? item.url}
+      alt={item.alt || item.filename}
+      loading="lazy"
+      className="aspect-video w-full object-cover"
+    />
+  );
+};
 
 interface CMediaPickerProps extends CFieldProps {
   media: CMediaItem[];
   emptyLabel: string;
+  /*
+   * Which half of the library to offer. A hero's still and a hero's
+   * film are two different fields, and showing every file in both is
+   * how a video ends up chosen as a photograph — which fails silently,
+   * as a broken image, on the live site.
+   */
+  kind?: 'image' | 'video';
 }
 
 export const CMediaPicker = ({
   name,
   label,
   defaultValue,
-  media,
+  media: library,
   emptyLabel,
+  kind,
 }: CMediaPickerProps) => {
+  const media = kind
+    ? library.filter((item) => (kind === 'video' ? isVideo(item) : !isVideo(item)))
+    : library;
   const current = media.find((item) => item.id === defaultValue);
   const orphan = Boolean(defaultValue) && !current;
 
@@ -133,13 +192,7 @@ export const CMediaPicker = ({
               className="peer sr-only"
             />
             <span className="block overflow-hidden rounded-md border border-transparent opacity-75 transition-all peer-checked:border-[var(--c-bronze)] peer-checked:opacity-100 peer-checked:shadow-[0_0_0_1px_var(--c-bronze)] peer-focus-visible:border-[var(--c-bronze)] hover:opacity-100">
-              {/* eslint-disable-next-line @next/next/no-img-element -- library thumbnails come straight from the media API */}
-              <img
-                src={item.url}
-                alt={item.alt || item.filename}
-                loading="lazy"
-                className="aspect-video w-full object-cover"
-              />
+              <MediaTile item={item} />
             </span>
           </label>
         ))}
@@ -191,13 +244,7 @@ export const CMediaMultiPicker = ({
               className="peer sr-only"
             />
             <span className="block overflow-hidden rounded-md border border-transparent opacity-75 transition-all peer-checked:border-[var(--c-bronze)] peer-checked:opacity-100 peer-checked:shadow-[0_0_0_1px_var(--c-bronze)] peer-focus-visible:border-[var(--c-bronze)] hover:opacity-100">
-              {/* eslint-disable-next-line @next/next/no-img-element -- library thumbnails come straight from the media API */}
-              <img
-                src={item.url}
-                alt={item.alt || item.filename}
-                loading="lazy"
-                className="aspect-video w-full object-cover"
-              />
+              <MediaTile item={item} />
             </span>
           </label>
         ))}

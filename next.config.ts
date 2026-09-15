@@ -77,6 +77,17 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  experimental: {
+    /*
+     * A Server Action's body defaults to one megabyte, which is smaller
+     * than most photographs and far smaller than any film. The Studio
+     * uploads through actions, so this is the real ceiling — it is kept
+     * equal to MAX_VIDEO_BYTES in the upload action and to Nginx's
+     * client_max_body_size, because the smallest of the three is what
+     * an operator actually meets.
+     */
+    serverActions: { bodySizeLimit: '200mb' },
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     /*

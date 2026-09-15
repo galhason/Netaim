@@ -76,6 +76,10 @@ export interface MediaSummary {
   url: string;
   alt: string;
   filename: string;
+  /* 'image/png', 'video/mp4' — what the library actually holds. */
+  mimeType?: string;
+  /* Video only: the still to show before it plays. */
+  posterUrl?: string;
 }
 
 export interface MediaRepository {
@@ -103,6 +107,7 @@ export interface PortalEvent {
   teaser?: string;
   posterUrl?: string;
   heroUrl?: string;
+  heroVideoUrl?: string;
   featured: boolean;
   atmosphere: GuidingTone;
 }
@@ -133,6 +138,7 @@ export interface EventOpeningInput {
   atmosphere?: string;
   posterId?: string | null;
   heroImageId?: string | null;
+  heroVideoId?: string | null;
   arrivalEyebrow?: string;
   storyEyebrow?: string;
   storyTitle?: string;
@@ -185,6 +191,7 @@ export interface EventOpeningDraft {
   atmosphere: string;
   posterId?: string;
   heroImageId?: string;
+  heroVideoId?: string;
   arrivalEyebrow?: string;
   story: { eyebrow?: string; title?: string; paragraph?: string; imageId?: string };
   quote: {

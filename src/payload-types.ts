@@ -268,6 +268,7 @@ export interface Event {
   teaser?: string | null;
   poster?: (number | null) | Media;
   heroImage?: (number | null) | Media;
+  heroVideo?: (number | null) | Media;
   featured?: boolean | null;
   /**
    * Conference opening experience content
@@ -413,6 +414,10 @@ export interface Media {
   id: number;
   organization: number | Organization;
   alt: string;
+  /**
+   * Video only: the still shown before playback.
+   */
+  poster?: (number | null) | Media;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -1119,6 +1124,7 @@ export interface UsersSelect<T extends boolean = true> {
 export interface MediaSelect<T extends boolean = true> {
   organization?: T;
   alt?: T;
+  poster?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -1158,6 +1164,7 @@ export interface EventsSelect<T extends boolean = true> {
   teaser?: T;
   poster?: T;
   heroImage?: T;
+  heroVideo?: T;
   featured?: T;
   opening?:
     | T
@@ -1737,6 +1744,7 @@ export interface OpeningPage {
     titleAccent?: string | null;
     subtitle?: string | null;
     image?: (number | null) | Media;
+    video?: (number | null) | Media;
   };
   events?: {
     title?: string | null;
@@ -1807,6 +1815,7 @@ export interface OpeningPageSelect<T extends boolean = true> {
         titleAccent?: T;
         subtitle?: T;
         image?: T;
+        video?: T;
       };
   events?:
     | T

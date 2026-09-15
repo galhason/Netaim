@@ -1227,7 +1227,19 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                     defaultValue={draft.heroImageId}
                     media={media}
                     emptyLabel={noImage}
+                    kind="image"
                   />
+                  <CMediaPicker
+                    name="heroVideoId"
+                    label={label('heroVideo', locale)}
+                    defaultValue={draft.heroVideoId}
+                    media={media}
+                    emptyLabel={label('noVideo', locale)}
+                    kind="video"
+                  />
+                  <p className="-mt-2 text-[10px] leading-relaxed text-[var(--c-text-faint)]">
+                    {label('heroVideoHint', locale)}
+                  </p>
                   <CMediaPicker
                     name="posterId"
                     label={label('poster', locale)}

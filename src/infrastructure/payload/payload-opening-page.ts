@@ -34,6 +34,8 @@ export const payloadHomepageContent = async (
       subtitle: page.hero?.subtitle ?? undefined,
       imageUrl: mediaUrl(page.hero?.image),
       imageId: mediaId(page.hero?.image),
+      videoUrl: mediaUrl(page.hero?.video),
+      videoId: mediaId(page.hero?.video),
     },
     events: {
       title: page.events?.title ?? undefined,
@@ -90,6 +92,7 @@ export const payloadSaveHomepageContent = async (
         titleAccent: text(input.heroTitleAccent),
         subtitle: text(input.heroSubtitle),
         image: toMediaRelation(input.heroImageId),
+        video: toMediaRelation(input.heroVideoId),
       },
       events: {
         title: text(input.eventsTitle),

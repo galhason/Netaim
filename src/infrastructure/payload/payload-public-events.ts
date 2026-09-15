@@ -20,6 +20,7 @@ export const toPortal = (event: Event): PortalEvent => ({
   teaser: event.teaser ?? undefined,
   posterUrl: mediaUrl(event.poster),
   heroUrl: mediaUrl(event.heroImage),
+  heroVideoUrl: mediaUrl(event.heroVideo),
   featured: event.featured === true,
   atmosphere:
     event.atmosphere && isGuidingTone(event.atmosphere)

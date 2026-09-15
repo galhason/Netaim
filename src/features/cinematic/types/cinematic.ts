@@ -18,6 +18,12 @@ export interface ArrivalScene {
   location: string;
   image?: string;
   /*
+   * A looping background film, when the conference has one. The still
+   * above stays: poster, reduced-motion fallback, and what remains if
+   * autoplay is refused.
+   */
+  video?: string;
+  /*
    * The invitation carries its own anticipation (Experience Engine v3):
    * the countdown target and the at-a-glance numbers live inside the
    * hero's glass panel.

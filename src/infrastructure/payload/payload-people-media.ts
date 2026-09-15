@@ -31,6 +31,10 @@ const toMedia = (media: Media): MediaSummary => ({
   url: media.url ?? '',
   alt: media.alt,
   filename: media.filename ?? '',
+  ...(media.mimeType ? { mimeType: media.mimeType } : {}),
+  ...(media.poster && typeof media.poster === 'object' && media.poster.url
+    ? { posterUrl: media.poster.url }
+    : {}),
 });
 
 export const payloadPeopleRepository: PeopleRepository = {
@@ -83,6 +87,8 @@ export const payloadMediaRepository: MediaRepository = {
       user,
       sort: '-createdAt',
       limit: 60,
+      /* depth 1 so a video's poster arrives with it, not as an id. */
+      depth: 1,
       where: search
         ? {
             or: [

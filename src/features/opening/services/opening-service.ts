@@ -48,6 +48,7 @@ export const getOpening = async (locale: Locale): Promise<OpeningContent> => {
           titleAccent: page.hero.titleAccent ?? fallback.hero.titleAccent,
           subtitle: page.hero.subtitle ?? fallback.hero.subtitle,
           image: page.hero.imageUrl ?? fallback.hero.image,
+          ...(page.hero.videoUrl ? { video: page.hero.videoUrl } : {}),
         },
         events: {
           title: page.events.title ?? fallback.events.title,

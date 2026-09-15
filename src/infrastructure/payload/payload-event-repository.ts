@@ -59,6 +59,7 @@ const toOpeningDraft = (event: Event): EventOpeningDraft => ({
   atmosphere: event.atmosphere ?? 'bronze',
   posterId: mediaId(event.poster),
   heroImageId: mediaId(event.heroImage),
+  heroVideoId: mediaId(event.heroVideo),
   arrivalEyebrow: event.opening?.arrivalEyebrow ?? undefined,
   story: {
     eyebrow: event.opening?.story?.eyebrow ?? undefined,
@@ -493,6 +494,7 @@ export const payloadEventRepository: EventRepository = {
         atmosphere: input.atmosphere as Event['atmosphere'],
         poster: toMediaRelation(input.posterId),
         heroImage: toMediaRelation(input.heroImageId),
+        heroVideo: toMediaRelation(input.heroVideoId),
         opening: {
           arrivalEyebrow: openingText(input.arrivalEyebrow),
           story: {

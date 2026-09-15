@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Locale } from '@/config/locales';
+import { BackgroundVideo } from '@/shared';
 import { CINEMATIC_UI } from '../constants/cinematic-content';
 import type { ArrivalScene as ArrivalSceneData } from '../types/cinematic';
 import HeroCountdownBadge from './hero-countdown-badge';
@@ -56,6 +57,13 @@ const ArrivalScene = ({ arrival, locale }: ArrivalSceneProps) => {
               sizes="100vw"
               className="object-cover object-[22%_center] rtl:object-[78%_center]"
             />
+            {arrival.video ? (
+              <BackgroundVideo
+                src={arrival.video}
+                poster={arrival.image}
+                className="absolute inset-0 size-full object-cover object-[22%_center] rtl:object-[78%_center]"
+              />
+            ) : null}
           </div>
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-[#16233a] via-surface to-[#0d1626]" />

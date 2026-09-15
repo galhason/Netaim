@@ -42,6 +42,7 @@ export { Icon } from './components/icon';
 export { default as Reveal } from './components/reveal';
 export { default as RevealText } from './components/reveal-text';
 export { default as ParallaxImage } from './components/parallax-image';
+export { default as BackgroundVideo } from './components/background-video';
 export { default as ShaderCanvas } from './components/shader-canvas';
 export { default as GuidingLight } from './components/guiding-light';
 export {

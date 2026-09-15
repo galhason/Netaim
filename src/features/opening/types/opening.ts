@@ -5,6 +5,12 @@ export interface OpeningHero {
   titleAccent: string;
   subtitle: string;
   image: string;
+  /*
+   * A looping background film, when the organisers uploaded one. The
+   * still is never optional: it is the poster, the reduced-motion
+   * fallback, and what stands in if the video cannot play.
+   */
+  video?: string;
 }
 
 export interface FeaturedHero {
