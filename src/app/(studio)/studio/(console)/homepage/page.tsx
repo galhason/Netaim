@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from '@/config/locales';
-import { listMedia } from '@/features/events';
+import { getSiteBrand, listMedia } from '@/features/events';
 import {
   buildOpeningDescriptor,
   getHomepageDraft,
@@ -66,13 +66,15 @@ const ConsoleHomepage = async ({ searchParams }: ConsoleHomepageProps) => {
   const contentLocale: Locale =
     contentParam === 'en' || contentParam === 'he' ? contentParam : 'he';
 
-  const [opening, draft, media] = await Promise.all([
+  const [opening, draft, media, logo] = await Promise.all([
     getOpening(contentLocale),
     getHomepageDraft(contentLocale),
     listMedia().catch(() => []),
+    getSiteBrand(),
   ]);
 
-  const descriptor = buildOpeningDescriptor(opening, contentLocale);
+  /* The canvas shows the site, logo and all. */
+  const descriptor = buildOpeningDescriptor(opening, contentLocale, logo.onDark);
   const selectedScene =
     descriptor.scenes.find((scene) => scene.id === sceneParam) ??
     descriptor.scenes.find((scene) => HOMEPAGE_SCENE_GROUPS[scene.type]);

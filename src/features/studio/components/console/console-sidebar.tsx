@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { BRAND_NAME } from '@/config/brand';
 import type { Locale } from '@/config/locales';
+import { BrandMark } from '@/shared';
 import { CONSOLE_UI } from '../../constants/console';
 
 /*
@@ -60,6 +62,7 @@ const buildGroups = (
   {
     title: CONSOLE_UI.groupOrg[locale],
     items: [
+      { href: '/studio/brand', label: CONSOLE_UI.brandNav[locale] },
       { href: '/studio/organization', label: CONSOLE_UI.organization[locale] },
       { href: '/studio/team', label: CONSOLE_UI.teams[locale] },
       { label: CONSOLE_UI.settings[locale], soon: true },
@@ -67,14 +70,29 @@ const buildGroups = (
   },
 ];
 
-const Logo = () => (
-  <Link href="/studio" className="flex items-center gap-2.5 px-2 py-2.5">
-    <span className="grid size-7 place-items-center rounded-full border border-[var(--c-bronze)]/50 font-display text-sm text-[var(--c-bronze)]">
-      H
-    </span>
-    <span className="text-[13px] font-semibold tracking-[0.3em] text-[#EDE6D8]">
-      נטעים
-    </span>
+/*
+ * The rail's own mark. The site's logo when there is one — the operator
+ * should see the brand they are editing, not a placeholder initial —
+ * and the letter and the name when there is not.
+ */
+const Logo = ({ brandLogo }: { brandLogo?: string }) => (
+  <Link
+    href="/studio"
+    aria-label={BRAND_NAME}
+    className="flex items-center gap-2.5 px-2 py-2.5"
+  >
+    {brandLogo ? (
+      <BrandMark brand={BRAND_NAME} src={brandLogo} height={34} />
+    ) : (
+      <>
+        <span className="grid size-7 place-items-center rounded-full border border-[var(--c-bronze)]/50 font-display text-sm text-[var(--c-bronze)]">
+          H
+        </span>
+        <span className="text-[13px] font-semibold tracking-[0.3em] text-[#EDE6D8]">
+          {BRAND_NAME}
+        </span>
+      </>
+    )}
   </Link>
 );
 
@@ -124,9 +142,11 @@ const NavList = ({
 const ConsoleSidebar = ({
   locale,
   openReports = 0,
+  brandLogo,
 }: {
   locale: Locale;
   openReports?: number;
+  brandLogo?: string;
 }) => {
   const [open, setOpen] = useState(false);
   const he = locale === 'he';
@@ -135,7 +155,7 @@ const ConsoleSidebar = ({
     <>
       {/* Mobile top bar */}
       <div className="flex items-center justify-between bg-[#0C1520] px-3 py-2 md:hidden">
-        <Logo />
+        <Logo brandLogo={brandLogo} />
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -150,7 +170,7 @@ const ConsoleSidebar = ({
 
       {/* Desktop rail */}
       <aside className="hidden flex-col bg-[#0C1520] p-3 md:flex">
-        <Logo />
+        <Logo brandLogo={brandLogo} />
         <NavList locale={locale} openReports={openReports} />
       </aside>
 
@@ -165,7 +185,7 @@ const ConsoleSidebar = ({
           />
           <aside className="absolute inset-y-0 end-0 flex w-72 max-w-[85%] flex-col overflow-y-auto bg-[#0C1520] p-3 shadow-2xl">
             <div className="flex items-center justify-between">
-              <Logo />
+              <Logo brandLogo={brandLogo} />
               <button
                 type="button"
                 onClick={() => setOpen(false)}

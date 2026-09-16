@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Locale } from '@/config/locales';
+import { BrandMark } from '@/shared';
 import { OPENING_UI } from '../constants/opening-content';
 
 /*
@@ -9,13 +10,19 @@ import { OPENING_UI } from '../constants/opening-content';
 interface OpeningFooterProps {
   locale: Locale;
   brand: string;
+  brandLogo?: string;
 }
 
-const OpeningFooter = ({ locale, brand }: OpeningFooterProps) => (
+const OpeningFooter = ({ locale, brand, brandLogo }: OpeningFooterProps) => (
   <footer>
     <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-10 md:px-12">
       <p>
-        <span className="block font-display tracking-[0.3em]">{brand}</span>
+        <BrandMark
+          brand={brand}
+          src={brandLogo}
+          height={40}
+          textClassName="block font-display tracking-[0.3em]"
+        />
         <span className="mt-1 block text-[0.65rem] tracking-[0.24em] text-text-secondary">
           {OPENING_UI.footerTagline[locale]}
         </span>

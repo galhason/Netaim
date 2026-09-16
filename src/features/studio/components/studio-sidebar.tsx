@@ -2,13 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { BRAND_NAME } from '@/config/brand';
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from '@/config/locales';
+import { BrandMark } from '@/shared';
 import { setStudioLocaleAction } from '@/app/(studio)/studio/actions';
 import { STUDIO_AREAS, STUDIO_MESSAGES } from '../constants/navigation';
 
 interface StudioSidebarProps {
   locale: Locale;
   userName: string;
+  /* The site's logo for this dark rail; the name in type without one. */
+  brandLogo?: string;
 }
 
 const initials = (name: string): string =>
@@ -22,10 +26,10 @@ const initials = (name: string): string =>
 const isActive = (pathname: string, path: string): boolean =>
   path === '/studio' ? pathname === '/studio' : pathname.startsWith(path);
 
-const Wordmark = () => (
-  <p className="font-display text-lg font-medium tracking-[0.2em] text-sidebar-text">
-    נטעים
-    <span className="ms-2 align-middle text-[0.6rem] tracking-[0.35em] text-sidebar-muted">
+const Wordmark = ({ brandLogo }: { brandLogo?: string }) => (
+  <p className="flex items-center gap-2 font-display text-lg font-medium tracking-[0.2em] text-sidebar-text">
+    <BrandMark brand={BRAND_NAME} src={brandLogo} height={30} />
+    <span className="align-middle text-[0.6rem] tracking-[0.35em] text-sidebar-muted">
       STUDIO
     </span>
   </p>
@@ -70,7 +74,11 @@ const User = ({ userName }: { userName: string }) => (
   </div>
 );
 
-const StudioSidebar = ({ locale, userName }: StudioSidebarProps) => {
+const StudioSidebar = ({
+  locale,
+  userName,
+  brandLogo,
+}: StudioSidebarProps) => {
   const pathname = usePathname();
 
   const navLink = (path: string, label: string, horizontal: boolean) => {
@@ -101,7 +109,7 @@ const StudioSidebar = ({ locale, userName }: StudioSidebarProps) => {
     <>
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-8 border-e border-sidebar-border bg-sidebar px-4 py-6 md:flex">
         <div className="px-3">
-          <Wordmark />
+          <Wordmark brandLogo={brandLogo} />
         </div>
         <nav
           aria-label={STUDIO_MESSAGES.title[locale]}
@@ -118,7 +126,7 @@ const StudioSidebar = ({ locale, userName }: StudioSidebarProps) => {
       </aside>
 
       <header className="flex items-center justify-between gap-4 border-b border-sidebar-border bg-sidebar px-5 py-3 md:hidden">
-        <Wordmark />
+        <Wordmark brandLogo={brandLogo} />
         <nav
           aria-label={STUDIO_MESSAGES.title[locale]}
           className="flex flex-1 items-center gap-1 overflow-x-auto"

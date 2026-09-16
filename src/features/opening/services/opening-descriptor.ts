@@ -15,6 +15,12 @@ import type { OpeningContent } from '../types/opening';
 export const buildOpeningDescriptor = (
   content: OpeningContent,
   locale: Locale,
+  /*
+   * The site's logo for this dark chrome. Optional: a caller that has
+   * not resolved it still gets a working descriptor, and the chrome
+   * writes the name in type.
+   */
+  brandLogo?: string,
 ): ExperienceDescriptor => ({
   id: 'homepage',
   type: 'homepage',
@@ -25,7 +31,7 @@ export const buildOpeningDescriptor = (
     {
       id: 'nav',
       type: OPENING_SCENE_TYPES.nav,
-      content: { brand: brandFor(locale), meHref: content.meHref },
+      content: { brand: brandFor(locale), brandLogo, meHref: content.meHref },
     },
     content.featured
       ? {
@@ -53,7 +59,7 @@ export const buildOpeningDescriptor = (
       {
         id: 'footer',
         type: OPENING_SCENE_TYPES.footer,
-        content: { brand: brandFor(locale) },
+        content: { brand: brandFor(locale), brandLogo },
       },
     ],
     content.composition ?? [],

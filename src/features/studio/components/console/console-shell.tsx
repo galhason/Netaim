@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from '@/config/locales';
 import { setStudioLocaleAction } from '@/app/(studio)/studio/actions';
+import { getSiteBrand } from '@/features/events';
 import ConsoleSidebar from './console-sidebar';
 
 /*
@@ -64,16 +65,28 @@ const LocaleSwitch = ({ locale }: { locale: Locale }) => (
   </form>
 );
 
-const ConsoleShell = ({
+/*
+ * The shell resolves the logo itself rather than taking it as a prop.
+ * Every console screen renders through here, and a prop would have to
+ * be threaded through each of them — fifteen chances to forget one and
+ * leave a single screen wearing a different mark.
+ */
+const ConsoleShell = async ({
   locale,
   userName,
   breadcrumb,
   actions,
   openReports,
   children,
-}: ConsoleShellProps) => (
+}: ConsoleShellProps) => {
+  const logo = await getSiteBrand().catch(() => null);
+  return (
   <div className="console flex min-h-dvh flex-col bg-[var(--c-void)] font-body text-[var(--c-text)] md:grid md:grid-cols-[200px_1fr]">
-    <ConsoleSidebar locale={locale} openReports={openReports ?? 0} />
+    <ConsoleSidebar
+      locale={locale}
+      openReports={openReports ?? 0}
+      {...(logo ? { brandLogo: logo.onDark } : {})}
+    />
 
     <div className="flex min-h-0 min-w-0 flex-col">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-[var(--c-line)] px-5 py-3">
@@ -89,6 +102,7 @@ const ConsoleShell = ({
       <div className="min-h-0 flex-1">{children}</div>
     </div>
   </div>
-);
+  );
+};
 
 export default ConsoleShell;

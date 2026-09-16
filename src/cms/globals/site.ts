@@ -28,5 +28,29 @@ export const Site: GlobalConfig = {
           'The published conference shown as the public website (its landing, program, speakers and information).',
       },
     },
+    /*
+     * The logo, in the two treatments the platform's two chromes need.
+     * Left unset, the build's own artwork is drawn — so this is an
+     * override, never a requirement, and clearing it restores the mark
+     * rather than emptying the header.
+     */
+    {
+      name: 'logo',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description:
+          'The logo drawn on light backgrounds — the daylight pages and the footer.',
+      },
+    },
+    {
+      name: 'logoOnDark',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description:
+          'The logo drawn on the navy chrome — the navigation bar and mail headers. Falls back to the light logo when unset.',
+      },
+    },
   ],
 };

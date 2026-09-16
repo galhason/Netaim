@@ -4,7 +4,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { CinematicNav, ConferenceFooter } from '@/features/cinematic';
-import { getActiveConferenceSlug } from '@/features/events';
+import { getActiveConferenceSlug, getSiteBrand } from '@/features/events';
 import { currentParticipant } from '@/features/registration';
 
 interface SiteLayoutProps {
@@ -39,6 +39,7 @@ const SiteLayout = async ({ children, params }: SiteLayoutProps) => {
    * already dynamic because of this read.
    */
   const me = await currentParticipant().catch(() => null);
+  const logo = await getSiteBrand();
 
   return (
     <div className="cinematic min-h-dvh bg-surface text-text-primary">
@@ -47,11 +48,16 @@ const SiteLayout = async ({ children, params }: SiteLayoutProps) => {
         registerHref={registerHref}
         meHref={meHref}
         brand={brandFor(locale as Locale)}
+        brandLogo={logo.onDark}
         viewer={me ? { name: me.name || me.email } : null}
         immediate
       />
       {children}
-      <ConferenceFooter locale={locale as Locale} brand={brandFor(locale as Locale)} />
+      <ConferenceFooter
+        locale={locale as Locale}
+        brand={brandFor(locale as Locale)}
+        brandLogo={logo.onDark}
+      />
     </div>
   );
 };

@@ -50,7 +50,11 @@ import { payloadPublicEventRepository } from './payload/payload-public-events';
 import {
   payloadActiveConferenceSlug,
   payloadSetActiveConference,
+  payloadSiteLogos,
+  payloadSiteLogoChoice,
+  payloadSetSiteLogos,
 } from './payload/payload-site';
+import type { SiteLogos } from './payload/payload-site';
 import {
   payloadHomepageContent,
   payloadHomepageDraft,
@@ -190,6 +194,18 @@ export const activeConferenceSlug: () => Promise<string | null> =
   payloadActiveConferenceSlug;
 export const setActiveConference: (slug: string | null) => Promise<void> =
   payloadSetActiveConference;
+
+/* The logo the Studio holds for the site, and the Studio write that sets it. */
+export const siteLogos: () => Promise<SiteLogos> = payloadSiteLogos;
+export const siteLogoChoice: () => Promise<{
+  logo: string | null;
+  logoOnDark: string | null;
+}> = payloadSiteLogoChoice;
+export const setSiteLogos: (logos: {
+  logo?: string | null;
+  logoOnDark?: string | null;
+}) => Promise<void> = payloadSetSiteLogos;
+export type { SiteLogos };
 export const homepageContent: HomepageContentSource = payloadHomepageContent;
 /* The Studio's reading of the same page: this locale alone. */
 export const homepageDraftContent: HomepageContentSource =

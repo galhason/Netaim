@@ -8,6 +8,7 @@ import type { Locale } from '@/config/locales';
 import { chooseLocaleAction } from '@/features/account/actions/choose-locale';
 import { signOutAction } from '@/features/account/actions/sign-out';
 import NavBell from '@/features/notifications/components/nav-bell';
+import { BrandMark } from '@/shared';
 import { CINEMATIC_UI, SITE_NAV_LINKS } from '../constants/cinematic-content';
 import type { NavSection } from '../types/cinematic';
 
@@ -26,6 +27,11 @@ interface CinematicNavProps {
   registerHref: string;
   meHref: string;
   brand: string;
+  /*
+   * The logo for the cinematic chrome, which is dark. Absent, the name
+   * is set in type as it was before there was a logo.
+   */
+  brandLogo?: string;
   /* `null` means nobody is signed in; `undefined` means not resolved. */
   viewer?: NavViewer | null;
   signInHref?: string;
@@ -60,6 +66,7 @@ const CinematicNav = ({
   registerHref,
   meHref,
   brand,
+  brandLogo,
   viewer = null,
   signInHref,
   immediate = false,
@@ -115,9 +122,15 @@ const CinematicNav = ({
       <nav className="mx-auto flex h-[88px] max-w-[1560px] items-center justify-between gap-6 px-6 md:px-10 lg:px-14">
         <Link
           href={home}
-          className="flex-none whitespace-nowrap font-display text-lg font-medium tracking-[0.22em] text-text-primary lg:tracking-[0.32em]"
+          aria-label={brand}
+          className="flex flex-none items-center whitespace-nowrap"
         >
-          {brand}
+          <BrandMark
+            brand={brand}
+            src={brandLogo}
+            height={46}
+            textClassName="font-display text-lg font-medium tracking-[0.22em] text-text-primary lg:tracking-[0.32em]"
+          />
         </Link>
 
         <div className="hidden items-center gap-5 md:flex lg:gap-7 xl:gap-9">

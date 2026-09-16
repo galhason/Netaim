@@ -27,6 +27,11 @@ export const publishedActiveConference = (): void => {
   revalidateTag(cacheTags.activeConference);
 };
 
+/* The Studio changed the site's logo. */
+export const publishedSiteBrand = (): void => {
+  revalidateTag(cacheTags.siteBrand);
+};
+
 /* The composed homepage changed. */
 export const publishedHomepage = (): void => {
   revalidateTag(cacheTags.homepage);

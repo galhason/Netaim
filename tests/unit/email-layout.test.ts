@@ -77,7 +77,7 @@ describe('the SMTP channel sends both parts', () => {
   it('always attaches the HTML beside the text', () => {
     const channel = read('src/infrastructure/email/smtp-channel.ts');
     expect(channel.includes('text: message.body')).toBe(true);
-    expect(channel.includes('html: htmlFor(message)')).toBe(true);
+    expect(channel.includes('html: htmlFor(message,')).toBe(true);
   });
 
   it('keeps presentation out of what the outbox stores', () => {

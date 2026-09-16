@@ -43,3 +43,26 @@ export const BRAND_LATIN = BRAND_MARKS.en;
  */
 export const SUPPORT_EMAIL =
   process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? 'support@hason.events';
+
+/*
+ * The mark as a picture.
+ *
+ * The wordmark is one drawing in two treatments, because the platform
+ * has two chromes: a light page and a navy rail. The colour lockup
+ * carries the green wordmark the brand was drawn with; the light one
+ * carries the same letters in cream, because dark green on navy is not
+ * a logo, it is a smudge. The emblem is identical in both.
+ *
+ * One shape, used everywhere: an operator who uploads their own logo
+ * uploads one picture, and it must look right in every place the mark
+ * appears. These are the defaults, shipped with the build so a fresh
+ * install has a logo before anyone opens the Studio; the Studio may
+ * replace either treatment, and what it stores wins.
+ */
+export const BRAND_LOGO = {
+  /* Emblem and wordmark side by side: navigation bars and mail headers. */
+  onLight: '/brand/netaim-lockup.png',
+  onDark: '/brand/netaim-lockup-light.png',
+  /* The emblem alone, square: avatars, favicons, tight corners. */
+  mark: '/brand/netaim-mark.png',
+} as const;

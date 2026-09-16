@@ -6,6 +6,7 @@ import {
   buildConferenceDescriptor,
   getConferenceExperience,
 } from '@/features/cinematic';
+import { getSiteBrand } from '@/features/events';
 import { currentParticipant, myAreaHref } from '@/features/registration';
 import '@/scenes';
 
@@ -29,6 +30,7 @@ const EventPage = async ({ params }: EventPageProps) => {
    * never enters the descriptor, which is cached and shared.
    */
   const me = await currentParticipant().catch(() => null);
+  const logo = await getSiteBrand();
   /*
    * Resolved beside the name, for the same reason: a guest who has not
    * joined this conference must not be pointed at its lounge.
@@ -44,7 +46,7 @@ const EventPage = async ({ params }: EventPageProps) => {
   return (
     <>
       <ExperienceStage
-        experience={buildConferenceDescriptor(experience, locale)}
+        experience={buildConferenceDescriptor(experience, locale, logo.onDark)}
         locale={locale}
         viewer={
           me ? { name: me.name || me.email, ...(meHref ? { href: meHref } : {}) } : null

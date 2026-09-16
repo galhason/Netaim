@@ -13,12 +13,17 @@ import type { OutboxMessage } from '../channel/channel';
  * a message becomes an email, so a verification code and a conference
  * announcement arrive looking like they came from the same place.
  *
- * The HTML is deliberately old-fashioned: tables, inline styles, web-safe
- * fonts, no external stylesheet and no image. Mail clients are not
+ * The HTML is deliberately old-fashioned: tables, inline styles and
+ * web-safe fonts, with no external stylesheet. Mail clients are not
  * browsers — Outlook renders with Word's engine, Gmail strips <style>,
  * and many readers block remote images by default. A layout that needs
  * any of those to be legible is a layout that arrives broken for a
  * share of 400 people, and there is no way to tell which share.
+ *
+ * There is exactly one image, the logo in the header, and it is drawn
+ * so that blocking it costs nothing: its alt text is the brand name,
+ * set in the same white on the same navy, which is the header this
+ * layout had before there was a logo at all.
  */
 
 const PALETTE = {
@@ -131,6 +136,12 @@ export interface EmailLayoutInput {
   /* The one value to set apart — a verification code. */
   highlight?: { label: string; value: string };
   cta?: { label: string; href: string };
+  /*
+   * The logo for the navy header, as an absolute URL — a mail client
+   * has no site to resolve a path against. Absent, the header writes
+   * the name in type.
+   */
+  logoUrl?: string;
 }
 
 export const renderEmailHtml = ({
@@ -139,6 +150,7 @@ export const renderEmailHtml = ({
   body,
   highlight,
   cta,
+  logoUrl,
 }: EmailLayoutInput): string => {
   const lang: Locale = isSupportedLocale(locale) ? locale : 'he';
   const rtl = lang === 'he';
@@ -164,7 +176,11 @@ export const renderEmailHtml = ({
           <tbody>
             <tr>
               <td style="background-color:${PALETTE.navy};border-radius:14px 14px 0 0;padding:22px 28px;text-align:${align};">
-                <div style="color:#ffffff;font-size:19px;font-weight:700;letter-spacing:0.12em;">${escape(brand)}</div>
+                ${
+                  logoUrl
+                    ? `<img src="${escape(logoUrl)}" alt="${escape(brand)}" height="34" style="display:inline-block;height:34px;width:auto;border:0;outline:none;color:#ffffff;font-size:19px;font-weight:700;letter-spacing:0.12em;" />`
+                    : `<div style="color:#ffffff;font-size:19px;font-weight:700;letter-spacing:0.12em;">${escape(brand)}</div>`
+                }
               </td>
             </tr>
             <tr>
@@ -196,11 +212,12 @@ export const renderEmailHtml = ({
  * all come off the message itself, so a channel needs to know nothing
  * about what kind of notification it is carrying.
  */
-export const htmlFor = (message: OutboxMessage): string =>
+export const htmlFor = (message: OutboxMessage, logoUrl?: string): string =>
   renderEmailHtml({
     locale: message.locale,
     subject: message.subject,
     body: message.body,
     ...(message.highlight ? { highlight: message.highlight } : {}),
     ...(message.cta ? { cta: message.cta } : {}),
+    ...(logoUrl ? { logoUrl } : {}),
   });

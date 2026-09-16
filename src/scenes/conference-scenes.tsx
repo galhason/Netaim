@@ -57,6 +57,12 @@ const ATMOS = {
 
 interface ConferenceNavContent {
   brand: string;
+  /*
+   * The logo travels on the scene's content, like the name it stands
+   * beside: the renderer must stay synchronous, so it cannot go and
+   * ask the Studio what the site's logo is.
+   */
+  brandLogo?: string;
   registerHref: string;
   meHref: string;
   sections?: NavSection[];
@@ -64,6 +70,7 @@ interface ConferenceNavContent {
 
 interface ConferenceFooterContent {
   brand: string;
+  brandLogo?: string;
 }
 
 /*
@@ -90,6 +97,7 @@ const NavRenderer = ({
      */
     meHref={viewer?.href ?? content.meHref}
     brand={content.brand}
+    brandLogo={content.brandLogo}
     sections={content.sections}
     viewer={viewer ?? null}
   />
@@ -99,7 +107,11 @@ const FooterRenderer = ({
   content,
   locale,
 }: SceneComponentProps<ConferenceFooterContent>) => (
-  <ConferenceFooter locale={locale} brand={content.brand} />
+  <ConferenceFooter
+    locale={locale}
+    brand={content.brand}
+    brandLogo={content.brandLogo}
+  />
 );
 
 interface ArrivalContent {

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
+import { getSiteBrand } from '@/features/events';
 import {
   ArrowOn,
   currentParticipant,
@@ -161,6 +162,7 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
   const query = carried.toString();
   const switchHref = `/${other}/events/${slug}/register${query ? `?${query}` : ''}`;
 
+  const logo = await getSiteBrand();
   const stateLabel = PUBLIC_STATE_LABELS[situation.state][lang];
   const stateTone: string = STATE_TONE[situation.state] ?? STATE_TONE.closed ?? '';
 
@@ -183,6 +185,7 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
     <OnboardingLayout
       locale={lang}
       switchHref={switchHref}
+      brandLogo={logo.onLight}
       eyebrow={eyebrow}
       title={title}
       intro={intro}

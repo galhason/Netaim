@@ -5,6 +5,7 @@ import {
   buildConferenceDescriptor,
   getConferenceExperiencePreview,
 } from '@/features/cinematic';
+import { getSiteBrand } from '@/features/events';
 import { CanvasSelectBridge } from '@/features/studio';
 import '@/scenes';
 
@@ -32,7 +33,8 @@ const PreviewPage = async ({ params, searchParams }: PreviewPageProps) => {
     notFound();
   }
 
-  const descriptor = buildConferenceDescriptor(experience, locale);
+  const logo = await getSiteBrand();
+  const descriptor = buildConferenceDescriptor(experience, locale, logo.onDark);
   /*
    * Focus take (approved flow): while a scene is being directed, the
    * canvas shows that scene alone — no scrolling, no getting lost.

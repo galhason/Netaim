@@ -1783,6 +1783,14 @@ export interface Site {
    * The published conference shown as the public website (its landing, program, speakers and information).
    */
   activeConference?: (number | null) | Event;
+  /**
+   * The logo drawn on light backgrounds — the daylight pages and the footer.
+   */
+  logo?: (number | null) | Media;
+  /**
+   * The logo drawn on the navy chrome — the navigation bar and mail headers. Falls back to the light logo when unset.
+   */
+  logoOnDark?: (number | null) | Media;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1859,6 +1867,8 @@ export interface OpeningPageSelect<T extends boolean = true> {
  */
 export interface SiteSelect<T extends boolean = true> {
   activeConference?: T;
+  logo?: T;
+  logoOnDark?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

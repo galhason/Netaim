@@ -23,7 +23,7 @@ import {
 } from '@/features/attendee';
 import { myConnections, myUnreadByConnection } from '@/features/networking';
 import { listDirectoryParticipants } from '@/infrastructure';
-import { getActiveConferenceSlug } from '@/features/events';
+import { getActiveConferenceSlug, getSiteBrand } from '@/features/events';
 import { listAgenda, myActivities } from '@/features/program';
 import type { SessionSummary } from '@/features/program';
 import { formatDayLabel, formatTimeLabel } from '@/shared';
@@ -158,6 +158,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
         detail={detail}
         registerHref={registerHref}
         switchHref={switchHref}
+        brandLogo={(await getSiteBrand()).onLight}
       />
     );
   }

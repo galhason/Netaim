@@ -32,6 +32,12 @@ const defaults = fallbackOpeningContent('he');
 
 interface OpeningChromeContent {
   brand: string;
+  /*
+   * The logo travels on the scene's content, like the name it stands
+   * beside: the renderer must stay synchronous, so it cannot go and
+   * ask the Studio what the site's logo is.
+   */
+  brandLogo?: string;
 }
 
 interface OpeningNavContent extends OpeningChromeContent {
@@ -42,14 +48,23 @@ const NavRenderer = ({
   content,
   locale,
 }: SceneComponentProps<OpeningNavContent>) => (
-  <OpeningNav locale={locale} brand={content.brand} meHref={content.meHref} />
+  <OpeningNav
+    locale={locale}
+    brand={content.brand}
+    brandLogo={content.brandLogo}
+    meHref={content.meHref}
+  />
 );
 
 const FooterRenderer = ({
   content,
   locale,
 }: SceneComponentProps<OpeningChromeContent>) => (
-  <OpeningFooter locale={locale} brand={content.brand} />
+  <OpeningFooter
+    locale={locale}
+    brand={content.brand}
+    brandLogo={content.brandLogo}
+  />
 );
 
 const FeaturedHeroRenderer = ({

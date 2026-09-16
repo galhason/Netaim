@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { brandFor } from '@/config/brand';
 import type { Locale } from '@/config/locales';
 import { ConferenceFooter } from '@/features/cinematic';
+import { BrandMark } from '@/shared';
 
 /*
  * The onboarding shell: the frame, the heading and the supporting
@@ -108,11 +109,17 @@ export const ArrowOn = ({ className = 'size-3.5' }: { className?: string }) => (
 export const OnboardingFrame = ({
   locale,
   switchHref,
+  brandLogo,
   children,
 }: {
   locale: Locale;
   /* This same screen, in the other language. */
   switchHref: string;
+  /*
+   * The site's logo for a daylight header. Absent — a caller that has
+   * not resolved it — and the sprout and the name stand as before.
+   */
+  brandLogo?: string;
   children: ReactNode;
 }) => (
   <div className="experience flex min-h-dvh flex-col bg-[var(--x-bg)] text-[var(--x-ink)]">
@@ -127,11 +134,14 @@ export const OnboardingFrame = ({
           href={`/${locale}`}
           className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]"
         >
-          <Sprout />
+          {brandLogo ? null : <Sprout />}
           <span className="flex flex-col leading-none">
-            <span className="font-display text-xl font-extrabold tracking-tight text-[var(--x-ink)]">
-              {brandFor(locale)}
-            </span>
+            <BrandMark
+              brand={brandFor(locale)}
+              src={brandLogo}
+              height={40}
+              textClassName="font-display text-xl font-extrabold tracking-tight text-[var(--x-ink)]"
+            />
             <span className="mt-1 text-[11px] text-[var(--x-faint)]">
               {pickCopy(locale, ONBOARDING_COPY.tagline)}
             </span>
@@ -186,7 +196,11 @@ export const OnboardingFrame = ({
       </div>
     </header>
     <div className="flex-1">{children}</div>
-    <ConferenceFooter locale={locale} brand={brandFor(locale)} />
+    <ConferenceFooter
+      locale={locale}
+      brand={brandFor(locale)}
+      brandLogo={brandLogo}
+    />
   </div>
 );
 
@@ -195,6 +209,7 @@ export const OnboardingFrame = ({
 export const OnboardingLayout = ({
   locale,
   switchHref,
+  brandLogo,
   eyebrow,
   title,
   intro,
@@ -203,13 +218,18 @@ export const OnboardingLayout = ({
 }: {
   locale: Locale;
   switchHref: string;
+  brandLogo?: string;
   eyebrow: string;
   title: string;
   intro: string;
   aside: ReactNode;
   children: ReactNode;
 }) => (
-  <OnboardingFrame locale={locale} switchHref={switchHref}>
+  <OnboardingFrame
+    locale={locale}
+    switchHref={switchHref}
+    brandLogo={brandLogo}
+  >
     <main
       id="main-content"
       className="mx-auto max-w-6xl px-5 pb-20 pt-10 md:px-8 md:pt-14"

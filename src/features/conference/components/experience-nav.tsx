@@ -7,6 +7,7 @@ import type { Locale } from '@/config/locales';
 import { chooseLocaleAction } from '@/features/account/actions/choose-locale';
 import { signOutAction } from '@/features/account/actions/sign-out';
 import NavBell from '@/features/notifications/components/nav-bell';
+import { BrandMark } from '@/shared';
 import { Avatar } from '../ui/kit';
 import { IconCalendar, IconSearch } from '../ui/icons';
 
@@ -22,6 +23,11 @@ interface Props {
   registerHref: string;
   meHref: string;
   brand: string;
+  /*
+   * The logo for this bar's navy, when the site has one. Absent, the
+   * name is written in type exactly as it was before there was a logo.
+   */
+  brandLogo?: string;
   userName?: string;
   /*
    * Inside a conference the participant's own schedule is a destination,
@@ -60,6 +66,7 @@ const ExperienceNav = ({
   registerHref,
   meHref,
   brand,
+  brandLogo,
   userName,
   scheduleHref,
 }: Props) => {
@@ -119,11 +126,13 @@ const ExperienceNav = ({
   return (
     <header className="experience sticky top-0 z-50 bg-[var(--x-nav)] shadow-[0_1px_0_rgba(255,255,255,0.06)]">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-6 md:px-10">
-        <Link
-          href={home}
-          className="font-display text-lg font-extrabold tracking-[0.14em] text-white"
-        >
-          {brand}
+        <Link href={home} className="flex flex-none items-center" aria-label={brand}>
+          <BrandMark
+            brand={brand}
+            src={brandLogo}
+            height={38}
+            textClassName="font-display text-lg font-extrabold tracking-[0.14em] text-white"
+          />
         </Link>
 
         <div className="hidden items-center gap-7 lg:flex">{links}</div>

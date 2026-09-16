@@ -5,7 +5,7 @@ import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { ConferenceFooter, SITE_NAV_LINKS } from '@/features/cinematic';
 import { ExperienceNav } from '@/features/conference';
-import { getActiveConferenceSlug } from '@/features/events';
+import { getActiveConferenceSlug, getSiteBrand } from '@/features/events';
 import { currentParticipant } from '@/features/registration';
 
 interface ExperienceLayoutProps {
@@ -29,6 +29,7 @@ const ExperienceLayout = async ({ children, params }: ExperienceLayoutProps) => 
 
   const slug = await getActiveConferenceSlug(lang).catch(() => null);
   const participant = await currentParticipant().catch(() => null);
+  const logo = await getSiteBrand();
   const registerHref = slug ? `/${lang}/events/${slug}/register` : `/${lang}`;
 
   return (
@@ -37,6 +38,7 @@ const ExperienceLayout = async ({ children, params }: ExperienceLayoutProps) => 
         locale={lang}
         links={SITE_NAV_LINKS}
         brand={brandFor(lang)}
+        brandLogo={logo.onDark}
         registerHref={registerHref}
         meHref={`/${lang}/me`}
         userName={participant?.name ?? undefined}
@@ -45,7 +47,11 @@ const ExperienceLayout = async ({ children, params }: ExperienceLayoutProps) => 
           : {})}
       />
       {children}
-      <ConferenceFooter locale={lang} brand={brandFor(lang)} />
+      <ConferenceFooter
+        locale={lang}
+        brand={brandFor(lang)}
+        brandLogo={logo.onLight}
+      />
     </div>
   );
 };

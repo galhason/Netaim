@@ -341,6 +341,31 @@ export const CONSOLE_UI = {
   },
   organization: { he: 'הארגון', en: 'Organization' },
   teams: { he: 'צוות', en: 'Teams' },
+
+  /* The logo: one picture, worn by every surface of the platform. */
+  brandNav: { he: 'לוגו', en: 'Logo' },
+  brandTitle: { he: 'הלוגו של האתר', en: 'The site logo' },
+  brandSub: {
+    he: 'הלוגו מופיע בסרגל העליון, בתחתית העמוד ובראש כל מייל שיוצא מהמערכת. אם לא מעלים כלום — מופיע הלוגו של נטעים.',
+    en: 'The logo appears in the navigation bar, in the page footer and at the head of every message the platform sends. Upload nothing and the Netaim logo is drawn.',
+  },
+  brandOnLight: { he: 'לוגו לרקע בהיר', en: 'Logo for light backgrounds' },
+  brandOnLightHint: {
+    he: 'העמודים הבהירים ותחתית העמוד.',
+    en: 'The daylight pages and the footer.',
+  },
+  brandOnDark: { he: 'לוגו לרקע כהה', en: 'Logo for dark backgrounds' },
+  brandOnDarkHint: {
+    he: 'הסרגל הכחול והמיילים. אם לא מעלים — משתמשים בלוגו של הרקע הבהיר.',
+    en: 'The navy bar and outgoing mail. Left empty, the light-background logo is used.',
+  },
+  brandPreview: { he: 'כך זה ייראה', en: 'How it will look' },
+  brandDefault: { he: 'הלוגו של נטעים', en: 'The Netaim logo' },
+  brandDenied: {
+    he: 'לשינוי הלוגו דרושה הרשאת עריכת תוכן.',
+    en: 'Changing the logo requires the content editing permission.',
+  },
+  brandSaved: { he: 'הלוגו נשמר.', en: 'The logo is saved.' },
   settings: { he: 'הגדרות', en: 'Settings' },
   moveUp: { he: 'הקדמת הסצנה', en: 'Move scene earlier' },
   moveDown: { he: 'איחור הסצנה', en: 'Move scene later' },

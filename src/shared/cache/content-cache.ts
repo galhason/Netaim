@@ -21,6 +21,8 @@ export const cacheTags = {
   event: (slug: string): string => `event:${slug}`,
   /* The conference the Studio has named the live site. */
   activeConference: 'site:active-conference',
+  /* The logo the Studio holds — drawn in the chrome of every page. */
+  siteBrand: 'site:brand',
   /* The composed homepage. */
   homepage: 'site:homepage',
   /* A named scene sequence rendered at /experiences/[slug]. */

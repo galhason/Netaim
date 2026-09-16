@@ -6,7 +6,7 @@ import {
   buildConferenceDescriptor,
   getConferenceExperience,
 } from '@/features/cinematic';
-import { getActiveConferenceSlug } from '@/features/events';
+import { getActiveConferenceSlug, getSiteBrand } from '@/features/events';
 import { currentParticipant, myAreaHref } from '@/features/registration';
 import '@/scenes';
 
@@ -43,6 +43,7 @@ const ConferenceLandingPage = async ({
    * never enters the descriptor, which is cached and shared.
    */
   const me = await currentParticipant().catch(() => null);
+  const logo = await getSiteBrand();
   /*
    * Where this guest's own area is. Depends on whether they have joined
    * this conference, so it is resolved here beside their name and never
@@ -61,7 +62,11 @@ const ConferenceLandingPage = async ({
   return (
     <>
       <ExperienceStage
-        experience={buildConferenceDescriptor(experience, locale as Locale)}
+        experience={buildConferenceDescriptor(
+          experience,
+          locale as Locale,
+          logo.onDark,
+        )}
         locale={locale as Locale}
         viewer={
           me ? { name: me.name || me.email, ...(meHref ? { href: meHref } : {}) } : null

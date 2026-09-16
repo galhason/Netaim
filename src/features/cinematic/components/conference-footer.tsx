@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Locale } from '@/config/locales';
+import { BrandMark } from '@/shared';
 import { CINEMATIC_UI } from '../constants/cinematic-content';
 
 /*
@@ -10,12 +11,27 @@ import { CINEMATIC_UI } from '../constants/cinematic-content';
 interface ConferenceFooterProps {
   locale: Locale;
   brand: string;
+  /*
+   * The logo for whatever this footer is standing on. The same footer
+   * closes a dark cinematic page and a daylight participant page, so
+   * the treatment is the layout's decision, not the footer's.
+   */
+  brandLogo?: string;
 }
 
-const ConferenceFooter = ({ locale, brand }: ConferenceFooterProps) => (
+const ConferenceFooter = ({
+  locale,
+  brand,
+  brandLogo,
+}: ConferenceFooterProps) => (
   <footer className="border-t cine-hair">
     <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-10 md:px-12">
-      <span className="font-display tracking-[0.3em]">{brand}</span>
+      <BrandMark
+        brand={brand}
+        src={brandLogo}
+        height={40}
+        textClassName="font-display tracking-[0.3em]"
+      />
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
         {/* Required by the Israeli service-accessibility regulations:
           * the statement is reachable from every page's footer. */}

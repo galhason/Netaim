@@ -6,8 +6,42 @@ import {
   type Recipient,
 } from '@/notification-engine';
 import { createLogger } from '@/shared';
+import { BRAND_LOGO } from '@/config/brand';
+import { payloadSiteLogos } from '../payload/payload-site';
 
 const log = createLogger('smtp');
+
+/*
+ * The logo for the mail header, as an absolute URL.
+ *
+ * A mail client has no site to resolve `/brand/...` against, so without
+ * a deployment origin there is no image to offer and the header falls
+ * back to the name in type — which is what it was before. The Studio's
+ * own logo wins when one is set; a read that fails costs a picture, not
+ * a message, so it is caught.
+ *
+ * Held for a minute, for the same reason the transport is pooled: an
+ * announcement to six hundred people is six hundred calls through here,
+ * and the answer changes about once in the life of an organization.
+ */
+const LOGO_TTL_MS = 60_000;
+let logoHeld: { url: string | undefined; at: number } | null = null;
+
+const mailLogoUrl = async (): Promise<string | undefined> => {
+  const now = Date.now();
+  if (logoHeld && now - logoHeld.at < LOGO_TTL_MS) {
+    return logoHeld.url;
+  }
+  const origin = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/+$/, '');
+  let url: string | undefined;
+  if (origin) {
+    const stored = await payloadSiteLogos().catch(() => null);
+    const path = stored?.onDark ?? BRAND_LOGO.onDark;
+    url = path.startsWith('http') ? path : `${origin}${path}`;
+  }
+  logoHeld = { url, at: now };
+  return url;
+};
 
 /*
  * Email over SMTP, deliberately rather than a vendor's SDK.
@@ -138,7 +172,7 @@ export const smtpChannel: ChannelAdapter = {
          * plain text all get the full content from `text` alone.
          */
         text: message.body,
-        html: htmlFor(message),
+        html: htmlFor(message, await mailLogoUrl()),
         ...(config.replyTo ? { replyTo: config.replyTo } : {}),
       });
       log.info('sent', { type: message.type, eventSlug: message.eventSlug });

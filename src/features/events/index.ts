@@ -6,8 +6,12 @@ export {
 } from './services/portal-service';
 export {
   getActiveConferenceSlug,
+  getSiteBrand,
+  getSiteBrandChoice,
   setActiveConference,
+  setSiteBrand,
 } from './services/site-service';
+export type { SiteBrand } from './services/site-service';
 export {
   getEventOpeningDraft,
   saveEventComposition,

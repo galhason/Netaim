@@ -1,10 +1,17 @@
+import { BRAND_LOGO } from '@/config/brand';
 import type { Locale } from '@/config/locales';
 import {
   activeConferenceSlug,
   setActiveConference as setActiveConferenceRepo,
+  setSiteLogos,
+  siteLogoChoice,
+  siteLogos,
 } from '@/infrastructure';
 import { cacheTags, cachedContent } from '@/shared/cache/content-cache';
-import { publishedActiveConference } from '@/shared/cache/publish';
+import {
+  publishedActiveConference,
+  publishedSiteBrand,
+} from '@/shared/cache/publish';
 import { listPortalEvents } from './portal-service';
 import type { PortalEvent } from '../types/event-repository';
 
@@ -59,4 +66,47 @@ export const setActiveConference = async (
 ): Promise<void> => {
   await setActiveConferenceRepo(slug);
   publishedActiveConference();
+};
+
+/*
+ * The logo, resolved.
+ *
+ * Two treatments, each with a fallback to the artwork shipped with the
+ * build, so a page always has a logo to draw — before anyone has opened
+ * the Studio, and after someone has cleared the field again.
+ *
+ * Cached under its own tag. It is read in the layout of every public
+ * page, and it changes about once in the life of an organization.
+ */
+export interface SiteBrand {
+  onLight: string;
+  onDark: string;
+}
+
+const resolveSiteBrand = async (): Promise<SiteBrand> => {
+  const stored = await siteLogos().catch(() => null);
+  return {
+    onLight: stored?.onLight ?? BRAND_LOGO.onLight,
+    onDark: stored?.onDark ?? BRAND_LOGO.onDark,
+  };
+};
+
+export const getSiteBrand = (): Promise<SiteBrand> =>
+  cachedContent(resolveSiteBrand, ['site-brand'], [cacheTags.siteBrand])();
+
+/*
+ * What the Studio has stored, as the Studio stores it. Never cached:
+ * it is read only by the screen that is about to change it.
+ */
+export const getSiteBrandChoice = (): Promise<{
+  logo: string | null;
+  logoOnDark: string | null;
+}> => siteLogoChoice();
+
+export const setSiteBrand = async (logos: {
+  logo?: string | null;
+  logoOnDark?: string | null;
+}): Promise<void> => {
+  await setSiteLogos(logos);
+  publishedSiteBrand();
 };

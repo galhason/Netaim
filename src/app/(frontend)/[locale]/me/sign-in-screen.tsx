@@ -41,6 +41,8 @@ interface SignInScreenProps {
   registerHref: string | null;
   /* This same screen in the other language, with the moment carried along. */
   switchHref: string;
+  /* The site's logo, resolved by the page and drawn in the header. */
+  brandLogo?: string;
 }
 
 const COPY = {
@@ -151,6 +153,7 @@ const SignInScreen = ({
   detail,
   registerHref,
   switchHref,
+  brandLogo,
 }: SignInScreenProps) => {
   const ui = ACCOUNT_UI;
   const note = noteFor(state, locale);
@@ -189,6 +192,7 @@ const SignInScreen = ({
       <OnboardingLayout
         locale={locale}
         switchHref={switchHref}
+        brandLogo={brandLogo}
         eyebrow={pick(locale, COPY.totpEyebrow)}
         title={pick(locale, COPY.totpTitle)}
         intro={ui.totpIntro[locale]}
@@ -254,6 +258,7 @@ const SignInScreen = ({
         <OnboardingLayout
           locale={locale}
           switchHref={switchHref}
+          brandLogo={brandLogo}
           eyebrow={pick(locale, COPY.resetEyebrow)}
           title={pick(locale, COPY.sentTitle)}
           intro={pick(locale, COPY.sentBody)}
@@ -289,6 +294,7 @@ const SignInScreen = ({
       <OnboardingLayout
         locale={locale}
         switchHref={switchHref}
+        brandLogo={brandLogo}
         eyebrow={pick(locale, COPY.resetEyebrow)}
         title={pick(locale, COPY.resetTitle)}
         intro={pick(locale, COPY.resetIntro)}
@@ -339,6 +345,7 @@ const SignInScreen = ({
     <OnboardingLayout
       locale={locale}
       switchHref={switchHref}
+      brandLogo={brandLogo}
       eyebrow={pick(locale, COPY.eyebrow)}
       title={ui.signInTitle[locale]}
       intro={ui.signInIntro[locale]}

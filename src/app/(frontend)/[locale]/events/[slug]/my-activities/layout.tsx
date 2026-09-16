@@ -5,6 +5,7 @@ import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { ConferenceFooter, SITE_NAV_LINKS } from '@/features/cinematic';
 import { ExperienceNav } from '@/features/conference';
+import { getSiteBrand } from '@/features/events';
 import { currentParticipant } from '@/features/registration';
 
 interface Props {
@@ -29,6 +30,7 @@ const MyScheduleLayout = async ({ children, params }: Props) => {
   const lang = locale as Locale;
 
   const participant = await currentParticipant().catch(() => null);
+  const logo = await getSiteBrand();
 
   return (
     <div className="experience min-h-dvh bg-[var(--x-bg)] text-[var(--x-ink)]">
@@ -36,6 +38,7 @@ const MyScheduleLayout = async ({ children, params }: Props) => {
         locale={lang}
         links={SITE_NAV_LINKS}
         brand={brandFor(lang)}
+        brandLogo={logo.onDark}
         registerHref={`/${lang}/events/${slug}/register`}
         meHref={`/${lang}/me`}
         userName={participant?.name ?? undefined}
@@ -44,7 +47,11 @@ const MyScheduleLayout = async ({ children, params }: Props) => {
           : {})}
       />
       {children}
-      <ConferenceFooter locale={lang} brand={brandFor(lang)} />
+      <ConferenceFooter
+        locale={lang}
+        brand={brandFor(lang)}
+        brandLogo={logo.onLight}
+      />
     </div>
   );
 };

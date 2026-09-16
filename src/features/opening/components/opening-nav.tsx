@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import type { Locale } from '@/config/locales';
+import { BrandMark } from '@/shared';
 import { NAV_LINKS, OPENING_UI } from '../constants/opening-content';
 
 /*
@@ -14,10 +15,12 @@ import { NAV_LINKS, OPENING_UI } from '../constants/opening-content';
 interface OpeningNavProps {
   locale: Locale;
   brand: string;
+  /* The logo for this dark chrome; the name in type when there is none. */
+  brandLogo?: string;
   meHref?: string | null;
 }
 
-const OpeningNav = ({ locale, brand, meHref }: OpeningNavProps) => {
+const OpeningNav = ({ locale, brand, brandLogo, meHref }: OpeningNavProps) => {
   const [scrolled, setScrolled] = useState(false);
   const reduce = useReducedMotion();
   const other: Locale = locale === 'he' ? 'en' : 'he';
@@ -43,9 +46,15 @@ const OpeningNav = ({ locale, brand, meHref }: OpeningNavProps) => {
       <nav className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6 md:px-12">
         <Link
           href={`/${locale}`}
-          className="font-display text-lg font-medium tracking-[0.32em] text-text-primary"
+          aria-label={brand}
+          className="flex flex-none items-center"
         >
-          {brand}
+          <BrandMark
+            brand={brand}
+            src={brandLogo}
+            height={46}
+            textClassName="font-display text-lg font-medium tracking-[0.32em] text-text-primary"
+          />
         </Link>
         <div className="hidden items-center gap-9 md:flex">
           {NAV_LINKS.map((link) => (

@@ -52,6 +52,12 @@ const deriveSections = (scenes: SceneInstance[]): NavSection[] => {
 export const buildConferenceDescriptor = (
   experience: ConferenceExperience,
   locale: Locale,
+  /*
+   * The site's logo for this dark chrome. Optional because a caller
+   * that has not resolved it (a preview, a test) still gets a working
+   * descriptor — the chrome then writes the name in type.
+   */
+  brandLogo?: string,
 ): ExperienceDescriptor => {
   const brand = brandFor(locale);
   const scenes = applyComposition(
@@ -61,6 +67,7 @@ export const buildConferenceDescriptor = (
         type: CONFERENCE_SCENE_TYPES.nav,
         content: {
           brand,
+          brandLogo,
           registerHref: experience.registerHref,
           meHref: experience.meHref,
         },
@@ -142,7 +149,7 @@ export const buildConferenceDescriptor = (
       {
         id: 'footer',
         type: CONFERENCE_SCENE_TYPES.footer,
-        content: { brand },
+        content: { brand, brandLogo },
       },
     ],
     completeComposition(experience.composition ?? []),
