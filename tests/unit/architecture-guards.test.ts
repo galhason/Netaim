@@ -182,3 +182,31 @@ describe('no redirect is built from the request origin', () => {
     ).toEqual([]);
   });
 });
+
+/*
+ * A client component reaches for a component, never for a feature's
+ * front door.
+ *
+ * The Studio's barrel re-exports services that read cookies through
+ * `next/headers`. Importing it from a file marked 'use client' fails the
+ * build with a message about the pages directory that names neither the
+ * barrel nor the service — the last time this happened it cost a build
+ * cycle to read. The component modules import nothing of the sort.
+ */
+describe('client components do not import the Studio barrel', () => {
+  it('reaches the module directly instead', () => {
+    const offenders = walk('src/app')
+      .filter((file) => /\.tsx$/.test(file))
+      .filter((file) => {
+        const text = readFileSync(file, 'utf8');
+        return (
+          /^'use client';/m.test(text) &&
+          /^\s*import\s+(?!type\s)[^;]*?from\s+'@\/features\/studio';/m.test(text)
+        );
+      });
+    expect(
+      offenders,
+      "a 'use client' file importing @/features/<name> pulls server-only code into the browser bundle",
+    ).toEqual([]);
+  });
+});

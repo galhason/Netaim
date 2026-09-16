@@ -165,12 +165,25 @@ const ActivityManager = ({ locale, slug, rows }: Props) => {
           </h1>
           <p className="mt-1 text-sm text-[var(--c-text-soft)]">{t.sub}</p>
         </div>
-        <Link
-          href="/studio/activity/new"
-          className="inline-flex flex-none items-center gap-2 rounded-lg bg-[var(--c-bronze)] px-4 py-2 text-sm font-medium text-[#161006]"
-        >
-          + {t.create}
-        </Link>
+        <div className="flex flex-none items-center gap-2">
+          {/*
+            * Beside "new", not buried in a menu: a programme is usually
+            * imported once, at the start, by somebody who has never seen
+            * this screen before.
+            */}
+          <Link
+            href="/studio/activity/import"
+            className="inline-flex items-center gap-2 rounded-lg border border-[var(--c-line-strong)] px-4 py-2 text-sm text-[var(--c-text-soft)] transition-colors hover:border-[var(--c-bronze)]/50 hover:text-[var(--c-bronze)]"
+          >
+            {locale === 'he' ? 'ייבוא מאקסל' : 'Import'}
+          </Link>
+          <Link
+            href="/studio/activity/new"
+            className="inline-flex items-center gap-2 rounded-lg bg-[var(--c-bronze)] px-4 py-2 text-sm font-medium text-[#161006]"
+          >
+            + {t.create}
+          </Link>
+        </div>
       </header>
 
       {/* Summary */}

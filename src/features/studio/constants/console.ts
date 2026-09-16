@@ -161,6 +161,22 @@ export const CONSOLE_UI = {
     he: 'כל מי שנרשם — הכנסים שלהם, המצב שלהם, והדלת.',
     en: 'Everyone who registered — their conferences, their state, and the door.',
   },
+  /* Importing a programme from the spreadsheet it was planned in. */
+  importTitle: { he: 'ייבוא מאקסל', en: 'Import from a spreadsheet' },
+  importSub: {
+    he: 'הלוח של הכנס מתוכנן בגיליון — כאן מעלים אותו במקום להקליד פעילות אחת בכל פעם.',
+    en: 'A conference timetable is planned in a spreadsheet — upload it here instead of retyping one activity at a time.',
+  },
+  importAction: { he: 'ייבוא מאקסל', en: 'Import' },
+  importDenied: {
+    he: 'לייבוא פעילויות דרושה הרשאת ניהול כנסים.',
+    en: 'Importing activities requires the conference management permission.',
+  },
+  importNoConference: {
+    he: 'אין כרגע כנס פעיל לייבא אליו.',
+    en: 'There is no active conference to import into.',
+  },
+
   /* Logistics: the roster a caterer and a front desk work from. */
   logisticsTitle: { he: 'לוגיסטיקה', en: 'Logistics' },
   logisticsSub: {

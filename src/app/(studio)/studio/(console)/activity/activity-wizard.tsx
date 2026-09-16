@@ -5,6 +5,13 @@ import Link from 'next/link';
 import type { Locale } from '@/config/locales';
 import type { SessionType } from '@/features/program';
 import type { ResolvedSpeaker, SpeakerCandidate } from '@/features/speakers';
+/*
+ * The client-safe entry, not the feature's main barrel: this file is a
+ * client component, and that barrel re-exports services that read
+ * cookies. The build says so plainly — "next/headers ... only works in
+ * a Server Component" — and names this file.
+ */
+import { WhenField } from '@/features/studio/components';
 import { saveActivityAction } from './actions';
 import ActivityImagePicker, { type MediaOption } from './activity-image-picker';
 import SpeakerPicker from './speaker-picker';
@@ -353,30 +360,24 @@ const ActivityWizard = ({
           {/* STEP 1 — Schedule */}
           <section className={step === 1 ? 'flex flex-col gap-5' : 'hidden'}>
             <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label className={label} htmlFor="w-starts">
-                  {t.fStarts}
-                </label>
-                <input
-                  id="w-starts"
-                  type="datetime-local"
-                  name="startsAt"
-                  defaultValue={initial?.startsAt ?? ''}
-                  className={field}
-                />
-              </div>
-              <div>
-                <label className={label} htmlFor="w-ends">
-                  {t.fEnds}
-                </label>
-                <input
-                  id="w-ends"
-                  type="datetime-local"
-                  name="endsAt"
-                  defaultValue={initial?.endsAt ?? ''}
-                  className={field}
-                />
-              </div>
+              <WhenField
+                name="startsAt"
+                label={t.fStarts}
+                locale={locale}
+                defaultValue={initial?.startsAt ?? ''}
+              />
+              {/*
+                * The end follows the start's day on its own. An activity
+                * that ends on a different day is rare; typing the same
+                * date twice for every one of forty activities is not.
+                */}
+              <WhenField
+                name="endsAt"
+                label={t.fEnds}
+                locale={locale}
+                defaultValue={initial?.endsAt ?? ''}
+                follows="startsAt"
+              />
             </div>
             <div>
               <label className={label} htmlFor="w-floor">
@@ -454,30 +455,19 @@ const ActivityWizard = ({
               {t.fWaitlist}
             </Check>
             <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label className={label} htmlFor="w-regopens">
-                  {t.fRegOpens}
-                </label>
-                <input
-                  id="w-regopens"
-                  type="datetime-local"
-                  name="registrationOpensAt"
-                  defaultValue={initial?.registrationOpensAt ?? ''}
-                  className={field}
-                />
-              </div>
-              <div>
-                <label className={label} htmlFor="w-regcloses">
-                  {t.fRegCloses}
-                </label>
-                <input
-                  id="w-regcloses"
-                  type="datetime-local"
-                  name="registrationClosesAt"
-                  defaultValue={initial?.registrationClosesAt ?? ''}
-                  className={field}
-                />
-              </div>
+              <WhenField
+                name="registrationOpensAt"
+                label={t.fRegOpens}
+                locale={locale}
+                defaultValue={initial?.registrationOpensAt ?? ''}
+              />
+              <WhenField
+                name="registrationClosesAt"
+                label={t.fRegCloses}
+                locale={locale}
+                defaultValue={initial?.registrationClosesAt ?? ''}
+                follows="registrationOpensAt"
+              />
             </div>
           </section>
 
@@ -490,18 +480,12 @@ const ActivityWizard = ({
             >
               {t.fAllowCancel}
             </Check>
-            <div>
-              <label className={label} htmlFor="w-canceldeadline">
-                {t.fCancelDeadline}
-              </label>
-              <input
-                id="w-canceldeadline"
-                type="datetime-local"
-                name="cancellationDeadline"
-                defaultValue={initial?.cancellationDeadline ?? ''}
-                className={field}
-              />
-            </div>
+            <WhenField
+              name="cancellationDeadline"
+              label={t.fCancelDeadline}
+              locale={locale}
+              defaultValue={initial?.cancellationDeadline ?? ''}
+            />
 
             <div className="rounded-xl border border-[var(--c-line)] bg-[rgba(255,255,255,0.02)] p-4">
               <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--c-text-faint)]">

@@ -62,6 +62,7 @@ export { default as StudioSignIn } from './components/studio-signin';
 export { default as ConsoleShell } from './components/console/console-shell';
 export { default as ConsoleCanvas } from './components/console/console-canvas';
 export { default as CanvasSelectBridge } from './components/console/canvas-select-bridge';
+export { default as WhenField } from './components/console/when-field';
 export {
   CTextField,
   CTextAreaField,

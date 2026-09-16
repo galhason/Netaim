@@ -20,6 +20,20 @@ export type {
 export { buildProgramModel, TYPE_LABELS, dayKeyOf } from './services/program-model';
 export type { ProgramModel } from './services/program-model';
 export { SESSION_TYPES, isSessionType } from './types/session';
+export {
+  COLUMN_LABELS,
+  IMPORT_COLUMNS,
+  importTemplate,
+  mapHeader,
+  readImport,
+} from './services/activity-import';
+export type {
+  ImportColumn,
+  ImportProblem,
+  ImportReading,
+  ImportRow,
+} from './services/activity-import';
+export { readCsv, readFirstSheet, readGrid, writeWorkbook } from './services/sheet-codec';
 export type { CreateSessionInput } from './types/session';
 export {
   TOUR_STATUS_LABELS,
