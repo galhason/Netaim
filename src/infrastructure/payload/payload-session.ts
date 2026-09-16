@@ -154,6 +154,36 @@ export const payloadSessionRepository: SessionRepository = {
     return (result.docs as unknown as SessionRow[]).map(toSession);
   },
 
+  translationOf: async (sessionId, locale) => {
+    const payload = await getSystemPayload();
+    const doc = await payload
+      .findByID({
+        collection: 'sessions',
+        id: sessionId,
+        locale,
+        /* This language alone — see the port for why. */
+        fallbackLocale: 'null',
+        depth: 0,
+        overrideAccess: true,
+      })
+      .catch(() => null);
+    if (!doc) {
+      return null;
+    }
+    const row = doc as unknown as {
+      title?: string | null;
+      subtitle?: string | null;
+      description?: string | null;
+      track?: string | null;
+    };
+    return {
+      ...(row.title ? { title: row.title } : {}),
+      ...(row.subtitle ? { subtitle: row.subtitle } : {}),
+      ...(row.description ? { description: row.description } : {}),
+      ...(row.track ? { track: row.track } : {}),
+    };
+  },
+
   getById: async (sessionId, locale) => {
     const payload = await getSystemPayload();
     const doc = await payload

@@ -18,6 +18,7 @@ import type {
   SessionCounts,
   SessionRegistrationSummary,
   SessionSummary,
+  SessionTranslation,
 } from '../types/session';
 import {
   workshopStatus,
@@ -140,6 +141,16 @@ export const deleteSession = async (sessionId: string): Promise<boolean> => {
   }
   return sessionRepository.remove(sessionId);
 };
+
+/*
+ * One activity's text in one language, exactly as stored. For the
+ * editor only — see the repository port.
+ */
+export const getSessionTranslation = (
+  sessionId: string,
+  locale: Locale,
+): Promise<SessionTranslation | null> =>
+  sessionRepository.translationOf(sessionId, locale);
 
 export const getSessionSituation = async (
   sessionId: string,

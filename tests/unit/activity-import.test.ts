@@ -66,7 +66,8 @@ describe('the template', () => {
     const grid = readFirstSheet(importTemplate('he'));
     const mapped = mapHeader(grid[0] ?? []);
     expect(mapped.title).toBe(0);
-    expect(mapped.sessionType).toBe(1);
+    expect(mapped.titleEn).toBe(1);
+    expect(mapped.sessionType).toBe(2);
     expect(mapped.date).toBeDefined();
     expect(mapped.endTime).toBeDefined();
   });
@@ -84,6 +85,32 @@ describe('the template', () => {
   it('does the same in English', () => {
     const reading = readImport(readFirstSheet(importTemplate('en')));
     expect(reading.ready).toHaveLength(4);
+  });
+});
+
+describe('the two languages, side by side in the sheet', () => {
+  const reading = readImport([
+    ['כותרת', 'כותרת באנגלית', 'סוג', 'תיאור', 'תיאור באנגלית'],
+    ['דברי פתיחה', 'Opening remarks', 'מליאה', 'פתיחת הכנס', 'The conference opens'],
+    ['סדנה', '', 'סדנה', 'סדנה מעשית', ''],
+  ]);
+
+  it('carries the English half beside the Hebrew', () => {
+    expect(reading.rows[0]?.input?.title).toBe('דברי פתיחה');
+    expect(reading.rows[0]?.english?.title).toBe('Opening remarks');
+    expect(reading.rows[0]?.english?.description).toBe('The conference opens');
+  });
+
+  it('leaves an untranslated row with no English at all', () => {
+    expect(
+      reading.rows[1]?.english,
+      'an empty column must not be written as an empty string — empty is what inherits',
+    ).toBeUndefined();
+  });
+
+  it('never demands a translation', () => {
+    expect(reading.rows[1]?.problems).toEqual([]);
+    expect(reading.ready).toHaveLength(2);
   });
 });
 

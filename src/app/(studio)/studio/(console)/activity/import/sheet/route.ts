@@ -4,6 +4,7 @@ import {
   importTemplate,
   readGrid,
   readImport,
+  updateSession,
 } from '@/features/program';
 import { authorized, getStudioLocale } from '@/features/studio';
 
@@ -114,11 +115,20 @@ export const POST = async (request: Request): Promise<Response> => {
     if (!row.input) {
       continue;
     }
-    const saved = await createSession(slug, locale, row.input).catch(() => null);
-    if (saved) {
-      created += 1;
-    } else {
+    /*
+     * Hebrew is the activity; English is what was translated of it.
+     * Written as a second pass so an untranslated column stays absent
+     * rather than becoming an empty English string — empty is what lets
+     * the English page fall back to the Hebrew.
+     */
+    const saved = await createSession(slug, 'he', row.input).catch(() => null);
+    if (!saved) {
       failed.push(row.line);
+      continue;
+    }
+    created += 1;
+    if (row.english) {
+      await updateSession(saved.id, 'en', row.english).catch(() => null);
     }
   }
 

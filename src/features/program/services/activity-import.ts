@@ -21,14 +21,18 @@ import { writeWorkbook, type SheetData } from './sheet-codec';
 
 export const IMPORT_COLUMNS = [
   'title',
+  'titleEn',
   'sessionType',
   'date',
   'startTime',
   'endTime',
   'subtitle',
+  'subtitleEn',
   'description',
+  'descriptionEn',
   'floor',
   'track',
+  'trackEn',
   'language',
   'capacity',
   'waitlist',
@@ -39,14 +43,18 @@ export type ImportColumn = (typeof IMPORT_COLUMNS)[number];
 
 export const COLUMN_LABELS: Record<ImportColumn, Record<Locale, string>> = {
   title: { he: 'כותרת', en: 'Title' },
+  titleEn: { he: 'כותרת באנגלית', en: 'Title (English)' },
   sessionType: { he: 'סוג', en: 'Type' },
   date: { he: 'תאריך', en: 'Date' },
   startTime: { he: 'שעת התחלה', en: 'Start time' },
   endTime: { he: 'שעת סיום', en: 'End time' },
   subtitle: { he: 'כותרת משנה', en: 'Subtitle' },
+  subtitleEn: { he: 'כותרת משנה באנגלית', en: 'Subtitle (English)' },
   description: { he: 'תיאור', en: 'Description' },
+  descriptionEn: { he: 'תיאור באנגלית', en: 'Description (English)' },
   floor: { he: 'מיקום / קומה', en: 'Place / floor' },
   track: { he: 'מסלול', en: 'Track' },
+  trackEn: { he: 'מסלול באנגלית', en: 'Track (English)' },
   language: { he: 'שפה', en: 'Language' },
   capacity: { he: 'מקומות', en: 'Capacity' },
   waitlist: { he: 'רשימת המתנה', en: 'Waitlist' },
@@ -62,7 +70,17 @@ const COLUMN_HELP: Record<ImportColumn, Record<Locale, string>> = {
   date: { he: 'תאריך הפעילות, בצורה 2026-10-12.', en: 'The day, as 2026-10-12.' },
   startTime: { he: 'שעה בצורה 09:00.', en: 'A time, as 09:00.' },
   endTime: { he: 'שעה בצורה 09:45. חייבת להיות אחרי שעת ההתחלה.', en: 'As 09:45. Must be after the start.' },
+  titleEn: {
+    he: 'לא חובה. אם יישאר ריק — האתר יציג באנגלית את הכותרת העברית.',
+    en: 'Optional. Left empty, the English page shows the Hebrew title.',
+  },
   subtitle: { he: 'לא חובה.', en: 'Optional.' },
+  subtitleEn: { he: 'לא חובה.', en: 'Optional.' },
+  descriptionEn: {
+    he: 'לא חובה. תרגום התיאור.',
+    en: 'Optional. The description, translated.',
+  },
+  trackEn: { he: 'לא חובה.', en: 'Optional.' },
   description: { he: 'לא חובה. הטקסט שמופיע בעמוד הפעילות.', en: 'Optional. The text on the activity page.' },
   floor: { he: 'לא חובה. אולם, חדר או קומה.', en: 'Optional. Hall, room or floor.' },
   track: { he: 'לא חובה. מסלול תוכן.', en: 'Optional. A content track.' },
@@ -79,14 +97,18 @@ const COLUMN_HELP: Record<ImportColumn, Record<Locale, string>> = {
  */
 const HEADER_ALIASES: Record<ImportColumn, string[]> = {
   title: ['כותרת', 'שם', 'שם הפעילות', 'title', 'name'],
+  titleEn: ['כותרת באנגלית', 'כותרת אנגלית', 'title en', 'title english', 'english title'],
   sessionType: ['סוג', 'סוג פעילות', 'type', 'kind'],
   date: ['תאריך', 'יום', 'date', 'day'],
   startTime: ['שעת התחלה', 'התחלה', 'משעה', 'start', 'start time', 'from'],
   endTime: ['שעת סיום', 'סיום', 'עד שעה', 'end', 'end time', 'to'],
   subtitle: ['כותרת משנה', 'תת כותרת', 'subtitle'],
+  subtitleEn: ['כותרת משנה באנגלית', 'subtitle en', 'subtitle english'],
   description: ['תיאור', 'פירוט', 'description', 'about'],
+  descriptionEn: ['תיאור באנגלית', 'description en', 'description english'],
   floor: ['מיקום / קומה', 'מיקום', 'קומה', 'אולם', 'חדר', 'place', 'floor', 'room'],
   track: ['מסלול', 'track'],
+  trackEn: ['מסלול באנגלית', 'track en', 'track english'],
   language: ['שפה', 'language'],
   capacity: ['מקומות', 'קיבולת', 'capacity', 'seats'],
   waitlist: ['רשימת המתנה', 'המתנה', 'waitlist'],
@@ -150,6 +172,12 @@ export interface ImportRow {
   line: number;
   raw: Partial<Record<ImportColumn, string>>;
   input?: CreateSessionInput;
+  /*
+   * The English side, carrying only what was actually translated. An
+   * empty column is left out rather than written as an empty string,
+   * so the English page keeps falling back to the Hebrew.
+   */
+  english?: Partial<CreateSessionInput>;
   problems: ImportProblem[];
 }
 
@@ -287,10 +315,18 @@ const readRow = (
   const startsAt = day && start ? fromDateTimeInputValue(`${day}T${start}`) : undefined;
   const endsAt = day && end ? fromDateTimeInputValue(`${day}T${end}`) : undefined;
 
+  const english: Partial<CreateSessionInput> = {
+    ...(raw.titleEn ? { title: raw.titleEn } : {}),
+    ...(raw.subtitleEn ? { subtitle: raw.subtitleEn } : {}),
+    ...(raw.descriptionEn ? { description: raw.descriptionEn } : {}),
+    ...(raw.trackEn ? { track: raw.trackEn } : {}),
+  };
+
   return {
     line,
     raw,
     problems,
+    ...(Object.keys(english).length > 0 ? { english } : {}),
     input: {
       title,
       sessionType,
@@ -357,22 +393,22 @@ export const importTemplate = (locale: Locale): Buffer => {
   const example: string[][] =
     locale === 'he'
       ? [
-          ['דברי פתיחה', 'מליאה', '2026-10-12', '09:00', '09:30', '', 'פתיחת הכנס', 'אולם מרכזי', '', 'עברית', '', 'לא', 'כן'],
-          ['בינה מלאכותית בשירות הציבור', 'הרצאה', '2026-10-12', '09:45', '10:30', 'מבט מהשטח', '', 'אולם מרכזי', 'טכנולוגיה', 'עברית', '', 'לא', 'כן'],
-          ['סדנת כתיבה לרשת', 'סדנה', '2026-10-12', '11:00', '12:30', '', 'סדנה מעשית, נדרשת הרשמה', 'חדר 204', 'תוכן', 'עברית', '25', 'כן', 'לא'],
-          ['הפסקת צהריים', 'הפסקה', '2026-10-12', '12:30', '13:30', '', '', '', '', '', '', 'לא', 'לא'],
+          ['דברי פתיחה', 'Opening remarks', 'מליאה', '2026-10-12', '09:00', '09:30', '', '', 'פתיחת הכנס', 'The conference opens', 'אולם מרכזי', '', '', 'עברית', '', 'לא', 'כן'],
+          ['בינה מלאכותית בשירות הציבור', 'AI in public service', 'הרצאה', '2026-10-12', '09:45', '10:30', 'מבט מהשטח', 'A view from the field', '', '', 'אולם מרכזי', 'טכנולוגיה', 'Technology', 'עברית', '', 'לא', 'כן'],
+          ['סדנת כתיבה לרשת', '', 'סדנה', '2026-10-12', '11:00', '12:30', '', '', 'סדנה מעשית, נדרשת הרשמה', '', 'חדר 204', 'תוכן', '', 'עברית', '25', 'כן', 'לא'],
+          ['הפסקת צהריים', 'Lunch', 'הפסקה', '2026-10-12', '12:30', '13:30', '', '', '', '', '', '', '', '', '', 'לא', 'לא'],
         ]
       : [
-          ['Opening remarks', 'keynote', '2026-10-12', '09:00', '09:30', '', 'The conference opens', 'Main hall', '', 'Hebrew', '', 'no', 'yes'],
-          ['AI in public service', 'talk', '2026-10-12', '09:45', '10:30', 'A view from the field', '', 'Main hall', 'Technology', 'Hebrew', '', 'no', 'yes'],
-          ['Writing for the web', 'workshop', '2026-10-12', '11:00', '12:30', '', 'Hands-on; registration required', 'Room 204', 'Content', 'Hebrew', '25', 'yes', 'no'],
-          ['Lunch', 'break', '2026-10-12', '12:30', '13:30', '', '', '', '', '', '', 'no', 'no'],
+          ['דברי פתיחה', 'Opening remarks', 'keynote', '2026-10-12', '09:00', '09:30', '', '', 'פתיחת הכנס', 'The conference opens', 'Main hall', '', '', 'Hebrew', '', 'no', 'yes'],
+          ['בינה מלאכותית בשירות הציבור', 'AI in public service', 'talk', '2026-10-12', '09:45', '10:30', '', 'A view from the field', '', '', 'Main hall', '', 'Technology', 'Hebrew', '', 'no', 'yes'],
+          ['סדנת כתיבה', 'Writing for the web', 'workshop', '2026-10-12', '11:00', '12:30', '', '', '', 'Hands-on; registration required', 'Room 204', '', 'Content', 'Hebrew', '25', 'yes', 'no'],
+          ['הפסקת צהריים', 'Lunch', 'break', '2026-10-12', '12:30', '13:30', '', '', '', '', '', '', '', '', '', 'no', 'no'],
         ];
 
   const activities: SheetData = {
     name: locale === 'he' ? 'פעילויות' : 'Activities',
     rows: [header, ...example],
-    widths: [30, 12, 13, 12, 12, 24, 40, 18, 14, 10, 10, 14, 18],
+    widths: [28, 28, 12, 13, 12, 12, 22, 22, 34, 34, 18, 13, 13, 10, 10, 14, 18],
   };
 
   const guide: SheetData = {
@@ -392,6 +428,12 @@ export const importTemplate = (locale: Locale): Buffer => {
         locale === 'he'
           ? 'שורות הדוגמה נועדו למחיקה. אפשר להוסיף עמודות משלכם — הן פשוט יתעלמו.'
           : 'The example rows are meant to be deleted. Columns of your own are ignored, not refused.',
+      ],
+      [
+        locale === 'he' ? 'אנגלית' : 'English',
+        locale === 'he'
+          ? 'כל עמודה "באנגלית" היא רשות. עמודה שנשארת ריקה — האתר באנגלית יציג במקומה את העברית, כך שאפשר לתרגם רק את מה שחשוב.'
+          : 'Every "(English)" column is optional. Left empty, the English site shows the Hebrew instead — so you can translate only what matters.',
       ],
     ],
     widths: [22, 80],

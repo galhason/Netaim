@@ -4,7 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { Locale } from '@/config/locales';
+import { chooseLocaleAction } from '@/features/account/actions/choose-locale';
 import { signOutAction } from '@/features/account/actions/sign-out';
+import NavBell from '@/features/notifications/components/nav-bell';
 import { Avatar } from '../ui/kit';
 import { IconCalendar, IconSearch } from '../ui/icons';
 
@@ -30,21 +32,6 @@ interface Props {
   scheduleHref?: string;
 }
 
-const Bell = ({ className = '' }: { className?: string }) => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={1.6}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-    className={className}
-  >
-    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-    <path d="M13.7 21a2 2 0 0 1-3.4 0" />
-  </svg>
-);
 
 const Exit = ({ className = '' }: { className?: string }) => (
   <svg
@@ -79,9 +66,6 @@ const ExperienceNav = ({
   const pathname = usePathname();
   const home = `/${locale}`;
   const other: Locale = locale === 'he' ? 'en' : 'he';
-  const localeHref = pathname
-    ? pathname.replace(new RegExp(`^/${locale}(?=/|$)`), `/${other}`)
-    : `/${other}`;
   const [open, setOpen] = useState(false);
   const signOutLabel = locale === 'he' ? 'התנתקות' : 'Sign out';
 
@@ -152,19 +136,30 @@ const ExperienceNav = ({
           >
             <IconSearch className="size-5" />
           </Link>
-          <Link
-            href={`${home}/me`}
-            aria-label={locale === 'he' ? 'התראות' : 'Notifications'}
-            className="relative grid size-9 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-          >
-            <Bell className="size-5" />
-          </Link>
-          <Link
-            href={localeHref}
-            className="hidden rounded-full px-2.5 py-1 text-sm font-medium text-white/70 transition-colors hover:text-white sm:block"
-          >
-            {other === 'en' ? 'EN' : 'עב'}
-          </Link>
+          {/*
+            * The bell opens the notifications, here as everywhere else.
+            * It used to be a link to the personal page — the same icon
+            * as on the landing, in the same corner, doing something
+            * else entirely, which is worse than not having it.
+            */}
+          {userName ? <NavBell locale={locale} /> : null}
+          {/*
+            * Language is a preference, not navigation. A plain link to
+            * /en could not work: a participant with a stored preference
+            * is redirected straight back by the middleware, so the
+            * switch appeared to do nothing at all. The action stores the
+            * choice first and then moves.
+            */}
+          <form action={chooseLocaleAction} className="hidden sm:block">
+            <input type="hidden" name="to" value={other} />
+            <input type="hidden" name="next" value={pathname ?? home} />
+            <button
+              type="submit"
+              className="cursor-pointer rounded-full px-2.5 py-1 text-sm font-medium text-white/70 transition-colors hover:text-white"
+            >
+              {other === 'en' ? 'EN' : 'עב'}
+            </button>
+          </form>
 
           {userName ? (
             <>
@@ -223,6 +218,24 @@ const ExperienceNav = ({
       {open ? (
         <div className="border-t border-white/10 bg-[var(--x-nav)] px-6 pb-4 pt-2 lg:hidden">
           <div className="flex flex-col gap-1">{links}</div>
+          {/*
+            * The language belongs in the drawer too. On a phone the
+            * desktop switch is hidden, so without this there is no way
+            * to change language on the pages most people browse.
+            */}
+          <form
+            action={chooseLocaleAction}
+            className="mt-2 border-t border-white/10 pt-2"
+          >
+            <input type="hidden" name="to" value={other} />
+            <input type="hidden" name="next" value={pathname ?? home} />
+            <button
+              type="submit"
+              className="inline-flex items-center gap-2 py-1.5 text-sm text-white/70 transition-colors hover:text-white"
+            >
+              {other === 'en' ? 'English' : 'עברית'}
+            </button>
+          </form>
           {userName ? (
             <form action={signOutAction} className="mt-2 border-t border-white/10 pt-2">
               <input type="hidden" name="locale" value={locale} />

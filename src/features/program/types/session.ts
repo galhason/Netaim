@@ -30,6 +30,13 @@ export interface CreateSessionInput {
   imageId?: string;
 }
 
+export interface SessionTranslation {
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  track?: string;
+}
+
 export interface SessionSummary {
   id: string;
   eventSlug?: string;
@@ -82,6 +89,17 @@ export interface SessionWaitlistEntry {
  */
 export interface SessionRepository {
   listByEvent: (slug: string, locale: Locale) => Promise<SessionSummary[]>;
+  /*
+   * The localized text of one activity in one language, as stored —
+   * nothing inherited from the other language. The editor needs this
+   * and the site must never use it: an English page with no English
+   * text should show the Hebrew, and an English *form* pre-filled with
+   * Hebrew is how the two get welded together on the first save.
+   */
+  translationOf: (
+    sessionId: string,
+    locale: Locale,
+  ) => Promise<SessionTranslation | null>;
   getById: (
     sessionId: string,
     locale: Locale,

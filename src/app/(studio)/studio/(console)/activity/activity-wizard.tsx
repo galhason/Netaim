@@ -21,6 +21,16 @@ export interface WizardInitial {
   title?: string;
   subtitle?: string;
   description?: string;
+  /*
+   * The same four fields in the other language. They are edited beside
+   * the Hebrew rather than behind a language switch: an activity is
+   * written once, by one person, who has both languages in their head
+   * at that moment — and a switch means opening every activity twice.
+   */
+  titleEn?: string;
+  subtitleEn?: string;
+  descriptionEn?: string;
+  trackEn?: string;
   sessionType?: SessionType;
   speakers?: ResolvedSpeaker[];
   startsAt?: string;
@@ -46,6 +56,101 @@ interface Props {
   library?: MediaOption[];
   initial?: WizardInitial;
 }
+
+/*
+ * One field, both languages, stacked.
+ *
+ * The tag on the right of each row says which language it is; the
+ * English row is optional everywhere, and left empty the site shows the
+ * Hebrew — the same inheritance the rest of the platform uses, so a
+ * conference can translate the four titles that matter and leave the
+ * rest.
+ */
+const LangTag = ({ children }: { children: string }) => (
+  <span className="grid w-8 flex-none place-items-center self-stretch rounded-md border border-[var(--c-line)] text-[10px] font-medium tracking-wider text-[var(--c-text-faint)]">
+    {children}
+  </span>
+);
+
+interface PairProps {
+  name: string;
+  label: string;
+  he: string;
+  en: string;
+  placeholder?: string;
+  rows?: number;
+  fieldClass: string;
+  labelClass: string;
+  /* The Hebrew half of the title is controlled; every other half is not. */
+  controlled?: { value: string; onChange: (value: string) => void; onBlur?: () => void };
+}
+
+const Pair = ({
+  name,
+  label,
+  he,
+  en,
+  placeholder,
+  rows,
+  fieldClass,
+  labelClass,
+  controlled,
+}: PairProps) => (
+  <div>
+    <span className={labelClass}>{label}</span>
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-stretch gap-1.5">
+        <LangTag>עב</LangTag>
+        {rows ? (
+          <textarea
+            name={name}
+            rows={rows}
+            defaultValue={he}
+            placeholder={placeholder}
+            dir="rtl"
+            className={`${fieldClass} resize-y`}
+          />
+        ) : controlled ? (
+          <input
+            value={controlled.value}
+            onChange={(event) => controlled.onChange(event.target.value)}
+            onBlur={controlled.onBlur}
+            placeholder={placeholder}
+            dir="rtl"
+            className={fieldClass}
+          />
+        ) : (
+          <input
+            name={name}
+            defaultValue={he}
+            placeholder={placeholder}
+            dir="rtl"
+            className={fieldClass}
+          />
+        )}
+      </div>
+      <div className="flex items-stretch gap-1.5">
+        <LangTag>EN</LangTag>
+        {rows ? (
+          <textarea
+            name={`${name}_en`}
+            rows={rows}
+            defaultValue={en}
+            dir="ltr"
+            className={`${fieldClass} resize-y`}
+          />
+        ) : (
+          <input
+            name={`${name}_en`}
+            defaultValue={en}
+            dir="ltr"
+            className={fieldClass}
+          />
+        )}
+      </div>
+    </div>
+  </div>
+);
 
 const SESSION_TYPES: SessionType[] = [
   'talk',
@@ -286,16 +391,19 @@ const ActivityWizard = ({
           {/* STEP 0 — Basics */}
           <section className={step === 0 ? 'flex flex-col gap-5' : 'hidden'}>
             <div>
-              <label className={label} htmlFor="w-title">
-                {t.fTitle}
-              </label>
-              <input
-                id="w-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={() => setTouched(true)}
+              <Pair
+                name="title"
+                label={t.fTitle}
+                he={initial?.title ?? ''}
+                en={initial?.titleEn ?? ''}
                 placeholder={t.fTitlePh}
-                className={field}
+                fieldClass={field}
+                labelClass={label}
+                controlled={{
+                  value: title,
+                  onChange: setTitle,
+                  onBlur: () => setTouched(true),
+                }}
               />
               {touched && !titleOk ? (
                 <p className="mt-1.5 text-xs text-rose-300">{t.titleRequired}</p>
@@ -320,31 +428,25 @@ const ActivityWizard = ({
                 ))}
               </div>
             </div>
-            <div>
-              <label className={label} htmlFor="w-subtitle">
-                {t.fSubtitle}
-              </label>
-              <input
-                id="w-subtitle"
-                name="subtitle"
-                defaultValue={initial?.subtitle ?? ''}
-                placeholder={t.fSubtitlePh}
-                className={field}
-              />
-            </div>
-            <div>
-              <label className={label} htmlFor="w-desc">
-                {t.fDesc}
-              </label>
-              <textarea
-                id="w-desc"
-                name="description"
-                rows={4}
-                defaultValue={initial?.description ?? ''}
-                placeholder={t.fDescPh}
-                className={`${field} resize-y`}
-              />
-            </div>
+            <Pair
+              name="subtitle"
+              label={t.fSubtitle}
+              he={initial?.subtitle ?? ''}
+              en={initial?.subtitleEn ?? ''}
+              placeholder={t.fSubtitlePh}
+              fieldClass={field}
+              labelClass={label}
+            />
+            <Pair
+              name="description"
+              label={t.fDesc}
+              he={initial?.description ?? ''}
+              en={initial?.descriptionEn ?? ''}
+              placeholder={t.fDescPh}
+              rows={4}
+              fieldClass={field}
+              labelClass={label}
+            />
             <ActivityImagePicker
               locale={locale}
               slug={slug}
@@ -392,18 +494,15 @@ const ActivityWizard = ({
               />
             </div>
             <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label className={label} htmlFor="w-track">
-                  {t.fTrack}
-                </label>
-                <input
-                  id="w-track"
-                  name="track"
-                  defaultValue={initial?.track ?? ''}
-                  placeholder={t.fTrackPh}
-                  className={field}
-                />
-              </div>
+              <Pair
+                name="track"
+                label={t.fTrack}
+                he={initial?.track ?? ''}
+                en={initial?.trackEn ?? ''}
+                placeholder={t.fTrackPh}
+                fieldClass={field}
+                labelClass={label}
+              />
               <div>
                 <label className={label} htmlFor="w-lang">
                   {t.fLang}

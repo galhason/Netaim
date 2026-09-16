@@ -5,7 +5,7 @@ import {
   getStudioLocale as localeOf,
 } from '@/features/studio';
 import { getActiveConferenceSlug, listMedia } from '@/features/events';
-import { getSessionSituation } from '@/features/program';
+import { getSessionSituation, getSessionTranslation } from '@/features/program';
 import { listSpeakerCandidates } from '@/features/speakers';
 import { toDateTimeInputValue } from '@/shared';
 import ActivityWizard, { type WizardInitial } from '../activity-wizard';
@@ -30,7 +30,16 @@ const EditActivityPage = async ({ params }: EditActivityPageProps) => {
     redirect('/studio/activity');
   }
 
-  const situation = await getSessionSituation(id, locale).catch(() => null);
+  /*
+   * Both languages, because the wizard shows both rows. The English
+   * read asks for English alone — with the fallback on it would arrive
+   * full of Hebrew, and the first save would freeze that Hebrew into
+   * English for good. Same trap as the conference inspector had.
+   */
+  const [situation, en] = await Promise.all([
+    getSessionSituation(id, locale).catch(() => null),
+    getSessionTranslation(id, 'en').catch(() => null),
+  ]);
   if (!situation) {
     notFound();
   }
@@ -50,6 +59,10 @@ const EditActivityPage = async ({ params }: EditActivityPageProps) => {
     title: s.title,
     subtitle: s.subtitle,
     description: s.description,
+    titleEn: en?.title,
+    subtitleEn: en?.subtitle,
+    descriptionEn: en?.description,
+    trackEn: en?.track,
     sessionType: s.sessionType,
     speakers: s.speakers,
     startsAt: toDateTimeInputValue(s.startsAt),

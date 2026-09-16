@@ -4,6 +4,7 @@ export {
   updateSession,
   deleteSession,
   getSessionSituation,
+  getSessionTranslation,
   selectWorkshop,
   leaveWorkshop,
   myWorkshops,

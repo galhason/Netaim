@@ -39,13 +39,20 @@ const iso = (value: FormDataEntryValue | null): string | undefined => {
  * otherwise. Registration/capacity/waitlist behaviour stays in the
  * frozen engine — this only persists the activity's structured content.
  */
+/*
+ * The activity's own two languages, fixed. They are deliberately not
+ * the Studio's interface language: the form shows both rows at once, so
+ * "which language am I editing" is not a question any more.
+ */
+const HEBREW: Locale = 'he';
+const ENGLISH: Locale = 'en';
+
 export const saveActivityAction = async (formData: FormData) => {
   const slug = String(formData.get('slug') ?? '');
   if (!slug || !(await authorized(slug))) {
     return;
   }
   const sessionId = String(formData.get('sessionId') ?? '').trim();
-  const locale = String(formData.get('contentLocale') ?? 'he') as Locale;
   const title = String(formData.get('title') ?? '').trim();
   const type = String(formData.get('sessionType') ?? 'talk');
   if (!title || !isSessionType(type)) {
@@ -87,11 +94,37 @@ export const saveActivityAction = async (formData: FormData) => {
     language: text(formData.get('language')),
   };
 
-  if (sessionId) {
-    await updateSession(sessionId, locale, input);
-  } else {
-    await createSession(slug, locale, input);
+  /*
+   * The other language, from the same press.
+   *
+   * The form shows Hebrew and English side by side, so a save carries
+   * both. Only the fields that are actually translated are written —
+   * an English row left empty is *not* written as an empty string,
+   * because empty is what lets the site fall back to the Hebrew. A
+   * conference can translate the four titles that matter and leave the
+   * rest, and nothing looks broken.
+   *
+   * The second write never announces anything to the people registered:
+   * updateSession compares time and place before and after, and this
+   * write changes neither.
+   */
+  const english: Partial<CreateSessionInput> = {
+    ...(text(formData.get('title_en')) ? { title: text(formData.get('title_en'))! } : {}),
+    ...(text(formData.get('subtitle_en')) ? { subtitle: text(formData.get('subtitle_en')) } : {}),
+    ...(text(formData.get('description_en'))
+      ? { description: text(formData.get('description_en')) }
+      : {}),
+    ...(text(formData.get('track_en')) ? { track: text(formData.get('track_en')) } : {}),
+  };
+
+  const id = sessionId
+    ? ((await updateSession(sessionId, HEBREW, input)) ? sessionId : null)
+    : ((await createSession(slug, HEBREW, input))?.id ?? null);
+
+  if (id && Object.keys(english).length > 0) {
+    await updateSession(id, ENGLISH, english).catch(() => null);
   }
+
   revalidatePath('/studio/activity');
   redirect('/studio/activity');
 };
