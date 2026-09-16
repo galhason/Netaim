@@ -377,3 +377,68 @@ describe('the frame policy lets the Studio frame its own site', () => {
     ).toBe(false);
   });
 });
+
+/*
+ * The nightly copy, and the two ways it lies.
+ *
+ * A backup fails in silence twice over. It runs, exits zero and holds
+ * nothing — a changed password, a renamed database, a full disk all
+ * look like that from the outside. And it is never read back, so the
+ * first restore is attempted on the worst night of the year.
+ *
+ * The script answers both: it reads its own dump before believing it,
+ * and there is a restore that can be run on an ordinary Tuesday
+ * without touching anything live. These cases hold that shape, because
+ * a verification step is exactly the kind of thing a later "simplify"
+ * removes.
+ */
+describe('the backup proves itself', () => {
+  const backup = readFileSync('scripts/backup.sh', 'utf8');
+  const restore = readFileSync('scripts/restore.sh', 'utf8');
+
+  it('reads the dump back and insists on the tables that matter', () => {
+    expect(backup).toContain('pg_restore --list');
+    for (const table of ['participants', 'registrations', 'account_grants']) {
+      expect(backup).toContain(table);
+    }
+  });
+
+  it('throws away a dump that failed its own check', () => {
+    /* Otherwise `restore.sh` would later pick the newest file — this one. */
+    expect(backup).toContain('VERIFIED');
+    expect(backup).toContain('rm -f "$DUMP"');
+  });
+
+  it('keeps a verified dump even when a later step fails', () => {
+    expect(backup).toContain('[ "$VERIFIED" -eq 0 ]');
+  });
+
+  it('copies the media the database cannot regenerate', () => {
+    expect(backup).toContain('media');
+    expect(backup).toContain('rsync');
+  });
+
+  it('takes the credentials from the application, never its own copy', () => {
+    expect(backup).toContain("grep -E '^DATABASE_URL='");
+    expect(restore).toContain("grep -E '^DATABASE_URL='");
+  });
+
+  it('refuses to restore over the live database unless told by name', () => {
+    expect(restore).toContain('--i-mean-the-live-database');
+    expect(restore).toContain('hason_restore_test');
+  });
+
+  it('never prints a connection URL, because it carries the password', () => {
+    /* The hint after a test restore used to echo $ADMIN_URL verbatim. */
+    expect(restore.includes('say "Drop it when you are done:  psql')).toBe(
+      false,
+    );
+  });
+
+  it('is documented with the line that actually installs it', () => {
+    const deploy = readFileSync('DEPLOY.md', 'utf8');
+    expect(deploy).toContain('scripts/backup.sh');
+    expect(deploy).toContain('0 3 * * *');
+    expect(deploy).toContain('scripts/restore.sh');
+  });
+});

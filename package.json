@@ -28,7 +28,9 @@
     "test:watch": "vitest",
     "test:integration": "docker compose up -d postgres-test && TEST_DATABASE_URL=postgres://hason:hason@localhost:5433/hason_test vitest run tests/integration",
     "gates": "npm run generate:types && npm run typecheck && npm run lint && npm run test && npm run build",
-    "setup:verification": "node scripts/setup-verification-table.mjs"
+    "setup:verification": "node scripts/setup-verification-table.mjs",
+    "backup": "bash scripts/backup.sh",
+    "backup:verify": "bash scripts/restore.sh"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "^3.0.0",

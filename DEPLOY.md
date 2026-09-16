@@ -407,34 +407,101 @@ psql "$DATABASE_URL" -f scripts/sql/001-email-verifications.sql
 
 ## חלק ד' — מדיה, גיבוי ושחזור
 
-### מדיה
+### מה בכלל צריך גיבוי
 
-תיקיית `media/` נמצאת ב-`.gitignore` — כלומר **התמונות שהעלית בשרת קיימות רק בשרת**, ו-`git pull` לעולם לא ידרוס אותן. זה טוב, אבל זה גם אומר שהן לא מגובות בשום מקום אוטומטית.
+שני דברים שהמערכת לא יודעת לייצר מחדש:
 
-### גיבוי מסד הנתונים
+1. **מסד הנתונים** — כל ההרשמות, החשבונות, ההרשאות, התוכנית, ההתראות.
+2. **תיקיית `media/`** — התמונות והסרטונים שהועלו דרך הסטודיו. היא ב-`.gitignore`, כלומר היא קיימת **רק בשרת**. `git pull` לא ידרוס אותה, אבל גם שום דבר לא מעתיק אותה.
 
-```bash
-mkdir -p /root/backups
-pg_dump -U hason -h localhost hason > /root/backups/hason-$(date +%F).sql
-```
+הקוד עצמו לא צריך גיבוי — הוא ב-GitHub.
 
-גיבוי אוטומטי יומי ב-03:00 — `crontab -e` והוסף:
-
-```
-0 3 * * * pg_dump -U hason -h localhost hason > /root/backups/hason-$(date +\%F).sql
-```
-
-### גיבוי מדיה
+### התקנה חד־פעמית
 
 ```bash
-tar -czf /root/backups/media-$(date +%F).tgz -C /var/www/hason media
+sudo mkdir -p /var/backups/hason
+sudo chmod 700 /var/backups/hason
+sudo chmod +x /var/www/hason/scripts/backup.sh /var/www/hason/scripts/restore.sh
 ```
 
-### שחזור
+הרצה ראשונה ידנית, כדי לראות שזה עובד לפני שזה רץ לבד:
 
 ```bash
-psql -U hason -h localhost -d hason < /root/backups/hason-2026-07-25.sql
+/var/www/hason/scripts/backup.sh
 ```
+
+הפלט צריך להיראות כך — שימו לב למספרים, הם הבדיקה:
+
+```
+[2026-09-16 03:00:01] dumping the database
+[2026-09-16 03:00:04] database: 3.1M — participants=214 registrations=198 events=1 media=42
+[2026-09-16 03:00:05] media: 84M mirrored
+[2026-09-16 03:00:05] done — 1 copies kept in /var/backups/hason/db
+```
+
+ואז `crontab -e` ושורה אחת:
+
+```
+0 3 * * * /var/www/hason/scripts/backup.sh >> /var/backups/hason/cron.log 2>&1
+```
+
+### מה הסקריפט עושה
+
+- `pg_dump` בפורמט custom (דחוס, ניתן לשחזור טבלה-טבלה) לתוך `/var/backups/hason/db/`.
+- **קורא את הגיבוי בחזרה** ומוודא שהטבלאות שחשובות באמת נמצאות בו. גיבוי שרץ, החזיר 0 והוא ריק — זה איך שנראית סיסמה שהשתנתה או דיסק מלא, וזה בדיוק מה שהבדיקה תופסת. גיבוי שנכשל בבדיקה נמחק מיד, כדי שהשחזור לעולם לא יבחר בו.
+- רושם את מספר השורות בכל לילה ליד הקובץ. מספר שקורס פתאום נראה ביומן, לא מתגלה בשחזור.
+- מסנכרן את `media/` כמראה (`rsync --delete`) — לא tar חדש כל לילה, כי בתיקייה יש סרטונים והיא תמלא את הדיסק שהגיבוי אמור לשרוד.
+- שומר 14 גיבויים ומוחק ישנים יותר. לשינוי: `BACKUP_KEEP=30`.
+- הקבצים נוצרים 600 והתיקייה 700 — יש שם שמות, אימיילים וטלפונים של אנשים. **לא לשים את זה במקום ש-nginx מגיש.**
+
+### לבדוק שהגיבוי באמת עובד
+
+גיבוי שאף אחד לא שחזר הוא קובץ, לא גיבוי. הסקריפט הזה משחזר לדאטהבייס צדדי — לא נוגע בחי — ומדפיס מה חזר:
+
+```bash
+/var/www/hason/scripts/restore.sh
+```
+
+```
+restoring hason-20260916-0300.dump into hason_restore_test
+
+what came back:
+  participants  214
+  registrations 198
+  events        1
+  media         42
+  grants        3
+
+This was a test. Nothing live was touched.
+```
+
+המספרים צריכים להתאים לשורת היומן של אותו לילה. שווה להריץ את זה פעם בחודש, ובוודאי שבוע לפני הכנס.
+
+### שחזור אמיתי
+
+```bash
+pm2 stop hason
+/var/www/hason/scripts/restore.sh /var/backups/hason/db/hason-20260916-0300.dump hason --i-mean-the-live-database
+cd /var/www/hason && npx payload migrate     # הגיבוי נושא את הסכימה של הלילה שבו נלקח
+pm2 start hason
+```
+
+ואם צריך גם את המדיה:
+
+```bash
+rsync -a /var/backups/hason/media/ /var/www/hason/media/
+```
+
+### מה זה עדיין לא מכסה
+
+הגיבוי יושב על אותו דיסק של השרת. זה מגן מפני הטעות הנפוצה — מיגרציה שהשתבשה, טבלה שנמחקה, קובץ שנדרס — אבל **לא** מפני אובדן המכונה עצמה. בשביל זה צריך עותק מחוץ לשרת. שתי אפשרויות פשוטות:
+
+```bash
+# למחשב שלך, מתי שבא לך:
+scp -r root@46.225.232.227:/var/backups/hason/db ~/netaim-backups/
+```
+
+או Hetzner Backups בפאנל של השרת (תמונת דיסק יומית, בתשלום נוסף) — שזו ההגנה היחידה שעובדת גם כשהשרת עצמו נעלם.
 
 ---
 
