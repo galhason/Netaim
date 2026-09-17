@@ -53,6 +53,15 @@ const ConferenceFooter = ({
         >
           {CINEMATIC_UI.accessibilityStatement[locale]}
         </Link>
+        {/* Contact came down from the navigation bar, where it was
+          * spending width a visitor needed for the conference's own
+          * pages. This is where a reader looks for it anyway. */}
+        <Link
+          href={`/${locale}/contact`}
+          className="text-sm text-text-secondary transition-colors hover:text-text-primary"
+        >
+          {CINEMATIC_UI.contact[locale]}
+        </Link>
         <Link
           href="/studio"
           className="text-sm text-text-secondary transition-colors hover:text-text-primary"
@@ -61,8 +70,21 @@ const ConferenceFooter = ({
         </Link>
       </div>
     </div>
-    <p className="border-t cine-hair py-5 text-center text-xs text-text-secondary/70">
-      {`© ${new Date().getFullYear()} ${brand}`}
+    <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-t cine-hair py-5 text-center text-xs text-text-secondary/70">
+      <span>{`© ${new Date().getFullYear()} ${brand}`}</span>
+      <span aria-hidden="true">·</span>
+      <span>
+        {CINEMATIC_UI.builtBy[locale]}{' '}
+        <a
+          href="https://ghx.co.il"
+          target="_blank"
+          rel="noreferrer"
+          dir="ltr"
+          className="font-medium text-text-secondary underline-offset-4 transition-colors hover:text-text-primary hover:underline"
+        >
+          GHX.CO.IL
+        </a>
+      </span>
     </p>
   </footer>
 );

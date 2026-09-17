@@ -1,6 +1,7 @@
 export { getAttendeeExperience } from './services/attendee-service';
 export { DEMO_ATTENDEE_SLUG } from './constants/demo-attendee';
 export { buildPlatformLounge } from './services/platform-lounge';
+export { toAttendeeUpdates } from './services/participant-experience-builder';
 export { default as LoungeView } from './components/lounge/lounge-view';
 export type {
   LoungeSessionCard,

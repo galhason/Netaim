@@ -27,9 +27,21 @@ const OpeningFooter = ({ locale, brand, brandLogo }: OpeningFooterProps) => (
           {OPENING_UI.footerTagline[locale]}
         </span>
       </p>
-      <p className="flex items-center gap-6">
+      <p className="flex flex-wrap items-center gap-x-6 gap-y-2">
         <span className="text-xs text-text-secondary">
           © {new Date().getFullYear()} {brand} · {OPENING_UI.rights[locale]}
+        </span>
+        <span className="text-xs text-text-secondary">
+          {OPENING_UI.builtBy[locale]}{' '}
+          <a
+            href="https://ghx.co.il"
+            target="_blank"
+            rel="noreferrer"
+            dir="ltr"
+            className="font-medium underline-offset-4 transition-colors hover:text-text-primary hover:underline"
+          >
+            GHX.CO.IL
+          </a>
         </span>
         <Link
           href="/studio"

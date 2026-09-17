@@ -46,7 +46,12 @@ const EventPage = async ({ params }: EventPageProps) => {
   return (
     <>
       <ExperienceStage
-        experience={buildConferenceDescriptor(experience, locale, logo.onDark)}
+        experience={buildConferenceDescriptor(
+          experience,
+          locale,
+          logo.onDark,
+          `/${locale}/events/${slug}/my-activities`,
+        )}
         locale={locale}
         viewer={
           me ? { name: me.name || me.email, ...(meHref ? { href: meHref } : {}) } : null

@@ -2,6 +2,7 @@ import type { Locale } from '@/config/locales';
 import type {
   AttendeeExperienceContent,
   AttendeePerson,
+  AttendeeUpdate,
 } from '../types/attendee-experience';
 
 /*
@@ -15,6 +16,13 @@ export const buildPlatformLounge = (
   name: string,
   locale: Locale,
   people: AttendeePerson[] = [],
+  /*
+   * The live conference's announcements. This room used to hold none at
+   * all — the Updates card was built empty and stayed empty, which is
+   * how a guest who registered for activities but never "joined" at the
+   * account level came to see a conference that never said anything.
+   */
+  updates: AttendeeUpdate[] = [],
 ): AttendeeExperienceContent => {
   const he = locale === 'he';
   return {
@@ -43,7 +51,7 @@ export const buildPlatformLounge = (
         url: '/placeholder/scene.jpg',
         alt: 'נטעים',
       },
-      updates: [],
+      updates,
     },
     myDay: {
       savedLabel: he ? 'נשמר' : 'Saved',

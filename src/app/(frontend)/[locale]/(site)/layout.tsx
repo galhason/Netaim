@@ -49,6 +49,9 @@ const SiteLayout = async ({ children, params }: SiteLayoutProps) => {
         meHref={meHref}
         brand={brandFor(locale as Locale)}
         brandLogo={logo.onDark}
+        {...(slug && me
+          ? { scheduleHref: `/${locale}/events/${slug}/my-activities` }
+          : {})}
         viewer={me ? { name: me.name || me.email } : null}
         immediate
       />

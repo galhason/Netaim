@@ -4,6 +4,7 @@ import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { LoungeView, getAttendeeExperience } from '@/features/attendee';
 import { CinematicNav } from '@/features/cinematic';
+import { getSiteBrand } from '@/features/events';
 import { myConnections } from '@/features/networking';
 import { currentParticipant } from '@/features/registration';
 
@@ -32,6 +33,7 @@ const AttendeePage = async ({ params }: AttendeePageProps) => {
   }
 
   const me = await currentParticipant().catch(() => null);
+  const siteLogo = await getSiteBrand();
   const links = await myConnections(slug).catch(() => []);
   const connections = links.filter(
     (connection) => connection.status === 'accepted',
@@ -62,6 +64,10 @@ const AttendeePage = async ({ params }: AttendeePageProps) => {
               registerHref={`/${locale}/events/${slug}/register`}
               meHref={`/${locale}/me`}
               brand={brandFor(locale as Locale)}
+              brandLogo={siteLogo.onDark}
+              {...(me
+                ? { scheduleHref: `/${locale}/events/${slug}/my-activities` }
+                : {})}
               viewer={me ? { name: me.name || me.email } : null}
               immediate
             />

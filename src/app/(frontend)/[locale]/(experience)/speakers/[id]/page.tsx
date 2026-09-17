@@ -12,6 +12,7 @@ import {
   surface,
 } from '@/features/conference';
 import type { SessionType } from '@/features/program';
+import { requireParticipant } from '@/features/registration';
 
 interface SpeakerProfilePageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -35,6 +36,7 @@ const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
   const { locale, id } = await params;
   const lang = (isSupportedLocale(locale) ? locale : 'he') as Locale;
   setRequestLocale(lang);
+  await requireParticipant(lang);
   const he = lang === 'he';
 
   const speaker = await getSpeaker(id, lang).catch(() => null);
@@ -210,5 +212,17 @@ const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
     </main>
   );
 };
+
+
+/*
+ * Rendered per request, and never prerendered.
+ *
+ * The page asks who is reading before it draws anything, and a page
+ * that can be built once at build time has no reader to ask. Without
+ * this line Next prerendered the programme as a signed-out visitor and
+ * served that HTML to everyone — the guard above ran once, at build,
+ * and never again.
+ */
+export const dynamic = 'force-dynamic';
 
 export default SpeakerProfilePage;

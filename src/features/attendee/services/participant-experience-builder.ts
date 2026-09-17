@@ -84,7 +84,15 @@ const toMoments = (
     }));
 };
 
-const toUpdates = (
+/*
+ * The conference's own announcements, as the Lounge shows them.
+ *
+ * Exported because the platform Lounge — the room a guest sees before
+ * they have joined a conference at the account level — has to fill the
+ * same card from the same outbox, and two copies of this mapping is how
+ * the two rooms come to disagree about what an update looks like.
+ */
+export const toAttendeeUpdates = (
   notifications: NotificationView[],
   locale: Locale,
 ): AttendeeUpdate[] => {
@@ -202,7 +210,7 @@ export const buildParticipantExperience = ({
       statusLabel: he ? 'הסטטוס שלך' : 'Your status',
       statusValue,
       image: heroImage ? { url: heroImage, alt: title } : undefined,
-      updates: toUpdates(notifications, locale),
+      updates: toAttendeeUpdates(notifications, locale),
     },
     myDay: {
       savedLabel: he ? 'נשמר' : 'Saved',

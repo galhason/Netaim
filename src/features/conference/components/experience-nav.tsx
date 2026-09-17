@@ -94,7 +94,7 @@ const ExperienceNav = ({
             key={link.key}
             href={`${home}${link.path}`}
             onClick={() => setOpen(false)}
-            className={`relative py-1.5 text-sm transition-colors ${
+            className={`relative whitespace-nowrap py-1.5 text-sm transition-colors ${
               on ? 'font-medium text-white' : 'text-white/70 hover:text-white'
             }`}
           >
@@ -109,7 +109,7 @@ const ExperienceNav = ({
         <Link
           href={scheduleHref}
           onClick={() => setOpen(false)}
-          className={`relative inline-flex items-center gap-1.5 py-1.5 text-sm transition-colors ${
+          className={`relative inline-flex items-center gap-1.5 whitespace-nowrap py-1.5 text-sm transition-colors ${
             scheduleOn ? 'font-medium text-white' : 'text-white/70 hover:text-white'
           }`}
         >
@@ -141,7 +141,7 @@ const ExperienceNav = ({
           />
         </Link>
 
-        <div className="hidden items-center gap-5 lg:flex xl:gap-7">{links}</div>
+        <div className="hidden items-center gap-5 lg:flex xl:gap-6">{links}</div>
 
         <div className="flex items-center gap-2 sm:gap-3">
           <Link

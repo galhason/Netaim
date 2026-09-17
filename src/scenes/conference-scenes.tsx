@@ -63,6 +63,12 @@ interface ConferenceNavContent {
    * ask the Studio what the site's logo is.
    */
   brandLogo?: string;
+  /*
+   * The participant's own day. Carried on the content like the name and
+   * the logo, and drawn only for a viewer the runtime can see — the
+   * descriptor is cached and shared, so who is looking is never on it.
+   */
+  scheduleHref?: string;
   registerHref: string;
   meHref: string;
   sections?: NavSection[];
@@ -98,6 +104,9 @@ const NavRenderer = ({
     meHref={viewer?.href ?? content.meHref}
     brand={content.brand}
     brandLogo={content.brandLogo}
+    {...(viewer && content.scheduleHref
+      ? { scheduleHref: content.scheduleHref }
+      : {})}
     sections={content.sections}
     viewer={viewer ?? null}
   />

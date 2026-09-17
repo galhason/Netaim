@@ -10,7 +10,11 @@ import {
 } from '@/features/account';
 import { LOUNGE_UI } from '@/features/attendee';
 import { CinematicNav } from '@/features/cinematic';
-import { getActiveConferenceSlug, getEventExperience } from '@/features/events';
+import {
+  getActiveConferenceSlug,
+  getEventExperience,
+  getSiteBrand,
+} from '@/features/events';
 import { myConnections, myConversations, myMeetings } from '@/features/networking';
 import type { ConversationPreview } from '@/features/networking';
 import {
@@ -120,6 +124,7 @@ const MessagesPage = async ({ params, searchParams }: MessagesPageProps) => {
    * the bell already reads the live conference for the same reason.
    */
   const activeSlug = await getActiveConferenceSlug(locale).catch(() => null);
+  const siteLogo = await getSiteBrand();
   const slugs = [
     ...new Set([
       ...(activeSlug ? [activeSlug] : []),
@@ -370,6 +375,10 @@ const MessagesPage = async ({ params, searchParams }: MessagesPageProps) => {
           registerHref={`/${locale}`}
           meHref={`/${locale}/me`}
           brand={brandFor(locale)}
+          brandLogo={siteLogo.onDark}
+          {...(activeSlug
+            ? { scheduleHref: `/${locale}/events/${activeSlug}/my-activities` }
+            : {})}
           viewer={{ name: account.name || account.email }}
           immediate
         />

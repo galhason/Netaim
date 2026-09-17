@@ -2,6 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { findPortalEvent, getActiveConferenceSlug } from '@/features/events';
 import { buildProgramModel } from '@/features/program';
+import { requireParticipant } from '@/features/registration';
 import ProgramExperience from './program-experience';
 
 interface ProgramPageProps {
@@ -18,6 +19,8 @@ const ProgramPage = async ({ params, searchParams }: ProgramPageProps) => {
   const { locale } = await params;
   const lang = (isSupportedLocale(locale) ? locale : 'he') as Locale;
   setRequestLocale(lang);
+  /* The programme is the conference itself — it is read by people who joined it. */
+  await requireParticipant(lang);
   const { notice, activity } = await searchParams;
 
   const slug = await getActiveConferenceSlug(lang).catch(() => null);
@@ -41,5 +44,17 @@ const ProgramPage = async ({ params, searchParams }: ProgramPageProps) => {
     />
   );
 };
+
+
+/*
+ * Rendered per request, and never prerendered.
+ *
+ * The page asks who is reading before it draws anything, and a page
+ * that can be built once at build time has no reader to ask. Without
+ * this line Next prerendered the programme as a signed-out visitor and
+ * served that HTML to everyone — the guard above ran once, at build,
+ * and never again.
+ */
+export const dynamic = 'force-dynamic';
 
 export default ProgramPage;

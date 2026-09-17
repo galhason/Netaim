@@ -110,3 +110,4 @@ export {
   onboardingCls,
   pickCopy,
 } from './components/onboarding-shell';
+export { requireParticipant } from './services/participant-gate';

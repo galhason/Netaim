@@ -58,6 +58,8 @@ export const buildConferenceDescriptor = (
    * descriptor — the chrome then writes the name in type.
    */
   brandLogo?: string,
+  /* The signed-in participant's day; the nav scene draws it for a viewer. */
+  scheduleHref?: string,
 ): ExperienceDescriptor => {
   const brand = brandFor(locale);
   const scenes = applyComposition(
@@ -68,6 +70,7 @@ export const buildConferenceDescriptor = (
         content: {
           brand,
           brandLogo,
+          scheduleHref,
           registerHref: experience.registerHref,
           meHref: experience.meHref,
         },

@@ -6,6 +6,7 @@ import {
 } from '@/features/speakers';
 import { getActiveConferenceSlug } from '@/features/events';
 import { EmptyState } from '@/features/conference';
+import { requireParticipant } from '@/features/registration';
 import SpeakersDirectory, {
   type DirectorySpeaker,
 } from './speakers-directory';
@@ -24,6 +25,7 @@ const SpeakersPage = async ({ params }: SpeakersPageProps) => {
   const { locale } = await params;
   const lang = (isSupportedLocale(locale) ? locale : 'he') as Locale;
   setRequestLocale(lang);
+  await requireParticipant(lang);
   const he = lang === 'he';
 
   const slug = await getActiveConferenceSlug(lang).catch(() => null);
@@ -79,5 +81,17 @@ const SpeakersPage = async ({ params }: SpeakersPageProps) => {
     </main>
   );
 };
+
+
+/*
+ * Rendered per request, and never prerendered.
+ *
+ * The page asks who is reading before it draws anything, and a page
+ * that can be built once at build time has no reader to ask. Without
+ * this line Next prerendered the programme as a signed-out visitor and
+ * served that HTML to everyone — the guard above ran once, at build,
+ * and never again.
+ */
+export const dynamic = 'force-dynamic';
 
 export default SpeakersPage;

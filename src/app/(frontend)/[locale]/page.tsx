@@ -66,6 +66,7 @@ const ConferenceLandingPage = async ({
           experience,
           locale as Locale,
           logo.onDark,
+          slug ? `/${locale}/events/${slug}/my-activities` : undefined,
         )}
         locale={locale as Locale}
         viewer={

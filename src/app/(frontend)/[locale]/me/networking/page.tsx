@@ -9,7 +9,11 @@ import {
   getMyAccount,
 } from '@/features/account';
 import { LOUNGE_UI } from '@/features/attendee';
-import { findPortalEvent, getActiveConferenceSlug } from '@/features/events';
+import {
+  findPortalEvent,
+  getActiveConferenceSlug,
+  getSiteBrand,
+} from '@/features/events';
 import {
   connectionChannels,
   myBlockedPeople,
@@ -113,6 +117,7 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
   const directorySlug =
     chosenConf?.slug ??
     (await getActiveConferenceSlug(locale as Locale).catch(() => null));
+  const siteLogo = await getSiteBrand();
   /*
    * Where to look for this guest's connections: the site's conference,
    * plus any others their account happens to hold.
@@ -637,6 +642,10 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
           registerHref={`/${locale}`}
           meHref={`/${locale}/me`}
           brand={brandFor(locale as Locale)}
+          brandLogo={siteLogo.onDark}
+          {...(directorySlug
+            ? { scheduleHref: `/${locale}/events/${directorySlug}/my-activities` }
+            : {})}
           viewer={{ name: myself.name }}
           immediate
         />

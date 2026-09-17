@@ -31,6 +31,7 @@ export const OPENING_UI = {
     en: 'PLATFORM FOR MEANINGFUL EVENTS',
   },
   rights: { he: 'כל הזכויות שמורות', en: 'All rights reserved' },
+  builtBy: { he: 'האתר נבנה ע״י', en: 'Built by' },
 } as const;
 
 /*

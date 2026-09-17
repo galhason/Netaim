@@ -61,6 +61,13 @@ interface LoungeViewProps {
   /* Platform mode: the personal home and profile live at /me. */
   homeHref?: string;
   profileHref?: string;
+  /*
+   * Where "my schedule" goes. The Lounge cannot work it out on its own:
+   * the personal day lives under a conference, and in platform mode the
+   * Lounge holds no conference — the page above it knows which one is
+   * live and says so here.
+   */
+  scheduleHref?: string;
   /* The site's own navigation bar, rendered above the Lounge. */
   siteNav?: ReactNode;
 }
@@ -233,13 +240,22 @@ const LoungeView = ({
   sessionsSection,
   homeHref,
   profileHref,
+  scheduleHref: scheduleHrefProp,
   siteNav,
 }: LoungeViewProps) => {
   const platformBase = `/${locale}/me`;
   const base = content.slug ? `/${locale}/events/${content.slug}` : platformBase;
   const home = homeHref ?? `${base}/me`;
   const profile = profileHref ?? `${base}/me/profile`;
-  const scheduleHref = `/${locale}/program`;
+  /*
+   * The personal day, not the programme. These were the same address
+   * once — "manage my schedule" opened the full timetable, which is the
+   * place to *add* an activity and the wrong place to look at the ones
+   * already chosen.
+   */
+  const scheduleHref =
+    scheduleHrefProp ??
+    (content.slug ? `${base}/my-activities` : `/${locale}/program`);
   /*
    * One community, whichever conference the guest came from. The
    * per-conference networking page was retired; pointing at it would

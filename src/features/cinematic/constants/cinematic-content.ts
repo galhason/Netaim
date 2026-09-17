@@ -89,7 +89,12 @@ export const SITE_NAV_LINKS: {
     path: '/me/networking',
     label: { he: 'Networking', en: 'Networking' },
   },
-  { key: 'contact', path: '/contact', label: { he: 'צור קשר', en: 'Contact' } },
+  /*
+   * Contact used to close this row. It is a page a person visits once,
+   * if ever, and it was costing the bar the width that the conference's
+   * own pages — and "My schedule" — needed. It lives in the footer now,
+   * which is where a reader looks for it.
+   */
 ];
 
 export const CINEMATIC_UI = {
@@ -103,6 +108,12 @@ export const CINEMATIC_UI = {
   },
   privacyPolicy: { he: 'מדיניות פרטיות', en: 'Privacy policy' },
   termsOfUse: { he: 'תנאי שימוש', en: 'Terms of use' },
+  contact: { he: 'צור קשר', en: 'Contact' },
+  /*
+   * Who built it. The name is a Latin wordmark in both languages —
+   * it is an address, and an address is not translated.
+   */
+  builtBy: { he: 'האתר נבנה ע״י', en: 'Built by' },
   myArea: { he: 'האזור האישי', en: 'My Space' },
   /* The nav when nobody is signed in. */
   signIn: { he: 'התחברות', en: 'Sign in' },

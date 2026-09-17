@@ -20,8 +20,10 @@ import {
   loungeGhost,
   loungePrimary,
   loungeQuiet,
+  toAttendeeUpdates,
 } from '@/features/attendee';
 import { myConnections, myUnreadByConnection } from '@/features/networking';
+import { listMyAnnouncements } from '@/features/notifications';
 import { listDirectoryParticipants } from '@/infrastructure';
 import { getActiveConferenceSlug, getSiteBrand } from '@/features/events';
 import { listAgenda, myActivities } from '@/features/program';
@@ -107,6 +109,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
     event: eventParam,
   } = await searchParams;
   const account = await getMyAccount(locale);
+  const siteLogo = await getSiteBrand();
   const ui = ACCOUNT_UI;
   const he = locale === 'he';
 
@@ -158,7 +161,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
         detail={detail}
         registerHref={registerHref}
         switchHref={switchHref}
-        brandLogo={(await getSiteBrand()).onLight}
+        brandLogo={siteLogo.onLight}
       />
     );
   }
@@ -241,6 +244,19 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
     const mySchedule = activeSlug
       ? await myActivities(activeSlug, locale).catch(() => null)
       : null;
+    /*
+     * What the conference has actually said. Read here for the same
+     * reason the schedule above is: this room is the platform Lounge,
+     * which holds no conference of its own, and a guest who registered
+     * for activities without joining at the account level still belongs
+     * to the live conference's audience.
+     */
+    const platformUpdates = activeSlug
+      ? toAttendeeUpdates(
+          await listMyAnnouncements(activeSlug).catch(() => []),
+          locale,
+        )
+      : [];
     const myRegistrations = mySchedule
       ? [...mySchedule.upcoming, ...mySchedule.waiting].sort(
           (a, b) =>
@@ -340,6 +356,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
       account.name || account.email,
       locale,
       platformPeople,
+      platformUpdates,
     );
     if (scheduleMoments.length > 0) {
       platformContent.myDay.moments = scheduleMoments;
@@ -365,6 +382,11 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
         }}
         homeHref={`/${locale}/me`}
         profileHref={`/${locale}/me/profile`}
+        {...(chosen?.slug ?? activeSlug
+          ? {
+              scheduleHref: `/${locale}/events/${chosen?.slug ?? activeSlug}/my-activities`,
+            }
+          : {})}
         siteNav={
           <div className="cinematic">
             <CinematicNav
@@ -374,6 +396,12 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
               }
               meHref={`/${locale}/me`}
               brand={brandFor(locale as Locale)}
+              brandLogo={siteLogo.onDark}
+              {...(chosen?.slug ?? activeSlug
+                ? {
+                    scheduleHref: `/${locale}/events/${chosen?.slug ?? activeSlug}/my-activities`,
+                  }
+                : {})}
               /* This branch only renders for a signed-in account. */
               viewer={{ name: account.name || account.email }}
               immediate

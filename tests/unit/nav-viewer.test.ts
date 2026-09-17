@@ -30,11 +30,20 @@ describe('the nav viewer never enters cached content', () => {
      * name or account field on it means the identity is being cached.
      */
     const scenes = read('src/scenes/conference-scenes.tsx');
-    const contentType = scenes.match(
+    const declared = scenes.match(
       /interface ConferenceNavContent \{([\s\S]*?)\n\}/,
     )?.[1];
+    const contentType = declared
+      /*
+       * Fields, not prose. A comment inside the type may well have to
+       * say the word "viewer" — explaining that the viewer is *not*
+       * carried here is exactly the kind of note this rule wants
+       * written down.
+       */
+      ?.replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/.*$/gm, '');
 
-    expect(contentType, 'ConferenceNavContent not found').toBeDefined();
+    expect(declared, 'ConferenceNavContent not found').toBeDefined();
     for (const forbidden of ['viewer', 'account', 'participant', 'signedIn']) {
       expect(
         contentType?.includes(forbidden),

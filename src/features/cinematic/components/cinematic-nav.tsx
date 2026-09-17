@@ -32,6 +32,13 @@ interface CinematicNavProps {
    * is set in type as it was before there was a logo.
    */
   brandLogo?: string;
+  /*
+   * The participant's own day. Given, it takes the place Contact used
+   * to hold in this row — the pages a person actually returns to are
+   * the conference's and their own, and "My schedule" was reachable
+   * from some pages and not others for no reason anyone could name.
+   */
+  scheduleHref?: string;
   /* `null` means nobody is signed in; `undefined` means not resolved. */
   viewer?: NavViewer | null;
   signInHref?: string;
@@ -67,6 +74,7 @@ const CinematicNav = ({
   meHref,
   brand,
   brandLogo,
+  scheduleHref,
   viewer = null,
   signInHref,
   immediate = false,
@@ -149,6 +157,17 @@ const CinematicNav = ({
               </Link>
             );
           })}
+          {scheduleHref ? (
+            <Link
+              href={scheduleHref}
+              aria-current={pathname === scheduleHref ? 'page' : undefined}
+              className={`whitespace-nowrap text-sm tracking-wide transition-colors hover:text-text-primary ${
+                pathname === scheduleHref ? 'text-accent' : 'text-text-secondary'
+              }`}
+            >
+              {locale === 'he' ? 'הלוז שלי' : 'My schedule'}
+            </Link>
+          ) : null}
         </div>
 
         <div className="flex flex-none items-center gap-4 lg:gap-5">
