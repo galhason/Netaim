@@ -203,7 +203,7 @@ const DiscoverLink = ({ he, filled }: { he: boolean; filled?: boolean }) => (
     href="#discovery"
     className={
       filled
-        ? 'inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--n-purple)] px-5 text-sm font-medium text-white transition-colors hover:bg-[#6f57c8]'
+        ? 'inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--n-purple)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--n-purple-soft)]'
         : 'inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--n-purple)]/35 px-4 text-[13px] font-medium text-[var(--n-purple)] transition-colors hover:bg-[var(--n-purple)]/10'
     }
   >
@@ -363,7 +363,7 @@ const ConnectionsSection = ({
             </p>
           ) : null}
           {open ? (
-            <p className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-[#4c8a60]">
+            <p className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-[var(--n-green)]">
               <span aria-hidden="true" className="text-[8px]">
                 ●
               </span>
@@ -493,7 +493,7 @@ const ConnectionsSection = ({
             <circle cx="60" cy="52" r="13" fill="var(--n-purple)" />
             <path
               d="M60 46v12M54 52h12"
-              stroke="#fff"
+              style={{ stroke: 'var(--nt-surface)' }}
               strokeWidth="2.4"
               strokeLinecap="round"
             />

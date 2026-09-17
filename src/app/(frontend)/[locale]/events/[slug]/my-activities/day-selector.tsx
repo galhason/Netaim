@@ -101,7 +101,7 @@ const DaySelector = ({ days, active, todayKey, counts, locale, onSelect }: Props
               onKeyDown={(event) => onKey(event, i)}
               className={`relative flex min-h-[64px] min-w-[150px] shrink-0 snap-start flex-col justify-center rounded-[var(--x-r-card)] border px-4 py-2.5 text-start transition-[background-color,border-color,box-shadow] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] md:min-w-[168px] ${
                 on
-                  ? 'border-[var(--x-primary)]/40 bg-[var(--x-primary-wash)] shadow-[0_6px_18px_rgba(110,86,207,0.14)]'
+                  ? 'border-[var(--x-primary)]/40 bg-[var(--x-primary-wash)] shadow-[0_6px_18px_rgb(23 63 115 / 0.14)]'
                   : 'border-[var(--x-line)] bg-[var(--x-surface)] hover:border-[var(--x-line-strong)]'
               }`}
             >

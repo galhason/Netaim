@@ -636,7 +636,7 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
         * warm page, and the bar keeps its glass surface from the first
         * pixel, because here it floats over cream, not over a dark hero.
         */}
-      <div className="cinematic bg-transparent [&::after]:content-none [&>header]:border-b [&>header]:border-white/10 [&>header]:bg-[#08111e]/90 [&>header]:backdrop-blur-md">
+      <div className="cinematic bg-transparent [&::after]:content-none [&>header]:border-b [&>header]:border-white/10 [&>header]:bg-[var(--nt-dark-deep)]/90 [&>header]:backdrop-blur-md">
         <CinematicNav
           locale={locale as Locale}
           registerHref={`/${locale}`}

@@ -79,7 +79,7 @@ const HeroCountdownBadge = ({
   }
 
   return (
-    <div className="inline-flex items-center gap-2.5 rounded-full border border-accent/25 bg-accent/10 px-4 py-2 text-sm font-medium text-accent shadow-[0_0_34px_-10px_rgba(201,161,93,0.55)] backdrop-blur-sm">
+    <div className="inline-flex items-center gap-2.5 rounded-full border border-accent/25 bg-accent/10 px-4 py-2 text-sm font-medium text-accent shadow-[0_0_34px_-10px_rgba(249,161,27,0.55)] backdrop-blur-sm">
       <span className="relative flex size-2">
         <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent/60" />
         <span className="relative inline-flex size-2 rounded-full bg-accent" />

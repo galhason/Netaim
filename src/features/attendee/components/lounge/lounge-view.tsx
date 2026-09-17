@@ -74,7 +74,7 @@ interface LoungeViewProps {
 
 const TYPE_CHIP: Record<string, string> = {
   workshop: 'bg-[var(--l-bronze)]/15 text-[var(--l-bronze)]',
-  keynote: 'bg-[#e8cfa4]/60 text-[#7a5c2e]',
+  keynote: 'bg-[var(--nt-yellow-wash)]/60 text-[var(--l-bronze)]',
   panel: 'bg-[var(--l-navy)] text-white',
   talk: 'bg-[var(--l-navy)]/10 text-[var(--l-navy)]',
 };
@@ -144,7 +144,7 @@ const SessionTile = ({
       <Link
         href={session.href}
         title={LOUNGE_UI.activityDetailsHint[locale]}
-        className="group flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-[0_14px_44px_rgba(35,40,47,0.08)] transition-shadow hover:shadow-[0_18px_54px_rgba(35,40,47,0.14)]"
+        className="group flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-[0_14px_44px_rgba(23,32,51,0.08)] transition-shadow hover:shadow-[0_18px_54px_rgba(23,32,51,0.14)]"
       >
         <span className="relative block h-20 flex-none bg-[var(--l-navy)]">
           <span
@@ -158,7 +158,7 @@ const SessionTile = ({
           />
           <span
             aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-t from-[rgba(14,27,46,0.6)] to-transparent"
+            className="absolute inset-0 bg-gradient-to-t from-[rgba(11,27,51,0.6)] to-transparent"
           />
           {typeLabel ? (
             <span className="absolute bottom-3 start-3 inline-flex items-center rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-medium text-[var(--l-navy)] backdrop-blur-sm">
@@ -419,7 +419,7 @@ const LoungeView = ({
             </p>
             <a
               href={`mailto:${SUPPORT_EMAIL}`}
-              className="mt-3 inline-flex min-h-9 w-full items-center justify-center rounded-xl bg-white text-xs font-medium text-[var(--l-ink)] shadow-[0_6px_18px_rgba(35,40,47,0.08)] transition-colors hover:text-[var(--l-bronze)]"
+              className="mt-3 inline-flex min-h-9 w-full items-center justify-center rounded-xl bg-white text-xs font-medium text-[var(--l-ink)] shadow-[0_6px_18px_rgba(23,32,51,0.08)] transition-colors hover:text-[var(--l-bronze)]"
             >
               {LOUNGE_UI.contactSupport[locale]}
             </a>
@@ -469,7 +469,7 @@ const LoungeView = ({
             ) : null}
             <span
               aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-b from-[rgba(14,27,46,0.6)] via-[rgba(14,27,46,0.3)] to-[var(--l-bg)]"
+              className="absolute inset-0 bg-gradient-to-b from-[rgba(11,27,51,0.6)] via-[rgba(11,27,51,0.3)] to-[var(--l-bg)]"
             />
           </div>
           <div
@@ -521,7 +521,7 @@ const LoungeView = ({
                 </div>
               ) : null}
               {ended ? (
-                <div className="mt-6 inline-flex max-w-xl items-center gap-4 rounded-2xl bg-white/90 px-5 py-3.5 text-[var(--l-ink)] shadow-[0_10px_30px_rgba(14,27,46,0.2)] backdrop-blur-sm">
+                <div className="mt-6 inline-flex max-w-xl items-center gap-4 rounded-2xl bg-white/90 px-5 py-3.5 text-[var(--l-ink)] shadow-[0_10px_30px_rgba(11,27,51,0.2)] backdrop-blur-sm">
                   <span className="grid size-9 flex-none place-items-center rounded-full bg-[var(--l-bronze)]/15 text-[var(--l-bronze)]">
                     <NavIcon path="M12 4.5c2.8 0 5 2.2 5 5 0 3.7-5 10-5 10s-5-6.3-5-10c0-2.8 2.2-5 5-5zM12 21h.01M9 9.5l2 2 4-4" />
                   </span>
@@ -537,7 +537,7 @@ const LoungeView = ({
               ) : null}
               <Link
                 href={nextAction.href}
-                className="mt-7 inline-flex min-h-12 items-center gap-2.5 rounded-2xl bg-gradient-to-l from-[#8a6a3c] to-[#b08c55] px-7 text-sm font-semibold text-white shadow-[0_12px_32px_rgba(176,140,85,0.35)] transition-transform hover:-translate-y-0.5"
+                className="mt-7 inline-flex min-h-12 items-center gap-2.5 rounded-2xl bg-gradient-to-l from-[var(--nt-amber-ink)] to-[var(--nt-orange)] px-7 text-sm font-semibold text-white shadow-[0_12px_32px_rgba(143,89,4,0.35)] transition-transform hover:-translate-y-0.5"
               >
                 {LOUNGE_UI.continueJourney[locale]}
                 <span aria-hidden="true">←</span>
@@ -584,24 +584,32 @@ const LoungeView = ({
           </div>
         </section>
 
-        <div className="relative z-10 mx-auto -mt-32 flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-6 pb-5 text-white md:px-10">
-          <ol className="flex flex-wrap items-start gap-0">
+        {/*
+          * The rail rides the bottom of the hero photograph, where the
+          * scrim has already begun to give way to daylight. On a phone it
+          * used to wrap onto a second line and land on the pale half,
+          * where white lettering cannot be read at all; it now scrolls
+          * sideways in one row and carries a soft shadow, so the labels
+          * hold against whatever passes behind them.
+          */}
+        <div className="relative z-10 mx-auto -mt-32 flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-6 pb-5 text-white [text-shadow:0_1px_3px_rgba(7,19,36,0.55)] md:px-10">
+          <ol className="flex flex-nowrap items-start gap-0 overflow-x-auto scrollbar-none md:flex-wrap md:overflow-visible">
             {journey.map((step, index) => (
               <li key={step.key} className="flex items-start">
                 {index > 0 ? (
                   <span
                     aria-hidden="true"
-                    className={`mt-3.5 h-px w-8 md:w-14 ${
+                    className={`mt-3.5 h-px w-8 flex-none md:w-14 ${
                       step.done ? 'bg-[var(--l-bronze-soft)]' : 'bg-white/25'
                     }`}
                   />
                 ) : null}
-                <span className="flex w-16 flex-col items-center gap-1.5 text-center md:w-20">
+                <span className="flex w-16 flex-none flex-col items-center gap-1.5 text-center md:w-20">
                   <span
                     aria-hidden="true"
                     className={`grid size-7 place-items-center rounded-full text-xs font-bold transition-colors ${
                       step.done
-                        ? 'bg-[var(--l-bronze-soft)] text-[var(--l-navy)] shadow-[0_0_18px_rgba(201,169,110,0.45)]'
+                        ? 'bg-[var(--l-bronze-soft)] text-[var(--l-navy)] shadow-[0_0_18px_rgba(249,161,27,0.45)]'
                         : 'border border-white/40 bg-white/5 text-transparent'
                     }`}
                   >
@@ -609,7 +617,7 @@ const LoungeView = ({
                   </span>
                   <span
                     className={`text-[11px] leading-tight ${
-                      step.done ? 'text-white' : 'text-white/55'
+                      step.done ? 'text-white' : 'text-white/80'
                     }`}
                   >
                     {step.label}
@@ -637,7 +645,7 @@ const LoungeView = ({
         </div>
 
         <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-5 px-6 md:grid-cols-2 md:px-10 xl:grid-cols-3">
-          <article className="lounge-rise flex flex-col rounded-3xl bg-white p-5 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:60ms]">
+          <article className="lounge-rise flex flex-col rounded-3xl bg-white p-5 shadow-[0_14px_44px_rgba(23,32,51,0.08)] [animation-delay:60ms]">
             <h2 className="flex items-center gap-2.5 text-[15px] font-semibold">
               <NavIcon path="M4 6.5h16v13H4zM4 10.5h16M8.5 4v4M15.5 4v4" />
               {LOUNGE_UI.mySchedule[locale]}
@@ -690,7 +698,7 @@ const LoungeView = ({
                     <span
                       aria-hidden="true"
                       className={`size-2.5 flex-none rounded-full ${
-                        index === 0 ? 'bg-[var(--l-bronze)]' : 'bg-[#7C93B4]'
+                        index === 0 ? 'bg-[var(--l-bronze)]' : 'bg-[var(--nt-ink-faint)]'
                       }`}
                     />
                     <Link
@@ -730,7 +738,7 @@ const LoungeView = ({
             </Link>
           </article>
 
-          <article className="lounge-rise flex flex-col rounded-3xl bg-white p-5 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:120ms]">
+          <article className="lounge-rise flex flex-col rounded-3xl bg-white p-5 shadow-[0_14px_44px_rgba(23,32,51,0.08)] [animation-delay:120ms]">
             <h2 className="flex items-center gap-2.5 text-[15px] font-semibold">
               <NavIcon path={NAV_ICONS.networking} />
               {LOUNGE_UI.networking[locale]}
@@ -812,7 +820,7 @@ const LoungeView = ({
             </Link>
           </article>
 
-          <article className="lounge-rise flex flex-col rounded-3xl bg-white p-5 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:180ms]">
+          <article className="lounge-rise flex flex-col rounded-3xl bg-white p-5 shadow-[0_14px_44px_rgba(23,32,51,0.08)] [animation-delay:180ms]">
             <h2 className="flex items-center gap-2.5 text-[15px] font-semibold">
               <NavIcon path="M12 4.5a5 5 0 0 1 5 5v3l1.5 2.5h-13L7 12.5v-3a5 5 0 0 1 5-5zM10 18a2 2 0 0 0 4 0" />
               {LOUNGE_UI.updates[locale]}
@@ -827,7 +835,7 @@ const LoungeView = ({
                 <li key={update.id} className="flex gap-3">
                   <span
                     aria-hidden="true"
-                    className="mt-1 size-9 flex-none rounded-xl bg-gradient-to-br from-[#22354D] to-[#0E1B2E]"
+                    className="mt-1 size-9 flex-none rounded-xl bg-gradient-to-br from-[var(--nt-dark-raise)] to-[var(--nt-dark)]"
                   />
                   <span className="min-w-0">
                     <span className="block text-sm font-medium">{update.title}</span>
@@ -886,7 +894,7 @@ const LoungeView = ({
                   {sessionsSection.programHref ? (
                     <Link
                       href={sessionsSection.programHref}
-                      className="mt-3 inline-flex min-h-10 items-center rounded-xl bg-[var(--l-navy)] px-5 text-sm font-medium text-white transition-colors hover:bg-[#16263c]"
+                      className="mt-3 inline-flex min-h-10 items-center rounded-xl bg-[var(--l-navy)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--nt-dark)]"
                     >
                       {LOUNGE_UI.browseProgram[locale]}
                     </Link>
@@ -919,7 +927,7 @@ const LoungeView = ({
                 {suggestions.map((moment) => (
                   <article
                     key={moment.id}
-                    className="lounge-rise flex w-44 flex-none flex-col rounded-2xl bg-white p-3.5 shadow-[0_10px_30px_rgba(35,40,47,0.06)]"
+                    className="lounge-rise flex w-44 flex-none flex-col rounded-2xl bg-white p-3.5 shadow-[0_10px_30px_rgba(23,32,51,0.06)]"
                   >
                     <span
                       className={`inline-flex w-fit items-center rounded-md px-2 py-0.5 text-[10px] font-semibold ${
@@ -964,7 +972,7 @@ const LoungeView = ({
                       sizes="176px"
                       className="object-cover opacity-70 transition-transform duration-500 group-hover:scale-105"
                     />
-                    <span className="absolute inset-0 bg-gradient-to-t from-[rgba(14,27,46,0.8)] to-transparent" />
+                    <span className="absolute inset-0 bg-gradient-to-t from-[rgba(11,27,51,0.8)] to-transparent" />
                     <span className="absolute inset-x-0 bottom-0 p-3.5 text-white">
                       <span className="block text-sm font-semibold leading-snug">
                         &ldquo;{LOUNGE_UI.waitingForYou[locale]}&rdquo;
@@ -982,7 +990,7 @@ const LoungeView = ({
 
         <nav
           aria-label={LOUNGE_UI.myExperience[locale]}
-          className="fixed bottom-5 left-1/2 z-30 flex -translate-x-1/2 items-center gap-1 rounded-2xl bg-white/95 px-2 py-1.5 shadow-[0_14px_40px_rgba(35,40,47,0.14)] backdrop-blur-sm"
+          className="fixed bottom-5 left-1/2 z-30 flex -translate-x-1/2 items-center gap-1 rounded-2xl bg-white/95 px-2 py-1.5 shadow-[0_14px_40px_rgba(23,32,51,0.14)] backdrop-blur-sm"
         >
           <Link href={home} className="flex items-center gap-2 rounded-xl bg-[var(--l-bronze)]/12 px-4 py-2 text-sm font-medium text-[var(--l-bronze)]">
             <NavIcon path={NAV_ICONS.home} />

@@ -39,10 +39,10 @@ const quietButton =
   'rounded-lg border border-[var(--c-line-strong)] px-3 py-1 text-[11px] text-[var(--c-text-soft)] transition-colors hover:border-[var(--c-bronze)]/50 hover:text-[var(--c-bronze)]';
 
 const dangerButton =
-  'rounded-lg border border-[#B0442F]/50 px-3 py-1 text-[11px] text-[#E39A8B] transition-colors hover:bg-[#B0442F]/10';
+  'rounded-lg border border-[var(--c-danger)]/50 px-3 py-1 text-[11px] text-[var(--c-danger-text)] transition-colors hover:bg-[var(--c-danger)]/10';
 
 const selectField =
-  'rounded-lg border border-[var(--c-line-strong)] bg-[rgba(6,10,16,0.6)] px-2 py-1 text-[11px] text-[var(--c-text)] focus:border-[var(--c-bronze)]/60 focus:outline-none';
+  'rounded-lg border border-[var(--c-line-strong)] bg-[rgba(7,19,36,0.6)] px-2 py-1 text-[11px] text-[var(--c-text)] focus:border-[var(--c-bronze)]/60 focus:outline-none';
 
 const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
   const { grants: grantsState, move: moveState } = await searchParams;
@@ -86,12 +86,12 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
         </header>
 
         {grantsState === 'lastOwner' ? (
-          <p className="rounded-xl border border-[#B0442F]/40 bg-[#B0442F]/10 px-4 py-3 text-sm text-[#E39A8B]">
+          <p className="rounded-xl border border-[var(--c-danger)]/40 bg-[var(--c-danger)]/10 px-4 py-3 text-sm text-[var(--c-danger-text)]">
             {CONSOLE_UI.lastOwnerNote[locale]}
           </p>
         ) : null}
         {moveState === 'failed' ? (
-          <p className="rounded-xl border border-[#B0442F]/40 bg-[#B0442F]/10 px-4 py-3 text-sm text-[#E39A8B]">
+          <p className="rounded-xl border border-[var(--c-danger)]/40 bg-[var(--c-danger)]/10 px-4 py-3 text-sm text-[var(--c-danger-text)]">
             {CONSOLE_UI.moveFailedNote[locale]}
           </p>
         ) : null}
@@ -104,7 +104,7 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
                 key={participant.id}
                 className={`rounded-xl border bg-[var(--c-panel)] px-5 py-4 ${
                   participant.blocked
-                    ? 'border-[#B0442F]/40'
+                    ? 'border-[var(--c-danger)]/40'
                     : 'border-[var(--c-line)]'
                 }`}
               >
@@ -112,7 +112,7 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
                   <span
                     className={`grid size-9 flex-none place-items-center rounded-full text-sm font-medium ${
                       participant.blocked
-                        ? 'bg-[#B0442F]/20 text-[#E39A8B]'
+                        ? 'bg-[var(--c-danger)]/20 text-[var(--c-danger-text)]'
                         : 'bg-[var(--c-bronze)]/20 text-[var(--c-bronze)]'
                     }`}
                   >
@@ -132,7 +132,7 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
                     </span>
                   </span>
                   {participant.blocked ? (
-                    <span className="rounded-full border border-[#B0442F]/50 px-2.5 py-0.5 text-[10px] tracking-widest text-[#E39A8B]">
+                    <span className="rounded-full border border-[var(--c-danger)]/50 px-2.5 py-0.5 text-[10px] tracking-widest text-[var(--c-danger-text)]">
                       {CONSOLE_UI.blockedTag[locale]}
                     </span>
                   ) : null}
@@ -145,7 +145,7 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
                       name="name"
                       defaultValue={participant.name}
                       aria-label={CONSOLE_UI.renameMember[locale]}
-                      className="w-36 rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm text-[var(--c-text)] transition-colors focus:border-[var(--c-bronze)]/60 focus:bg-[rgba(6,10,16,0.6)] focus:outline-none"
+                      className="w-36 rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm text-[var(--c-text)] transition-colors focus:border-[var(--c-bronze)]/60 focus:bg-[rgba(7,19,36,0.6)] focus:outline-none"
                     />
                     <button type="submit" className={quietButton}>
                       {CONSOLE_UI.renameMember[locale]}
@@ -163,7 +163,7 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
                       className={`rounded-lg border px-3 py-1 text-[11px] transition-colors ${
                         participant.blocked
                           ? 'border-[var(--c-live)]/50 text-[var(--c-live)] hover:bg-[var(--c-live)]/10'
-                          : 'border-[#B0442F]/50 text-[#E39A8B] hover:bg-[#B0442F]/10'
+                          : 'border-[var(--c-danger)]/50 text-[var(--c-danger-text)] hover:bg-[var(--c-danger)]/10'
                       }`}
                     >
                       {participant.blocked
@@ -265,7 +265,7 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
                       <input type="hidden" name="grantId" value={grant.id} />
                       <button
                         type="submit"
-                        className={`${chip} transition-colors hover:border-[#B0442F]/50 hover:text-[#E39A8B]`}
+                        className={`${chip} transition-colors hover:border-[var(--c-danger)]/50 hover:text-[var(--c-danger-text)]`}
                         title={CONSOLE_UI.revokeGrant[locale]}
                       >
                         {ROLE_LABELS[grant.role][locale]}

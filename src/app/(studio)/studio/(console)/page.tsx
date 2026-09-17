@@ -68,7 +68,7 @@ const ConsolePage = async () => {
           </div>
           <Link
             href="/studio/new"
-            className="ms-auto rounded-lg bg-[var(--c-bronze)] px-5 py-2.5 text-sm font-medium text-[#161006] transition-colors hover:bg-[#dcbe84]"
+            className="ms-auto rounded-lg bg-[var(--c-bronze)] px-5 py-2.5 text-sm font-medium text-[var(--c-on-accent)] transition-colors hover:bg-[var(--c-bronze-hover)]"
           >
             {CONSOLE_UI.newExperience[locale]}
           </Link>
@@ -94,7 +94,7 @@ const ConsolePage = async () => {
                 {CONSOLE_UI.homepageSub[locale]}
               </span>
             </span>
-            <span className="ms-auto rounded-lg bg-[var(--c-bronze)] px-5 py-2.5 text-sm font-medium text-[#161006] transition-colors group-hover:bg-[#dcbe84]">
+            <span className="ms-auto rounded-lg bg-[var(--c-bronze)] px-5 py-2.5 text-sm font-medium text-[var(--c-on-accent)] transition-colors group-hover:bg-[var(--c-bronze-hover)]">
               {CONSOLE_UI.openWorkspace[locale]}
             </span>
           </span>
@@ -114,7 +114,7 @@ const ConsolePage = async () => {
                 }`}
               >
                 <details className="absolute end-2 top-2 z-20">
-                  <summary className="grid size-7 cursor-pointer list-none place-items-center rounded-lg bg-[rgba(6,9,15,0.65)] text-[var(--c-text-soft)] backdrop-blur-sm transition-colors hover:text-[var(--c-bronze)]">
+                  <summary className="grid size-7 cursor-pointer list-none place-items-center rounded-lg bg-[rgba(7,19,36,0.65)] text-[var(--c-text-soft)] backdrop-blur-sm transition-colors hover:text-[var(--c-bronze)]">
                     ⋮
                   </summary>
                   <div className="absolute end-0 top-8 z-30 flex w-44 flex-col rounded-xl border border-[var(--c-line-strong)] bg-[var(--c-deep)] p-1.5 shadow-[0_18px_50px_rgba(0,0,0,0.5)]">
@@ -172,20 +172,20 @@ const ConsolePage = async () => {
                       <input type="hidden" name="slug" value={event.slug} />
                       <button
                         type="submit"
-                        className="w-full rounded-lg px-3 py-2 text-start text-xs text-[#E39A8B] transition-colors hover:bg-[#B0442F]/10"
+                        className="w-full rounded-lg px-3 py-2 text-start text-xs text-[var(--c-danger-text)] transition-colors hover:bg-[var(--c-danger)]/10"
                       >
                         {locale === 'he' ? 'העברה לארכיון' : 'Archive'}
                       </button>
                     </form>
                     <details>
-                      <summary className="cursor-pointer list-none rounded-lg px-3 py-2 text-xs text-[#E39A8B] transition-colors hover:bg-[#B0442F]/10">
+                      <summary className="cursor-pointer list-none rounded-lg px-3 py-2 text-xs text-[var(--c-danger-text)] transition-colors hover:bg-[var(--c-danger)]/10">
                         {locale === 'he' ? 'מחיקה לצמיתות…' : 'Delete forever…'}
                       </summary>
                       <form action={deleteEventAction} className="p-1">
                         <input type="hidden" name="slug" value={event.slug} />
                         <button
                           type="submit"
-                          className="w-full rounded-lg bg-[#B0442F] px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-[#96351F]"
+                          className="w-full rounded-lg bg-[var(--c-danger)] px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-[var(--c-danger-strong)]"
                         >
                           {locale === 'he'
                             ? 'אישור: מחיקת הכנס וכל נתוניו'
@@ -217,8 +217,8 @@ const ConsolePage = async () => {
                   <span
                     className={`absolute start-2.5 top-2.5 rounded-full border px-2.5 py-0.5 text-[10px] tracking-widest backdrop-blur-sm ${
                       event.launched
-                        ? 'border-[var(--c-live)]/50 bg-[rgba(6,9,15,0.6)] text-[var(--c-live)]'
-                        : 'border-[var(--c-bronze)]/50 bg-[rgba(6,9,15,0.6)] text-[var(--c-bronze)]'
+                        ? 'border-[var(--c-live)]/50 bg-[rgba(7,19,36,0.6)] text-[var(--c-live)]'
+                        : 'border-[var(--c-bronze)]/50 bg-[rgba(7,19,36,0.6)] text-[var(--c-bronze)]'
                     }`}
                   >
                     {event.launched

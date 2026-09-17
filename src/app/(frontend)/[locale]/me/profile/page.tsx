@@ -56,7 +56,7 @@ interface ProfilePageProps {
 const Atmosphere = () => (
   <span aria-hidden="true" className="absolute inset-0 overflow-hidden">
     <span className="absolute inset-0 bg-[var(--l-navy)]" />
-    <span className="absolute -top-32 left-1/2 h-[30rem] w-[48rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(201,169,110,0.4),transparent_70%)]" />
+    <span className="absolute -top-32 left-1/2 h-[30rem] w-[48rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(249,161,27,0.4),transparent_70%)]" />
     <span className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-[var(--l-bg)]" />
   </span>
 );
@@ -134,7 +134,7 @@ const AccountProfilePage = async ({
             </div>
           </div>
           <div className="mt-auto pb-14 text-white">
-            <p className="text-xs font-medium tracking-[0.18em] text-[var(--l-bronze-soft,#d8b98a)]">
+            <p className="text-xs font-medium tracking-[0.18em] text-[var(--l-bronze-soft)]">
               {he ? 'הפרופיל שלי' : 'My profile'}
             </p>
           </div>
@@ -142,9 +142,9 @@ const AccountProfilePage = async ({
       </div>
 
       <div className="mx-auto max-w-2xl px-6 pb-16">
-        <div className="lounge-rise relative -mt-16 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(35,40,47,0.08)]">
+        <div className="lounge-rise relative -mt-16 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(23,32,51,0.08)]">
           <div className="flex flex-wrap items-end gap-5">
-            <span className="relative -mt-16 block size-28 flex-none overflow-hidden rounded-3xl bg-[var(--l-navy)] shadow-[0_10px_30px_rgba(14,27,46,0.25)] ring-4 ring-white">
+            <span className="relative -mt-16 block size-28 flex-none overflow-hidden rounded-3xl bg-[var(--l-navy)] shadow-[0_10px_30px_rgba(11,27,51,0.25)] ring-4 ring-white">
               {details.photoUrl ? (
                 <Image
                   src={details.photoUrl}
@@ -247,7 +247,7 @@ const AccountProfilePage = async ({
           * Site language: a small, permanent control — the choice is kept
           * on the account, so it holds on every device and every visit.
           */}
-        <div className="lounge-rise mt-5 flex flex-wrap items-center gap-x-6 gap-y-4 rounded-3xl bg-white px-7 py-5 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:30ms]">
+        <div className="lounge-rise mt-5 flex flex-wrap items-center gap-x-6 gap-y-4 rounded-3xl bg-white px-7 py-5 shadow-[0_14px_44px_rgba(23,32,51,0.08)] [animation-delay:30ms]">
           <div className="min-w-0">
             <h2 className="font-display text-base font-semibold">
               {ACCOUNT_UI.languageLabel[locale]}
@@ -273,14 +273,14 @@ const AccountProfilePage = async ({
           * The full checkbox panel remains in the edit view.
           */}
         {!editing ? (
-          <div className="lounge-rise mt-5 flex flex-wrap items-center gap-x-6 gap-y-4 rounded-3xl bg-white px-7 py-5 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:45ms]">
+          <div className="lounge-rise mt-5 flex flex-wrap items-center gap-x-6 gap-y-4 rounded-3xl bg-white px-7 py-5 shadow-[0_14px_44px_rgba(23,32,51,0.08)] [animation-delay:45ms]">
             <div className="min-w-0 flex-1 basis-60">
               <h2 className="flex items-center gap-2 font-display text-base font-semibold">
                 <span
                   aria-hidden="true"
                   className={`size-2 rounded-full ${
                     contact?.prefs.directory === true
-                      ? 'bg-[#67A97C]'
+                      ? 'bg-[var(--l-live)]'
                       : 'bg-[var(--l-soft)]/50'
                   }`}
                 />
@@ -319,7 +319,7 @@ const AccountProfilePage = async ({
                 type="submit"
                 className={
                   contact?.prefs.directory === true
-                    ? 'inline-flex min-h-11 items-center rounded-full border border-[var(--l-line,rgba(35,40,47,0.14))] px-5 text-sm font-medium text-[var(--l-soft)] transition-colors hover:border-[var(--l-bronze)] hover:text-[var(--l-ink,#23282f)]'
+                    ? 'inline-flex min-h-11 items-center rounded-full border border-[var(--l-line,rgba(23,32,51,0.14))] px-5 text-sm font-medium text-[var(--l-soft)] transition-colors hover:border-[var(--l-bronze)] hover:text-[var(--l-ink,var(--nt-ink))]'
                     : 'inline-flex min-h-11 items-center rounded-full bg-[var(--l-bronze)] px-5 text-sm font-medium text-white transition-colors hover:opacity-90'
                 }
               >
@@ -337,7 +337,7 @@ const AccountProfilePage = async ({
 
         {editing ? (
           <>
-            <div className="lounge-rise mt-5 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:60ms]">
+            <div className="lounge-rise mt-5 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(23,32,51,0.08)] [animation-delay:60ms]">
               <h2 className="font-display text-xl font-semibold">
                 {he ? 'תמונת פרופיל' : 'Profile photo'}
               </h2>
@@ -359,7 +359,7 @@ const AccountProfilePage = async ({
               </form>
             </div>
 
-            <div className="lounge-rise mt-5 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:120ms]">
+            <div className="lounge-rise mt-5 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(23,32,51,0.08)] [animation-delay:120ms]">
               <h2 className="font-display text-xl font-semibold">
                 {he ? 'פרטים' : 'Details'}
               </h2>
@@ -517,7 +517,7 @@ const AccountProfilePage = async ({
 
             <div
               id="privacy"
-              className="lounge-rise mt-5 scroll-mt-24 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:150ms]"
+              className="lounge-rise mt-5 scroll-mt-24 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(23,32,51,0.08)] [animation-delay:150ms]"
             >
               <h2 className="font-display text-xl font-semibold">
                 {he ? 'פרטיות ויצירת קשר' : 'Privacy & contact'}
@@ -607,7 +607,7 @@ const AccountProfilePage = async ({
               </form>
             </div>
 
-            <div className="lounge-rise mt-5 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:180ms]">
+            <div className="lounge-rise mt-5 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(23,32,51,0.08)] [animation-delay:180ms]">
               <h2 className="font-display text-xl font-semibold">
                 {he ? 'החלפת סיסמה' : 'Change password'}
               </h2>
@@ -656,7 +656,7 @@ const AccountProfilePage = async ({
 
             <div
               id="totp"
-              className="lounge-rise mt-5 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:210ms]"
+              className="lounge-rise mt-5 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(23,32,51,0.08)] [animation-delay:210ms]"
             >
               <h2 className="font-display text-xl font-semibold">
                 {he ? 'אימות דו-שלבי' : 'Two-factor authentication'}
@@ -770,7 +770,7 @@ const AccountProfilePage = async ({
           * the account holds when a phone is lost or a password may
           * have travelled.
           */}
-        <div className="lounge-rise mt-5 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(35,40,47,0.08)] [animation-delay:240ms]">
+        <div className="lounge-rise mt-5 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(23,32,51,0.08)] [animation-delay:240ms]">
           <h2 className="font-display text-xl font-semibold">
             {he ? 'יציאה מהחשבון' : 'Sign out'}
           </h2>

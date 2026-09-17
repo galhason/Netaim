@@ -36,11 +36,11 @@ interface InsightsPageProps {
 }
 
 const dangerButton =
-  'rounded-lg border border-[#B0442F]/50 px-3 py-1 text-[11px] text-[#E39A8B] transition-colors hover:bg-[#B0442F]/10';
+  'rounded-lg border border-[var(--c-danger)]/50 px-3 py-1 text-[11px] text-[var(--c-danger-text)] transition-colors hover:bg-[var(--c-danger)]/10';
 const quietButton =
   'rounded-lg border border-[var(--c-line-strong)] px-3 py-1 text-[11px] text-[var(--c-text-soft)] transition-colors hover:border-[var(--c-bronze)]/50 hover:text-[var(--c-bronze)]';
 const primaryButton =
-  'rounded-lg bg-[var(--c-bronze)] px-3 py-1 text-[11px] font-medium text-[#161006] transition-colors hover:bg-[#dcbe84]';
+  'rounded-lg bg-[var(--c-bronze)] px-3 py-1 text-[11px] font-medium text-[var(--c-on-accent)] transition-colors hover:bg-[var(--c-bronze-hover)]';
 const settingsField =
   'w-full rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-3 py-2 text-sm text-[var(--c-text)] outline-none focus:border-[var(--c-bronze)]/60';
 const settingsLabel =

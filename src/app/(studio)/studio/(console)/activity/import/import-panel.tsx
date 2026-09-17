@@ -127,7 +127,7 @@ const card =
 const stepLabel =
   'text-[10px] font-medium tracking-[0.18em] text-[var(--c-text-faint)]';
 const primary =
-  'rounded-lg bg-[var(--c-bronze)] px-5 py-2.5 text-sm font-medium text-[#161006] transition-colors hover:bg-[#dcbe84] disabled:opacity-50';
+  'rounded-lg bg-[var(--c-bronze)] px-5 py-2.5 text-sm font-medium text-[var(--c-on-accent)] transition-colors hover:bg-[var(--c-bronze-hover)] disabled:opacity-50';
 const quiet =
   'inline-flex items-center rounded-lg border border-[var(--c-line-strong)] px-4 py-2 text-xs text-[var(--c-text-soft)] transition-colors hover:border-[var(--c-bronze)]/50 hover:text-[var(--c-bronze)]';
 
@@ -265,7 +265,7 @@ const ImportPanel = ({ locale, columnLabels }: Props) => {
           }}
         />
         {error ? (
-          <p className="mt-3 rounded-lg bg-[#B0442F]/10 px-3 py-2 text-xs text-[#E39A8B]">
+          <p className="mt-3 rounded-lg bg-[var(--c-danger)]/10 px-3 py-2 text-xs text-[var(--c-danger-text)]">
             {error}
           </p>
         ) : null}
@@ -276,7 +276,7 @@ const ImportPanel = ({ locale, columnLabels }: Props) => {
           <p className={stepLabel}>3 · {t.step3.toUpperCase()}</p>
 
           {preview.missingColumns.length > 0 ? (
-            <p className="mt-2 rounded-lg bg-[#B0442F]/10 px-3 py-2 text-xs text-[#E39A8B]">
+            <p className="mt-2 rounded-lg bg-[var(--c-danger)]/10 px-3 py-2 text-xs text-[var(--c-danger-text)]">
               {t.missing}{' '}
               {preview.missingColumns
                 .map((column) => columnLabels[column] ?? column)
@@ -294,7 +294,7 @@ const ImportPanel = ({ locale, columnLabels }: Props) => {
                 </span>
                 <span className="text-[var(--c-text-soft)]">{t.ready}</span>
                 {preview.rows.length - preview.readyCount > 0 ? (
-                  <span className="text-[#E39A8B]">
+                  <span className="text-[var(--c-danger-text)]">
                     · {preview.rows.length - preview.readyCount} {t.skipped}
                   </span>
                 ) : null}
@@ -318,7 +318,7 @@ const ImportPanel = ({ locale, columnLabels }: Props) => {
                       <tr
                         key={row.line}
                         className={`border-b border-[var(--c-line)] last:border-0 ${
-                          row.problems.length > 0 ? 'bg-[#B0442F]/5' : ''
+                          row.problems.length > 0 ? 'bg-[var(--c-danger)]/5' : ''
                         }`}
                       >
                         <td className="px-3 py-2 tabular-nums text-[var(--c-text-faint)]">
@@ -341,7 +341,7 @@ const ImportPanel = ({ locale, columnLabels }: Props) => {
                           {row.problems.length === 0 ? (
                             <span className="text-[var(--c-live)]">{t.good}</span>
                           ) : (
-                            <ul className="flex flex-col gap-0.5 text-xs text-[#E39A8B]">
+                            <ul className="flex flex-col gap-0.5 text-xs text-[var(--c-danger-text)]">
                               {row.problems.map((problem) => (
                                 <li key={problem}>{problem}</li>
                               ))}

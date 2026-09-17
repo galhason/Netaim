@@ -58,8 +58,8 @@ const CardAvatar = ({ person }: { person: FellowParticipant }) => (
     <span
       className={`block rounded-full p-[2px] ${
         person.openToMeetings
-          ? 'bg-[linear-gradient(135deg,var(--n-green),#a3cdb0)]'
-          : 'bg-[linear-gradient(135deg,var(--n-purple-soft),#d8d0f5)]'
+          ? 'bg-[linear-gradient(135deg,var(--n-green),var(--n-green-soft))]'
+          : 'bg-[linear-gradient(135deg,var(--n-purple-soft),var(--n-purple-soft))]'
       }`}
     >
       <span className="block rounded-full bg-[var(--n-bg)] p-[2px]">

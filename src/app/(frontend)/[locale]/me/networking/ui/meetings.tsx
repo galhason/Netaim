@@ -82,8 +82,8 @@ const dayInWords = (iso: string, locale: Locale): string =>
   }).format(new Date(iso));
 
 const STATUS_PILL: Record<string, string> = {
-  confirmed: 'bg-[var(--n-green)]/12 text-[#4c8a60]',
-  proposed: 'bg-[var(--n-cream)] text-[#8a6a2c]',
+  confirmed: 'bg-[var(--n-green)]/12 text-[var(--n-green)]',
+  proposed: 'bg-[var(--n-cream)] text-[var(--n-gold)]',
   cancelled: 'bg-[var(--n-navy)]/6 text-[var(--n-faint)]',
 };
 
@@ -275,7 +275,7 @@ const MeetingsSection = ({
             <circle cx="48" cy="45" r="9" fill="var(--n-gold)" opacity="0.85" />
             <path
               d="M48 40.5V45l3 2.5"
-              stroke="#fff"
+              style={{ stroke: 'var(--nt-surface)' }}
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -458,7 +458,7 @@ const MeetingsSection = ({
                               />
                               <button
                                 type="submit"
-                                className="inline-flex min-h-10 items-center rounded-xl border border-[var(--n-hair)] px-4 text-[13px] font-medium text-[var(--n-soft)] transition-colors hover:border-[#c05687]/50 hover:text-[#c05687]"
+                                className="inline-flex min-h-10 items-center rounded-xl border border-[var(--n-hair)] px-4 text-[13px] font-medium text-[var(--n-soft)] transition-colors hover:border-[var(--n-pink)]/50 hover:text-[var(--n-pink)]"
                               >
                                 {pick(he, COPY.cancel)}
                               </button>

@@ -39,7 +39,7 @@ const PREVIEW: {
     title: { he: 'פתיחת הכנס', en: 'Opening session' },
     place: { he: 'אולם ראשי', en: 'Main hall' },
     icon: (cls) => <IconCalendar className={cls} />,
-    tone: 'bg-[var(--x-ok-wash)] text-[#1f7a45]',
+    tone: 'bg-[var(--x-ok-wash)] text-[var(--x-ok)]',
   },
   {
     time: '10:00',
@@ -55,7 +55,7 @@ const PREVIEW: {
     title: { he: 'כלים ליצירת חיבורים חדשים', en: 'Tools for new connections' },
     place: { he: 'חדר סדנאות 3', en: 'Workshop room 3' },
     icon: (cls) => <IconBulb className={cls} />,
-    tone: 'bg-[var(--x-warn-wash)] text-[#9a5b06]',
+    tone: 'bg-[var(--x-warn-wash)] text-[var(--x-warn)]',
   },
   {
     time: '13:30',
@@ -63,7 +63,7 @@ const PREVIEW: {
     title: { he: 'מפגש Networking', en: 'Networking meetup' },
     place: { he: 'אזור ה-Networking', en: 'Networking area' },
     icon: (cls) => <IconUsers className={cls} />,
-    tone: 'bg-[#e7f1fb] text-[#2b6aa3]',
+    tone: 'bg-[var(--x-interactive-wash)] text-[var(--x-interactive)]',
   },
 ];
 
@@ -102,7 +102,7 @@ const SignInPreview = ({ locale, enterHref, signInHref }: Props) => {
         <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <a
             href={enterHref}
-            className="inline-flex min-h-12 items-center gap-2 rounded-[var(--x-r-pill)] bg-[var(--x-primary)] px-7 text-[15px] font-semibold text-[var(--x-primary-ink)] shadow-[0_10px_30px_rgba(110,86,207,0.28)] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-[var(--x-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] motion-reduce:transition-none"
+            className="inline-flex min-h-12 items-center gap-2 rounded-[var(--x-r-pill)] bg-[var(--x-primary)] px-7 text-[15px] font-semibold text-[var(--x-primary-ink)] shadow-[0_10px_30px_rgb(42 144 200 / 0.28)] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-[var(--x-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] motion-reduce:transition-none"
           >
             {t(locale, 'signInCta')}
             <IconArrow className="size-4 rtl:rotate-180" />

@@ -10,7 +10,7 @@ const ProgramLoading = () => (
     <header className="relative overflow-hidden border-b border-[var(--x-line)]">
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-[radial-gradient(120%_120%_at_50%_-20%,#eeeffb_0%,#f6f7fb_55%,var(--x-bg)_100%)]"
+        className="absolute inset-0 bg-[radial-gradient(120%_120%_at_50%_-20%,var(--nt-navy-wash)_0%,var(--nt-raise)_55%,var(--x-bg)_100%)]"
       />
       <div className="relative mx-auto max-w-6xl px-6 pb-8 pt-28 md:px-10 md:pt-32">
         <div className="mx-auto flex max-w-xl flex-col items-center gap-3">

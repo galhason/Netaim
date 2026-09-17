@@ -48,11 +48,11 @@ import type { SceneComponentProps } from '@/experience-runtime';
 const defaults = fallbackConference('he');
 
 const ATMOS = {
-  gold: 'cine-atmos [--atmos:rgb(201_161_93_/_0.15)]',
-  warm: 'cine-atmos [--atmos:rgb(201_161_93_/_0.10)] [--atmos-x:68%]',
-  neutral: 'cine-atmos [--atmos:rgb(122_142_170_/_0.05)]',
-  spotlight: 'cine-atmos [--atmos:rgb(201_161_93_/_0.13)] [--atmos-strength:0.8]',
-  sand: 'cine-atmos [--atmos:rgb(196_158_108_/_0.12)]',
+  gold: 'cine-atmos [--atmos:rgb(249_161_27_/_0.15)]',
+  warm: 'cine-atmos [--atmos:rgb(249_161_27_/_0.10)] [--atmos-x:68%]',
+  neutral: 'cine-atmos [--atmos:rgb(42_144_200_/_0.05)]',
+  spotlight: 'cine-atmos [--atmos:rgb(249_161_27_/_0.13)] [--atmos-strength:0.8]',
+  sand: 'cine-atmos [--atmos:rgb(255_210_28_/_0.12)]',
 } as const;
 
 interface ConferenceNavContent {

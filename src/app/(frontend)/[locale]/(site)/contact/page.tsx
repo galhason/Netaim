@@ -61,7 +61,7 @@ const ContactPage = async ({ params }: ContactPageProps) => {
         <div className="flex flex-wrap gap-4 pt-2">
           <Link
             href={registerHref}
-            className="inline-flex min-h-12 items-center rounded-xl bg-brand px-8 font-medium text-brand-contrast shadow-[0_14px_44px_-12px_rgba(201,161,93,0.55)] transition-all hover:scale-[1.02]"
+            className="inline-flex min-h-12 items-center rounded-xl bg-brand px-8 font-medium text-brand-contrast shadow-[0_14px_44px_-12px_rgba(249,161,27,0.55)] transition-all hover:scale-[1.02]"
           >
             {lang === 'he' ? 'הרשמה לכנס' : 'Register'}
           </Link>

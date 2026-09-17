@@ -110,7 +110,7 @@ const InfoPage = async ({ params }: InfoPageProps) => {
         >
           <div
             aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-t from-[rgba(9,16,28,0.94)] via-[rgba(9,16,28,0.38)] to-[rgba(9,16,28,0.12)]"
+            className="absolute inset-0 bg-gradient-to-t from-[rgba(11,27,51,0.94)] via-[rgba(11,27,51,0.38)] to-[rgba(11,27,51,0.12)]"
           />
           <div className="relative mx-auto flex h-full max-w-6xl flex-col justify-end px-6 pb-10 md:px-10 md:pb-12">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">
@@ -220,7 +220,7 @@ const InfoPage = async ({ params }: InfoPageProps) => {
           className="relative overflow-hidden rounded-[var(--x-r-card)] p-7 md:p-9"
           style={{
             background:
-              'radial-gradient(120% 160% at 100% 0%, rgba(110,86,207,0.4), transparent 55%), linear-gradient(135deg, #1b2946, #0d1626)',
+              'radial-gradient(120% 160% at 100% 0%, rgb(42 144 200 / 0.4), transparent 55%), linear-gradient(135deg, var(--nt-dark-raise), var(--nt-dark))',
           }}
         >
           <span
@@ -256,7 +256,7 @@ const InfoPage = async ({ params }: InfoPageProps) => {
                 href={mapsHref}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-white px-5 text-sm font-semibold text-[#0d1626] transition-transform hover:-translate-y-0.5"
+                className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-white px-5 text-sm font-semibold text-[var(--nt-dark)] transition-transform hover:-translate-y-0.5"
               >
                 {mapsLabel}
               </a>

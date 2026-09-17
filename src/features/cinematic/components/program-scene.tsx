@@ -151,7 +151,7 @@ const ProgramScene = ({ program, locale }: ProgramSceneProps) => {
 
                 {/* Milestone circle */}
                 <motion.span
-                  className="relative z-10 my-6 grid size-16 place-items-center rounded-full border border-accent/40 bg-surface text-accent shadow-[0_0_30px_-8px_rgba(201,161,93,0.5)]"
+                  className="relative z-10 my-6 grid size-16 place-items-center rounded-full border border-accent/40 bg-surface text-accent shadow-[0_0_30px_-8px_rgba(249,161,27,0.5)]"
                   initial={reduce ? false : { opacity: 0, scale: 0.5 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true, amount: 0.4 }}

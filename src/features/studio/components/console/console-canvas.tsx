@@ -117,7 +117,7 @@ const ConsoleCanvas = ({
           <button
             type="button"
             onClick={() => setDirector(false)}
-            className="fixed end-4 top-4 rounded-full border border-[var(--c-line-strong)] bg-[rgba(8,12,18,0.6)] px-4 py-2 text-xs tracking-wider text-[var(--c-text-soft)] backdrop-blur-sm transition-colors hover:border-[var(--c-bronze)]/50 hover:text-[var(--c-text)]"
+            className="fixed end-4 top-4 rounded-full border border-[var(--c-line-strong)] bg-[rgba(7,19,36,0.6)] px-4 py-2 text-xs tracking-wider text-[var(--c-text-soft)] backdrop-blur-sm transition-colors hover:border-[var(--c-bronze)]/50 hover:text-[var(--c-text)]"
           >
             {CONSOLE_UI.exitDirector[locale]}
           </button>

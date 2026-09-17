@@ -34,7 +34,7 @@ const th =
 const td = 'px-3 py-2.5 align-top text-sm text-[var(--c-text)]';
 
 const selectField =
-  'rounded-lg border border-[var(--c-line-strong)] bg-[rgba(6,10,16,0.6)] px-3 py-1.5 text-xs text-[var(--c-text)] focus:border-[var(--c-bronze)]/60 focus:outline-none';
+  'rounded-lg border border-[var(--c-line-strong)] bg-[rgba(7,19,36,0.6)] px-3 py-1.5 text-xs text-[var(--c-text)] focus:border-[var(--c-bronze)]/60 focus:outline-none';
 
 const quietButton =
   'rounded-lg border border-[var(--c-line-strong)] px-3 py-1.5 text-[11px] text-[var(--c-text-soft)] transition-colors hover:border-[var(--c-bronze)]/50 hover:text-[var(--c-bronze)]';

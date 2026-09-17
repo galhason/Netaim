@@ -93,10 +93,10 @@ const ConsoleBrandPage = async () => {
                 {CONSOLE_UI.brandPreview[locale]}
               </h2>
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="flex h-24 items-center justify-center rounded-xl border border-[var(--c-line)] bg-[#0e1b2e] px-4">
+                <div className="flex h-24 items-center justify-center rounded-xl border border-[var(--c-line)] bg-[var(--nt-dark)] px-4">
                   <BrandMark brand={brand} src={current.onDark} height={38} />
                 </div>
-                <div className="flex h-24 items-center justify-center rounded-xl border border-[var(--c-line)] bg-[#f6f7fb] px-4">
+                <div className="flex h-24 items-center justify-center rounded-xl border border-[var(--c-line)] bg-[var(--nt-bg)] px-4">
                   <BrandMark brand={brand} src={current.onLight} height={38} />
                 </div>
               </div>

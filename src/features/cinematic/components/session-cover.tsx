@@ -15,13 +15,25 @@ interface Palette {
   ink: string;
 }
 
+/*
+ * Six covers, all of them the brand.
+ *
+ * What used to sit here was a rainbow — a teal, a violet, a pink —
+ * invented for these cards alone. Each cover is now one of the brand
+ * colours laid over the brand's own darkness, so a rail of drawn
+ * covers reads as one conference rather than six. The values are the
+ * tokens themselves: change the brand once and every cover follows.
+ * They are handed to the gradient through `style` rather than the
+ * `stop-color` attribute, because a presentation attribute does not
+ * resolve `var()`.
+ */
 const PALETTES: Palette[] = [
-  { from: '#1d2c4e', to: '#0b1120', ink: '#8fa9f2' },
-  { from: '#0f3339', to: '#08151b', ink: '#5fd2c4' },
-  { from: '#2c1c40', to: '#120d1f', ink: '#b78bf0' },
-  { from: '#3a2716', to: '#160f09', ink: '#efab63' },
-  { from: '#391725', to: '#160a10', ink: '#ef7f9d' },
-  { from: '#1b2c35', to: '#0a1117', ink: '#7fb8d6' },
+  { from: 'var(--nt-navy)', to: 'var(--nt-dark-deep)', ink: 'var(--nt-blue-on-dark)' },
+  { from: 'var(--nt-dark-mid)', to: 'var(--nt-dark-deep)', ink: 'var(--nt-accent-on-dark)' },
+  { from: 'var(--nt-dark-raise)', to: 'var(--nt-dark-deep)', ink: 'var(--nt-green-on-dark)' },
+  { from: 'var(--nt-navy)', to: 'var(--nt-dark)', ink: 'var(--nt-accent-on-dark-soft)' },
+  { from: 'var(--nt-dark)', to: 'var(--nt-dark-deep)', ink: 'var(--nt-on-dark-soft)' },
+  { from: 'var(--nt-dark-mid)', to: 'var(--nt-dark)', ink: 'var(--nt-blue-on-dark)' },
 ];
 
 /* Stable, cheap and evenly spread — the same id always lands the same. */
@@ -158,12 +170,12 @@ const SessionCover = ({ seed, className }: SessionCoverProps) => {
     >
       <defs>
         <linearGradient id={`${gid}-bg`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor={palette.from} />
-          <stop offset="100%" stopColor={palette.to} />
+          <stop offset="0%" style={{ stopColor: palette.from }} />
+          <stop offset="100%" style={{ stopColor: palette.to }} />
         </linearGradient>
         <radialGradient id={`${gid}-glow`} cx="50%" cy="18%" r="72%">
-          <stop offset="0%" stopColor={palette.ink} stopOpacity="0.26" />
-          <stop offset="100%" stopColor={palette.ink} stopOpacity="0" />
+          <stop offset="0%" style={{ stopColor: palette.ink }} stopOpacity="0.26" />
+          <stop offset="100%" style={{ stopColor: palette.ink }} stopOpacity="0" />
         </radialGradient>
       </defs>
 

@@ -15,7 +15,7 @@ export const loungeLabel =
   'mb-1.5 block text-xs font-medium text-[var(--l-soft)]';
 
 export const loungePrimary =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--l-navy)] px-6 text-sm font-medium text-white transition-colors hover:bg-[#16263c]';
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--l-navy)] px-6 text-sm font-medium text-white transition-colors hover:bg-[var(--nt-dark)]';
 
 export const loungeQuiet =
   'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--l-hair)] bg-white px-5 text-sm font-medium text-[var(--l-ink)] transition-colors hover:border-[var(--l-bronze)]';
@@ -23,8 +23,13 @@ export const loungeQuiet =
 export const loungeGhost =
   'inline-flex min-h-11 items-center text-sm text-[var(--l-soft)] underline decoration-current/30 underline-offset-8 transition-colors hover:text-[var(--l-ink)]';
 
+/*
+ * The chip is a wash of the brand orange with the readable amber on
+ * top — a tint of the ink itself came out muddy brown, which is not a
+ * colour anyone chose.
+ */
 export const loungeChip =
-  'inline-flex items-center rounded-full bg-[var(--l-bronze)]/12 px-3 py-1 text-xs font-medium text-[var(--l-bronze)]';
+  'inline-flex items-center rounded-full bg-[var(--nt-orange)]/15 px-3 py-1 text-xs font-medium text-[var(--l-bronze)]';
 
 interface LoungeShellProps {
   children: ReactNode;
@@ -76,7 +81,7 @@ export const LoungeCard = ({
   delay = 0,
 }: LoungeCardProps) => (
   <article
-    className={`lounge-rise flex flex-col rounded-3xl bg-white p-5 shadow-[0_14px_44px_rgba(35,40,47,0.08)] ${DELAYS[delay]} ${className}`}
+    className={`lounge-rise flex flex-col rounded-3xl bg-white p-5 shadow-[0_14px_44px_rgba(23,32,51,0.08)] ${DELAYS[delay]} ${className}`}
   >
     {children}
   </article>

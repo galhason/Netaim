@@ -111,11 +111,11 @@ export const AvatarGroup = ({
 /* ---------- Type pill ---------- */
 const TYPE_TONE: Record<SessionType, string> = {
   keynote: 'bg-[var(--x-primary-wash)] text-[var(--x-primary-strong)]',
-  talk: 'bg-[#eef1f7] text-[#3d475c]',
-  workshop: 'bg-[var(--x-ok-wash)] text-[#1f7a45]',
-  panel: 'bg-[var(--x-wait-wash)] text-[#5b45c0]',
-  tour: 'bg-[#e7f1fb] text-[#2b6aa3]',
-  break: 'bg-[#f0f1f4] text-[var(--x-soft)]',
+  talk: 'bg-[var(--x-mute-wash)] text-[var(--x-mute)]',
+  workshop: 'bg-[var(--x-ok-wash)] text-[var(--x-ok)]',
+  panel: 'bg-[var(--x-wait-wash)] text-[var(--x-wait)]',
+  tour: 'bg-[var(--x-interactive-wash)] text-[var(--x-interactive)]',
+  break: 'bg-[var(--x-mute-wash)] text-[var(--x-soft)]',
 } as unknown as Record<SessionType, string>;
 
 export const TypePill = ({
@@ -253,7 +253,7 @@ const WAIT_BTN =
 const DONE_BTN =
   'inline-flex items-center justify-center gap-2 rounded-[var(--x-r-field)] bg-[var(--x-ok-wash)] font-medium text-[var(--x-ok)]';
 const MUTED_BTN =
-  'inline-flex items-center justify-center gap-2 rounded-[var(--x-r-field)] bg-[#f0f1f4] font-medium text-[var(--x-faint)] cursor-not-allowed';
+  'inline-flex items-center justify-center gap-2 rounded-[var(--x-r-field)] bg-[var(--x-mute-wash)] font-medium text-[var(--x-faint)] cursor-not-allowed';
 
 export const RegistrationButton = ({
   state,
@@ -379,7 +379,7 @@ export const SearchBar = ({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       aria-label={placeholder}
-      className="w-full rounded-2xl border border-[var(--x-line)] bg-[var(--x-surface)] py-4 pe-4 ps-12 text-[15px] text-[var(--x-ink)] shadow-[0_2px_10px_rgba(20,25,45,0.05)] outline-none transition-[box-shadow,border-color] duration-200 placeholder:text-[var(--x-faint)] focus:border-[var(--x-primary)] focus:shadow-[0_8px_30px_rgba(110,86,207,0.16)] focus:ring-4 focus:ring-[var(--x-ring)]"
+      className="w-full rounded-2xl border border-[var(--x-line)] bg-[var(--x-surface)] py-4 pe-4 ps-12 text-[15px] text-[var(--x-ink)] shadow-[0_2px_10px_rgba(23,32,51,0.05)] outline-none transition-[box-shadow,border-color] duration-200 placeholder:text-[var(--x-faint)] focus:border-[var(--x-primary)] focus:shadow-[0_8px_30px_rgba(23,63,115,0.16)] focus:ring-4 focus:ring-[var(--x-ring)]"
     />
   </div>
 );

@@ -99,7 +99,7 @@ const ClosingScene = ({ closing, facts = [], locale }: ClosingSceneProps) => {
         <div className="mt-9 flex justify-center">
           <Link
             href={programHref}
-            className="group inline-flex min-h-14 items-center gap-3 rounded-2xl bg-brand px-10 text-base font-medium text-brand-contrast shadow-[0_20px_60px_-14px_rgba(201,161,93,0.6)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_26px_72px_-12px_rgba(201,161,93,0.78)]"
+            className="group inline-flex min-h-14 items-center gap-3 rounded-2xl bg-brand px-10 text-base font-medium text-brand-contrast shadow-[0_20px_60px_-14px_rgba(249,161,27,0.6)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_26px_72px_-12px_rgba(249,161,27,0.78)]"
           >
             {PRIMARY[locale]}
             <span

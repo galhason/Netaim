@@ -116,7 +116,7 @@ const LiveSearch = ({
         clearTimeout(timer.current);
         go(urlWith({ q: value.trim() || undefined }));
       }}
-      className="flex flex-col gap-3 rounded-3xl bg-[var(--n-card)] p-3 shadow-[0_14px_44px_rgba(28,36,51,0.08)] ring-1 ring-[var(--n-hair)]/70 sm:flex-row sm:items-center"
+      className="flex flex-col gap-3 rounded-3xl bg-[var(--n-card)] p-3 shadow-[0_14px_44px_rgba(23,32,51,0.08)] ring-1 ring-[var(--n-hair)]/70 sm:flex-row sm:items-center"
     >
       {org ? <input type="hidden" name="org" value={org} /> : null}
       {open ? <input type="hidden" name="open" value={open} /> : null}

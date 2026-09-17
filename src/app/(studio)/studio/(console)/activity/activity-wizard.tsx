@@ -261,7 +261,7 @@ const T = (locale: Locale) => ({
 
 const label = 'mb-1.5 block text-sm font-medium text-[var(--c-text)]';
 const field =
-  'w-full rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.5)] px-3 py-2.5 text-sm text-[var(--c-text)] placeholder:text-[var(--c-text-faint)] outline-none transition-colors focus:border-[var(--c-bronze)]';
+  'w-full rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.5)] px-3 py-2.5 text-sm text-[var(--c-text)] placeholder:text-[var(--c-text-faint)] outline-none transition-colors focus:border-[var(--c-bronze)]';
 const hint = 'mt-1.5 text-xs text-[var(--c-text-faint)]';
 
 const Check = ({
@@ -347,7 +347,7 @@ const ActivityWizard = ({
                   <span
                     className={`grid size-6 flex-none place-items-center rounded-full text-xs font-semibold transition-colors ${
                       active
-                        ? 'bg-[var(--c-bronze)] text-[#161006]'
+                        ? 'bg-[var(--c-bronze)] text-[var(--c-on-accent)]'
                         : done
                           ? 'bg-[var(--c-bronze)]/25 text-[var(--c-bronze)]'
                           : 'bg-[rgba(255,255,255,0.06)] text-[var(--c-text-faint)]'
@@ -632,14 +632,14 @@ const ActivityWizard = ({
               type="button"
               onClick={goNext}
               disabled={!canAdvance}
-              className="rounded-lg bg-[var(--c-bronze)] px-6 py-2 text-sm font-medium text-[#161006] disabled:opacity-40"
+              className="rounded-lg bg-[var(--c-bronze)] px-6 py-2 text-sm font-medium text-[var(--c-on-accent)] disabled:opacity-40"
             >
               {t.next}
             </button>
           ) : (
             <button
               type="submit"
-              className="rounded-lg bg-[var(--c-bronze)] px-6 py-2 text-sm font-medium text-[#161006]"
+              className="rounded-lg bg-[var(--c-bronze)] px-6 py-2 text-sm font-medium text-[var(--c-on-accent)]"
             >
               {editing ? t.saveEdit : t.save}
             </button>

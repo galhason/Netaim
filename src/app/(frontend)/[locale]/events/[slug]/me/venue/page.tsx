@@ -58,7 +58,7 @@ const VenuePage = async ({ params }: VenuePageProps) => {
           ) : null}
           <span
             aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-b from-[rgba(14,27,46,0.6)] via-[rgba(14,27,46,0.3)] to-[var(--l-bg)]"
+            className="absolute inset-0 bg-gradient-to-b from-[rgba(11,27,51,0.6)] via-[rgba(11,27,51,0.3)] to-[var(--l-bg)]"
           />
         </div>
         <div className="relative mx-auto max-w-3xl px-6 pb-16 pt-6 text-white">
@@ -73,7 +73,7 @@ const VenuePage = async ({ params }: VenuePageProps) => {
               {content.brandName.toUpperCase()}
             </span>
           </div>
-          <p className="mt-10 text-xs font-medium tracking-[0.18em] text-[var(--l-bronze-soft,#d8b98a)]">
+          <p className="mt-10 text-xs font-medium tracking-[0.18em] text-[var(--l-bronze-soft)]">
             {LOUNGE_UI.venueTitle[locale]}
           </p>
           <h1 className="mt-2 font-display text-3xl font-semibold md:text-4xl">
@@ -86,7 +86,7 @@ const VenuePage = async ({ params }: VenuePageProps) => {
       </section>
 
       <div className="mx-auto -mt-6 flex max-w-3xl flex-col gap-5 px-6">
-        <div className="lounge-rise rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(35,40,47,0.08)]">
+        <div className="lounge-rise rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(23,32,51,0.08)]">
           {narrative ? (
             <p className="text-[15px] leading-relaxed text-[var(--l-ink)]">
               {narrative}
@@ -103,7 +103,7 @@ const VenuePage = async ({ params }: VenuePageProps) => {
               href={`https://www.google.com/maps/search/?api=1&query=${mapsQuery}`}
               target="_blank"
               rel="noreferrer"
-              className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--l-navy)] px-6 text-sm font-medium text-white transition-colors hover:bg-[#16263c]"
+              className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--l-navy)] px-6 text-sm font-medium text-white transition-colors hover:bg-[var(--nt-dark)]"
             >
               {LOUNGE_UI.openInMaps[locale]}
             </a>

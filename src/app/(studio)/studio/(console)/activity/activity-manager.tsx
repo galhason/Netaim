@@ -179,7 +179,7 @@ const ActivityManager = ({ locale, slug, rows }: Props) => {
           </Link>
           <Link
             href="/studio/activity/new"
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--c-bronze)] px-4 py-2 text-sm font-medium text-[#161006]"
+            className="inline-flex items-center gap-2 rounded-lg bg-[var(--c-bronze)] px-4 py-2 text-sm font-medium text-[var(--c-on-accent)]"
           >
             + {t.create}
           </Link>
@@ -207,12 +207,12 @@ const ActivityManager = ({ locale, slug, rows }: Props) => {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t.search}
-          className="min-w-0 flex-1 rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.5)] px-3 py-2 text-sm text-[var(--c-text)] placeholder:text-[var(--c-text-faint)]"
+          className="min-w-0 flex-1 rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.5)] px-3 py-2 text-sm text-[var(--c-text)] placeholder:text-[var(--c-text-faint)]"
         />
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value as typeof status)}
-          className="rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.5)] px-3 py-2 text-sm text-[var(--c-text)]"
+          className="rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.5)] px-3 py-2 text-sm text-[var(--c-text)]"
         >
           <option value="all">{t.allStatuses}</option>
           {(Object.keys(STATUS_META) as WorkshopStatus[]).map((s) => (
@@ -224,7 +224,7 @@ const ActivityManager = ({ locale, slug, rows }: Props) => {
         <select
           value={type}
           onChange={(e) => setType(e.target.value as typeof type)}
-          className="rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.5)] px-3 py-2 text-sm text-[var(--c-text)]"
+          className="rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.5)] px-3 py-2 text-sm text-[var(--c-text)]"
         >
           <option value="all">{t.allTypes}</option>
           {types.map((ty) => (

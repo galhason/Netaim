@@ -117,7 +117,7 @@ const ConsoleHomepage = async ({ searchParams }: ConsoleHomepageProps) => {
             * label, the box and the filled state: this is a switch, not
             * a link, and it says what it switches.
             */}
-          <span className="flex items-center gap-1.5 rounded-lg border border-[var(--c-line-strong)] bg-[rgba(6,10,16,0.6)] px-2 py-1">
+          <span className="flex items-center gap-1.5 rounded-lg border border-[var(--c-line-strong)] bg-[rgba(7,19,36,0.6)] px-2 py-1">
             <span className="text-[9.5px] font-medium tracking-[0.14em] text-[var(--c-text-faint)]">
               {CONSOLE_UI.contentLanguage[locale].toUpperCase()}
             </span>
@@ -128,7 +128,7 @@ const ConsoleHomepage = async ({ searchParams }: ConsoleHomepageProps) => {
                 aria-current={entry === contentLocale ? 'true' : undefined}
                 className={
                   entry === contentLocale
-                    ? 'rounded-md bg-[var(--c-bronze)] px-2 py-0.5 font-semibold text-[#161006]'
+                    ? 'rounded-md bg-[var(--c-bronze)] px-2 py-0.5 font-semibold text-[var(--c-on-accent)]'
                     : 'rounded-md px-2 py-0.5 text-[var(--c-text-soft)] transition-colors hover:text-[var(--c-text)]'
                 }
               >

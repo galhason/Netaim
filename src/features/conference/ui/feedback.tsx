@@ -183,7 +183,7 @@ export const Modal = ({
             type="button"
             aria-label="Close"
             onClick={onClose}
-            className="absolute inset-0 bg-[rgba(14,27,46,0.34)] backdrop-blur-[2px]"
+            className="absolute inset-0 bg-[rgba(11,27,51,0.34)] backdrop-blur-[2px]"
           />
           <motion.div
             role="dialog"

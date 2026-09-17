@@ -107,7 +107,7 @@ const NetworkingSearch = ({
         className={`${railChip} ${
           open
             ? 'border-transparent bg-[var(--n-green)] text-white'
-            : 'border-[var(--n-green)]/40 bg-[var(--n-green)]/8 text-[#4c8a60] hover:border-[var(--n-green)]'
+            : 'border-[var(--n-green)]/40 bg-[var(--n-green)]/8 text-[var(--n-green)] hover:border-[var(--n-green)]'
         }`}
       >
         {he ? 'פתוחים לפגישות' : 'Open to meetings'}

@@ -1,6 +1,128 @@
 @import 'tailwindcss';
 
 /*
+ * ---------------------------------------------------------------
+ * The Netaim brand, once.
+ * ---------------------------------------------------------------
+ *
+ * Every colour in this product comes from here. The scopes below
+ * (`.cinematic`, `.experience`, `.lounge`, `.community`, `.console`)
+ * keep their own semantic names — a component asks for "the surface",
+ * never for a hex — but the values they resolve to are all drawn from
+ * this block. One place to change the brand, and nowhere else to
+ * forget to.
+ *
+ * The five brand colours are used in a strict order of weight, so the
+ * product stays calm rather than becoming a rainbow: navy carries the
+ * identity and every primary action, blue carries interaction, green
+ * means success, and yellow and orange are highlights — small, and
+ * never the colour of a sentence.
+ *
+ * Each pairing below carries its measured WCAG contrast ratio. Two of
+ * the brand colours cannot be text on white at body size — blue is
+ * 3.55:1 and green is 3.65:1, both short of the 4.5 a paragraph needs —
+ * so each has a darkened twin for text and for filled buttons. Yellow
+ * on white is 1.45:1, which is not a colour you can read at all; it is
+ * a background, with ink on top.
+ */
+:root {
+  /* --- the five, as the brand sheet gives them --- */
+  --nt-navy: #173f73;
+  --nt-blue: #2a90c8;
+  --nt-green: #159a4b;
+  --nt-yellow: #ffd21c;
+  --nt-orange: #f9a11b;
+
+  /* --- the same colours, dark enough to be read on white --- */
+  --nt-navy-soft: #2d5a94; /* 7.00 on white */
+  --nt-navy-deep: #102c52; /* white-on 13.96 — the pressed navy */
+  --nt-blue-ink: #1b5e82; /* 7.07 on white, 7.07 white-on */
+  --nt-green-ink: #117b3c; /* 5.35 on white, 5.35 white-on */
+  --nt-amber-ink: #8f5904; /* 5.84 on white, 5.24 on its own wash */
+
+  /* --- washes: a brand colour at the strength of a background --- */
+  --nt-navy-wash: #eef3fa;
+  --nt-blue-wash: #e8f3fa;
+  --nt-green-wash: #e6f5ec;
+  --nt-yellow-wash: #fff8dd;
+  --nt-orange-wash: #fef1de;
+
+  /* --- neutrals, which carry most of the surface --- */
+  --nt-bg: #f7f8fa;
+  --nt-surface: #ffffff;
+  --nt-raise: #fbfcfd;
+  --nt-ink: #172033; /* 16.27 on white */
+  --nt-ink-soft: #667085; /* 4.97 on white */
+  --nt-ink-faint: #98a2b3;
+  --nt-border: #e6eaf0;
+  --nt-border-strong: #d6dce5;
+  /*
+   * The quietest fill in the product — an ended session, a disabled
+   * chip — and the one grey that stays readable on it.
+   */
+  --nt-mute-wash: #f0f1f4;
+  --nt-mute: #5d6778; /* 5.71 on white, 5.06 on the wash above */
+
+  /*
+   * The dark chrome: the landing, the navigation rail and the Studio.
+   * Navy taken down to a surface, so even the dark side of the product
+   * is the brand's own colour rather than a neutral black.
+   */
+  --nt-dark: #0b1b33; /* white 17.23 */
+  --nt-dark-deep: #071324;
+  --nt-dark-raise: #12273f;
+  --nt-on-dark: #ffffff;
+  --nt-on-dark-soft: #c7d4e6; /* 11.48 on dark */
+  --nt-on-dark-faint: #93a7c4; /* 7.03 on dark */
+  --nt-on-dark-line: rgb(255 255 255 / 0.12);
+  --nt-on-dark-line-strong: rgb(255 255 255 / 0.22);
+  --nt-accent-on-dark: #f9a11b; /* 8.32 on dark */
+  --nt-accent-on-dark-hover: #ffc04d; /* 10.58 on dark */
+  --nt-dark-mid: #0e2340; /* the midpoint of the navy band gradients */
+  --nt-ink-on-accent: #071324; /* 8.99 on orange, 12.85 on yellow */
+  --nt-accent-on-dark-soft: #ffd21c; /* 11.89 on dark */
+  --nt-blue-on-dark: #7ec2ea; /* 8.85 on dark */
+  --nt-green-on-dark: #4fc27e; /* 7.67 on dark */
+
+  /*
+   * Danger is not a brand colour. A red that means "this went wrong"
+   * has to be read as red by someone who has never seen the brand, so
+   * it is the system red, chosen for contrast and left alone.
+   */
+  --nt-danger: #b42318; /* 6.53 on white, white-on 6.57 */
+  --nt-danger-strong: #8f1d12; /* white-on 8.93 — the pressed state */
+  --nt-danger-wash: #fdeceb; /* danger reads 5.75 on it */
+  --nt-danger-on-dark: #f79e92; /* 8.42 on the dark chrome */
+
+  /* --- one radius scale --- */
+  --nt-r-sm: 8px;
+  --nt-r-md: 10px;
+  --nt-r-lg: 16px;
+  --nt-r-xl: 20px;
+  --nt-r-pill: 999px;
+
+  /*
+   * Shadow is depth, not drama. One soft card shadow; the stronger two
+   * are for the things that genuinely float — dropdowns, modals, a
+   * drawer over the page.
+   */
+  --nt-shadow: 0 4px 18px rgba(23, 32, 51, 0.06);
+  --nt-shadow-lift: 0 12px 34px rgba(23, 32, 51, 0.1);
+  --nt-shadow-float: 0 24px 60px rgba(23, 32, 51, 0.16);
+  --nt-shadow-drawer: -24px 0 60px rgba(23, 32, 51, 0.16);
+
+  /* The focus ring: brand blue, at the strength of a halo. */
+  --nt-ring: rgb(42 144 200 / 0.35);
+
+  /*
+   * What the accessibility widget's high-contrast mode swaps the two
+   * quiet inks for. Both clear 7:1 on white.
+   */
+  --nt-ink-soft-hc: #3b4452;
+  --nt-ink-faint-hc: #4a5462;
+}
+
+/*
  * Design tokens are the single source of truth for visual values.
  * Semantic tokens (below) may be overridden at runtime per event from
  * CMS theme settings by reassigning the CSS variables on a container.
@@ -8,51 +130,50 @@
  * text, one bronze accent used with restraint.
  */
 :root {
-  --color-surface: oklch(96.5% 0.011 90);
-  --color-surface-raised: oklch(99% 0.005 90);
-  --color-text-primary: oklch(24% 0.028 264);
-  --color-text-secondary: oklch(42% 0.022 264);
-  --color-brand: oklch(34% 0.055 262);
-  --color-brand-contrast: oklch(97% 0.008 90);
-  --color-accent: oklch(58% 0.088 70);
-  --color-on-media: oklch(97% 0.01 90);
-  --color-scrim: oklch(18% 0.03 264);
-  --color-focus-ring: oklch(58% 0.088 70);
-  --color-border: oklch(85% 0.015 90);
-  --color-border-strong: oklch(78% 0.017 90);
+  --color-surface: var(--nt-bg);
+  --color-surface-raised: var(--nt-surface);
+  --color-text-primary: var(--nt-ink);
+  --color-text-secondary: var(--nt-ink-soft);
+  --color-brand: var(--nt-navy);
+  --color-brand-contrast: var(--nt-surface);
+  --color-accent: var(--nt-blue-ink);
+  --color-on-media: var(--nt-surface);
+  --color-scrim: var(--nt-dark);
+  --color-focus-ring: var(--nt-blue);
+  --color-border: var(--nt-border);
+  --color-border-strong: var(--nt-border-strong);
 
   /*
-   * The Studio sidebar is the product's permanent identity: a deep
-   * civic-ink rail (the brand hue carried to low lightness), warm
-   * near-white text, one bronze accent for the current place. Text/
-   * surface pairs clear AA in both directions.
+   * The Studio's permanent rail: the brand navy taken to a surface,
+   * with the accent it can actually carry there. Text/surface pairs
+   * clear AA in both directions — see the ratios on the brand block.
    */
-  --color-sidebar: oklch(22% 0.03 264);
-  --color-sidebar-active: oklch(30% 0.038 264);
-  --color-sidebar-border: oklch(32% 0.025 264);
-  --color-sidebar-text: oklch(94% 0.008 90);
-  --color-sidebar-muted: oklch(72% 0.016 264);
+  --color-sidebar: var(--nt-dark);
+  --color-sidebar-active: var(--nt-dark-raise);
+  --color-sidebar-border: var(--nt-on-dark-line-strong);
+  --color-sidebar-text: var(--nt-on-dark);
+  --color-sidebar-muted: var(--nt-on-dark-faint);
+
+  /*
+   * One typeface. `font-display` stays as a name — hundreds of
+   * components ask for it — but it now resolves to the same Heebo as
+   * everything else, so a heading and its paragraph are one voice.
+   */
+  --font-display: var(--font-body);
 
   --space-unit: 0.25rem;
 
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 1rem;
+  --radius-sm: var(--nt-r-sm);
+  --radius-md: var(--nt-r-md);
+  --radius-lg: var(--nt-r-lg);
 
   --duration-fast: 150ms;
   --duration-base: 250ms;
   --duration-slow: 400ms;
   --easing-standard: cubic-bezier(0.2, 0, 0, 1);
 
-  /*
-   * Elevation is used with extreme restraint — the workspace stays flat
-   * (whitespace before borders); soft shadow marks only what genuinely
-   * floats above the surface, chiefly the Composer canvas.
-   */
-  --shadow-soft: 0 1px 2px oklch(24% 0.028 264 / 0.04),
-    0 10px 30px oklch(24% 0.028 264 / 0.06);
-  --shadow-raised: 0 1px 2px oklch(24% 0.028 264 / 0.05),
-    0 24px 56px oklch(24% 0.028 264 / 0.1);
+  --shadow-soft: var(--nt-shadow);
+  --shadow-raised: var(--nt-shadow-lift);
 }
 
 @theme inline {
@@ -168,23 +289,23 @@ main [id] {
  * palette automatically inside this scope.
  */
 .cinematic {
-  --color-surface: #08111e;
-  --color-surface-raised: #0f1728;
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #c7ced9;
-  --color-brand: #c9a15d;
-  --color-brand-contrast: #08111e;
-  --color-accent: #c9a15d;
-  --color-on-media: #ffffff;
-  --color-border: rgb(255 255 255 / 0.1);
-  --color-border-strong: rgb(255 255 255 / 0.2);
-  --color-focus-ring: #c9a15d;
-  --radius-lg: 24px;
-  --font-display: var(--font-cine);
+  --color-surface: var(--nt-dark);
+  --color-surface-raised: var(--nt-dark-raise);
+  --color-text-primary: var(--nt-on-dark);
+  --color-text-secondary: var(--nt-on-dark-soft);
+  --color-brand: var(--nt-accent-on-dark);
+  --color-brand-contrast: var(--nt-dark);
+  --color-accent: var(--nt-accent-on-dark);
+  --color-on-media: var(--nt-on-dark);
+  --color-border: var(--nt-on-dark-line);
+  --color-border-strong: var(--nt-on-dark-line-strong);
+  --color-focus-ring: var(--nt-accent-on-dark-soft);
+  --radius-lg: var(--nt-r-xl);
+  --font-display: var(--font-body);
   /*
-   * Art Direction V4 — depth replaces borders. One floating-shadow scale
-   * (soft close contact + deep ambient throw) carries every card that
-   * lifts off the darkness, so scenes stop relying on outlines.
+   * Depth replaces borders here. One floating-shadow scale (soft close
+   * contact + deep ambient throw) carries every card that lifts off the
+   * darkness, so scenes stop relying on outlines.
    */
   --cine-shadow: 0 1px 0 rgb(255 255 255 / 0.05) inset,
     0 28px 64px -30px rgb(0 0 0 / 0.7);
@@ -200,7 +321,7 @@ main [id] {
     180deg,
     rgb(8 17 30 / 0.35) 0%,
     rgb(8 17 30 / 0.55) 55%,
-    rgb(8 17 30 / 0.92) 100%
+    rgb(11 27 51 / 0.92) 100%
   );
 }
 
@@ -214,24 +335,24 @@ main [id] {
 }
 
 .cine-audience {
-  background: linear-gradient(180deg, rgb(8 17 30 / 0) 55%, #08111e 100%);
+  background: linear-gradient(180deg, rgb(11 27 51 / 0) 55%, var(--nt-dark) 100%);
 }
 
 .cine-blue-band {
   background:
-    radial-gradient(120% 140% at 50% 0%, #1b3a63 0%, #0c1c33 55%, #08111e 100%);
+    radial-gradient(120% 140% at 50% 0%, var(--nt-navy) 0%, var(--nt-dark-mid) 55%, var(--nt-dark) 100%);
 }
 
 .cine-hero-glow {
   background: radial-gradient(
     120% 90% at 50% 18%,
-    rgb(201 161 93 / 0.16),
+    rgb(249 161 27 / 0.16),
     transparent 55%
   );
 }
 
 .cine-hero-fade {
-  background: linear-gradient(180deg, rgb(8 17 30 / 0) 45%, #08111e 100%);
+  background: linear-gradient(180deg, rgb(11 27 51 / 0) 45%, var(--nt-dark) 100%);
 }
 
 .cine-vignette {
@@ -243,7 +364,7 @@ main [id] {
 }
 
 .cine-panel {
-  background: linear-gradient(150deg, #10203a 0%, #0b1526 60%, #0a1322 100%);
+  background: linear-gradient(150deg, var(--nt-dark-raise) 0%, var(--nt-dark-mid) 60%, var(--nt-dark) 100%);
 }
 
 /*
@@ -288,7 +409,7 @@ main [id] {
   border-radius: inherit;
   background: radial-gradient(
     82% 62% at 50% 0%,
-    rgb(201 161 93 / 0.12),
+    rgb(249 161 27 / 0.12),
     transparent 72%
   );
   pointer-events: none;
@@ -384,7 +505,7 @@ main [id] {
 .cine-darkness-glow {
   background: radial-gradient(
     60% 45% at 50% 42%,
-    rgb(201 161 93 / 0.14),
+    rgb(249 161 27 / 0.14),
     transparent 70%
   );
 }
@@ -392,7 +513,7 @@ main [id] {
 .cine-dust {
   background-image:
     radial-gradient(1.5px 1.5px at 20% 30%, rgb(255 255 255 / 0.4), transparent 60%),
-    radial-gradient(1px 1px at 70% 60%, rgb(201 161 93 / 0.35), transparent 60%),
+    radial-gradient(1px 1px at 70% 60%, rgb(255 210 28 / 0.35), transparent 60%),
     radial-gradient(1.2px 1.2px at 45% 84%, rgb(255 255 255 / 0.25), transparent 60%),
     radial-gradient(1px 1px at 88% 18%, rgb(255 255 255 / 0.2), transparent 60%);
   background-size: 340px 560px;
@@ -445,17 +566,33 @@ main [id] {
  * them through Tailwind arbitrary values.
  */
 .console {
-  --c-void: #06090f;
-  --c-deep: #0a1119;
-  --c-panel: rgba(15, 22, 33, 0.78);
-  --c-glass: rgba(17, 25, 38, 0.66);
-  --c-line: rgba(233, 228, 216, 0.09);
-  --c-line-strong: rgba(233, 228, 216, 0.18);
-  --c-text: #e7e1d4;
-  --c-text-soft: #95a0af;
-  --c-text-faint: #5c6878;
-  --c-bronze: #c9a96e;
-  --c-live: #4db47e;
+  --c-void: var(--nt-dark-deep);
+  --c-deep: var(--nt-dark);
+  --c-panel: rgba(18, 39, 63, 0.78);
+  --c-glass: rgba(18, 39, 63, 0.66);
+  --c-line: var(--nt-on-dark-line);
+  --c-line-strong: var(--nt-on-dark-line-strong);
+  --c-text: var(--nt-on-dark);
+  --c-text-soft: var(--nt-on-dark-soft);
+  --c-text-faint: var(--nt-on-dark-faint);
+  --c-bronze: var(--nt-accent-on-dark);
+  --c-bronze-hover: var(--nt-accent-on-dark-hover);
+  /*
+   * What may be written on top of the accent. Orange is a background
+   * here, never a letter: the ink that sits on it is the deepest navy
+   * in the brand, 8.99 against it.
+   */
+  --c-on-accent: var(--nt-ink-on-accent);
+  --c-live: var(--nt-green-on-dark);
+  /*
+   * Danger in the dark suite. The fill is the system red with white on
+   * it; the text variant is that red lightened until it can be read
+   * against the void, which the fill colour cannot be.
+   */
+  --c-danger: var(--nt-danger);
+  --c-danger-strong: var(--nt-danger-strong);
+  --c-danger-text: var(--nt-danger-on-dark);
+  --c-on-danger: var(--nt-surface);
 }
 
 /*
@@ -464,16 +601,22 @@ main [id] {
  * light continuing past registration. Guest tones, not work tones.
  */
 .lounge {
-  --l-bg: #f4f0e8;
-  --l-card: #ffffff;
-  --l-ink: #23282f;
-  --l-soft: #6e7480;
-  --l-faint: #9aa0ab;
-  --l-hair: #e7e1d4;
-  --l-bronze: #b08c55;
-  --l-bronze-soft: #c9a96e;
-  --l-navy: #0e1b2e;
-  --l-live: #3fa36c;
+  --l-bg: var(--nt-bg);
+  --l-card: var(--nt-surface);
+  --l-ink: var(--nt-ink);
+  --l-soft: var(--nt-ink-soft);
+  --l-faint: var(--nt-ink-faint);
+  --l-hair: var(--nt-border);
+  --l-bronze: var(--nt-amber-ink);
+  --l-bronze-soft: var(--nt-orange);
+  --l-navy: var(--nt-dark);
+  --l-live: var(--nt-green-ink);
+  --l-navy-soft: var(--nt-dark-raise);
+  --l-navy-line: var(--nt-on-dark-line-strong);
+  --l-on-navy: var(--nt-on-dark);
+  --l-on-navy-soft: var(--nt-on-dark-soft);
+  --l-on-navy-faint: var(--nt-on-dark-faint);
+  --l-bronze-on-navy: var(--nt-accent-on-dark);
 }
 /*
  * The Community — the conference's own small social network. Same warm
@@ -485,23 +628,45 @@ main [id] {
  * there are exactly these and no more.
  */
 .community {
-  --n-bg: #f7f5ef;
-  --n-card: #ffffff;
-  --n-ink: #1c2433;
-  --n-soft: #66707f;
-  --n-faint: #98a0ad;
-  --n-hair: #e8e3d8;
-  --n-navy: #172033;
-  --n-deep: #10182a;
-  --n-indigo: #232c4d;
-  --n-purple: #8067d8;
-  --n-purple-soft: #b8a9ff;
-  --n-blue: #5c91db;
-  --n-gold: #c9a45e;
-  --n-gold-soft: #e2c896;
-  --n-pink: #df7eaa;
-  --n-green: #67a97c;
-  --n-cream: #f6efe1;
+  --n-bg: var(--nt-bg);
+  --n-card: var(--nt-surface);
+  --n-ink: var(--nt-ink);
+  --n-soft: var(--nt-ink-soft);
+  --n-faint: var(--nt-ink-faint);
+  --n-hair: var(--nt-border);
+  --n-navy: var(--nt-dark);
+  --n-deep: var(--nt-dark-deep);
+  --n-indigo: var(--nt-dark-raise);
+  /*
+   * Four tones that each MEAN something on a person's ring — a room you
+   * shared, a matching interest, the same organization, openness to
+   * meeting. Colour is information here, never decoration, which is why
+   * there are exactly these and no more. They are the brand's own four.
+   */
+  --n-purple: var(--nt-navy);
+  --n-purple-soft: var(--nt-navy-soft);
+  --n-blue: var(--nt-blue-ink);
+  --n-blue-soft: var(--nt-blue);
+  --n-gold: var(--nt-amber-ink);
+  --n-gold-soft: var(--nt-orange);
+  /*
+   * "The same organization" was a pink that belonged to no one. It is
+   * now the navy one shade up — near enough to the discovery tone to
+   * read as the same family, far enough apart to tell them apart, and
+   * every ring carries its reason in words beside it regardless.
+   */
+  --n-pink: var(--nt-navy-soft);
+  --n-pink-soft: var(--nt-blue);
+  --n-green: var(--nt-green-ink);
+  --n-green-soft: var(--nt-green);
+  --n-cream: var(--nt-yellow-wash);
+
+  /* The dark half of the page: the hero card and what sits on it. */
+  --n-on-navy: var(--nt-on-dark);
+  --n-on-navy-soft: var(--nt-on-dark-soft);
+  --n-ink-on-accent: var(--nt-ink-on-accent);
+  --n-gold-hover: var(--nt-accent-on-dark-hover);
+  --n-gold-active: var(--nt-yellow);
 }
 
 /*
@@ -546,46 +711,58 @@ main [id] {
  * timeline spine — a conference is time, so time is the structure.
  */
 .experience {
-  --x-bg: #f6f7fb;
-  --x-surface: #ffffff;
-  --x-raise: #fbfcfe;
-  --x-ink: #182031;
-  --x-soft: #5b6273;
-  --x-faint: #99a0af;
-  --x-line: #e9ebf2;
-  --x-line-strong: #dcdfea;
-  --x-nav: #0e1b2e;
+  --x-bg: var(--nt-bg);
+  --x-surface: var(--nt-surface);
+  --x-raise: var(--nt-raise);
+  --x-ink: var(--nt-ink);
+  --x-soft: var(--nt-ink-soft);
+  --x-faint: var(--nt-ink-faint);
+  --x-line: var(--nt-border);
+  --x-line-strong: var(--nt-border-strong);
+  --x-nav: var(--nt-dark);
 
-  --x-primary: #6e56cf;
-  --x-primary-strong: #5b43bd;
-  --x-primary-ink: #ffffff;
-  --x-primary-wash: #f1eefc;
-  --x-ring: rgba(110, 86, 207, 0.35);
+  /*
+   * Navy is the action. The indigo that used to sit here was the
+   * platform's own colour, not the organization's; every primary
+   * button, active tab and chosen day now carries the brand instead.
+   * Blue stays beside it for interaction — focus, links, the state of
+   * a thing the reader is touching.
+   */
+  --x-primary: var(--nt-navy);
+  --x-primary-strong: var(--nt-navy-deep);
+  --x-primary-ink: var(--nt-surface);
+  --x-primary-wash: var(--nt-navy-wash);
+  --x-ring: var(--nt-ring);
+  --x-interactive: var(--nt-blue-ink);
+  --x-interactive-wash: var(--nt-blue-wash);
 
-  --x-ok: #2f9e5b;
-  --x-ok-wash: #e7f5ec;
-  --x-warn: #c67a12;
-  --x-warn-wash: #fbf0dd;
-  --x-full: #cf4b39;
-  --x-full-wash: #fbe8e5;
-  --x-wait: #7c5cf0;
-  --x-wait-wash: #efeafd;
-  --x-live: #e5484d;
+  --x-ok: var(--nt-green-ink);
+  --x-ok-wash: var(--nt-green-wash);
+  --x-warn: var(--nt-amber-ink);
+  --x-warn-wash: var(--nt-orange-wash);
+  --x-full: var(--nt-danger);
+  --x-full-wash: var(--nt-danger-wash);
+  --x-wait: var(--nt-blue-ink);
+  --x-wait-wash: var(--nt-blue-wash);
+  --x-live: var(--nt-danger);
+  /* The quietest fill on the light side: a break, an ended session. */
+  --x-mute: var(--nt-mute);
+  --x-mute-wash: var(--nt-mute-wash);
 
-  /* The premium accent — navy and gold, reserved for the personal
-     dashboard's hero moments (next activity, daily progress). */
-  --x-navy: #0e1b2e;
-  --x-navy-deep: #081321;
-  --x-gold: #c2a05a;
-  --x-gold-soft: #ddbf7d;
-  --x-gold-wash: #f8f3e8;
+  /* The premium accent, reserved for the personal dashboard's hero
+     moments (next activity, daily progress). */
+  --x-navy: var(--nt-dark);
+  --x-navy-deep: var(--nt-dark-deep);
+  --x-gold: var(--nt-amber-ink);
+  --x-gold-soft: var(--nt-accent-on-dark-soft);
+  --x-gold-wash: var(--nt-yellow-wash);
 
-  --x-r-card: 16px;
-  --x-r-field: 12px;
-  --x-r-pill: 999px;
-  --x-shadow: 0 8px 30px rgba(20, 25, 45, 0.06);
-  --x-shadow-lift: 0 18px 48px rgba(20, 25, 45, 0.12);
-  --x-shadow-drawer: -24px 0 60px rgba(20, 25, 45, 0.14);
+  --x-r-card: var(--nt-r-lg);
+  --x-r-field: var(--nt-r-md);
+  --x-r-pill: var(--nt-r-pill);
+  --x-shadow: var(--nt-shadow);
+  --x-shadow-lift: var(--nt-shadow-lift);
+  --x-shadow-drawer: var(--nt-shadow-drawer);
 
   color: var(--x-ink);
   font-family: var(--font-body), 'Segoe UI', sans-serif;
@@ -604,8 +781,8 @@ main [id] {
   to { opacity: 1; transform: none; }
 }
 @keyframes x-live-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(229, 72, 77, 0.45); }
-  50% { box-shadow: 0 0 0 6px rgba(229, 72, 77, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgb(180 35 24 / 0.45); }
+  50% { box-shadow: 0 0 0 6px rgb(180 35 24 / 0); }
 }
 .x-rise { animation: x-rise 460ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 .x-fade { animation: x-fade 300ms ease both; }
@@ -650,9 +827,9 @@ main [id] {
 .lounge-sheen {
   background-image: linear-gradient(
     100deg,
-    #ffffff 38%,
-    #e8cfa4 50%,
-    #ffffff 62%
+    var(--nt-surface) 38%,
+    var(--nt-yellow) 50%,
+    var(--nt-surface) 62%
   );
   background-size: 220% 100%;
   background-clip: text;
@@ -722,17 +899,17 @@ html.a11y-font-2 {
 }
 
 html.a11y-contrast .cinematic {
-  --color-text-secondary: #ffffff;
+  --color-text-secondary: var(--nt-on-dark);
   --color-border: rgb(255 255 255 / 0.4);
   --color-border-strong: rgb(255 255 255 / 0.55);
 }
 html.a11y-contrast .community {
-  --n-soft: #252d3d;
-  --n-faint: #333d4f;
-  --n-hair: rgba(28, 36, 51, 0.35);
+  --n-soft: var(--nt-ink-soft-hc);
+  --n-faint: var(--nt-ink-faint-hc);
+  --n-hair: rgba(23, 32, 51, 0.35);
 }
 html.a11y-contrast .lounge {
-  --l-soft: #333a46;
+  --l-soft: var(--nt-ink-soft-hc);
 }
 
 html.a11y-no-motion *,
@@ -781,7 +958,7 @@ html.a11y-readable body * {
   @apply grid size-8 cursor-pointer list-none place-items-center rounded-full text-xs text-[var(--n-faint)] transition-colors hover:bg-[var(--n-navy)]/5 hover:text-[var(--n-ink)];
 }
 .n-menu-panel {
-  @apply absolute end-0 top-9 z-20 w-72 rounded-2xl bg-white p-4 text-start shadow-[0_18px_50px_rgba(28,36,51,0.18)] ring-1 ring-[var(--n-hair)];
+  @apply absolute end-0 top-9 z-20 w-72 rounded-2xl bg-white p-4 text-start shadow-[0_18px_50px_rgba(23,32,51,0.18)] ring-1 ring-[var(--n-hair)];
 }
 /*
  * A closed menu takes no space.
@@ -825,7 +1002,7 @@ details:not([open]) > .n-menu-panel {
   @apply flex flex-col items-center gap-1.5 rounded-2xl text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--n-purple)];
 }
 .n-bubble-ring {
-  @apply block rounded-full p-[2.5px] bg-[linear-gradient(135deg,var(--n-gold),var(--n-gold-soft))] shadow-[0_6px_18px_rgba(28,36,51,0.14)];
+  @apply block rounded-full p-[2.5px] bg-[linear-gradient(135deg,var(--n-gold),var(--n-gold-soft))] shadow-[0_6px_18px_rgba(23,32,51,0.14)];
 }
 
 /* Tiles in the directory grid. */
@@ -861,20 +1038,20 @@ details:not([open]) > .n-menu-panel {
   @apply mt-4 border-t border-[var(--n-hair)] pt-3;
 }
 .n-danger-link {
-  @apply text-sm font-medium text-[#B0442F] underline underline-offset-4;
+  @apply text-sm font-medium text-[var(--nt-danger)] underline underline-offset-4;
 }
 .n-quiet-link {
   @apply min-h-7 text-[10.5px] text-[var(--n-faint)] underline-offset-4 transition-colors hover:text-[var(--n-ink)] hover:underline;
 }
 .n-ring-gold {
-  @apply block rounded-full p-[2.5px] bg-[linear-gradient(135deg,var(--n-gold),var(--n-gold-soft))] shadow-[0_6px_18px_rgba(28,36,51,0.14)];
+  @apply block rounded-full p-[2.5px] bg-[linear-gradient(135deg,var(--n-gold),var(--n-gold-soft))] shadow-[0_6px_18px_rgba(23,32,51,0.14)];
 }
 .n-ring-green {
-  @apply block rounded-full p-[2px] bg-[linear-gradient(135deg,var(--n-green),#a3cdb0)];
+  @apply block rounded-full p-[2px] bg-[linear-gradient(135deg,var(--n-green),var(--nt-green))];
 }
 .n-avatar-lg {
   @apply size-16 md:size-[4.5rem] grid place-items-center rounded-full bg-[var(--n-navy)]/8 font-display text-xl font-semibold text-[var(--n-navy)];
 }
 .n-open-note {
-  @apply mt-1.5 inline-flex items-center gap-1 text-[10px] font-medium text-[#4c8a60];
+  @apply mt-1.5 inline-flex items-center gap-1 text-[10px] font-medium text-[var(--nt-green-ink)];
 }

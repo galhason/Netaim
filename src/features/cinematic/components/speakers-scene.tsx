@@ -165,7 +165,7 @@ const SpeakerCard = ({
           className={`object-cover ${IMG_POS} transition-transform duration-300 ease-out group-hover:scale-[1.04]`}
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1a2740] via-surface to-[#0e1826]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[var(--nt-dark-raise)] via-surface to-[var(--nt-dark-deep)]" />
       )}
 
       {/* Reading gradient — deepens on hover */}

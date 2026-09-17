@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import type { Locale } from '@/config/locales';
+import { VENDOR_MARKS } from '@/shared/constants/vendor-marks';
 import type { ActivityVM } from '../types';
 import {
   AvailabilityBadge,
@@ -160,12 +161,25 @@ const ShareModal = ({
   const enc = encodeURIComponent(url);
   const encT = encodeURIComponent(title);
   const links = [
-    { label: 'WhatsApp', href: `https://wa.me/?text=${encT}%20${enc}`, tone: 'text-[#25D366]' },
-    { label: 'LinkedIn', href: `https://www.linkedin.com/sharing/share-offsite/?url=${enc}`, tone: 'text-[#0A66C2]' },
+    /*
+     * The two icons wear their own company's colour, taken from the
+     * vendor sheet rather than the brand — and through `style`, because
+     * a Tailwind class built at runtime is a class Tailwind never saw.
+     */
+    {
+      label: 'WhatsApp',
+      href: `https://wa.me/?text=${encT}%20${enc}`,
+      color: VENDOR_MARKS.whatsappGreen,
+    },
+    {
+      label: 'LinkedIn',
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${enc}`,
+      color: VENDOR_MARKS.linkedinBlue,
+    },
     {
       label: he ? 'אימייל' : 'Email',
       href: `mailto:?subject=${encT}&body=${enc}`,
-      tone: 'text-[var(--x-soft)]',
+      color: 'var(--x-soft)',
     },
   ];
   return (
@@ -187,7 +201,7 @@ const ShareModal = ({
             rel="noreferrer"
             className="flex items-center gap-3 rounded-[var(--x-r-field)] border border-[var(--x-line)] px-4 py-3 text-sm font-medium text-[var(--x-ink)] transition-colors hover:border-[var(--x-primary)] hover:bg-[var(--x-primary-wash)]"
           >
-            <IconShare className={`size-5 ${l.tone}`} />
+            <IconShare className="size-5" style={{ color: l.color }} />
             {l.label}
           </a>
         ))}
@@ -263,7 +277,7 @@ const ActivityDrawer = ({
               type="button"
               aria-label={he ? 'סגירה' : 'Close'}
               onClick={onClose}
-              className="absolute inset-0 bg-[rgba(14,27,46,0.4)] backdrop-blur-[3px]"
+              className="absolute inset-0 bg-[rgba(11,27,51,0.4)] backdrop-blur-[3px]"
             />
             <motion.aside
               role="dialog"
@@ -280,7 +294,7 @@ const ActivityDrawer = ({
                 className="relative flex-none overflow-hidden px-6 pb-5 pt-6"
                 style={{
                   background:
-                    'radial-gradient(120% 160% at 100% 0%, rgba(110,86,207,0.45), transparent 55%), radial-gradient(90% 120% at 0% 100%, rgba(43,58,110,0.55), transparent 60%), linear-gradient(135deg, #1b2946, #0d1626)',
+                    'radial-gradient(120% 160% at 100% 0%, rgb(42 144 200 / 0.45), transparent 55%), radial-gradient(90% 120% at 0% 100%, rgb(23 63 115 / 0.55), transparent 60%), linear-gradient(135deg, var(--nt-dark-raise), var(--nt-dark))',
                 }}
               >
                 <span

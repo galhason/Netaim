@@ -37,7 +37,7 @@ const SpeakersPage = async ({ params }: SpeakersPageProps) => {
         <div className="absolute inset-0 bg-[var(--l-navy)]">
           <span
             aria-hidden="true"
-            className="absolute -top-24 left-1/2 h-[22rem] w-[44rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(201,169,110,0.35),transparent_70%)]"
+            className="absolute -top-24 left-1/2 h-[22rem] w-[44rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(249,161,27,0.35),transparent_70%)]"
           />
           <span
             aria-hidden="true"
@@ -64,7 +64,7 @@ const SpeakersPage = async ({ params }: SpeakersPageProps) => {
 
       <div className="mx-auto -mt-6 max-w-5xl px-6">
         {speakers.length === 0 ? (
-          <p className="lounge-rise rounded-3xl bg-white p-6 text-center text-sm text-[var(--l-soft)] shadow-[0_14px_44px_rgba(35,40,47,0.08)]">
+          <p className="lounge-rise rounded-3xl bg-white p-6 text-center text-sm text-[var(--l-soft)] shadow-[0_14px_44px_rgba(23,32,51,0.08)]">
             {LOUNGE_UI.noSpeakers[locale]}
           </p>
         ) : (
@@ -72,7 +72,7 @@ const SpeakersPage = async ({ params }: SpeakersPageProps) => {
             {speakers.map((speaker, index) => (
               <li key={speaker.id}>
                 <article
-                  className={`lounge-rise flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-[0_14px_44px_rgba(35,40,47,0.08)] ${
+                  className={`lounge-rise flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-[0_14px_44px_rgba(23,32,51,0.08)] ${
                     ['', '[animation-delay:60ms]', '[animation-delay:120ms]', '[animation-delay:180ms]'][index % 4]
                   }`}
                 >

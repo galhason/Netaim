@@ -88,10 +88,10 @@ const FaceCluster = ({ faces }: { faces: FellowParticipant[] }) =>
             <img
               src={person.photoUrl}
               alt=""
-              className="size-9 rounded-full object-cover ring-2 ring-[#0d1226]"
+              className="size-9 rounded-full object-cover ring-2 ring-[var(--n-deep)]"
             />
           ) : (
-            <span className="grid size-9 place-items-center rounded-full bg-white/12 font-display text-xs font-semibold text-white ring-2 ring-[#0d1226]">
+            <span className="grid size-9 place-items-center rounded-full bg-white/12 font-display text-xs font-semibold text-white ring-2 ring-[var(--n-deep)]">
               {person.name.slice(0, 1)}
             </span>
           )}
@@ -112,7 +112,7 @@ const NetworkingHero = ({
 }: HeroProps) => (
   /* pt clears the site's fixed 88px navigation bar. */
   <section className="px-3 pt-[6.25rem] md:px-6 md:pt-[7rem]">
-    <div className="relative mx-auto max-w-6xl rounded-[1.75rem] bg-[#0d1226] md:rounded-[2rem]">
+    <div className="relative mx-auto max-w-6xl rounded-[1.75rem] bg-[var(--n-deep)] md:rounded-[2rem]">
       {/*
         * The moving backdrop — the conference itself, behind the words.
         * Muted, looping, decorative only (aria-hidden, no controls), and
@@ -142,7 +142,7 @@ const NetworkingHero = ({
           <source src="/videos/networking-hero.mp4" type="video/mp4" />
           <source src="/videos/networking-hero.webm" type="video/webm" />
         </video>
-        <span className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(13,18,38,0.72),rgba(13,18,38,0.6)_45%,rgba(13,18,38,0.82))]" />
+        <span className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(11,27,51,0.72),rgba(11,27,51,0.6)_45%,rgba(11,27,51,0.82))]" />
       </div>
       {/*
         * The atmosphere, in its own clipped layer: a violet orb rising
@@ -154,10 +154,10 @@ const NetworkingHero = ({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden rounded-[1.75rem] md:rounded-[2rem]"
       >
-        <span className="absolute -bottom-24 end-[-4rem] size-[16rem] rounded-full bg-[radial-gradient(circle_at_30%_30%,#5b4a9e,#241d4d_55%,#151033_75%)] opacity-90 md:-bottom-40 md:end-[-6rem] md:size-[26rem]" />
+        <span className="absolute -bottom-24 end-[-4rem] size-[16rem] rounded-full bg-[radial-gradient(circle_at_30%_30%,var(--nt-navy),var(--nt-dark-mid)_55%,var(--nt-dark-deep)_75%)] opacity-90 md:-bottom-40 md:end-[-6rem] md:size-[26rem]" />
         <span className="absolute -bottom-28 end-[-5rem] size-[18rem] rounded-full border border-white/5 md:-bottom-44 md:end-[-7rem] md:size-[28rem]" />
         <span className="absolute -bottom-32 end-[-6rem] hidden size-[30rem] rounded-full border border-white/[0.03] md:block" />
-        <span className="absolute -top-32 start-1/4 h-[24rem] w-[36rem] rounded-full bg-[radial-gradient(closest-side,rgba(128,103,216,0.22),transparent_70%)] blur-2xl" />
+        <span className="absolute -top-32 start-1/4 h-[24rem] w-[36rem] rounded-full bg-[radial-gradient(closest-side,rgba(42,144,200,0.22),transparent_70%)] blur-2xl" />
         <Sparkle className="absolute end-[30%] top-[22%] size-3 text-[var(--n-gold-soft)]/80" />
         <Sparkle className="absolute end-[12%] top-[55%] size-2 text-white/50" />
         <Sparkle className="absolute start-[55%] top-[70%] size-2 text-[var(--n-purple-soft)]/60" />
@@ -199,7 +199,7 @@ const NetworkingHero = ({
             <div className="mt-5 flex flex-wrap gap-3 md:mt-6">
               <a
                 href="#discovery"
-                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-[var(--n-gold-soft)] px-6 text-sm font-semibold text-[#1b2436] transition-colors hover:bg-[#d8bb84] active:bg-[#cbae77] sm:flex-none"
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-[var(--n-gold-soft)] px-6 text-sm font-semibold text-[var(--n-ink-on-accent)] transition-colors hover:bg-[var(--n-gold-hover)] active:bg-[var(--n-gold-active)] sm:flex-none"
               >
                 {COPY.discover[locale]}
               </a>
@@ -272,7 +272,7 @@ const NetworkingHero = ({
             <div className="rounded-2xl bg-white/[0.06] p-4 ring-1 ring-white/10">
               <div className="flex items-center gap-3">
                 <span className="rounded-full bg-[linear-gradient(135deg,var(--n-purple),var(--n-gold-soft))] p-[2px]">
-                  <span className="block rounded-full bg-[#12182e] p-[2px]">
+                  <span className="block rounded-full bg-[var(--n-indigo)] p-[2px]">
                     <Avatar
                       name={myself.name}
                       photoUrl={myself.photoUrl}
@@ -327,7 +327,7 @@ const NetworkingHero = ({
             </div>
 
             {nextMeeting ? (
-              <div className="rounded-2xl bg-[#1d2440] p-4 ring-1 ring-white/10">
+              <div className="rounded-2xl bg-[var(--n-indigo)] p-4 ring-1 ring-white/10">
                 <p className="text-[11px] font-medium tracking-[0.14em] text-[var(--n-gold-soft)]">
                   {COPY.nextMeeting[locale]}
                 </p>
@@ -344,7 +344,7 @@ const NetworkingHero = ({
                   </span>
                   <a
                     href="#meetings"
-                    className="ms-auto inline-flex min-h-9 flex-none items-center rounded-full bg-[var(--n-purple)] px-3.5 text-xs font-medium text-white transition-colors hover:bg-[#6f57c8]"
+                    className="ms-auto inline-flex min-h-9 flex-none items-center rounded-full bg-[var(--n-purple)] px-3.5 text-xs font-medium text-white transition-colors hover:bg-[var(--n-purple-soft)]"
                   >
                     {COPY.openMeeting[locale]}
                   </a>

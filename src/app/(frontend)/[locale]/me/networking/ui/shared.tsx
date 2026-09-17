@@ -9,10 +9,10 @@ import { formatDayLabel, formatTimeLabel } from '@/shared';
  * a card shadow is how a page stops looking like one thing.
  */
 export const card =
-  'lounge-rise rounded-3xl bg-[var(--n-card)] shadow-[0_14px_44px_rgba(28,36,51,0.08)] ring-1 ring-[var(--n-hair)]/70';
+  'lounge-rise rounded-3xl bg-[var(--n-card)] shadow-[0_14px_44px_rgba(23,32,51,0.08)] ring-1 ring-[var(--n-hair)]/70';
 
 export const liftable =
-  'transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[0_22px_60px_rgba(28,36,51,0.14)]';
+  'transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[0_22px_60px_rgba(23,32,51,0.14)]';
 
 export const chip =
   'inline-flex items-center rounded-full bg-[var(--n-purple)]/10 px-2.5 py-1 text-[11px] font-medium text-[var(--n-purple)]';
@@ -21,7 +21,7 @@ export const stateChip =
   'inline-flex items-center gap-1.5 rounded-full bg-[var(--n-navy)]/6 px-3 py-1 text-[11px] font-medium text-[var(--n-soft)]';
 
 export const connectBtn =
-  'inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[var(--n-purple)] px-5 text-sm font-medium text-white transition-colors hover:bg-[#6f57c8]';
+  'inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[var(--n-purple)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--n-purple-soft)]';
 
 export const quietConnectBtn =
   'inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[var(--n-purple)]/40 px-4 text-[13px] font-medium text-[var(--n-purple)] transition-colors hover:bg-[var(--n-purple)]/10';
@@ -48,17 +48,17 @@ export type ReasonTone = 'gold' | 'blue' | 'pink' | 'green' | 'purple';
 
 export const RING_GRADIENT: Record<ReasonTone, string> = {
   gold: 'bg-[linear-gradient(135deg,var(--n-gold),var(--n-gold-soft))]',
-  blue: 'bg-[linear-gradient(135deg,var(--n-blue),#9cbcec)]',
-  pink: 'bg-[linear-gradient(135deg,var(--n-pink),#efb3cd)]',
-  green: 'bg-[linear-gradient(135deg,var(--n-green),#a3cdb0)]',
+  blue: 'bg-[linear-gradient(135deg,var(--n-blue),var(--n-blue-soft))]',
+  pink: 'bg-[linear-gradient(135deg,var(--n-pink),var(--n-pink-soft))]',
+  green: 'bg-[linear-gradient(135deg,var(--n-green),var(--n-green-soft))]',
   purple: 'bg-[linear-gradient(135deg,var(--n-purple),var(--n-purple-soft))]',
 };
 
 export const TONE_TEXT: Record<ReasonTone, string> = {
-  gold: 'text-[#9a7a3a]',
+  gold: 'text-[var(--n-gold)]',
   blue: 'text-[var(--n-blue)]',
-  pink: 'text-[#c05687]',
-  green: 'text-[#4c8a60]',
+  pink: 'text-[var(--n-pink)]',
+  green: 'text-[var(--n-green)]',
   purple: 'text-[var(--n-purple)]',
 };
 
@@ -143,7 +143,7 @@ export const RingedAvatar = ({
   dim?: string;
 }) => (
   <span className="relative inline-block">
-    <span className={`block rounded-full p-[2.5px] ${RING_GRADIENT[tone]} shadow-[0_6px_18px_rgba(28,36,51,0.14)]`}>
+    <span className={`block rounded-full p-[2.5px] ${RING_GRADIENT[tone]} shadow-[0_6px_18px_rgba(23,32,51,0.14)]`}>
       <span className="block rounded-full bg-[var(--n-bg)] p-[2.5px]">
         {photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- participant portrait from the media API

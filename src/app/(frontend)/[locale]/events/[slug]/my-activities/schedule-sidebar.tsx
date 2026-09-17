@@ -9,6 +9,7 @@ import {
   IconClock,
   type ActivityVM,
 } from '@/features/conference';
+import { VENDOR_MARKS } from '@/shared/constants/vendor-marks';
 import { Sprig } from './botanical';
 import { googleCalendarUrl, outlookCalendarUrl } from './calendar-links';
 import { t } from './copy';
@@ -57,21 +58,26 @@ const Stat = ({ value, label, icon }: { value: string; label: string; icon: Reac
   </li>
 );
 
+/*
+ * Two logos that belong to other companies. Their colours come from
+ * the vendor sheet, never from the brand: a Google mark repainted in
+ * Netaim navy is simply the wrong mark.
+ */
 const GoogleMark = () => (
   <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
-    <path fill="#4285F4" d="M21.6 12.23c0-.7-.06-1.38-.18-2.03H12v3.84h5.38a4.6 4.6 0 0 1-2 3.02v2.5h3.24c1.89-1.74 2.98-4.3 2.98-7.33Z" />
-    <path fill="#34A853" d="M12 22c2.7 0 4.96-.9 6.62-2.44l-3.24-2.5c-.9.6-2.05.96-3.38.96-2.6 0-4.8-1.76-5.59-4.12H3.06v2.58A10 10 0 0 0 12 22Z" />
-    <path fill="#FBBC05" d="M6.41 13.9a6 6 0 0 1 0-3.8V7.52H3.06a10 10 0 0 0 0 8.96l3.35-2.58Z" />
-    <path fill="#EA4335" d="M12 5.98c1.47 0 2.79.5 3.83 1.5l2.87-2.87C16.95 2.99 14.7 2 12 2a10 10 0 0 0-8.94 5.52l3.35 2.58C7.2 7.74 9.4 5.98 12 5.98Z" />
+    <path fill={VENDOR_MARKS.googleBlue} d="M21.6 12.23c0-.7-.06-1.38-.18-2.03H12v3.84h5.38a4.6 4.6 0 0 1-2 3.02v2.5h3.24c1.89-1.74 2.98-4.3 2.98-7.33Z" />
+    <path fill={VENDOR_MARKS.googleGreen} d="M12 22c2.7 0 4.96-.9 6.62-2.44l-3.24-2.5c-.9.6-2.05.96-3.38.96-2.6 0-4.8-1.76-5.59-4.12H3.06v2.58A10 10 0 0 0 12 22Z" />
+    <path fill={VENDOR_MARKS.googleYellow} d="M6.41 13.9a6 6 0 0 1 0-3.8V7.52H3.06a10 10 0 0 0 0 8.96l3.35-2.58Z" />
+    <path fill={VENDOR_MARKS.googleRed} d="M12 5.98c1.47 0 2.79.5 3.83 1.5l2.87-2.87C16.95 2.99 14.7 2 12 2a10 10 0 0 0-8.94 5.52l3.35 2.58C7.2 7.74 9.4 5.98 12 5.98Z" />
   </svg>
 );
 
 const OutlookMark = () => (
   <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
-    <path fill="#0364B8" d="M13 5h8v4.2l-8 3.4V5Z" />
-    <path fill="#28A8EA" d="M13 12.6 21 9.2V19h-8v-6.4Z" />
-    <rect x="2.5" y="4" width="11" height="16" rx="2" fill="#0F5FA8" />
-    <path fill="#fff" d="M8 8.2c-1.7 0-2.9 1.6-2.9 3.8S6.3 15.8 8 15.8s2.9-1.6 2.9-3.8S9.7 8.2 8 8.2Zm0 1.5c.8 0 1.4.9 1.4 2.3S8.8 14.3 8 14.3s-1.4-.9-1.4-2.3S7.2 9.7 8 9.7Z" />
+    <path fill={VENDOR_MARKS.outlookBlue} d="M13 5h8v4.2l-8 3.4V5Z" />
+    <path fill={VENDOR_MARKS.outlookBlueLight} d="M13 12.6 21 9.2V19h-8v-6.4Z" />
+    <rect x="2.5" y="4" width="11" height="16" rx="2" fill={VENDOR_MARKS.outlookBlueDeep} />
+    <path fill="white" d="M8 8.2c-1.7 0-2.9 1.6-2.9 3.8S6.3 15.8 8 15.8s2.9-1.6 2.9-3.8S9.7 8.2 8 8.2Zm0 1.5c.8 0 1.4.9 1.4 2.3S8.8 14.3 8 14.3s-1.4-.9-1.4-2.3S7.2 9.7 8 9.7Z" />
   </svg>
 );
 

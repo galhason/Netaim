@@ -88,7 +88,7 @@ const COPY = {
 } as const;
 
 const rowBtn =
-  'flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-3 text-start text-sm text-[#1b2436] transition-colors hover:bg-[#172033]/5 aria-pressed:bg-[#172033] aria-pressed:text-white';
+  'flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-3 text-start text-sm text-[var(--nt-ink)] transition-colors hover:bg-[var(--nt-ink)]/5 aria-pressed:bg-[var(--nt-ink)] aria-pressed:text-white';
 
 const AccessibilityWidget = ({ locale }: { locale: Locale }) => {
   const he = locale === 'he';
@@ -141,7 +141,7 @@ const AccessibilityWidget = ({ locale }: { locale: Locale }) => {
           <div
             role="dialog"
             aria-label={pick(COPY.title)}
-            className="absolute bottom-16 start-0 w-72 rounded-2xl border border-[#172033]/10 bg-white p-3 text-[#1b2436] shadow-[0_24px_64px_rgba(23,32,51,0.35)]"
+            className="absolute bottom-16 start-0 w-72 rounded-2xl border border-[var(--nt-ink)]/10 bg-white p-3 text-[var(--nt-ink)] shadow-[0_24px_64px_rgba(23,32,51,0.35)]"
           >
             <div className="mb-1 flex items-center justify-between px-1">
               <p className="text-sm font-semibold">{pick(COPY.title)}</p>
@@ -149,7 +149,7 @@ const AccessibilityWidget = ({ locale }: { locale: Locale }) => {
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label={pick(COPY.close)}
-                className="grid size-9 place-items-center rounded-full text-[#5a6472] transition-colors hover:bg-[#172033]/5 hover:text-[#1b2436]"
+                className="grid size-9 place-items-center rounded-full text-[var(--nt-ink-soft)] transition-colors hover:bg-[var(--nt-ink)]/5 hover:text-[var(--nt-ink)]"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -220,18 +220,18 @@ const AccessibilityWidget = ({ locale }: { locale: Locale }) => {
               <span aria-hidden="true">{settings.readable ? '✓' : ''}</span>
             </button>
 
-            <div className="mt-2 flex items-center justify-between gap-2 border-t border-[#172033]/10 pt-2">
+            <div className="mt-2 flex items-center justify-between gap-2 border-t border-[var(--nt-ink)]/10 pt-2">
               <button
                 type="button"
                 onClick={() => update(DEFAULTS)}
-                className="min-h-10 rounded-full px-3 text-xs text-[#5a6472] transition-colors hover:bg-[#172033]/5 hover:text-[#1b2436]"
+                className="min-h-10 rounded-full px-3 text-xs text-[var(--nt-ink-soft)] transition-colors hover:bg-[var(--nt-ink)]/5 hover:text-[var(--nt-ink)]"
               >
                 {pick(COPY.reset)}
               </button>
               <Link
                 href={`/${locale}/accessibility`}
                 onClick={() => setOpen(false)}
-                className="min-h-10 rounded-full px-3 text-xs font-medium text-[#8067D8] underline-offset-4 transition-colors hover:underline"
+                className="min-h-10 rounded-full px-3 text-xs font-medium text-[var(--nt-navy)] underline-offset-4 transition-colors hover:underline"
               >
                 {pick(COPY.statement)}
               </Link>
@@ -245,7 +245,7 @@ const AccessibilityWidget = ({ locale }: { locale: Locale }) => {
         onClick={() => setOpen((value) => !value)}
         aria-label={pick(COPY.open)}
         aria-expanded={open}
-        className="grid size-12 place-items-center rounded-full bg-[#172033] text-white shadow-[0_10px_30px_rgba(23,32,51,0.45)] ring-2 ring-white/80 transition-transform hover:scale-105 motion-reduce:transition-none motion-reduce:hover:scale-100"
+        className="grid size-12 place-items-center rounded-full bg-[var(--nt-ink)] text-white shadow-[0_10px_30px_rgba(23,32,51,0.45)] ring-2 ring-white/80 transition-transform hover:scale-105 motion-reduce:transition-none motion-reduce:hover:scale-100"
       >
         {/* the universal-access figure */}
         <svg

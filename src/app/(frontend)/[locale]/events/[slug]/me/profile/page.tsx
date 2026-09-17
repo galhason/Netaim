@@ -45,7 +45,7 @@ const ProfilePage = async ({ params, searchParams }: ProfilePageProps) => {
           ← {LOUNGE_UI.backToLounge[locale]}
         </Link>
 
-        <div className="lounge-rise mt-5 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(35,40,47,0.08)]">
+        <div className="lounge-rise mt-5 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(23,32,51,0.08)]">
           <div className="flex items-center gap-4">
             <span className="grid size-14 flex-none place-items-center rounded-full bg-[var(--l-navy)] font-display text-xl text-white">
               {(details.name ?? details.email).slice(0, 1).toUpperCase()}
@@ -124,7 +124,7 @@ const ProfilePage = async ({ params, searchParams }: ProfilePageProps) => {
             </label>
             <button
               type="submit"
-              className="min-h-11 rounded-xl bg-[var(--l-navy)] text-sm font-medium text-white transition-colors hover:bg-[#16263c] sm:col-span-2"
+              className="min-h-11 rounded-xl bg-[var(--l-navy)] text-sm font-medium text-white transition-colors hover:bg-[var(--nt-dark)] sm:col-span-2"
             >
               {LOUNGE_UI.saveProfile[locale]}
             </button>

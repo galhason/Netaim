@@ -66,7 +66,7 @@ const ArrivalScene = ({ arrival, locale }: ArrivalSceneProps) => {
             ) : null}
           </div>
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-[#16233a] via-surface to-[#0d1626]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[var(--nt-dark-raise)] via-surface to-[var(--nt-dark)]" />
         )}
         {/*
          * One long horizontal ramp is what removes the seam: solid navy
@@ -140,7 +140,7 @@ const ArrivalScene = ({ arrival, locale }: ArrivalSceneProps) => {
             <div className="cine-hero-line mt-10 flex flex-wrap items-center gap-4 [animation-delay:1000ms]">
               <Link
                 href={programHref}
-                className="group inline-flex min-h-14 items-center gap-3 rounded-2xl bg-brand px-10 text-base font-medium text-brand-contrast shadow-[0_20px_60px_-14px_rgba(201,161,93,0.6)] transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_26px_72px_-12px_rgba(201,161,93,0.78)]"
+                className="group inline-flex min-h-14 items-center gap-3 rounded-2xl bg-brand px-10 text-base font-medium text-brand-contrast shadow-[0_20px_60px_-14px_rgba(249,161,27,0.6)] transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_26px_72px_-12px_rgba(249,161,27,0.78)]"
               >
                 {CINEMATIC_UI.heroAllSessions[locale]}
                 <span

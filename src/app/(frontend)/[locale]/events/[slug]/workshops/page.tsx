@@ -73,17 +73,17 @@ const timeLabel = (iso?: string): string => {
  * is closed, a bronze outline is the queue. Never renames the label.
  */
 const STATUS_MARKER: Record<string, string> = {
-  available: 'bg-[#2F9E5B]',
-  almostFull: 'bg-[#E8A23D] ring-2 ring-[#E8A23D]/30',
-  full: 'bg-[#C4523B]',
-  waitlist: 'bg-[#C4523B] ring-2 ring-[#C4523B]/30',
+  available: 'bg-[var(--nt-green)]',
+  almostFull: 'bg-[var(--nt-orange)] ring-2 ring-[var(--nt-orange)]/30',
+  full: 'bg-[var(--x-full)]',
+  waitlist: 'bg-[var(--x-full)] ring-2 ring-[var(--x-full)]/30',
 };
 
 const STATUS_TEXT: Record<string, string> = {
-  available: 'text-[#2F7D46]',
-  almostFull: 'text-[#B4700F]',
-  full: 'text-[#B0442F]',
-  waitlist: 'text-[#B0442F]',
+  available: 'text-[var(--x-ok)]',
+  almostFull: 'text-[var(--x-warn)]',
+  full: 'text-[var(--x-full)]',
+  waitlist: 'text-[var(--x-full)]',
 };
 
 const WorkshopsPage = async ({ params, searchParams }: WorkshopsPageProps) => {

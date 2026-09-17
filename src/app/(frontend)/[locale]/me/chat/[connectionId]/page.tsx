@@ -63,7 +63,7 @@ const ChatPage = async ({ params }: ChatPageProps) => {
           >
             ←
           </Link>
-          <span className="grid size-10 flex-none place-items-center rounded-full bg-[#C9A96E]/25 font-display text-[#E3CC9C]">
+          <span className="grid size-10 flex-none place-items-center rounded-full bg-[var(--nt-orange)]/25 font-display text-[var(--nt-amber-ink)]">
             {thread.otherName.slice(0, 1)}
           </span>
           <span className="min-w-0 flex-1">

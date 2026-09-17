@@ -239,7 +239,7 @@ const ChatLive = ({
         className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-2 overflow-y-auto px-5 py-6"
       >
         {lines.length === 0 ? (
-          <p className="m-auto rounded-2xl bg-white px-5 py-4 text-sm text-[var(--l-soft)] shadow-[0_10px_30px_rgba(35,40,47,0.06)]">
+          <p className="m-auto rounded-2xl bg-white px-5 py-4 text-sm text-[var(--l-soft)] shadow-[0_10px_30px_rgba(23,32,51,0.06)]">
             {text.empty}
           </p>
         ) : (
@@ -249,7 +249,7 @@ const ChatLive = ({
               className={`flex ${line.mine ? 'justify-end' : 'justify-start'}`}
             >
               <span
-                className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-[0_6px_18px_rgba(35,40,47,0.07)] transition-opacity ${
+                className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-[0_6px_18px_rgba(23,32,51,0.07)] transition-opacity ${
                   line.mine
                     ? 'rounded-ee-md bg-[var(--l-navy)] text-white'
                     : 'rounded-es-md bg-white'
@@ -315,14 +315,14 @@ const ChatLive = ({
             <button
               type="submit"
               disabled={sending || draft.trim().length === 0}
-              className="inline-flex min-h-12 items-center rounded-2xl bg-[var(--l-navy)] px-6 text-sm font-medium text-white transition-colors hover:bg-[#16263c] disabled:opacity-50"
+              className="inline-flex min-h-12 items-center rounded-2xl bg-[var(--l-navy)] px-6 text-sm font-medium text-white transition-colors hover:bg-[var(--nt-dark)] disabled:opacity-50"
             >
               {text.send}
             </button>
           </form>
         )}
         {failed && !closed ? (
-          <p className="mx-auto max-w-2xl px-5 pb-3 text-xs text-[#B0442F]">
+          <p className="mx-auto max-w-2xl px-5 pb-3 text-xs text-[var(--x-full)]">
             {text.failed}
           </p>
         ) : null}

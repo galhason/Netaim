@@ -109,7 +109,7 @@ const FILTERS: {
 const TINT: Record<NoticeCategory, string> = {
   conference: 'bg-[var(--x-primary-wash)] text-[var(--x-primary)]',
   networking: 'bg-[var(--x-ok-wash)] text-[var(--x-ok)]',
-  system: 'bg-[#eef0f5] text-[var(--x-soft)]',
+  system: 'bg-[var(--nt-mute-wash)] text-[var(--x-soft)]',
 };
 
 const card =

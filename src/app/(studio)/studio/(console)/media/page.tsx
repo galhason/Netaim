@@ -83,7 +83,7 @@ const MediaPage = async ({ searchParams }: MediaPageProps) => {
               className={`w-full rounded-lg px-3 py-2 text-[11px] ${
                 upload === 'ok'
                   ? 'bg-[var(--c-live)]/10 text-[var(--c-live)]'
-                  : 'bg-[#B0442F]/10 text-[#E39A8B]'
+                  : 'bg-[var(--c-danger)]/10 text-[var(--c-danger-text)]'
               }`}
             >
               {CONSOLE_UI[note][locale]}

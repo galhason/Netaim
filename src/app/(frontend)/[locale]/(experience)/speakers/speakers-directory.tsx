@@ -144,7 +144,7 @@ const SpeakersDirectory = ({
                         className={`mt-2 inline-flex items-center gap-1.5 rounded-[var(--x-r-pill)] px-2.5 py-1 text-xs font-medium ${
                           speaker.isRegistered
                             ? 'bg-[var(--x-ok-wash)] text-[var(--x-ok)]'
-                            : 'bg-[#f0f1f4] text-[var(--x-soft)]'
+                            : 'bg-[var(--x-mute-wash)] text-[var(--x-soft)]'
                         }`}
                       >
                         <span

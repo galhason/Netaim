@@ -26,16 +26,25 @@ import type { OutboxMessage } from '../channel/channel';
  * layout had before there was a logo at all.
  */
 
+/*
+ * The brand, written out.
+ *
+ * An email cannot read a custom property — half the clients that will
+ * open this strip the stylesheet and keep only the inline attributes —
+ * so the brand tokens are transcribed here by hand, and this is the one
+ * place in the product where that is allowed. The values must stay in
+ * step with `--nt-*` in src/styles/globals.css; a test holds them to it.
+ */
 const PALETTE = {
-  ground: '#f4f5fa',
-  surface: '#ffffff',
-  ink: '#182031',
-  soft: '#5b6273',
-  faint: '#8b93a3',
-  line: '#e4e7f0',
-  primary: '#6e56cf',
-  primaryWash: '#f1eefc',
-  navy: '#0e1b2e',
+  ground: '#f7f8fa', // --nt-bg
+  surface: '#ffffff', // --nt-surface
+  ink: '#172033', // --nt-ink
+  soft: '#667085', // --nt-ink-soft
+  faint: '#98a2b3', // --nt-ink-faint
+  line: '#e6eaf0', // --nt-border
+  primary: '#173f73', // --nt-navy
+  primaryWash: '#eef3fa', // --nt-navy-wash
+  navy: '#0b1b33', // --nt-dark
 } as const;
 
 const FONT_HE =

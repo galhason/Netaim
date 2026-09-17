@@ -13,11 +13,11 @@ import { CONSOLE_UI } from '../../constants/console';
  * render the same link list, so the menu never drifts between sizes.
  */
 const ITEM =
-  'flex w-full items-center rounded-lg px-3 py-2 text-[13px] text-[#96A3B4] transition-colors hover:bg-white/5 hover:text-[#E8E2D4]';
+  'flex w-full items-center rounded-lg px-3 py-2 text-[13px] text-[var(--c-text-soft)] transition-colors hover:bg-white/5 hover:text-[var(--c-text)]';
 const SOON =
-  'flex w-full cursor-default items-center rounded-lg px-3 py-2 text-[13px] text-[#55637A]';
+  'flex w-full cursor-default items-center rounded-lg px-3 py-2 text-[13px] text-[var(--c-text-faint)]';
 const GROUP =
-  'mb-1.5 mt-5 px-3 text-[9.5px] font-semibold tracking-[0.2em] text-[#55637A]';
+  'mb-1.5 mt-5 px-3 text-[9.5px] font-semibold tracking-[0.2em] text-[var(--c-text-faint)]';
 
 interface NavEntry {
   href?: string;
@@ -88,7 +88,7 @@ const Logo = ({ brandLogo }: { brandLogo?: string }) => (
         <span className="grid size-7 place-items-center rounded-full border border-[var(--c-bronze)]/50 font-display text-sm text-[var(--c-bronze)]">
           H
         </span>
-        <span className="text-[13px] font-semibold tracking-[0.3em] text-[#EDE6D8]">
+        <span className="text-[13px] font-semibold tracking-[0.3em] text-[var(--c-text)]">
           {BRAND_NAME}
         </span>
       </>
@@ -127,7 +127,7 @@ const NavList = ({
             >
               {item.label}
               {item.badge ? (
-                <span className="ms-auto grid min-w-5 place-items-center rounded-full bg-[#B0442F] px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                <span className="ms-auto grid min-w-5 place-items-center rounded-full bg-[var(--c-danger)] px-1.5 py-0.5 text-[10px] font-semibold text-white">
                   {item.badge}
                 </span>
               ) : null}
@@ -154,13 +154,13 @@ const ConsoleSidebar = ({
   return (
     <>
       {/* Mobile top bar */}
-      <div className="flex items-center justify-between bg-[#0C1520] px-3 py-2 md:hidden">
+      <div className="flex items-center justify-between bg-[var(--c-void)] px-3 py-2 md:hidden">
         <Logo brandLogo={brandLogo} />
         <button
           type="button"
           onClick={() => setOpen(true)}
           aria-label={he ? 'פתיחת תפריט' : 'Open menu'}
-          className="grid size-10 place-items-center rounded-lg text-[#96A3B4] transition-colors hover:bg-white/5 hover:text-[#E8E2D4]"
+          className="grid size-10 place-items-center rounded-lg text-[var(--c-text-soft)] transition-colors hover:bg-white/5 hover:text-[var(--c-text)]"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
             <path d="M4 6h16M4 12h16M4 18h16" />
@@ -169,7 +169,7 @@ const ConsoleSidebar = ({
       </div>
 
       {/* Desktop rail */}
-      <aside className="hidden flex-col bg-[#0C1520] p-3 md:flex">
+      <aside className="hidden flex-col bg-[var(--c-void)] p-3 md:flex">
         <Logo brandLogo={brandLogo} />
         <NavList locale={locale} openReports={openReports} />
       </aside>
@@ -183,14 +183,14 @@ const ConsoleSidebar = ({
             onClick={() => setOpen(false)}
             className="absolute inset-0 bg-black/55"
           />
-          <aside className="absolute inset-y-0 end-0 flex w-72 max-w-[85%] flex-col overflow-y-auto bg-[#0C1520] p-3 shadow-2xl">
+          <aside className="absolute inset-y-0 end-0 flex w-72 max-w-[85%] flex-col overflow-y-auto bg-[var(--c-void)] p-3 shadow-2xl">
             <div className="flex items-center justify-between">
               <Logo brandLogo={brandLogo} />
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label={he ? 'סגירת תפריט' : 'Close menu'}
-                className="grid size-10 place-items-center rounded-lg text-[#96A3B4] transition-colors hover:bg-white/5 hover:text-[#E8E2D4]"
+                className="grid size-10 place-items-center rounded-lg text-[var(--c-text-soft)] transition-colors hover:bg-white/5 hover:text-[var(--c-text)]"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
                   <path d="M6 6l12 12M18 6L6 18" />

@@ -111,7 +111,7 @@ const NextActivityCard = ({
       aria-labelledby="next-activity-title"
       className={`relative overflow-hidden rounded-[var(--x-r-card)] border p-4 sm:p-5 ${
         isNow
-          ? 'border-[var(--x-primary)]/40 bg-[var(--x-primary-wash)] shadow-[0_10px_30px_rgba(110,86,207,0.14)]'
+          ? 'border-[var(--x-primary)]/40 bg-[var(--x-primary-wash)] shadow-[0_10px_30px_rgb(23 63 115 / 0.14)]'
           : 'border-[var(--x-line)] bg-[linear-gradient(135deg,var(--x-primary-wash),var(--x-surface)_55%)] shadow-[var(--x-shadow)]'
       }`}
     >

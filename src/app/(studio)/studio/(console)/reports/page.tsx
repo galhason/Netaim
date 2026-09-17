@@ -33,7 +33,7 @@ import { setReportStatusAction } from './actions';
  * specific one, and it holds names, addresses and accounts of harm.
  */
 const STATE_TONE: Record<ReportStatus, string> = {
-  open: 'border-[#B0442F]/50 bg-[#B0442F]/10 text-[#E39A8B]',
+  open: 'border-[var(--c-danger)]/50 bg-[var(--c-danger)]/10 text-[var(--c-danger-text)]',
   reviewing: 'border-[var(--c-bronze)]/50 bg-[var(--c-bronze)]/10 text-[var(--c-bronze)]',
   resolved: 'border-[var(--c-live)]/50 bg-[var(--c-live)]/10 text-[var(--c-live)]',
   dismissed: 'border-[var(--c-line-strong)] text-[var(--c-text-soft)]',
@@ -76,7 +76,7 @@ const ReportCard = ({
   <li
     className={`rounded-xl border bg-[var(--c-panel)] px-5 py-4 ${
       report.status === 'open'
-        ? 'border-[#B0442F]/40'
+        ? 'border-[var(--c-danger)]/40'
         : 'border-[var(--c-line)]'
     }`}
   >
@@ -139,7 +139,7 @@ const ReportCard = ({
     </dl>
 
     {report.details ? (
-      <p className="mt-3 whitespace-pre-line rounded-lg bg-[rgba(6,10,16,0.5)] px-4 py-3 text-sm text-[var(--c-text)]">
+      <p className="mt-3 whitespace-pre-line rounded-lg bg-[rgba(7,19,36,0.5)] px-4 py-3 text-sm text-[var(--c-text)]">
         {report.details}
       </p>
     ) : null}
@@ -216,7 +216,7 @@ const ReportsPage = async () => {
             {CONSOLE_UI.reportsSub[locale]}
           </p>
           {open > 0 ? (
-            <p className="mt-3 inline-block rounded-full border border-[#B0442F]/50 bg-[#B0442F]/10 px-3 py-1 text-xs text-[#E39A8B]">
+            <p className="mt-3 inline-block rounded-full border border-[var(--c-danger)]/50 bg-[var(--c-danger)]/10 px-3 py-1 text-xs text-[var(--c-danger-text)]">
               {open} {CONSOLE_UI.reportsOpenCount[locale]}
             </p>
           ) : null}

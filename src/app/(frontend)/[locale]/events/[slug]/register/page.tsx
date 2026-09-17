@@ -50,7 +50,7 @@ const STATE_TONE: Record<string, string> = {
   open: 'bg-[var(--x-ok-wash)] text-[var(--x-ok)]',
   limited: 'bg-[var(--x-warn-wash)] text-[var(--x-warn)]',
   waitlist: 'bg-[var(--x-wait-wash)] text-[var(--x-wait)]',
-  closed: 'bg-[#f0f1f4] text-[var(--x-soft)]',
+  closed: 'bg-[var(--x-mute-wash)] text-[var(--x-soft)]',
 };
 
 const { card: cardCls, primary: primaryCls, ghost: ghostCls } = onboardingCls;

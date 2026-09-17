@@ -101,7 +101,7 @@ const ConsoleAccessPage = async ({ searchParams }: AccessPageProps) => {
         ) : (
           <>
             {grantsState === 'lastOwner' ? (
-              <p className="rounded-xl border border-[#B0442F]/40 bg-[#B0442F]/10 px-4 py-2.5 text-sm text-[#E39A8B]">
+              <p className="rounded-xl border border-[var(--c-danger)]/40 bg-[var(--c-danger)]/10 px-4 py-2.5 text-sm text-[var(--c-danger-text)]">
                 {CONSOLE_UI.lastOwnerNote[locale]}
               </p>
             ) : null}
@@ -114,12 +114,12 @@ const ConsoleAccessPage = async ({ searchParams }: AccessPageProps) => {
                 <input
                   name="q"
                   defaultValue={query}
-                  className="w-full rounded-lg border border-[var(--c-line-strong)] bg-[rgba(6,10,16,0.6)] px-3 py-2 text-sm text-[var(--c-text)] focus:border-[var(--c-bronze)]/60 focus:outline-none"
+                  className="w-full rounded-lg border border-[var(--c-line-strong)] bg-[rgba(7,19,36,0.6)] px-3 py-2 text-sm text-[var(--c-text)] focus:border-[var(--c-bronze)]/60 focus:outline-none"
                 />
               </label>
               <button
                 type="submit"
-                className="min-h-10 rounded-lg bg-[var(--c-bronze)] px-5 text-xs font-medium text-[#161006] transition-colors hover:bg-[#dcbe84]"
+                className="min-h-10 rounded-lg bg-[var(--c-bronze)] px-5 text-xs font-medium text-[var(--c-on-accent)] transition-colors hover:bg-[var(--c-bronze-hover)]"
               >
                 {CONSOLE_UI.searchAction[locale]}
               </button>
@@ -168,7 +168,7 @@ const ConsoleAccessPage = async ({ searchParams }: AccessPageProps) => {
                             </span>
                           </span>
                           {account.blocked ? (
-                            <span className="ms-auto rounded-full border border-[#B0442F]/50 px-3 py-1 text-[10px] tracking-widest text-[#E39A8B]">
+                            <span className="ms-auto rounded-full border border-[var(--c-danger)]/50 px-3 py-1 text-[10px] tracking-widest text-[var(--c-danger-text)]">
                               {CONSOLE_UI.blockedTag[locale]}
                             </span>
                           ) : null}
@@ -201,7 +201,7 @@ const ConsoleAccessPage = async ({ searchParams }: AccessPageProps) => {
                                   />
                                   <button
                                     type="submit"
-                                    className="text-[10px] text-[#E39A8B] underline underline-offset-2"
+                                    className="text-[10px] text-[var(--c-danger-text)] underline underline-offset-2"
                                   >
                                     {CONSOLE_UI.revokeGrant[locale]}
                                   </button>

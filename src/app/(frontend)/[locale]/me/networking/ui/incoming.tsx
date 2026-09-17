@@ -24,7 +24,7 @@ const IncomingRequests = ({
     return null;
   }
   return (
-    <section id="requests" className="lounge-rise scroll-mt-28 rounded-3xl border border-[var(--n-gold)]/25 bg-[var(--n-cream)] p-4 shadow-[0_14px_44px_rgba(28,36,51,0.08)] md:p-6">
+    <section id="requests" className="lounge-rise scroll-mt-28 rounded-3xl border border-[var(--n-gold)]/25 bg-[var(--n-cream)] p-4 shadow-[0_14px_44px_rgba(23,32,51,0.08)] md:p-6">
       <h2 className="mb-3 font-display text-xl font-semibold md:mb-4">
         {he
           ? `מחכים לכם (${num(incoming.length)})`
@@ -67,7 +67,7 @@ const IncomingRequests = ({
                     type="submit"
                     className={
                       response === 'accept'
-                        ? 'inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[var(--n-purple)] px-4 text-sm font-medium text-white transition-colors hover:bg-[#6f57c8]'
+                        ? 'inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[var(--n-purple)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--n-purple-soft)]'
                         : 'inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[var(--n-hair)] bg-white px-4 text-sm transition-colors hover:border-[var(--n-gold)]'
                     }
                   >

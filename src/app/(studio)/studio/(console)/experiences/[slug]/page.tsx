@@ -287,7 +287,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
             <input type="hidden" name="contentLocale" value={contentLocale} />
             <button
               type="submit"
-              className="rounded-lg bg-[var(--c-bronze)] px-4 py-2 text-xs font-medium text-[#161006] transition-colors hover:bg-[#dcbe84]"
+              className="rounded-lg bg-[var(--c-bronze)] px-4 py-2 text-xs font-medium text-[var(--c-on-accent)] transition-colors hover:bg-[var(--c-bronze-hover)]"
             >
               {summary?.launched
                 ? CONSOLE_UI.publishChanges[locale]
@@ -305,7 +305,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
             * label, the box and the filled state: this is a switch, not
             * a link, and it says what it switches.
             */}
-          <span className="flex items-center gap-1.5 rounded-lg border border-[var(--c-line-strong)] bg-[rgba(6,10,16,0.6)] px-2 py-1">
+          <span className="flex items-center gap-1.5 rounded-lg border border-[var(--c-line-strong)] bg-[rgba(7,19,36,0.6)] px-2 py-1">
             <span className="text-[9.5px] font-medium tracking-[0.14em] text-[var(--c-text-faint)]">
               {CONSOLE_UI.contentLanguage[locale].toUpperCase()}
             </span>
@@ -316,7 +316,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                 aria-current={entry === contentLocale ? 'true' : undefined}
                 className={
                   entry === contentLocale
-                    ? 'rounded-md bg-[var(--c-bronze)] px-2 py-0.5 font-semibold text-[#161006]'
+                    ? 'rounded-md bg-[var(--c-bronze)] px-2 py-0.5 font-semibold text-[var(--c-on-accent)]'
                     : 'rounded-md px-2 py-0.5 text-[var(--c-text-soft)] transition-colors hover:text-[var(--c-text)]'
                 }
               >
@@ -340,7 +340,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
         </p>
       ) : null}
       {launch === 'blocked' ? (
-        <p className="mx-4 mt-3 rounded-xl border border-[#B0442F]/40 bg-[#B0442F]/10 px-4 py-2.5 text-sm text-[#E39A8B]">
+        <p className="mx-4 mt-3 rounded-xl border border-[var(--c-danger)]/40 bg-[var(--c-danger)]/10 px-4 py-2.5 text-sm text-[var(--c-danger-text)]">
           {locale === 'he'
             ? `ההעלאה נעצרה — ${blockers ?? '?'} חסמים בבדיקת המוכנות. `
             : `Launch stopped — ${blockers ?? '?'} readiness blockers. `}
@@ -382,7 +382,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                         aria-hidden="true"
                         className={
                           finding.severity === 'blocker'
-                            ? 'text-[#E39A8B]'
+                            ? 'text-[var(--c-danger-text)]'
                             : 'text-[var(--c-bronze)]'
                         }
                       >
@@ -695,7 +695,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
               {agenda.map((session) => (
                 <details
                   key={session.id}
-                  className="rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.4)]"
+                  className="rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.4)]"
                 >
                   <summary className="flex cursor-pointer list-none items-baseline gap-2 px-3 py-2 text-sm text-[var(--c-text)]">
                     <span className="text-[10px] tabular-nums text-[var(--c-text-faint)]">
@@ -762,7 +762,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                         type="datetime-local"
                         name="startsAt"
                         defaultValue={toDateTimeInputValue(session.startsAt)}
-                        className="w-full rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.6)] px-3 py-2 text-sm text-[var(--c-text)] [color-scheme:dark]"
+                        className="w-full rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.6)] px-3 py-2 text-sm text-[var(--c-text)] [color-scheme:dark]"
                       />
                     </label>
                     <label className="block">
@@ -773,7 +773,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                         type="datetime-local"
                         name="endsAt"
                         defaultValue={toDateTimeInputValue(session.endsAt)}
-                        className="w-full rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.6)] px-3 py-2 text-sm text-[var(--c-text)] [color-scheme:dark]"
+                        className="w-full rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.6)] px-3 py-2 text-sm text-[var(--c-text)] [color-scheme:dark]"
                       />
                     </label>
                     <label className="flex items-center gap-2 text-xs text-[var(--c-text-soft)]">
@@ -789,7 +789,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                     </label>
                     <button
                       type="submit"
-                      className="min-h-9 rounded-lg bg-[var(--c-bronze)] text-xs font-medium text-[#161006]"
+                      className="min-h-9 rounded-lg bg-[var(--c-bronze)] text-xs font-medium text-[var(--c-on-accent)]"
                     >
                       {locale === 'he' ? 'שמירה' : 'Save'}
                     </button>
@@ -802,7 +802,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                     <input type="hidden" name="sessionId" value={session.id} />
                     <button
                       type="submit"
-                      className="text-[11px] text-[#E39A8B] underline underline-offset-4"
+                      className="text-[11px] text-[var(--c-danger-text)] underline underline-offset-4"
                     >
                       {locale === 'he' ? 'מחיקה מהתוכנית' : 'Remove'}
                     </button>
@@ -834,7 +834,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                     <select
                       name="sessionType"
                       defaultValue="workshop"
-                      className="w-full rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.6)] px-3 py-2 text-sm text-[var(--c-text)] [color-scheme:dark]"
+                      className="w-full rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.6)] px-3 py-2 text-sm text-[var(--c-text)] [color-scheme:dark]"
                     >
                       <option value="talk">{locale === 'he' ? 'הרצאה' : 'Talk'}</option>
                       <option value="workshop">{locale === 'he' ? 'סדנה' : 'Workshop'}</option>
@@ -850,7 +850,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                     <input
                       type="datetime-local"
                       name="startsAt"
-                      className="w-full rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.6)] px-3 py-2 text-sm text-[var(--c-text)] [color-scheme:dark]"
+                      className="w-full rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.6)] px-3 py-2 text-sm text-[var(--c-text)] [color-scheme:dark]"
                     />
                   </label>
                   <CTextField
@@ -859,7 +859,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                   />
                   <button
                     type="submit"
-                    className="min-h-9 rounded-lg bg-[var(--c-bronze)] text-xs font-medium text-[#161006]"
+                    className="min-h-9 rounded-lg bg-[var(--c-bronze)] text-xs font-medium text-[var(--c-on-accent)]"
                   >
                     {locale === 'he' ? 'הוספה' : 'Add'}
                   </button>
@@ -868,7 +868,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
               {programDayKeys.length > 0 ? (
                 <form
                   action={consoleSaveProgramDaysAction}
-                  className="mt-1 flex flex-col gap-3 rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.4)] p-3"
+                  className="mt-1 flex flex-col gap-3 rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.4)] p-3"
                 >
                   <p className="text-[10px] font-medium tracking-[0.16em] text-[var(--c-text-faint)]">
                     {locale === 'he' ? 'נושא לכל יום' : 'DAY THEMES'}
@@ -906,7 +906,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                   ))}
                   <button
                     type="submit"
-                    className="min-h-9 rounded-lg bg-[var(--c-bronze)] text-xs font-medium text-[#161006]"
+                    className="min-h-9 rounded-lg bg-[var(--c-bronze)] text-xs font-medium text-[var(--c-on-accent)]"
                   >
                     {locale === 'he' ? 'שמירת נושאי הימים' : 'Save day themes'}
                   </button>
@@ -952,7 +952,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                     return (
                       <div
                         key={speaker.id ?? `${shownName}-${index}`}
-                        className="flex items-center gap-3 rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.4)] px-3 py-2"
+                        className="flex items-center gap-3 rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.4)] px-3 py-2"
                       >
                         {shownPhoto ? (
                           /* eslint-disable-next-line @next/next/no-img-element -- portraits come straight from the media API */
@@ -962,7 +962,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                             className="h-9 w-9 flex-none rounded-full border border-[var(--c-line)] object-cover"
                           />
                         ) : (
-                          <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full border border-[var(--c-line)] bg-[rgba(201,161,93,0.12)] text-xs font-medium text-[var(--c-bronze)]">
+                          <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full border border-[var(--c-line)] bg-[rgba(249,161,27,0.12)] text-xs font-medium text-[var(--c-bronze)]">
                             {shownName.slice(0, 1)}
                           </span>
                         )}
@@ -991,7 +991,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                           <input type="hidden" name="index" value={index} />
                           <button
                             type="submit"
-                            className="flex-none rounded-md px-2 py-1 text-[11px] text-[#E39A8B] underline underline-offset-4"
+                            className="flex-none rounded-md px-2 py-1 text-[11px] text-[var(--c-danger-text)] underline underline-offset-4"
                           >
                             {locale === 'he' ? 'הסרה' : 'Remove'}
                           </button>
@@ -1008,7 +1008,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                 </p>
               )}
 
-              <details className="rounded-xl border border-[var(--c-line)] bg-[rgba(6,10,16,0.4)]">
+              <details className="rounded-xl border border-[var(--c-line)] bg-[rgba(7,19,36,0.4)]">
                 <summary className="cursor-pointer list-none px-4 py-3 text-sm text-[var(--c-bronze)]">
                   + {locale === 'he' ? 'מתוך חשבונות המערכת' : 'From platform accounts'}
                 </summary>
@@ -1022,7 +1022,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                       placeholder={
                         locale === 'he' ? 'חיפוש לפי שם או אימייל' : 'Search by name or email'
                       }
-                      className="min-w-0 flex-1 rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.6)] px-3 py-2 text-sm text-[var(--c-text)]"
+                      className="min-w-0 flex-1 rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.6)] px-3 py-2 text-sm text-[var(--c-text)]"
                     />
                     <button
                       type="submit"
@@ -1088,7 +1088,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                 </div>
               </details>
 
-              <details className="rounded-xl border border-[var(--c-line)] bg-[rgba(6,10,16,0.4)]">
+              <details className="rounded-xl border border-[var(--c-line)] bg-[rgba(7,19,36,0.4)]">
                 <summary className="cursor-pointer list-none px-4 py-3 text-sm text-[var(--c-bronze)]">
                   + {locale === 'he' ? 'שם ותמונה ידניים' : 'Manual name & photo'}
                 </summary>
@@ -1116,7 +1116,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                   />
                   <button
                     type="submit"
-                    className="min-h-9 rounded-lg bg-[var(--c-bronze)] text-xs font-medium text-[#161006]"
+                    className="min-h-9 rounded-lg bg-[var(--c-bronze)] text-xs font-medium text-[var(--c-on-accent)]"
                   >
                     {locale === 'he' ? 'הוספה לבמה' : 'Add to stage'}
                   </button>
@@ -1125,7 +1125,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
             </div>
           ) : null}
 
-          <details className="mb-4 rounded-xl border border-[var(--c-line)] bg-[rgba(6,10,16,0.4)]">
+          <details className="mb-4 rounded-xl border border-[var(--c-line)] bg-[rgba(7,19,36,0.4)]">
             <summary className="cursor-pointer list-none px-4 py-3 text-xs font-medium tracking-[0.12em] text-[var(--c-text-soft)] transition-colors hover:text-[var(--c-bronze)]">
               {locale === 'he' ? 'הגדרות הכנס' : 'Conference settings'}
             </summary>
@@ -1148,7 +1148,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                   type="datetime-local"
                   name="startsAt"
                   defaultValue={(summary?.startsAt ?? '').slice(0, 16)}
-                  className="w-full rounded-lg border border-[var(--c-line-strong)] bg-[rgba(6,10,16,0.6)] px-3 py-2 text-sm text-[var(--c-text)] focus:border-[var(--c-bronze)]/60 focus:outline-none"
+                  className="w-full rounded-lg border border-[var(--c-line-strong)] bg-[rgba(7,19,36,0.6)] px-3 py-2 text-sm text-[var(--c-text)] focus:border-[var(--c-bronze)]/60 focus:outline-none"
                 />
               </label>
               <label className="block">
@@ -1159,7 +1159,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                   type="datetime-local"
                   name="endsAt"
                   defaultValue={(summary?.endsAt ?? '').slice(0, 16)}
-                  className="w-full rounded-lg border border-[var(--c-line-strong)] bg-[rgba(6,10,16,0.6)] px-3 py-2 text-sm text-[var(--c-text)] focus:border-[var(--c-bronze)]/60 focus:outline-none"
+                  className="w-full rounded-lg border border-[var(--c-line-strong)] bg-[rgba(7,19,36,0.6)] px-3 py-2 text-sm text-[var(--c-text)] focus:border-[var(--c-bronze)]/60 focus:outline-none"
                 />
               </label>
               <button
@@ -1416,12 +1416,12 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                               placeholder={
                                 locale === 'he' ? 'למשל: חניה בבניין' : 'e.g. On-site parking'
                               }
-                              className="min-w-0 flex-1 rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.6)] px-3 py-2 text-sm text-[var(--c-text)]"
+                              className="min-w-0 flex-1 rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.6)] px-3 py-2 text-sm text-[var(--c-text)]"
                             />
                             <select
                               name={`venueFactIcon${index}`}
                               defaultValue={fact?.icon ?? 'accessibility'}
-                              className="w-24 rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.6)] px-2 py-2 text-xs text-[var(--c-text)]"
+                              className="w-24 rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.6)] px-2 py-2 text-xs text-[var(--c-text)]"
                             >
                               <option value="accessibility">{locale === 'he' ? 'נגישות' : 'Access'}</option>
                               <option value="parking">{locale === 'he' ? 'חניה' : 'Parking'}</option>
@@ -1437,7 +1437,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                             placeholder={
                               locale === 'he' ? 'תיאור קצר (רשות)' : 'Short description (optional)'
                             }
-                            className="w-full rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.6)] px-3 py-2 text-sm text-[var(--c-text)]"
+                            className="w-full rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.6)] px-3 py-2 text-sm text-[var(--c-text)]"
                           />
                         </div>
                       );
@@ -1485,7 +1485,7 @@ const ConsoleEventPage = async ({ params, searchParams }: ConsoleEventProps) => 
                             name={`momentCaption-${moment.imageId}`}
                             defaultValue={moment.caption ?? ''}
                             placeholder={CONSOLE_UI.momentCaption[locale]}
-                            className="min-w-0 flex-1 rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.6)] px-3 py-2 text-sm text-[var(--c-text)]"
+                            className="min-w-0 flex-1 rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.6)] px-3 py-2 text-sm text-[var(--c-text)]"
                           />
                         </div>
                       ))}

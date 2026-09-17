@@ -45,7 +45,7 @@ const NewExperiencePage = async () => {
             <input
               type="date"
               name="startsAt"
-              className="w-full rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.6)] px-3 py-2.5 text-sm text-[var(--c-text)] transition-colors focus:border-[var(--c-bronze)]/60 focus:outline-none"
+              className="w-full rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.6)] px-3 py-2.5 text-sm text-[var(--c-text)] transition-colors focus:border-[var(--c-bronze)]/60 focus:outline-none"
             />
           </label>
           <CSaveButton label={CONSOLE_UI.createAndOpen[locale]} />

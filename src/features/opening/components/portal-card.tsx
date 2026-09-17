@@ -80,7 +80,7 @@ const PortalCard = ({ poster, cta }: PortalCardProps) => {
       style={{ '--portal-tone': `rgb(${GUIDING_TONE_RGB[poster.tone]} / 0.22)` } as CSSProperties}
       className={`relative aspect-[2/3] overflow-hidden transition-transform delay-75 duration-700 ease-out group-hover:scale-[1.02] ${
         poster.featured
-          ? 'shadow-[0_0_90px_-25px_rgba(201,161,93,0.5)]'
+          ? 'shadow-[0_0_90px_-25px_rgba(249,161,27,0.5)]'
           : ''
       }`}
     >

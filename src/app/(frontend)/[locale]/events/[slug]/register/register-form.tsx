@@ -158,7 +158,7 @@ const fieldOk = `${fieldBase} border-[var(--x-line-strong)]`;
 const fieldBad = `${fieldBase} border-[var(--x-full)] focus:border-[var(--x-full)] focus:ring-[var(--x-full-wash)]`;
 const labelCls = 'mb-1.5 block text-sm font-medium text-[var(--x-ink)]';
 const primaryCls =
-  'inline-flex min-h-12 items-center justify-center gap-2 rounded-[var(--x-r-field)] bg-[var(--x-primary)] px-6 text-[15px] font-semibold text-white shadow-[0_10px_30px_rgba(110,86,207,0.28)] transition-[transform,background-color,box-shadow] hover:-translate-y-0.5 hover:bg-[var(--x-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0';
+  'inline-flex min-h-12 items-center justify-center gap-2 rounded-[var(--x-r-field)] bg-[var(--x-primary)] px-6 text-[15px] font-semibold text-white shadow-[0_10px_30px_rgb(42 144 200 / 0.28)] transition-[transform,background-color,box-shadow] hover:-translate-y-0.5 hover:bg-[var(--x-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0';
 const ghostCls =
   'inline-flex min-h-12 items-center justify-center gap-2 rounded-[var(--x-r-field)] border border-[var(--x-line-strong)] bg-[var(--x-surface)] px-5 text-[15px] font-medium text-[var(--x-ink)] transition-colors hover:border-[var(--x-primary)] hover:text-[var(--x-primary)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]';
 

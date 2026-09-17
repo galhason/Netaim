@@ -54,12 +54,12 @@ const TYPE_ICON: Record<SessionType | 'networking', (cls: string) => ReactNode> 
 };
 
 const TYPE_TONE: Record<SessionType | 'networking', string> = {
-  keynote: 'bg-[var(--x-ok-wash)] text-[#1f7a45]',
+  keynote: 'bg-[var(--x-ok-wash)] text-[var(--x-ok)]',
   talk: 'bg-[var(--x-primary-wash)] text-[var(--x-primary-strong)]',
-  workshop: 'bg-[var(--x-warn-wash)] text-[#9a5b06]',
-  tour: 'bg-[#e7f1fb] text-[#2b6aa3]',
-  break: 'bg-[#f0f1f4] text-[var(--x-soft)]',
-  networking: 'bg-[#e7f1fb] text-[#2b6aa3]',
+  workshop: 'bg-[var(--x-warn-wash)] text-[var(--x-warn)]',
+  tour: 'bg-[var(--x-interactive-wash)] text-[var(--x-interactive)]',
+  break: 'bg-[var(--x-mute-wash)] text-[var(--x-soft)]',
+  networking: 'bg-[var(--x-interactive-wash)] text-[var(--x-interactive)]',
 };
 
 const Pill = ({ tone, children }: { tone: string; children: ReactNode }) => (
@@ -130,7 +130,7 @@ const ScheduleRow = ({
         </Pill>
       ) : null}
       {past && !live ? (
-        <Pill tone="bg-[#f0f1f4] text-[var(--x-soft)]">{t(locale, 'ended')}</Pill>
+        <Pill tone="bg-[var(--x-mute-wash)] text-[var(--x-soft)]">{t(locale, 'ended')}</Pill>
       ) : null}
       {conflict ? (
         <Pill tone="bg-[var(--x-warn-wash)] text-[var(--x-warn)]">

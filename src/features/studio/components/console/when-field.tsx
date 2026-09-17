@@ -219,8 +219,8 @@ const WhenField = ({
           aria-expanded={open}
           className={`flex flex-1 items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-start text-sm transition-colors ${
             open
-              ? 'border-[var(--c-bronze)]/60 bg-[rgba(6,10,16,0.6)] text-[var(--c-text)]'
-              : 'border-[var(--c-line)] bg-[rgba(6,10,16,0.6)] text-[var(--c-text)] hover:border-[var(--c-bronze)]/40'
+              ? 'border-[var(--c-bronze)]/60 bg-[rgba(7,19,36,0.6)] text-[var(--c-text)]'
+              : 'border-[var(--c-line)] bg-[rgba(7,19,36,0.6)] text-[var(--c-text)] hover:border-[var(--c-bronze)]/40'
           }`}
         >
           <span className={day ? '' : 'text-[var(--c-text-faint)]'}>
@@ -239,7 +239,7 @@ const WhenField = ({
           onChange={(event) =>
             setValue(joinValue(day || today, event.target.value))
           }
-          className="w-28 rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.6)] px-2 py-2.5 text-sm text-[var(--c-text)] transition-colors focus:border-[var(--c-bronze)]/60 focus:outline-none"
+          className="w-28 rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.6)] px-2 py-2.5 text-sm text-[var(--c-text)] transition-colors focus:border-[var(--c-bronze)]/60 focus:outline-none"
         />
       </div>
 
@@ -290,7 +290,7 @@ const WhenField = ({
                     }}
                     className={`grid h-8 place-items-center rounded-md text-xs transition-colors ${
                       cell === day
-                        ? 'bg-[var(--c-bronze)] font-semibold text-[#161006]'
+                        ? 'bg-[var(--c-bronze)] font-semibold text-[var(--c-on-accent)]'
                         : cell === today
                           ? 'text-[var(--c-bronze)] hover:bg-white/5'
                           : 'text-[var(--c-text-soft)] hover:bg-white/5 hover:text-[var(--c-text)]'
@@ -319,7 +319,7 @@ const WhenField = ({
                   setValue('');
                   setOpen(false);
                 }}
-                className="rounded-md px-2 py-1 text-[11px] text-[var(--c-text-soft)] transition-colors hover:text-[#E39A8B]"
+                className="rounded-md px-2 py-1 text-[11px] text-[var(--c-text-soft)] transition-colors hover:text-[var(--c-danger-text)]"
               >
                 {t.clear}
               </button>

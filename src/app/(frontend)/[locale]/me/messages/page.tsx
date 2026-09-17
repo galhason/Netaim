@@ -369,7 +369,7 @@ const MessagesPage = async ({ params, searchParams }: MessagesPageProps) => {
         * the bell that led here is still in reach. It floats fixed over
         * a light ground here, hence the solid surface from the start.
         */}
-      <div className="cinematic bg-transparent [&::after]:content-none [&>header]:border-b [&>header]:border-white/10 [&>header]:bg-[#08111e]/95 [&>header]:backdrop-blur-md">
+      <div className="cinematic bg-transparent [&::after]:content-none [&>header]:border-b [&>header]:border-white/10 [&>header]:bg-[var(--nt-dark-deep)]/95 [&>header]:backdrop-blur-md">
         <CinematicNav
           locale={locale}
           registerHref={`/${locale}`}

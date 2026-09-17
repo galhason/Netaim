@@ -53,7 +53,7 @@ const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
         className="relative h-48 overflow-hidden md:h-56"
         style={{
           background:
-            'radial-gradient(120% 160% at 100% 0%, rgba(110,86,207,0.45), transparent 55%), radial-gradient(90% 120% at 0% 100%, rgba(43,58,110,0.55), transparent 60%), linear-gradient(135deg, #1b2946, #0d1626)',
+            'radial-gradient(120% 160% at 100% 0%, rgb(42 144 200 / 0.45), transparent 55%), radial-gradient(90% 120% at 0% 100%, rgb(23 63 115 / 0.55), transparent 60%), linear-gradient(135deg, var(--nt-dark-raise), var(--nt-dark))',
         }}
       >
         <span
@@ -90,7 +90,7 @@ const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
                   className={`inline-flex items-center gap-1 rounded-[var(--x-r-pill)] px-2.5 py-1 text-xs font-medium ${
                     speaker.isRegistered
                       ? 'bg-[var(--x-ok-wash)] text-[var(--x-ok)]'
-                      : 'bg-[#f0f1f4] text-[var(--x-soft)]'
+                      : 'bg-[var(--x-mute-wash)] text-[var(--x-soft)]'
                   }`}
                 >
                   {speaker.isRegistered

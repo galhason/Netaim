@@ -44,9 +44,9 @@ export const OPENING_UI = {
  * the one before it — warm stage bronze cooling gradually toward navy.
  */
 export const SCENE_BLEEDS = {
-  worlds: 'rgb(201 161 93 / 0.1)',
-  story: 'rgb(214 200 178 / 0.08)',
-  moments: 'rgb(148 170 200 / 0.07)',
+  worlds: 'rgb(249 161 27 / 0.1)',
+  story: 'rgb(249 161 27 / 0.08)',
+  moments: 'rgb(42 144 200 / 0.07)',
 } as const;
 
 export const FEATURED_CLOSING_CTA = {

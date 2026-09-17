@@ -83,7 +83,7 @@ const ActivityImagePicker = ({ locale, slug, seed, initial, library }: Props) =>
       <input type="hidden" name="imageId" value={selected?.id ?? ''} />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <div className="relative aspect-[16/11] w-full flex-none overflow-hidden rounded-xl border border-[var(--c-line)] bg-[rgba(6,10,16,0.5)] sm:w-56">
+        <div className="relative aspect-[16/11] w-full flex-none overflow-hidden rounded-xl border border-[var(--c-line)] bg-[rgba(7,19,36,0.5)] sm:w-56">
           {selected ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img

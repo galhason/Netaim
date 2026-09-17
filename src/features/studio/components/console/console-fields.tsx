@@ -11,7 +11,7 @@ import { useFormStatus } from 'react-dom';
 const LABEL_CLASS =
   'mb-1.5 block text-[10px] font-medium tracking-[0.16em] text-[var(--c-text-faint)]';
 const INPUT_CLASS =
-  'w-full rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.6)] px-3 py-2.5 text-sm text-[var(--c-text)] transition-colors focus:border-[var(--c-bronze)]/60 focus:outline-none';
+  'w-full rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.6)] px-3 py-2.5 text-sm text-[var(--c-text)] transition-colors focus:border-[var(--c-bronze)]/60 focus:outline-none';
 
 interface CFieldProps {
   name: string;
@@ -247,7 +247,7 @@ export const CMediaPicker = ({
           className="hidden"
         />
       ) : null}
-      <div className="grid max-h-56 grid-cols-3 gap-2 overflow-y-auto rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.6)] p-2">
+      <div className="grid max-h-56 grid-cols-3 gap-2 overflow-y-auto rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.6)] p-2">
         <label className="relative block cursor-pointer">
           <input
             type="radio"
@@ -317,7 +317,7 @@ export const CMediaPicker = ({
         />
       </div>
       {refusal ? (
-        <p className="mt-1 text-[10px] text-[#E39A8B]">{refusal}</p>
+        <p className="mt-1 text-[10px] text-[var(--c-danger-text)]">{refusal}</p>
       ) : null}
     </fieldset>
   );
@@ -348,7 +348,7 @@ export const CMediaMultiPicker = ({
   return (
     <fieldset className="block">
       <legend className={LABEL_CLASS}>{label}</legend>
-      <div className="grid max-h-64 grid-cols-3 gap-2 overflow-y-auto rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.6)] p-2">
+      <div className="grid max-h-64 grid-cols-3 gap-2 overflow-y-auto rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.6)] p-2">
         {media.map((item) => (
           <label
             key={item.id}
@@ -386,7 +386,7 @@ export const CSaveButton = ({ label }: CSaveButtonProps) => {
     <button
       type="submit"
       disabled={pending}
-      className="min-h-11 w-full rounded-lg bg-[var(--c-bronze)] text-sm font-medium text-[#161006] transition-all hover:bg-[#dcbe84] disabled:opacity-60"
+      className="min-h-11 w-full rounded-lg bg-[var(--c-bronze)] text-sm font-medium text-[var(--c-on-accent)] transition-all hover:bg-[var(--c-bronze-hover)] disabled:opacity-60"
     >
       {label}
     </button>

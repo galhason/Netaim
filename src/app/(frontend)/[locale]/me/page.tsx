@@ -86,7 +86,7 @@ const DELAYS = ['', '[animation-delay:60ms]', '[animation-delay:120ms]', '[anima
 const Atmosphere = () => (
   <span aria-hidden="true" className="absolute inset-0 overflow-hidden">
     <span className="absolute inset-0 bg-[var(--l-navy)]" />
-    <span className="absolute -top-32 left-1/2 h-[30rem] w-[48rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(201,169,110,0.4),transparent_70%)]" />
+    <span className="absolute -top-32 left-1/2 h-[30rem] w-[48rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(249,161,27,0.4),transparent_70%)]" />
     <span className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-[var(--l-bg)]" />
   </span>
 );
@@ -438,7 +438,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
               {initial}
             </span>
             <div className="min-w-0">
-              <p className="text-xs font-medium tracking-[0.18em] text-[var(--l-bronze-soft,#d8b98a)]">
+              <p className="text-xs font-medium tracking-[0.18em] text-[var(--l-bronze-soft)]">
                 {ui.greeting[locale]}
               </p>
               <h1 className="mt-1 truncate font-display text-3xl font-semibold md:text-4xl">
@@ -492,7 +492,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
               {account.joined.map((conference, index) => (
                 <li key={conference.slug}>
                   <article
-                    className={`lounge-rise flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-[0_14px_44px_rgba(35,40,47,0.08)] ${DELAYS[Math.min(index, 3)]}`}
+                    className={`lounge-rise flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-[0_14px_44px_rgba(23,32,51,0.08)] ${DELAYS[Math.min(index, 3)]}`}
                   >
                     <span className="relative block h-32 bg-[var(--l-navy)]">
                       <span
@@ -506,7 +506,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
                       />
                       <span
                         aria-hidden="true"
-                        className="absolute inset-0 bg-gradient-to-t from-[rgba(14,27,46,0.55)] to-transparent"
+                        className="absolute inset-0 bg-gradient-to-t from-[rgba(11,27,51,0.55)] to-transparent"
                       />
                       {conference.status ? (
                         <span className="absolute end-4 top-4 inline-flex items-center rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-[var(--l-bronze)] backdrop-blur-sm">
@@ -561,7 +561,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
               {account.available.map((conference, index) => (
                 <li key={conference.slug}>
                   <article
-                    className={`lounge-rise flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-[0_14px_44px_rgba(35,40,47,0.08)] ${DELAYS[Math.min(index, 3)]}`}
+                    className={`lounge-rise flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-[0_14px_44px_rgba(23,32,51,0.08)] ${DELAYS[Math.min(index, 3)]}`}
                   >
                     <span className="relative block h-24 bg-[var(--l-navy)]">
                       <span
@@ -575,7 +575,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
                       />
                       <span
                         aria-hidden="true"
-                        className="absolute inset-0 bg-gradient-to-t from-[rgba(14,27,46,0.55)] to-transparent"
+                        className="absolute inset-0 bg-gradient-to-t from-[rgba(11,27,51,0.55)] to-transparent"
                       />
                     </span>
                     <div className="flex flex-1 flex-col p-5">

@@ -103,7 +103,7 @@ const Badge = ({
 };
 
 const field =
-  'w-full rounded-lg border border-[var(--c-line)] bg-[rgba(6,10,16,0.5)] px-3 py-2 text-sm text-[var(--c-text)] placeholder:text-[var(--c-text-faint)] outline-none focus:border-[var(--c-bronze)]';
+  'w-full rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.5)] px-3 py-2 text-sm text-[var(--c-text)] placeholder:text-[var(--c-text-faint)] outline-none focus:border-[var(--c-bronze)]';
 
 const SpeakerPicker = ({
   slug,
@@ -259,7 +259,7 @@ const SpeakerPicker = ({
       ) : (
         <div className="rounded-xl border border-[var(--c-line)] bg-[rgba(255,255,255,0.02)] p-3">
           {/* Tabs */}
-          <div className="mb-3 flex gap-1 rounded-lg bg-[rgba(6,10,16,0.5)] p-1 text-sm">
+          <div className="mb-3 flex gap-1 rounded-lg bg-[rgba(7,19,36,0.5)] p-1 text-sm">
             {(['user', 'external'] as const).map((key) => (
               <button
                 key={key}
@@ -267,7 +267,7 @@ const SpeakerPicker = ({
                 onClick={() => setTab(key)}
                 className={`flex-1 rounded-md px-3 py-1.5 transition-colors ${
                   tab === key
-                    ? 'bg-[var(--c-bronze)] font-medium text-[#161006]'
+                    ? 'bg-[var(--c-bronze)] font-medium text-[var(--c-on-accent)]'
                     : 'text-[var(--c-text-soft)] hover:text-[var(--c-text)]'
                 }`}
               >
@@ -360,7 +360,7 @@ const SpeakerPicker = ({
                   type="button"
                   disabled={pending || !name.trim()}
                   onClick={createExternal}
-                  className="rounded-lg bg-[var(--c-bronze)] px-4 py-1.5 text-sm font-medium text-[#161006] disabled:opacity-40"
+                  className="rounded-lg bg-[var(--c-bronze)] px-4 py-1.5 text-sm font-medium text-[var(--c-on-accent)] disabled:opacity-40"
                 >
                   {t.create}
                 </button>

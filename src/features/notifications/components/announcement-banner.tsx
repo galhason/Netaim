@@ -76,11 +76,11 @@ const AnnouncementBanner = ({
     <div
       ref={line}
       role="status"
-      className="sticky top-0 z-[90] flex items-center justify-center gap-3 bg-[#B8860B] px-4 py-2.5 text-center text-sm font-medium text-[#1A1204] shadow-[0_6px_18px_rgba(0,0,0,0.25)]"
+      className="sticky top-0 z-[90] flex items-center justify-center gap-3 bg-[var(--nt-yellow)] px-4 py-2.5 text-center text-sm font-medium text-[var(--nt-ink-on-accent)] shadow-[0_6px_18px_rgba(0,0,0,0.25)]"
     >
       <span
         aria-hidden="true"
-        className="size-2 flex-none animate-pulse rounded-full bg-[#1A1204]"
+        className="size-2 flex-none animate-pulse rounded-full bg-[var(--nt-ink-on-accent)]"
       />
       <span className="min-w-0">
         <strong>{subject}</strong>
@@ -91,7 +91,7 @@ const AnnouncementBanner = ({
         onClick={dismiss}
         aria-label={closeLabel}
         title={closeLabel}
-        className="-me-1 ms-1 grid size-8 flex-none place-items-center rounded-full text-[#1A1204] transition-colors hover:bg-[#1A1204]/12 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A1204]"
+        className="-me-1 ms-1 grid size-8 flex-none place-items-center rounded-full text-[var(--nt-ink-on-accent)] transition-colors hover:bg-[var(--nt-ink-on-accent)]/12 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--nt-ink-on-accent)]"
       >
         <svg
           viewBox="0 0 24 24"
