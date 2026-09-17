@@ -20,6 +20,8 @@ interface BrandMarkProps {
   /*
    * Drawn height, in pixels. Width follows the artwork's own
    * proportions, because the Studio may hold a logo of any shape.
+   * Leave it out to size the mark with classes instead — a bar that
+   * needs a smaller logo on a phone than on a desk sets `h-8 sm:h-10`.
    */
   height?: number;
   /* Classes for the text mark, so a fallback still looks like the place it is in. */
@@ -30,7 +32,7 @@ interface BrandMarkProps {
 const BrandMark = ({
   brand,
   src,
-  height = 36,
+  height,
   textClassName = '',
   className = '',
 }: BrandMarkProps) => {
@@ -44,7 +46,7 @@ const BrandMark = ({
     <img
       src={src}
       alt={brand}
-      style={{ height: `${height}px` }}
+      {...(height === undefined ? {} : { style: { height: `${height}px` } })}
       className={`w-auto max-w-full object-contain ${className}`.trim()}
     />
   );

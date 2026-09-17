@@ -55,6 +55,13 @@ export {
   IconWait,
   IconLink,
   IconLive,
+  IconMic,
+  IconBulb,
+  IconCoffee,
+  IconCompass,
+  IconWarn,
+  IconBell,
+  IconChevronDown,
 } from './ui/icons';
 export { useFavorites } from './ui/favorites';
 export type { FavoritesApi } from './ui/favorites';

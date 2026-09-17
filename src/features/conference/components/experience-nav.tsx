@@ -125,23 +125,29 @@ const ExperienceNav = ({
 
   return (
     <header className="experience sticky top-0 z-50 bg-[var(--x-nav)] shadow-[0_1px_0_rgba(255,255,255,0.06)]">
-      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-6 md:px-10">
+      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 md:px-8 xl:px-10">
         <Link href={home} className="flex flex-none items-center" aria-label={brand}>
+          {/*
+           * The mark is drawn smaller on a phone: with the bell, the
+           * avatar and the menu beside it, a full-size logo pushed the
+           * bar past a 390px screen and gave every page a sideways
+           * scroll.
+           */}
           <BrandMark
             brand={brand}
             src={brandLogo}
-            height={38}
+            className="h-8 sm:h-[38px]"
             textClassName="font-display text-lg font-extrabold tracking-[0.14em] text-white"
           />
         </Link>
 
-        <div className="hidden items-center gap-7 lg:flex">{links}</div>
+        <div className="hidden items-center gap-5 lg:flex xl:gap-7">{links}</div>
 
         <div className="flex items-center gap-2 sm:gap-3">
           <Link
             href={`${home}/program`}
             aria-label={locale === 'he' ? 'חיפוש' : 'Search'}
-            className="grid size-9 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+            className="hidden size-9 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:grid"
           >
             <IconSearch className="size-5" />
           </Link>
@@ -177,7 +183,14 @@ const ExperienceNav = ({
                 className="flex items-center gap-2 rounded-full py-1 ps-1 pe-3 transition-colors hover:bg-white/10"
               >
                 <Avatar name={userName} size={30} ring={false} />
-                <span className="hidden text-sm font-medium text-white sm:block">
+                {/*
+                 * The name is written out only where the bar has room
+                 * for it. At the width where the links first appear,
+                 * the logo, five links, the bell and the name did not
+                 * fit on one line — and a bar that wraps is a bar that
+                 * scrolls sideways.
+                 */}
+                <span className="hidden text-sm font-medium text-white sm:block lg:hidden xl:block">
                   {userName}
                 </span>
               </Link>
@@ -188,7 +201,7 @@ const ExperienceNav = ({
                 * stands alone, named for a screen reader; the menu
                 * below repeats it in words.
                 */}
-              <form action={signOutAction} className="flex">
+              <form action={signOutAction} className="hidden sm:flex">
                 <input type="hidden" name="locale" value={locale} />
                 <button
                   type="submit"
@@ -197,7 +210,7 @@ const ExperienceNav = ({
                   className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-2 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white md:px-3"
                 >
                   <Exit className="size-4" />
-                  <span className="hidden md:inline">{signOutLabel}</span>
+                  <span className="hidden md:inline lg:hidden xl:inline">{signOutLabel}</span>
                 </button>
               </form>
             </>

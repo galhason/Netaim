@@ -1,15 +1,13 @@
 'use client';
 
 import { Fragment, useEffect, useMemo, useState } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
 import type { Locale } from '@/config/locales';
 import {
-  ActivityCard,
   ActivityDrawer,
-  DayTabs,
-  EmptyState,
   IconArrow,
   IconCalendar,
+  IconChevronDown,
+  IconWarn,
   ToastProvider,
   useFavorites,
   type ActivityVM,
@@ -17,22 +15,24 @@ import {
   type MyRegistrationsVM,
 } from '@/features/conference';
 import { registerActivityAction, leaveActivityAction } from './actions';
+import { PageLeaves } from './botanical';
+import { t } from './copy';
+import DaySelector from './day-selector';
+import type { MeetingVM } from './meetings';
 import NextActivityCard from './next-activity-card';
-import NotificationBar from './notification-bar';
-import ScheduleHero, { type HeroStateVM } from './schedule-hero';
+import NotificationBar, { type NoticeVM } from './notification-bar';
+import ScheduleRow from './schedule-row';
+import ScheduleSidebar from './schedule-sidebar';
 import {
-  ConferenceCalendar,
-  Discovery,
-  ExportCard,
-  FreeTime,
-  KpiRow,
-  MySpeakers,
-  NoticeBoard,
-  type BoardNoticeVM,
-  type GapSuggestion,
-  type KpiVM,
-  type MySpeakerRowVM,
-} from './dashboard-widgets';
+  MINUTE,
+  endOf,
+  findConflicts,
+  fromActivity,
+  fromMeeting,
+  titleOf,
+  venueClock,
+  type TimelineItem,
+} from './timeline';
 
 interface Props {
   locale: Locale;
@@ -41,84 +41,60 @@ interface Props {
   activities: ActivityVM[];
   days: DayVM[];
   mine: MyRegistrationsVM;
+  meetings: MeetingVM[];
   todayKey: string;
   notice: string | null;
   venue?: string;
   initialActivityId?: string | null;
 }
 
-type Segment = 'all' | 'today' | 'upcoming' | 'done' | 'cancelled';
-
-const MIN = 60000;
-const HOUR = 3600000;
-const GAP_MIN = 45;
-const SOON_MIN = 60;
-
-const COPY = {
-  title: { he: 'היום שלי בכנס', en: 'My day at the conference' },
-  sub: {
-    he: 'כל הפעילויות שנרשמת אליהן, במקום אחד.',
-    en: 'Every activity you signed up for, in one place.',
-  },
-  program: { he: 'לתוכנייה המלאה', en: 'Full program' },
-  emptyTitle: { he: 'הלוח שלך עוד ריק', en: 'Your schedule is still empty' },
-  emptyHint: {
-    he: 'בחרו הרצאות, סדנאות וסיורים מהתוכנייה — והם יופיעו כאן כציר הזמן האישי שלכם.',
-    en: 'Pick lectures, workshops and tours from the program — they will appear here as your personal timeline.',
-  },
-  filterEmptyTitle: { he: 'אין פעילויות בתצוגה הזו', en: 'Nothing in this view' },
-  filterEmptyHint: {
-    he: 'נסו יום אחר או מסנן אחר — או גללו למטה להצעות שמתאימות לכם.',
-    en: 'Try another day or another filter — or scroll down for what suits you.',
-  },
-  conflict: {
-    he: 'כבר נרשמת לפעילות אחרת באותו זמן.',
-    en: 'You’re already registered for another activity at this time.',
-  },
-  full: {
-    he: 'הפעילות התמלאה. נסו פעילות אחרת או הצטרפו לרשימת המתנה.',
-    en: 'That activity just filled up. Try another or join the waiting list.',
-  },
-};
-
-const SEGMENTS: { key: Segment; he: string; en: string }[] = [
-  { key: 'all', he: 'הכול', en: 'All' },
-  { key: 'today', he: 'היום', en: 'Today' },
-  { key: 'upcoming', he: 'הקרובות', en: 'Upcoming' },
-  { key: 'done', he: 'הסתיימו', en: 'Completed' },
-  { key: 'cancelled', he: 'בוטלו', en: 'Cancelled' },
-];
-
-const endOf = (a: ActivityVM): number => a.endMs ?? a.startMs + HOUR;
+const DAY_MS = 86400000;
 
 /*
  * The same activity can reach us more than once — a guest who registered,
  * cancelled and registered again leaves several rows behind. The timeline
- * shows a moment in the day, not a paper trail, so each activity appears
- * exactly once.
+ * shows a moment in the day, not a paper trail, so each appears once.
  */
 const uniqueById = (list: ActivityVM[]): ActivityVM[] => {
   const seen = new Set<string>();
-  const out: ActivityVM[] = [];
-  list.forEach((activity) => {
-    if (seen.has(activity.id)) return;
+  return list.filter((activity) => {
+    if (seen.has(activity.id)) return false;
     seen.add(activity.id);
-    out.push(activity);
+    return true;
   });
-  return out;
 };
 
-const hhmm = (ms: number): string => {
-  const d = new Date(ms);
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-};
+const primaryBtn =
+  'inline-flex min-h-[46px] items-center justify-center gap-2 rounded-[var(--x-r-pill)] bg-[var(--x-primary)] px-5 text-[14px] font-semibold text-[var(--x-primary-ink)] shadow-[0_8px_24px_rgba(110,86,207,0.24)] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-[var(--x-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] motion-reduce:transition-none';
+const ghostBtn =
+  'inline-flex min-h-[46px] items-center justify-center gap-2 rounded-[var(--x-r-pill)] border border-[var(--x-line)] bg-[var(--x-surface)] px-5 text-[14px] font-semibold text-[var(--x-primary)] transition-colors hover:border-[var(--x-primary)]/40 hover:bg-[var(--x-primary-wash)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]';
+
+/* A calendar with an empty page — drawn, so the empty state has a picture without an asset. */
+const EmptyCalendar = () => (
+  <svg viewBox="0 0 120 100" aria-hidden="true" className="mx-auto h-24 w-auto">
+    <rect x="14" y="18" width="92" height="72" rx="12" fill="var(--x-surface)" stroke="var(--x-line-strong)" strokeWidth="2" />
+    <rect x="14" y="18" width="92" height="20" rx="12" fill="var(--x-primary-wash)" />
+    <rect x="14" y="30" width="92" height="8" fill="var(--x-primary-wash)" />
+    <path d="M36 12v12M84 12v12" stroke="var(--x-primary)" strokeWidth="3" strokeLinecap="round" />
+    <g fill="var(--x-line)">
+      <rect x="28" y="48" width="14" height="10" rx="3" />
+      <rect x="53" y="48" width="14" height="10" rx="3" />
+      <rect x="78" y="48" width="14" height="10" rx="3" />
+      <rect x="28" y="66" width="14" height="10" rx="3" />
+      <rect x="78" y="66" width="14" height="10" rx="3" />
+    </g>
+    <rect x="53" y="66" width="14" height="10" rx="3" fill="var(--x-primary)" opacity=".85" />
+  </svg>
+);
 
 /*
- * The personal command centre. It owns no data of its own: every card
- * below is one of the Program's activities, seen through the lens of the
- * participant's registrations. Same view models, same cards, same drawer
- * — only the filter differs. That is what keeps the two pages honest with
- * each other.
+ * The personal day.
+ *
+ * It owns no data of its own: every row is one of the Program's activities
+ * seen through the lens of the participant's registrations, plus the
+ * meetings they confirmed. Same view models, same drawer, same server
+ * actions — only the filter differs, which is what keeps this page and the
+ * Program honest with each other.
  */
 const MyScheduleDashboard = ({
   locale,
@@ -127,27 +103,35 @@ const MyScheduleDashboard = ({
   activities,
   days,
   mine,
+  meetings,
   todayKey,
   notice,
   venue,
   initialActivityId,
 }: Props) => {
   const he = locale === 'he';
-  const reduce = useReducedMotion();
   const favorites = useFavorites();
   const programHref = `/${locale}/program`;
+  const meHref = `/${locale}/me`;
+  const networkingHref = `/${locale}/me/networking`;
 
   const pool = useMemo(() => uniqueById(activities), [activities]);
-
+  const waitingIds = useMemo(() => new Set(mine.waitingIds), [mine.waitingIds]);
   const byId = useMemo(() => new Map(pool.map((a) => [a.id, a])), [pool]);
 
   /* Mine, in order — the timeline's whole source of truth. */
   const held = useMemo(() => {
     const ids = new Set([...mine.registeredIds, ...mine.waitingIds]);
-    return pool
-      .filter((a) => ids.has(a.id))
-      .sort((a, b) => a.startMs - b.startMs);
+    return pool.filter((a) => ids.has(a.id));
   }, [pool, mine.registeredIds, mine.waitingIds]);
+
+  const items = useMemo<TimelineItem[]>(
+    () =>
+      [...held.map(fromActivity), ...meetings.map(fromMeeting)].sort(
+        (a, b) => a.startMs - b.startMs,
+      ),
+    [held, meetings],
+  );
 
   const cancelled = useMemo(
     () =>
@@ -159,53 +143,81 @@ const MyScheduleDashboard = ({
     [mine.cancelledIds, byId],
   );
 
-  const myDays = useMemo(() => {
-    const keys = new Set(held.map((a) => a.dayKey));
-    return days.filter((d) => keys.has(d.key));
-  }, [days, held]);
+  /*
+   * Which days carry something of mine. The selector shows every day of
+   * the conference — a day with nothing on it is a fact worth seeing —
+   * but a meeting on a day the programme does not know about still gets
+   * a tab, so nothing held can be unreachable.
+   */
+  const allDays = useMemo(() => {
+    const known = new Set(days.map((d) => d.key));
+    const extra = [...new Set(items.map((i) => i.dayKey))]
+      .filter((key) => !known.has(key))
+      .sort();
+    const list = [...days];
+    extra.forEach((key) => {
+      const date = new Date(`${key}T00:00:00`);
+      const fmt = (opts: Intl.DateTimeFormatOptions) =>
+        new Intl.DateTimeFormat(he ? 'he-IL' : 'en-GB', opts).format(date);
+      list.push({
+        key,
+        index: 0,
+        weekday: fmt({ weekday: 'short' }),
+        dateNum: fmt({ day: 'numeric', month: 'numeric' }),
+        month: fmt({ month: 'long' }),
+        full: fmt({ weekday: 'long', day: 'numeric', month: 'long' }),
+      });
+    });
+    return list
+      .sort((a, b) => a.key.localeCompare(b.key))
+      .map((day, i) => ({ ...day, index: i + 1 }));
+  }, [days, items, he]);
 
-  const [activeDay, setActiveDay] = useState<string>(
-    () => myDays.find((d) => d.key === todayKey)?.key ?? myDays[0]?.key ?? '',
-  );
-  const [segment, setSegment] = useState<Segment>('all');
-  const [selectedId, setSelectedId] = useState<string | null>(
-    initialActivityId ?? null,
-  );
+  const counts = useMemo(() => {
+    const out: Record<string, number> = {};
+    items.forEach((item) => {
+      out[item.dayKey] = (out[item.dayKey] ?? 0) + 1;
+    });
+    return out;
+  }, [items]);
 
-  /* The clock the whole page reads from — one tick, many widgets. */
+  /* Today if the conference is on; otherwise the first day with something. */
+  const [activeDay, setActiveDay] = useState<string>(() => {
+    if (allDays.some((d) => d.key === todayKey)) return todayKey;
+    return items[0]?.dayKey ?? allDays[0]?.key ?? '';
+  });
+  const [selectedId, setSelectedId] = useState<string | null>(initialActivityId ?? null);
+
+  /* The clock the whole page reads from — one tick, every widget. */
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
     setNow(Date.now());
     const timer = window.setInterval(() => setNow(Date.now()), 30000);
     return () => window.clearInterval(timer);
   }, []);
-  const clock = now ?? 0;
-
-  const next = useMemo(() => {
-    if (now === null) return null;
-    return held.find((a) => a.startMs > now) ?? null;
-  }, [held, now]);
 
   const current = useMemo(() => {
     if (now === null) return null;
-    return held.find((a) => a.startMs <= now && endOf(a) > now) ?? null;
-  }, [held, now]);
+    return items.find((i) => i.startMs <= now && i.endMs > now) ?? null;
+  }, [items, now]);
 
-  /* The timeline. 'All' reads one day at a time; every other segment is a
-   * question about time, so it answers across the whole conference. */
-  const timeline = useMemo(() => {
-    if (segment === 'cancelled') return cancelled;
-    if (segment === 'all') return held.filter((a) => a.dayKey === activeDay);
-    if (segment === 'today') return held.filter((a) => a.dayKey === todayKey);
-    if (now === null) return held;
-    if (segment === 'upcoming') return held.filter((a) => endOf(a) > now);
-    return held.filter((a) => endOf(a) <= now);
-  }, [segment, held, cancelled, activeDay, todayKey, now]);
+  const next = useMemo(() => {
+    if (now === null) return null;
+    return items.find((i) => i.startMs > now) ?? null;
+  }, [items, now]);
 
-  const selected = useMemo(
-    () => byId.get(selectedId ?? '') ?? null,
-    [byId, selectedId],
+  const dayItems = useMemo(
+    () => items.filter((i) => i.dayKey === activeDay),
+    [items, activeDay],
   );
+
+  const conflicts = useMemo(() => findConflicts(dayItems), [dayItems]);
+  const conflicted = useMemo(
+    () => new Set(conflicts.flatMap((c) => [c.a.id, c.b.id])),
+    [conflicts],
+  );
+
+  const selected = useMemo(() => byId.get(selectedId ?? '') ?? null, [byId, selectedId]);
 
   const related = useMemo(() => {
     if (!selected) return [];
@@ -215,559 +227,414 @@ const MyScheduleDashboard = ({
         (a) =>
           a.id !== selected.id &&
           a.type !== 'break' &&
-          (a.type === selected.type ||
-            a.speakers.some((s) => speakerIds.has(s.id))),
+          (a.type === selected.type || a.speakers.some((s) => speakerIds.has(s.id))),
       )
-      .sort(
-        (a, b) =>
-          Math.abs(a.startMs - selected.startMs) -
-          Math.abs(b.startMs - selected.startMs),
-      )
+      .sort((a, b) => Math.abs(a.startMs - selected.startMs) - Math.abs(b.startMs - selected.startMs))
       .slice(0, 3);
   }, [pool, selected]);
 
-  /* ---- KPIs ---- */
-  const doneCount = now === null ? 0 : held.filter((a) => endOf(a) <= now).length;
-  const favCount = favorites.ids.filter((id) => byId.has(id)).length;
-  const todayItems = held.filter((a) => a.dayKey === todayKey);
-  const todayNext = todayItems.find((a) => now !== null && a.startMs > now);
+  /* ---- the sidebar's numbers ---- */
+  const summary = useMemo(
+    () => ({
+      saved: items.length,
+      hours: items.reduce((sum, i) => sum + (i.endMs - i.startMs), 0) / 3600000,
+      days: allDays.length,
+    }),
+    [items, allDays],
+  );
 
   /*
-   * A number on its own is trivia. Each card carries the sentence that
-   * makes it useful: over how many days, what is coming next, out of how
-   * many, why the star matters.
+   * "Close to what you chose": open, still ahead, free in the schedule,
+   * and sharing a speaker or a kind with something held. Two at most —
+   * the sidebar is a margin, not a second programme.
    */
-  const kpis: KpiVM[] = [
-    {
-      key: 'total',
-      label: he ? 'סה״כ פעילויות' : 'Total activities',
-      value: held.length,
-      sub: he
-        ? `על פני ${myDays.length} ${myDays.length === 1 ? 'יום' : 'ימים'}`
-        : `across ${myDays.length} ${myDays.length === 1 ? 'day' : 'days'}`,
-      icon: 'calendar',
-    },
-    {
-      key: 'today',
-      label: he ? 'הפעילויות של היום' : 'Today',
-      value: todayItems.length,
-      sub: todayNext
-        ? he
-          ? `הבאה ב־${todayNext.time}`
-          : `next at ${todayNext.time}`
-        : he
-          ? 'אין עוד פעילויות היום'
-          : 'nothing else today',
-      icon: 'clock',
-    },
-    {
-      key: 'done',
-      label: he ? 'הושלמו' : 'Completed',
-      value: doneCount,
-      sub: he
-        ? `מתוך ${held.length} פעילויות`
-        : `of ${held.length} activities`,
-      icon: 'check',
-    },
-    {
-      key: 'fav',
-      label: he ? 'מועדפים' : 'Favorites',
-      value: favCount,
-      sub: he ? 'שמורים לצפייה' : 'saved for later',
-      icon: 'star',
-    },
-  ];
-
-  /* ---- Speakers of the day I built ---- */
-  const mySpeakers: MySpeakerRowVM[] = useMemo(() => {
-    const map = new Map<string, MySpeakerRowVM>();
-    held.forEach((activity) => {
-      activity.speakers.forEach((speaker) => {
-        const existing = map.get(speaker.id);
-        if (existing) {
-          existing.count += 1;
-          if (
-            !existing.nextTime &&
-            now !== null &&
-            activity.startMs > now &&
-            activity.time
-          ) {
-            existing.nextTime = activity.time;
-            existing.nextTitle = activity.title;
-          }
-          return;
-        }
-        const upcoming = now !== null && activity.startMs > now;
-        map.set(speaker.id, {
-          id: speaker.id,
-          name: speaker.name,
-          ...(speaker.role ? { role: speaker.role } : {}),
-          ...(speaker.company ? { company: speaker.company } : {}),
-          ...(speaker.photoUrl ? { photoUrl: speaker.photoUrl } : {}),
-          ...(upcoming && activity.time
-            ? { nextTime: activity.time, nextTitle: activity.title }
-            : {}),
-          registered: speaker.registered,
-          count: 1,
-        });
-      });
-    });
-    return [...map.values()].sort((a, b) => b.count - a.count);
-  }, [held, now]);
-
-  /* ---- Free time, and what fits inside it ---- */
-  const gaps: GapSuggestion[] = useMemo(() => {
-    const dayItems = held.filter((a) => a.dayKey === activeDay);
-    const out: GapSuggestion[] = [];
-    dayItems.forEach((activity, i) => {
-      const following = dayItems[i + 1];
-      if (!following) return;
-      const from = endOf(activity);
-      const to = following.startMs;
-      const minutes = Math.round((to - from) / MIN);
-      if (minutes < GAP_MIN) return;
-      const options = pool
-        .filter(
-          (candidate) =>
-            candidate.dayKey === activeDay &&
-            candidate.type !== 'break' &&
-            candidate.status !== 'full' &&
-            candidate.registration === 'available' &&
-            candidate.startMs >= from &&
-            endOf(candidate) <= to,
-        )
-        .slice(0, 2);
-      if (options.length === 0) return;
-      out.push({
-        key: `${activity.id}-${following.id}`,
-        from: hhmm(from),
-        to: hhmm(to),
-        minutes,
-        options,
-      });
-    });
-    return out;
-  }, [held, pool, activeDay]);
-
-  /*
-   * "You might also like" — read off the schedule the page already holds.
-   * An activity qualifies when it is still open, still ahead, does not
-   * collide with anything held, and shares a speaker or a kind with what
-   * the participant already chose. Familiar first, then the rest of what
-   * is open, so the section is never a wall of leftovers.
-   */
-  const discovery: ActivityVM[] = useMemo(() => {
+  const suggestions = useMemo(() => {
     if (now === null) return [];
     const heldIds = new Set(held.map((a) => a.id));
-    const mySpeakerIds = new Set(
-      held.flatMap((a) => a.speakers.map((s) => s.id)),
-    );
+    const mySpeakerIds = new Set(held.flatMap((a) => a.speakers.map((s) => s.id)));
     const myTypes = new Set(held.map((a) => a.type));
     const free = (a: ActivityVM): boolean =>
-      held.every((h) => a.startMs >= endOf(h) || endOf(a) <= h.startMs);
-
-    const open = pool.filter(
-      (a) =>
-        !heldIds.has(a.id) &&
-        a.type !== 'break' &&
-        a.status !== 'full' &&
-        a.registration === 'available' &&
-        a.startMs > now &&
-        free(a),
-    );
-    const score = (a: ActivityVM): number => {
-      let value = 0;
-      if (a.speakers.some((s) => mySpeakerIds.has(s.id))) value += 2;
-      if (myTypes.has(a.type)) value += 1;
-      if (favorites.has(a.id)) value += 3;
-      return value;
-    };
-    return [...open]
+      items.every((i) => a.startMs >= i.endMs || endOf(a) <= i.startMs);
+    const score = (a: ActivityVM): number =>
+      (a.speakers.some((s) => mySpeakerIds.has(s.id)) ? 2 : 0) +
+      (myTypes.has(a.type) ? 1 : 0) +
+      (favorites.has(a.id) ? 3 : 0);
+    return pool
+      .filter(
+        (a) =>
+          !heldIds.has(a.id) &&
+          a.type !== 'break' &&
+          a.status !== 'full' &&
+          a.registration === 'available' &&
+          a.startMs > now &&
+          free(a),
+      )
       .sort((a, b) => score(b) - score(a) || a.startMs - b.startMs)
-      .slice(0, 3);
-  }, [pool, held, now, favorites]);
+      .slice(0, 2);
+  }, [pool, held, items, now, favorites]);
 
-  /* ---- What changed, derived from what we already know ---- */
-  const notices: BoardNoticeVM[] = useMemo(() => {
-    const out: BoardNoticeVM[] = [];
-    if (notice === 'conflict') {
-      out.push({ id: 'conflict', tone: 'warn', text: COPY.conflict[locale] });
-    }
-    if (notice === 'full') {
-      out.push({ id: 'full', tone: 'warn', text: COPY.full[locale] });
-    }
-    if (current) {
+  /* ---- what deserves the bar at the foot of the screen ---- */
+  const urgent: NoticeVM[] = useMemo(() => {
+    const out: NoticeVM[] = [];
+    if (notice === 'conflict') out.push({ id: 'conflict', text: t(locale, 'noticeConflict') });
+    if (notice === 'full') out.push({ id: 'full', text: t(locale, 'noticeFull') });
+    if (current && current.kind === 'activity') {
       out.push({
         id: `live-${current.id}`,
-        tone: 'live',
-        text: he
-          ? `מתקיים עכשיו: ${current.title}${current.room ? ` · ${current.room}` : ''}`
-          : `Happening now: ${current.title}${current.room ? ` · ${current.room}` : ''}`,
+        text: `${t(locale, 'live')}: ${titleOf(current)}${current.activity.room ? ` · ${current.activity.room}` : ''}`,
         activityId: current.id,
-        actionLabel: he ? 'פרטים' : 'Details',
+        actionLabel: t(locale, 'viewActivity'),
       });
     }
     if (next && now !== null) {
-      const mins = Math.round((next.startMs - now) / MIN);
+      const mins = Math.round((next.startMs - now) / MINUTE);
       if (mins <= 20) {
         out.push({
           id: `soon-${next.id}`,
-          tone: 'soon',
           text: he
-            ? `עוד ${mins} דקות: ${next.title}${next.room ? ` · ${next.room}` : ''}`
-            : `In ${mins} min: ${next.title}${next.room ? ` · ${next.room}` : ''}`,
-          activityId: next.id,
-          actionLabel: he ? 'פרטים' : 'Details',
+            ? `עוד ${mins} דקות: ${titleOf(next)}`
+            : `In ${mins} min: ${titleOf(next)}`,
+          ...(next.kind === 'activity'
+            ? { activityId: next.id, actionLabel: t(locale, 'viewActivity') }
+            : {}),
         });
       }
     }
-    held
-      .filter((a) => a.registration === 'waitlist')
-      .slice(0, 2)
-      .forEach((a) => {
-        out.push({
-          id: `wait-${a.id}`,
-          tone: 'wait',
-          text: he
-            ? `אתם ברשימת ההמתנה ל־${a.title}. נעדכן ברגע שמתפנה מקום.`
-            : `You are on the waiting list for ${a.title}. We will tell you the moment a seat opens.`,
-          activityId: a.id,
-          actionLabel: he ? 'פרטים' : 'Details',
-        });
-      });
-    const almost = held.find(
-      (a) =>
-        a.registration === 'registered' &&
-        a.status === 'almostFull' &&
-        now !== null &&
-        a.startMs > now,
-    );
-    if (almost) {
-      out.push({
-        id: `seat-${almost.id}`,
-        tone: 'ok',
-        text: he
-          ? `המקום שלכם ב־${almost.title} שמור — הפעילות כמעט מלאה.`
-          : `Your seat at ${almost.title} is held — the activity is nearly full.`,
-        activityId: almost.id,
-        actionLabel: he ? 'פרטים' : 'Details',
-      });
-    }
     return out;
-  }, [notice, locale, current, next, now, he, held]);
+  }, [notice, locale, current, next, now, he]);
 
-  /* The bottom pill speaks only when something is about to happen; the
-   * board in the sidebar keeps the rest. */
-  const urgent = notices.filter(
-    (item) => item.tone === 'live' || item.tone === 'soon' || item.tone === 'warn',
-  );
+  /* ---- where the conference stands ---- */
+  const firstDay = allDays[0]?.key ?? '';
+  const lastDay = allDays[allDays.length - 1]?.key ?? '';
+  const ended = Boolean(lastDay) && todayKey > lastDay;
+  const daysUntil =
+    firstDay && todayKey < firstDay
+      ? Math.max(
+          1,
+          Math.round(
+            (new Date(`${firstDay}T00:00:00`).getTime() - new Date(`${todayKey}T00:00:00`).getTime()) /
+              DAY_MS,
+          ),
+        )
+      : 0;
 
-  const heroState: HeroStateVM = {
-    next: next ? { startMs: next.startMs, title: next.title } : null,
-    current: current ? { title: current.title, endMs: endOf(current) } : null,
-    todayTotal: todayItems.length,
-    allDone: held.length > 0 && doneCount === held.length,
-  };
+  const activeDayVM = allDays.find((d) => d.key === activeDay) ?? null;
+  const isToday = activeDay === todayKey;
+  const clock = now ?? 0;
 
-  const dayCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    held.forEach((a) => {
-      counts[a.dayKey] = (counts[a.dayKey] ?? 0) + 1;
-    });
-    return counts;
-  }, [held]);
-
-  /* The NOW line only belongs on a list that contains today. */
-  const showNowLine =
-    now !== null &&
-    timeline.length > 0 &&
-    timeline.some((a) => a.dayKey === todayKey);
-  const nowIndex = showNowLine
-    ? timeline.findIndex((a) => a.startMs > clock)
-    : -1;
-  const nowRow = showNowLine
-    ? nowIndex === -1
-      ? timeline.length
-      : nowIndex
-    : -1;
-
-  const soonMins =
-    next && now !== null ? Math.round((next.startMs - now) / MIN) : null;
-  const showStickyNext = soonMins !== null && soonMins <= SOON_MIN;
-
-  const empty = held.length === 0 && cancelled.length === 0;
-
-  /*
-   * Built once and placed twice — under the timeline when there is a day
-   * to show, at the foot of the page when there is not. Only one of the
-   * two ever renders, so the cards are never duplicated in the document.
-   */
-  const hasDiscovery = discovery.length > 0;
-  const discoverySection = (
-    <Discovery
-      items={discovery}
-      locale={locale}
-      slug={slug}
-      onOpen={setSelectedId}
-      registerAction={registerActivityAction}
-      leaveAction={leaveActivityAction}
-    />
-  );
+  /* The NOW line sits between the last thing that started and the first that has not. */
+  const nowIndex =
+    isToday && now !== null && dayItems.length > 0
+      ? (() => {
+          const i = dayItems.findIndex((item) => item.startMs > clock);
+          return i === -1 ? dayItems.length : i;
+        })()
+      : -1;
 
   const nowLine = (
-    <li aria-hidden="true" className="relative grid grid-cols-[46px_18px_1fr] items-center gap-2 sm:grid-cols-[54px_18px_1fr] sm:gap-3">
-      <span className="text-end text-[11px] font-bold tabular-nums text-[var(--x-ok)]">
-        {hhmm(clock)}
+    <li
+      aria-label={`${t(locale, 'now')} ${venueClock(clock)}`}
+      className="grid grid-cols-[40px_14px_1fr] items-center gap-1.5 sm:grid-cols-[54px_18px_1fr] sm:gap-3"
+    >
+      <span className="text-end text-[12px] font-bold tabular-nums text-[var(--x-live)]">
+        {venueClock(clock)}
       </span>
       <span className="relative flex justify-center">
-        <span className="size-2.5 rounded-full bg-[var(--x-ok)] ring-4 ring-[var(--x-bg)]" />
+        <span className="size-2.5 rounded-full bg-[var(--x-live)] ring-4 ring-[var(--x-bg)]" />
       </span>
       <span className="flex items-center gap-2">
-        <span className="h-px flex-1 bg-[var(--x-ok)]/45" />
-        <span className="rounded-[var(--x-r-pill)] bg-[var(--x-ok-wash)] px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.12em] text-[var(--x-ok)]">
-          {he ? 'עכשיו' : 'Now'}
+        <span className="h-px flex-1 bg-[var(--x-live)]/50" />
+        <span className="rounded-[var(--x-r-pill)] bg-[var(--x-live)]/10 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.12em] text-[var(--x-live)] rtl:tracking-normal">
+          {t(locale, 'now')} · {venueClock(clock)}
         </span>
       </span>
     </li>
   );
 
+  /* Nothing held now — whatever was cancelled along the way. */
+  const empty = items.length === 0;
+  /*
+   * Cancellations are history, not a schedule: they sit folded under
+   * whatever the page shows, including the empty page — a person who
+   * gave everything up should still be able to find their way back.
+   */
+  const cancelledSection =
+    cancelled.length > 0 ? (
+      <details className="group mt-6 rounded-[var(--x-r-card)] border border-[var(--x-line)] bg-[var(--x-surface)] text-start">
+        <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 text-[14px] font-semibold text-[var(--x-ink)] [&::-webkit-details-marker]:hidden">
+          <span className="flex-1">
+            {t(locale, 'cancelledByYou')}{' '}
+            <span className="text-[var(--x-faint)]">({cancelled.length})</span>
+          </span>
+          <IconChevronDown className="size-4 text-[var(--x-faint)] transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="border-t border-[var(--x-line)] px-4 pb-4 pt-3">
+          <p className="text-[13px] text-[var(--x-soft)]">{t(locale, 'cancelledHint')}</p>
+          <ul className="mt-2 flex flex-col gap-1.5">
+            {cancelled.map((a) => (
+              <li key={a.id}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedId(a.id)}
+                  className="flex w-full items-center gap-3 rounded-[var(--x-r-field)] px-2 py-2 text-start text-[13.5px] transition-colors hover:bg-[var(--x-raise)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]"
+                >
+                  <span dir="ltr" className="w-12 shrink-0 tabular-nums text-[var(--x-faint)]">{a.time}</span>
+                  <span className="min-w-0 flex-1 truncate text-[var(--x-ink)] line-through decoration-[var(--x-faint)]">
+                    {a.title}
+                  </span>
+                  <IconArrow className="size-4 shrink-0 text-[var(--x-faint)] rtl:rotate-180" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </details>
+    ) : null;
+
+  const exportTarget =
+    next && next.kind === 'activity' ? next.activity : (held.find((a) => now !== null && a.startMs > now) ?? null);
+
   return (
     <ToastProvider>
-      <main id="main-content" className="mx-auto max-w-6xl px-6 pb-24 pt-8 md:px-10 md:pb-16 md:pt-10">
-        <ScheduleHero
-          locale={locale}
-          eventTitle={eventTitle}
-          title={COPY.title[locale]}
-          subtitle={COPY.sub[locale]}
-          programHref={programHref}
-          programLabel={COPY.program[locale]}
-          dayKeys={days.map((d) => d.key)}
-          todayKey={todayKey}
-          state={heroState}
-        />
+      <main
+        id="main-content"
+        className="relative mx-auto max-w-6xl overflow-x-clip px-5 pb-24 pt-8 md:px-10 md:pb-16 md:pt-10"
+      >
+        <PageLeaves />
+
+        {/* ---- header ---- */}
+        <header className="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="min-w-0">
+            <a
+              href={meHref}
+              className="inline-flex min-h-[32px] items-center gap-1.5 text-[13px] font-medium text-[var(--x-soft)] transition-colors hover:text-[var(--x-primary)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] rounded-[var(--x-r-pill)]"
+            >
+              <IconArrow className="size-4 rotate-180 rtl:rotate-0" />
+              {t(locale, 'backToMe')}
+            </a>
+            <div className="mt-2 flex items-center gap-4">
+              <span className="hidden size-14 shrink-0 place-items-center rounded-full bg-[var(--x-primary-wash)] text-[var(--x-primary)] sm:grid">
+                <IconCalendar className="size-7" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-[var(--x-primary)] rtl:tracking-normal">
+                  {eventTitle}
+                </p>
+                <h1 className="mt-1 font-display text-[2rem] font-extrabold leading-[1.1] tracking-tight text-[var(--x-ink)] sm:text-[2.4rem]">
+                  {t(locale, 'title')}
+                </h1>
+              </div>
+            </div>
+            <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-[var(--x-soft)]">
+              {t(locale, 'sub')}
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row md:w-[200px] md:flex-col md:items-stretch">
+            <a href={programHref} className={primaryBtn}>
+              <span aria-hidden="true" className="text-[18px] leading-none">+</span>
+              {t(locale, 'addActivity')}
+            </a>
+            <a href={programHref} className={ghostBtn}>
+              <IconCalendar className="size-4" />
+              {t(locale, 'toProgram')}
+            </a>
+          </div>
+        </header>
 
         {empty ? (
-          <div className="mt-8">
-            <EmptyState
-              title={COPY.emptyTitle[locale]}
-              hint={COPY.emptyHint[locale]}
-              icon={<IconCalendar className="size-6" />}
-              action={
-                <a
-                  href={programHref}
-                  className="inline-flex min-h-[48px] items-center gap-2 rounded-[var(--x-r-pill)] bg-[var(--x-primary)] px-6 text-sm font-semibold text-[var(--x-primary-ink)] shadow-[var(--x-shadow)] transition-colors hover:bg-[var(--x-primary-strong)]"
-                >
-                  {he ? 'בחרו פעילויות מהתוכנייה' : 'Browse the program'}
-                  <IconArrow className="size-4 rtl:rotate-180" />
-                </a>
-              }
-            />
-          </div>
+          <section className="relative mx-auto mt-10 max-w-xl rounded-[var(--x-r-card)] border border-[var(--x-line)] bg-[var(--x-surface)] px-6 py-12 text-center shadow-[var(--x-shadow)]">
+            <EmptyCalendar />
+            <h2 className="mt-5 font-display text-[22px] font-bold tracking-tight text-[var(--x-ink)]">
+              {t(locale, 'emptyTitle')}
+            </h2>
+            <p className="mx-auto mt-2 max-w-sm text-[15px] leading-relaxed text-[var(--x-soft)]">
+              {t(locale, 'emptyHint')}
+            </p>
+            <a href={programHref} className={`${primaryBtn} mt-6`}>
+              {t(locale, 'toProgram')}
+              <IconArrow className="size-4 rtl:rotate-180" />
+            </a>
+            {cancelledSection}
+          </section>
         ) : (
           <>
-            <div className="mt-6">
-              <KpiRow items={kpis} />
+            <div className="relative mt-8">
+              <DaySelector
+                days={allDays}
+                active={activeDay}
+                todayKey={todayKey}
+                counts={counts}
+                locale={locale}
+                onSelect={setActiveDay}
+              />
             </div>
 
-            {/* Day strip + segmented filters */}
-            <div className="mt-7 flex flex-col gap-4">
-              {myDays.length > 1 ? (
-                <DayTabs
-                  days={myDays}
-                  active={activeDay}
-                  onSelect={(key) => {
-                    setActiveDay(key);
-                    setSegment('all');
-                  }}
-                  dayWord={he ? 'יום' : 'Day'}
-                />
-              ) : null}
-              <div
-                role="tablist"
-                aria-label={he ? 'סינון הלוח' : 'Filter schedule'}
-                className="-mx-6 flex snap-x snap-mandatory gap-2 overflow-x-auto px-6 pb-1 md:mx-0 md:flex-wrap md:px-0"
-              >
-                {SEGMENTS.map((item) => {
-                  const on = item.key === segment;
-                  return (
-                    <button
-                      key={item.key}
-                      type="button"
-                      role="tab"
-                      aria-selected={on}
-                      onClick={() => setSegment(item.key)}
-                      className={`relative shrink-0 snap-start rounded-[var(--x-r-pill)] px-4 py-2 text-[13px] font-semibold transition-colors ${
-                        on
-                          ? 'text-white'
-                          : 'border border-[var(--x-line)] bg-[var(--x-surface)] text-[var(--x-soft)] hover:border-[var(--x-line-strong)]'
-                      }`}
-                    >
-                      {on ? (
-                        <motion.span
-                          layoutId="my-segment"
-                          transition={{ duration: reduce ? 0 : 0.3, ease: 'easeOut' }}
-                          className="absolute inset-0 rounded-[var(--x-r-pill)] bg-[var(--x-nav)]"
-                        />
-                      ) : null}
-                      <span className="relative">{he ? item.he : item.en}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <div className="relative mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-10">
+              <div className="min-w-0">
+                {/* ---- where the conference stands, when it is not today ---- */}
+                {ended ? (
+                  <div className="mb-5 flex items-center gap-3 rounded-[var(--x-r-card)] border border-[var(--x-line)] bg-[var(--x-surface)] px-4 py-3.5 text-[14px] text-[var(--x-soft)]">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--x-ok-wash)] text-[var(--x-ok)]">
+                      <IconCalendar className="size-4" />
+                    </span>
+                    <span>
+                      <span className="block font-semibold text-[var(--x-ink)]">{t(locale, 'endedTitle')}</span>
+                      {t(locale, 'endedHint')}
+                    </span>
+                  </div>
+                ) : daysUntil > 0 ? (
+                  <p className="mb-4 text-[13px] font-medium text-[var(--x-soft)]">
+                    {daysUntil === 1
+                      ? t(locale, 'tomorrow')
+                      : `${t(locale, 'startsIn_days')} ${daysUntil} ${t(locale, 'daysWord')}`}
+                  </p>
+                ) : null}
 
-            {/* Two rails, one grid. On a phone the four blocks read in the
-                order the day demands — what is next, the day itself, the
-                things you consult, then what else is open — because the
-                wrappers are display:contents and the children order
-                themselves inside the page's single column. From lg up the
-                wrappers become real columns: utilities on the side, and the
-                wide column carries the timeline with the discovery section
-                directly beneath it. That adjacency is the point — a one-day
-                schedule pulls "you might also like" straight up under the
-                last card instead of leaving a field of white where the
-                sidebar used to dictate the height. */}
-            <div className="mt-8 grid gap-8 lg:grid-cols-[336px_1fr]">
-              <div className="contents lg:flex lg:flex-col lg:gap-8">
-                <div className="order-1">
+                {conflicts.length > 0 ? (
+                  <div
+                    role="alert"
+                    className="mb-5 flex gap-3 rounded-[var(--x-r-card)] border border-[var(--x-warn)]/40 bg-[var(--x-warn-wash)] p-4"
+                  >
+                    <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--x-surface)] text-[var(--x-warn)]">
+                      <IconWarn className="size-5" />
+                    </span>
+                    <div className="min-w-0 text-[14px]">
+                      <p className="font-semibold text-[var(--x-ink)]">{t(locale, 'conflictTitle')}</p>
+                      <p className="mt-0.5 text-[var(--x-soft)]">{t(locale, 'conflictBody')}</p>
+                      <ul className="mt-2 flex flex-col gap-1 text-[13px] text-[var(--x-ink)]">
+                        {conflicts.map((c) => (
+                          <li key={`${c.a.id}-${c.b.id}`}>
+                            <span className="font-semibold">{titleOf(c.a)}</span>
+                            {' ↔ '}
+                            <span className="font-semibold">{titleOf(c.b)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                ) : null}
+
+                {!ended ? (
                   <NextActivityCard
-                    activity={next}
+                    current={current}
+                    next={next}
+                    todayIsConferenceDay={allDays.some((d) => d.key === todayKey)}
+                    now={now}
+                    waiting={waitingIds.has((current ?? next)?.id ?? '')}
                     locale={locale}
-                    onOpen={setSelectedId}
                     programHref={programHref}
+                    networkingHref={networkingHref}
+                    onOpen={setSelectedId}
                     {...(venue ? { venue } : {})}
                   />
-                </div>
-
-                <aside className="order-3 flex flex-col gap-5 lg:sticky lg:top-24">
-                  <NoticeBoard
-                    items={notices}
-                    locale={locale}
-                    onOpen={setSelectedId}
-                  />
-                  <ConferenceCalendar
-                    days={myDays}
-                    active={activeDay}
-                    onSelect={(key) => {
-                      setActiveDay(key);
-                      setSegment('all');
-                    }}
-                    locale={locale}
-                    counts={dayCounts}
-                  />
-                  <MySpeakers speakers={mySpeakers} locale={locale} />
-                  <FreeTime gaps={gaps} locale={locale} onOpen={setSelectedId} />
-                  <ExportCard activities={held} next={next} locale={locale} />
-                </aside>
-              </div>
-
-              <div className="contents min-w-0 lg:flex lg:flex-col">
-                <div className="order-2 min-w-0">
-                  {showStickyNext && next ? (
-                    <div className="sticky top-[68px] z-20 mb-4 lg:hidden">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedId(next.id)}
-                        className="flex w-full items-center gap-3 rounded-[var(--x-r-pill)] bg-[var(--x-navy)] px-4 py-2.5 text-start text-white shadow-[var(--x-shadow-lift)]"
-                      >
-                        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-white/10 text-[11px] font-bold tabular-nums">
-                          {soonMins}
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--x-gold-soft)]">
-                            {he ? `עוד ${soonMins} דקות` : `in ${soonMins} min`}
-                          </span>
-                          <span className="block truncate text-[13px] font-semibold">
-                            {next.title}
-                          </span>
-                        </span>
-                        <IconArrow className="size-4 shrink-0 opacity-70 rtl:rotate-180" />
-                      </button>
-                    </div>
-                  ) : null}
-
-                  {timeline.length === 0 ? (
-                    <EmptyState
-                      title={COPY.filterEmptyTitle[locale]}
-                      hint={COPY.filterEmptyHint[locale]}
-                      icon={<IconCalendar className="size-6" />}
-                      action={
-                        <button
-                          type="button"
-                          onClick={() => setSegment('all')}
-                          className="inline-flex min-h-[44px] items-center gap-2 rounded-[var(--x-r-pill)] border border-[var(--x-line)] bg-[var(--x-surface)] px-5 text-sm font-semibold text-[var(--x-primary)] transition-colors hover:bg-[var(--x-primary-wash)]"
-                        >
-                          {he ? 'הצגת כל הפעילויות' : 'Show everything'}
-                        </button>
-                      }
-                    />
-                  ) : (
-                    <ol className="relative flex flex-col gap-4">
-                      <span
-                        aria-hidden="true"
-                        className="pointer-events-none absolute bottom-3 top-3 start-[54px] w-px bg-[var(--x-line-strong)] sm:start-[62px]"
-                      />
-                      {timeline.map((activity, i) => {
-                        const live =
-                          now !== null &&
-                          activity.startMs <= clock &&
-                          endOf(activity) > clock;
-                        return (
-                          <Fragment key={activity.id}>
-                            {nowRow === i ? nowLine : null}
-                            <li className="relative grid grid-cols-[46px_18px_1fr] items-start gap-2 sm:grid-cols-[54px_18px_1fr] sm:gap-3">
-                              <span className="pt-4 text-end text-sm font-semibold tabular-nums text-[var(--x-ink)]">
-                                {activity.time}
-                              </span>
-                              <span className="relative flex justify-center pt-[22px]">
-                                <span
-                                  className={`size-2.5 rounded-full ring-4 ring-[var(--x-bg)] ${
-                                    live
-                                      ? 'x-live-dot bg-[var(--x-live)]'
-                                      : activity.registration === 'registered'
-                                        ? 'bg-[var(--x-ok)]'
-                                        : 'bg-[var(--x-primary)]'
-                                  }`}
-                                />
-                              </span>
-                              <div
-                                className={
-                                  live
-                                    ? 'rounded-[var(--x-r-card)] ring-2 ring-[var(--x-primary)] ring-offset-2 ring-offset-[var(--x-bg)]'
-                                    : undefined
-                                }
-                              >
-                                <ActivityCard
-                                  activity={activity}
-                                  locale={locale}
-                                  slug={slug}
-                                  onOpen={setSelectedId}
-                                  registerAction={registerActivityAction}
-                                  leaveAction={leaveActivityAction}
-                                  index={i}
-                                  rich
-                                />
-                              </div>
-                            </li>
-                          </Fragment>
-                        );
-                      })}
-                      {nowRow === timeline.length ? nowLine : null}
-                    </ol>
-                  )}
-                </div>
-
-                {hasDiscovery ? (
-                  <div className="order-4 min-w-0">{discoverySection}</div>
                 ) : null}
+
+                {/* ---- the day ---- */}
+                <div className="mt-8 flex flex-wrap items-baseline justify-between gap-2">
+                  <h2 className="font-display text-[20px] font-bold tracking-tight text-[var(--x-ink)]">
+                    {t(locale, 'timelineTitle')}
+                  </h2>
+                  {activeDayVM ? (
+                    <p className="text-[13px] text-[var(--x-soft)]">{activeDayVM.full}</p>
+                  ) : null}
+                </div>
+
+                {dayItems.length === 0 ? (
+                  <section className="mt-4 rounded-[var(--x-r-card)] border border-dashed border-[var(--x-line-strong)] bg-[var(--x-surface)] px-6 py-10 text-center">
+                    <EmptyCalendar />
+                    <p className="mt-4 font-display text-[17px] font-bold text-[var(--x-ink)]">
+                      {t(locale, 'emptyDayTitle')}
+                    </p>
+                    <p className="mt-1 text-[14px] text-[var(--x-soft)]">
+                      {items.length > 0 ? t(locale, 'emptyDayHint') : t(locale, 'emptyHint')}
+                    </p>
+                    <a href={programHref} className={`${ghostBtn} mt-5`}>
+                      {t(locale, 'toProgram')}
+                      <IconArrow className="size-4 rtl:rotate-180" />
+                    </a>
+                  </section>
+                ) : (
+                  <ol
+                    id="my-schedule-timeline"
+                    role="tabpanel"
+                    aria-labelledby={`day-tab-${activeDay}`}
+                    className="relative mt-4 flex flex-col gap-3"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute bottom-4 top-4 start-[46px] w-px bg-[var(--x-line-strong)] sm:start-[62px]"
+                    />
+                    {dayItems.map((item, i) => {
+                      const live = now !== null && item.startMs <= clock && item.endMs > clock;
+                      const past = now !== null && item.endMs <= clock;
+                      const time = item.kind === 'activity' ? item.activity.time : item.meeting.time;
+                      return (
+                        <Fragment key={item.id}>
+                          {nowIndex === i ? nowLine : null}
+                          <li className="grid grid-cols-[40px_14px_1fr] items-start gap-1.5 sm:grid-cols-[54px_18px_1fr] sm:gap-3">
+                            <span
+                              dir="ltr"
+                              className={`pt-[18px] text-end text-[12px] font-bold tabular-nums sm:text-[13px] ${
+                                live ? 'text-[var(--x-primary)]' : past ? 'text-[var(--x-faint)]' : 'text-[var(--x-ink)]'
+                              }`}
+                            >
+                              {time}
+                            </span>
+                            <span className="relative flex justify-center pt-[22px]">
+                              <span
+                                className={`size-2.5 rounded-full ring-4 ring-[var(--x-bg)] ${
+                                  live
+                                    ? 'x-live-dot bg-[var(--x-primary)]'
+                                    : past
+                                      ? 'bg-[var(--x-line-strong)]'
+                                      : 'bg-[var(--x-primary)]'
+                                }`}
+                              />
+                            </span>
+                            <ScheduleRow
+                              item={item}
+                              locale={locale}
+                              slug={slug}
+                              live={live}
+                              past={past}
+                              conflict={conflicted.has(item.id)}
+                              waiting={waitingIds.has(item.id)}
+                              onOpen={setSelectedId}
+                              leaveAction={leaveActivityAction}
+                              networkingHref={networkingHref}
+                            />
+                          </li>
+                        </Fragment>
+                      );
+                    })}
+                    {nowIndex === dayItems.length ? nowLine : null}
+                  </ol>
+                )}
+
+                {dayItems.length > 0 ? (
+                  <p className="mt-6 flex items-center gap-3 text-[13px] text-[var(--x-faint)]">
+                    <span className="h-px flex-1 bg-[var(--x-line)]" />
+                    {t(locale, 'endOfList')}
+                    <span className="h-px flex-1 bg-[var(--x-line)]" />
+                  </p>
+                ) : null}
+
+                {cancelledSection}
               </div>
+
+              <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start">
+                <ScheduleSidebar
+                  locale={locale}
+                  summary={summary}
+                  suggestions={suggestions}
+                  exportTarget={exportTarget}
+                  programHref={programHref}
+                  onOpen={setSelectedId}
+                />
+              </aside>
             </div>
           </>
         )}
-
-        {/* With nothing in the schedule at all there is no timeline to sit
-            under, so the same section closes the empty page instead. */}
-        {empty ? discoverySection : null}
       </main>
 
       <NotificationBar items={urgent} locale={locale} onAction={setSelectedId} />

@@ -2,24 +2,18 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { findPortalEvent } from '@/features/events';
+import { myMeetings } from '@/features/networking';
 import { buildProgramModel } from '@/features/program';
 import { currentParticipant } from '@/features/registration';
 import AutoRefresh from './auto-refresh';
+import { toMeetingVMs } from './meetings';
 import MyScheduleDashboard from './my-schedule-dashboard';
+import SignInPreview from './sign-in-preview';
 
 interface Props {
   params: Promise<{ locale: string; slug: string }>;
   searchParams: Promise<{ notice?: string; activity?: string }>;
 }
-
-const SIGN_IN = {
-  title: { he: 'הלוח האישי מחכה לך', en: 'Your schedule is waiting' },
-  hint: {
-    he: 'התחברו כדי לראות את הפעילויות שנרשמתם אליהן, את הבאה בתור ואת הדרך לחדר.',
-    en: 'Sign in to see the activities you registered for, what’s next and how to get there.',
-  },
-  cta: { he: 'כניסה לכנס', en: 'Enter the conference' },
-};
 
 /*
  * My Schedule is not a second program — it is the program, filtered to one
@@ -27,6 +21,11 @@ const SIGN_IN = {
  * hands it to the dashboard together with the list of registrations that
  * decides what belongs on this participant's timeline. One source, two
  * lenses; nothing here can drift out of step with the program.
+ *
+ * The one thing added beside it is the participant's confirmed networking
+ * meetings: a commitment with a time and a place belongs on the same day
+ * as the workshops, and nobody should keep two schedules to know where
+ * they are at half past one.
  */
 const MySchedulePage = async ({ params, searchParams }: Props) => {
   const { locale, slug } = await params;
@@ -41,24 +40,18 @@ const MySchedulePage = async ({ params, searchParams }: Props) => {
 
   if (!participant) {
     return (
-      <main id="main-content" className="mx-auto flex max-w-lg flex-col items-center gap-4 px-6 py-24 text-center">
-        <h1 className="font-display text-3xl font-extrabold tracking-tight text-[var(--x-ink)]">
-          {SIGN_IN.title[lang]}
-        </h1>
-        <p className="text-[15px] text-[var(--x-soft)]">{SIGN_IN.hint[lang]}</p>
-        <a
-          href={`/${lang}/events/${slug}/register`}
-          className="mt-2 inline-flex min-h-[48px] items-center rounded-[var(--x-r-pill)] bg-[var(--x-primary)] px-6 text-sm font-semibold text-[var(--x-primary-ink)] shadow-[var(--x-shadow)] transition-colors hover:bg-[var(--x-primary-strong)]"
-        >
-          {SIGN_IN.cta[lang]}
-        </a>
-      </main>
+      <SignInPreview
+        locale={lang}
+        enterHref={`/${lang}/events/${slug}/register`}
+        signInHref={`/${lang}/me`}
+      />
     );
   }
 
-  const [event, model] = await Promise.all([
+  const [event, model, meetings] = await Promise.all([
     findPortalEvent(slug, lang).catch(() => null),
     buildProgramModel(slug, lang),
+    myMeetings(slug).catch(() => []),
   ]);
 
   const title = event?.title ?? (lang === 'he' ? 'הכנס' : 'The conference');
@@ -74,6 +67,7 @@ const MySchedulePage = async ({ params, searchParams }: Props) => {
         activities={model.activities}
         days={model.days}
         mine={model.mine}
+        meetings={toMeetingVMs(meetings, lang)}
         todayKey={todayKey}
         notice={notice ?? null}
         initialActivityId={activity ?? null}

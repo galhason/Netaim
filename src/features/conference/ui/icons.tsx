@@ -105,3 +105,46 @@ export const IconLive = (p: SVGProps<SVGSVGElement>) => (
     <circle cx="12" cy="12" r="5" />
   </svg>
 );
+
+/*
+ * The kinds of activity, each with a shape of its own — so a type reads
+ * at a glance and never by colour alone.
+ */
+export const IconMic = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <rect x="9" y="3.5" width="6" height="11" rx="3" />
+    <path d="M6 11.5a6 6 0 0 0 12 0M12 17.5v3M9 20.5h6" />
+  </svg>
+);
+export const IconBulb = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M9 18.5h6M10 21h4M8.5 14.2A5.5 5.5 0 1 1 15.5 14.2c-.7.6-1 1.3-1 2.3h-5c0-1-.3-1.7-1-2.3Z" />
+  </svg>
+);
+export const IconCoffee = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M4.5 9.5h11v5a4.5 4.5 0 0 1-4.5 4.5H9a4.5 4.5 0 0 1-4.5-4.5v-5ZM15.5 11h1.5a2.5 2.5 0 0 1 0 5h-1.5M8 6.5V4.5M11 6.5V4.5" />
+  </svg>
+);
+export const IconCompass = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="m15.5 8.5-2 5-5 2 2-5 5-2Z" />
+  </svg>
+);
+export const IconWarn = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M12 4.5 20.5 19h-17L12 4.5ZM12 10v4M12 16.5v.5" />
+  </svg>
+);
+export const IconBell = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6" />
+    <path d="M13.7 20a2 2 0 0 1-3.4 0" />
+  </svg>
+);
+export const IconChevronDown = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="m6 9 6 6 6-6" />
+  </svg>
+);

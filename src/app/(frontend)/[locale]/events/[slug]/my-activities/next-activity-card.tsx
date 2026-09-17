@@ -3,169 +3,218 @@
 import type { Locale } from '@/config/locales';
 import {
   IconArrow,
+  IconClock,
   IconPin,
   IconUsers,
   IconWait,
-  type ActivityVM,
 } from '@/features/conference';
 import { mapDirectionsUrl } from './calendar-links';
+import { t } from './copy';
+import { MINUTE, spanText, titleOf, type TimelineItem } from './timeline';
 
 interface Props {
-  activity: ActivityVM | null;
+  /* What is happening now, if anything; otherwise what comes next. */
+  current: TimelineItem | null;
+  next: TimelineItem | null;
+  /* Whether today is a day of the conference — decides the empty wording. */
+  todayIsConferenceDay: boolean;
+  now: number | null;
+  /* Whether the shown activity is held as a waiting-list place. */
+  waiting: boolean;
   locale: Locale;
-  onOpen: (id: string) => void;
   venue?: string;
   programHref: string;
+  networkingHref: string;
+  onOpen: (id: string) => void;
 }
 
-const primaryBtn =
-  'inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-[var(--x-r-pill)] bg-white px-4 text-sm font-semibold text-[var(--x-navy-deep)] transition-transform hover:scale-[1.02] hover:bg-[var(--x-primary-wash)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
-
-const ghostBtn =
-  'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[var(--x-r-pill)] border border-white/25 px-4 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
+const Sparkle = ({ className = 'size-5' }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
+    <path d="M12 2.5c.6 3.9 2.6 5.9 6.5 6.5-3.9.6-5.9 2.6-6.5 6.5-.6-3.9-2.6-5.9-6.5-6.5 3.9-.6 5.9-2.6 6.5-6.5ZM5 14c.3 1.9 1.3 2.9 3.2 3.2-1.9.3-2.9 1.3-3.2 3.2-.3-1.9-1.3-2.9-3.2-3.2 1.9-.3 2.9-1.3 3.2-3.2Z" />
+  </svg>
+);
 
 /*
- * The boarding pass. One card on the page is allowed to shout, and this is
- * it: everything a participant needs in the ninety seconds before they
- * stand up — when it starts, what it is, which room, who is speaking, and
- * the two things they might do about it. Navy marks it as the moment; the
- * rest of the dashboard stays in daylight so this reads as the single next
- * step.
+ * The one card on the page that is allowed to lead.
+ *
+ * It answers the question a participant standing in a corridor actually
+ * has — what next, where, in how long — and it reads the clock rather
+ * than the schedule: a session in progress beats the one after it, and
+ * a countdown is computed from the moment of render, never typed in.
+ * The clock is the dashboard's, ticking every half minute, so this card
+ * and the timeline's NOW line never disagree.
  */
 const NextActivityCard = ({
-  activity,
+  current,
+  next,
+  todayIsConferenceDay,
+  now,
+  waiting,
   locale,
-  onOpen,
   venue,
   programHref,
+  networkingHref,
+  onOpen,
 }: Props) => {
   const he = locale === 'he';
+  const item = current ?? next;
 
-  if (!activity) {
+  /* ---- nothing ahead ---- */
+  if (!item || now === null) {
+    if (now === null) {
+      /* Before the clock is read on the client, keep the card's height without a claim. */
+      return <div aria-hidden="true" className="min-h-[164px] rounded-[var(--x-r-card)] border border-[var(--x-line)] bg-[var(--x-surface)]" />;
+    }
     return (
-      <div className="rounded-[var(--x-r-card)] border border-dashed border-[var(--x-line-strong)] bg-[var(--x-surface)] p-6 text-center shadow-[var(--x-shadow)]">
+      <section className="rounded-[var(--x-r-card)] border border-dashed border-[var(--x-line-strong)] bg-[var(--x-surface)] p-5 text-center sm:p-6">
         <span className="mx-auto grid size-11 place-items-center rounded-full bg-[var(--x-primary-wash)] text-[var(--x-primary)]">
-          <IconWait className="size-5" />
+          <IconClock className="size-5" />
         </span>
-        <p className="mt-3 text-sm font-semibold text-[var(--x-ink)]">
-          {he ? 'אין פעילות הבאה בתור' : 'Nothing up next'}
+        <p className="mt-3 font-display text-[16px] font-bold text-[var(--x-ink)]">
+          {todayIsConferenceDay ? t(locale, 'noMoreToday') : t(locale, 'nothingAhead')}
         </p>
-        <p className="mt-1 text-[13px] leading-relaxed text-[var(--x-soft)]">
-          {he
-            ? 'סיימת להיום. אפשר להציץ בתוכנייה ולהוסיף עוד משהו.'
-            : 'You are done for now. Browse the program to add something.'}
+        <p className="mx-auto mt-1 max-w-sm text-[13px] leading-relaxed text-[var(--x-soft)]">
+          {todayIsConferenceDay ? t(locale, 'noMoreTodayHint') : t(locale, 'nothingAheadHint')}
         </p>
         <a
           href={programHref}
-          className="mt-4 inline-flex min-h-[42px] items-center gap-2 rounded-[var(--x-r-pill)] bg-[var(--x-primary)] px-5 text-[13px] font-semibold text-[var(--x-primary-ink)] transition-colors hover:bg-[var(--x-primary-strong)]"
+          className="mt-4 inline-flex min-h-[42px] items-center gap-2 rounded-[var(--x-r-pill)] bg-[var(--x-primary)] px-5 text-[13px] font-semibold text-[var(--x-primary-ink)] transition-colors hover:bg-[var(--x-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]"
         >
-          {he ? 'לתוכנייה' : 'Browse the program'}
+          {t(locale, 'toProgram')}
           <IconArrow className="size-4 rtl:rotate-180" />
         </a>
-      </div>
+      </section>
     );
   }
 
-  const speakers = activity.speakers.map((s) => s.name).join(' · ');
-  const directions = mapDirectionsUrl(activity, venue);
-  const waiting = activity.registration === 'waitlist';
+  const isNow = Boolean(current);
+  const left = isNow ? item.endMs - now : item.startMs - now;
+  const countdownLabel = isNow ? t(locale, 'endsIn') : t(locale, 'startsIn');
+  const countdown =
+    !isNow && left < MINUTE ? t(locale, 'startingNow') : spanText(left, he);
+
+  const activity = item.kind === 'activity' ? item.activity : null;
+  const meeting = item.kind === 'meeting' ? item.meeting : null;
+  const time = activity ? activity.time : meeting?.time;
+  const endTime = activity ? activity.endTime : meeting?.endTime;
+  const place = activity
+    ? [activity.room, activity.floor].filter(Boolean).join(' · ')
+    : (meeting?.location ?? '');
+  const people = activity
+    ? activity.speakers.map((s) => s.name).join(', ')
+    : (meeting?.withName ?? '');
+  const image = activity?.image;
+  const directions = activity ? mapDirectionsUrl(activity, venue) : null;
 
   return (
-    <article className="relative overflow-hidden rounded-[var(--x-r-card)] bg-[var(--x-navy)] text-white shadow-[var(--x-shadow-lift)]">
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(130%_150%_at_100%_0%,rgba(110,86,207,0.5),transparent_55%),radial-gradient(90%_130%_at_0%_100%,rgba(43,58,110,0.7),transparent_60%),linear-gradient(135deg,#16233c,#0a1322)]"
-      />
-      {/* The two notches that make a ticket a ticket. */}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute -start-2.5 top-[168px] size-5 rounded-full bg-[var(--x-bg)]"
-      />
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute -end-2.5 top-[168px] size-5 rounded-full bg-[var(--x-bg)]"
-      />
+    <section
+      aria-labelledby="next-activity-title"
+      className={`relative overflow-hidden rounded-[var(--x-r-card)] border p-4 sm:p-5 ${
+        isNow
+          ? 'border-[var(--x-primary)]/40 bg-[var(--x-primary-wash)] shadow-[0_10px_30px_rgba(110,86,207,0.14)]'
+          : 'border-[var(--x-line)] bg-[linear-gradient(135deg,var(--x-primary-wash),var(--x-surface)_55%)] shadow-[var(--x-shadow)]'
+      }`}
+    >
+      <h2
+        id="next-activity-title"
+        className="flex items-center gap-2 text-[13px] font-bold text-[var(--x-primary-strong)]"
+      >
+        <Sparkle className="size-5 text-[var(--x-primary)]" />
+        {isNow ? t(locale, 'nowTitle') : t(locale, 'nextTitle')}
+      </h2>
 
-      <div className="relative p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--x-gold-soft)]">
-            {he ? 'הפעילות הבאה' : 'Up next'}
-          </p>
-          <span className="rounded-[var(--x-r-pill)] bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/70">
-            {activity.typeLabel}
-          </span>
+      <div className="mt-3 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+        <div className="flex min-w-0 items-start gap-4">
+          {image ? (
+            // eslint-disable-next-line @next/next/no-img-element -- session artwork from the media API
+            <img
+              src={image}
+              alt=""
+              className="hidden size-[92px] shrink-0 rounded-[12px] object-cover sm:block"
+            />
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] font-semibold tabular-nums text-[var(--x-soft)]" dir="ltr">
+              {time}
+              {endTime ? ` – ${endTime}` : ''}
+            </p>
+            <p className="mt-1 font-display text-[19px] font-bold leading-snug tracking-tight text-[var(--x-ink)] sm:text-[21px]">
+              {titleOf(item)}
+            </p>
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-[var(--x-soft)]">
+              {place ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <IconPin className="size-4 text-[var(--x-faint)]" />
+                  {place}
+                </span>
+              ) : null}
+              {people ? (
+                <span className="inline-flex min-w-0 items-center gap-1.5">
+                  <IconUsers className="size-4 shrink-0 text-[var(--x-faint)]" />
+                  <span className="truncate">{people}</span>
+                </span>
+              ) : null}
+              {waiting ? (
+                <span className="inline-flex items-center gap-1.5 text-[var(--x-wait)]">
+                  <IconWait className="size-4" />
+                  {t(locale, 'onWaitlist')}
+                </span>
+              ) : null}
+            </p>
+          </div>
         </div>
 
-        <div className="mt-4 flex items-end gap-2">
-          <span className="font-display text-5xl font-extrabold leading-none tabular-nums text-white sm:text-6xl">
-            {activity.time}
-          </span>
-          {activity.endTime ? (
-            <span className="pb-1 text-sm font-semibold tabular-nums text-white/65">
-              {he ? `עד ${activity.endTime}` : `until ${activity.endTime}`}
+        <div className="flex items-center gap-4 sm:flex-col sm:items-end sm:gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--x-surface)] text-[var(--x-primary)] shadow-[var(--x-shadow)]">
+              <IconClock className="size-5" />
             </span>
-          ) : null}
-        </div>
-        {activity.duration ? (
-          <p className="mt-1.5 text-[12px] text-white/45">{activity.duration}</p>
-        ) : null}
-
-        <div
-          aria-hidden="true"
-          className="mt-5 border-t border-dashed border-white/15"
-        />
-
-        <h3 className="mt-4 font-display text-xl font-bold leading-snug tracking-tight sm:text-2xl">
-          {activity.title}
-        </h3>
-
-        <dl className="mt-3 flex flex-col gap-1.5 text-[13px] text-white/70">
-          {activity.room ? (
-            <div className="flex items-center gap-2">
-              <IconPin className="size-4 shrink-0 text-white/45" />
-              <span>
-                {activity.room}
-                {activity.floor ? ` · ${activity.floor}` : ''}
+            <span className="flex flex-wrap items-baseline gap-x-1.5 leading-tight sm:block">
+              <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] rtl:tracking-normal text-[var(--x-soft)]">
+                {countdownLabel}
               </span>
-            </div>
-          ) : null}
-          {speakers ? (
-            <div className="flex items-center gap-2">
-              <IconUsers className="size-4 shrink-0 text-white/45" />
-              <span className="truncate">{speakers}</span>
-            </div>
-          ) : null}
-          {waiting ? (
-            <div className="flex items-center gap-2 text-[var(--x-gold-soft)]">
-              <IconWait className="size-4 shrink-0" />
-              <span>{he ? 'אתה ברשימת המתנה' : 'You are on the waiting list'}</span>
-            </div>
-          ) : null}
-        </dl>
-
-        <div className="mt-5 flex flex-wrap gap-2">
-          <button
-            type="button"
-            className={primaryBtn}
-            onClick={() => onOpen(activity.id)}
-          >
-            {he ? 'פרטי הפעילות' : 'Open activity'}
-            <IconArrow className="size-4 rtl:rotate-180" />
-          </button>
-          {directions ? (
-            <a
-              href={directions}
-              target="_blank"
-              rel="noreferrer"
-              className={ghostBtn}
-            >
-              <IconPin className="size-4" />
-              {he ? 'ניווט לחדר' : 'Directions'}
-            </a>
-          ) : null}
+              <span
+                aria-live="polite"
+                className="block font-display text-[19px] font-extrabold tabular-nums text-[var(--x-primary-strong)]"
+              >
+                {countdown}
+              </span>
+            </span>
+          </div>
+          <div className="ms-auto flex flex-wrap items-center gap-2 sm:ms-0">
+            {activity ? (
+              <button
+                type="button"
+                onClick={() => onOpen(activity.id)}
+                className="inline-flex min-h-[42px] items-center gap-2 whitespace-nowrap rounded-[var(--x-r-pill)] border border-[var(--x-primary)]/40 bg-[var(--x-surface)] px-4 text-[13px] font-semibold text-[var(--x-primary)] transition-colors hover:bg-[var(--x-primary)] hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]"
+              >
+                {t(locale, 'viewActivity')}
+                <IconArrow className="size-4 rtl:rotate-180" />
+              </button>
+            ) : (
+              <a
+                href={networkingHref}
+                className="inline-flex min-h-[42px] items-center gap-2 whitespace-nowrap rounded-[var(--x-r-pill)] border border-[var(--x-primary)]/40 bg-[var(--x-surface)] px-4 text-[13px] font-semibold text-[var(--x-primary)] transition-colors hover:bg-[var(--x-primary)] hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]"
+              >
+                {t(locale, 'toNetworking')}
+                <IconArrow className="size-4 rtl:rotate-180" />
+              </a>
+            )}
+            {directions ? (
+              <a
+                href={directions}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-[42px] items-center gap-1.5 rounded-[var(--x-r-pill)] px-3 text-[13px] font-medium text-[var(--x-soft)] transition-colors hover:text-[var(--x-primary)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]"
+              >
+                <IconPin className="size-4" />
+                {t(locale, 'directions')}
+              </a>
+            ) : null}
+          </div>
         </div>
       </div>
-    </article>
+    </section>
   );
 };
 
