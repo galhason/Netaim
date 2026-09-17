@@ -308,6 +308,7 @@ const assembleExperience = (
       image: event.heroUrl ?? event.posterUrl ?? fallback.arrival.image,
       ...(event.heroVideoUrl ? { video: event.heroVideoUrl } : {}),
       startsAt: event.startsAt,
+      ...(event.endsAt ? { endsAt: event.endsAt } : {}),
       facts,
       eyebrow: opening?.arrivalEyebrow ?? fallback.arrival.eyebrow,
       title: event.title || fallback.arrival.title,

@@ -11,6 +11,12 @@ interface HeroCountdownBadgeProps {
 
 const DAY_MS = 86_400_000;
 
+const endOfDay = (ms: number): number => {
+  const day = new Date(ms);
+  day.setHours(23, 59, 59, 999);
+  return day.getTime();
+};
+
 /*
  * A small premium badge, computed live in the visitor's browser: how
  * many days until the conference opens, or that it is happening now, or
@@ -35,7 +41,13 @@ const HeroCountdownBadge = ({
       setLabel(null);
       return;
     }
-    const end = endsAt ? Date.parse(endsAt) : start + DAY_MS;
+    /*
+     * With no end date the conference is taken to run to the close of
+     * the day it opens. That is a guess, and it is only ever made when
+     * nobody has said otherwise — an end date is what this reads.
+     */
+    const parsedEnd = endsAt ? Date.parse(endsAt) : Number.NaN;
+    const end = Number.isNaN(parsedEnd) ? endOfDay(start) : parsedEnd;
 
     const compute = () => {
       const now = Date.now();
@@ -46,7 +58,7 @@ const HeroCountdownBadge = ({
             ? `הכנס מתחיל בעוד ${days} ${days === 1 ? 'יום' : 'ימים'}`
             : `Starts in ${days} ${days === 1 ? 'day' : 'days'}`,
         );
-      } else if (!Number.isNaN(end) && now > end) {
+      } else if (now > end) {
         setLabel(locale === 'he' ? 'הכנס הסתיים' : 'The conference has ended');
       } else {
         setLabel(

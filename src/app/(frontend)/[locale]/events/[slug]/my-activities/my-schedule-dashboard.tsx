@@ -43,6 +43,14 @@ interface Props {
   mine: MyRegistrationsVM;
   meetings: MeetingVM[];
   todayKey: string;
+  /*
+   * The conference's own dates, as the organiser set them. The
+   * programme's days are not the same thing: a timetable filled in for
+   * the first morning only would otherwise declare a three-day
+   * conference over by lunchtime.
+   */
+  startsAt?: string;
+  endsAt?: string;
   notice: string | null;
   venue?: string;
   initialActivityId?: string | null;
@@ -105,6 +113,8 @@ const MyScheduleDashboard = ({
   mine,
   meetings,
   todayKey,
+  startsAt,
+  endsAt,
   notice,
   venue,
   initialActivityId,
@@ -304,8 +314,21 @@ const MyScheduleDashboard = ({
   }, [notice, locale, current, next, now, he]);
 
   /* ---- where the conference stands ---- */
-  const firstDay = allDays[0]?.key ?? '';
-  const lastDay = allDays[allDays.length - 1]?.key ?? '';
+  /*
+   * The conference's own dates answer this, and the programme's days
+   * only stand in when it has none. They are different questions: the
+   * days are wherever activities happen to have been scheduled, and a
+   * timetable that has only been filled in for the opening morning does
+   * not mean the conference is over.
+   */
+  const dayKeyOf = (iso?: string): string => {
+    if (!iso) return '';
+    const parsed = Date.parse(iso);
+    return Number.isNaN(parsed) ? '' : new Date(parsed).toISOString().slice(0, 10);
+  };
+  const firstDay = dayKeyOf(startsAt) || (allDays[0]?.key ?? '');
+  const lastDay =
+    dayKeyOf(endsAt) || dayKeyOf(startsAt) || (allDays[allDays.length - 1]?.key ?? '');
   const ended = Boolean(lastDay) && todayKey > lastDay;
   const daysUntil =
     firstDay && todayKey < firstDay

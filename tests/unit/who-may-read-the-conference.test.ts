@@ -150,3 +150,56 @@ describe('the Lounge points at the day, and shows what the conference said', () 
     ).not.toMatch(/updates: \[\]/);
   });
 });
+
+/*
+ * When the conference is over.
+ *
+ * Only the organiser's own dates can answer that. The programme's days
+ * are wherever activities happen to have been scheduled, and a
+ * timetable filled in for the opening morning alone does not mean the
+ * conference has ended — which is exactly what the site told a visitor
+ * on the second day of a two-day event.
+ */
+describe('the conference ends when its organiser says it does', () => {
+  it('hands the hero badge the end date, not only the start', () => {
+    const arrival = read('src/features/cinematic/components/arrival-scene.tsx');
+    expect(arrival).toContain('endsAt={arrival.endsAt}');
+    expect(
+      read('src/features/cinematic/services/cinematic-service.ts'),
+    ).toContain('event.endsAt');
+    expect(read('src/features/cinematic/types/cinematic.ts')).toMatch(
+      /endsAt\?: string;/,
+    );
+  });
+
+  it('never guesses a one-day conference when a date was given', () => {
+    const badge = read(
+      'src/features/cinematic/components/hero-countdown-badge.tsx',
+    );
+    /* The old fallback, `start + DAY_MS`, ended every conference overnight. */
+    expect(badge).not.toContain('endsAt ? Date.parse(endsAt) : start + DAY_MS');
+  });
+
+  it('lets the schedule read the conference dates before the programme days', () => {
+    const dashboard = read(
+      `${FRONTEND}/events/[slug]/my-activities/my-schedule-dashboard.tsx`,
+    );
+    expect(dashboard).toContain('dayKeyOf(endsAt)');
+    expect(read(`${FRONTEND}/events/[slug]/my-activities/page.tsx`)).toContain(
+      'event?.endsAt',
+    );
+  });
+
+  it('clears the public site when the dates change in the Studio', () => {
+    /*
+     * The Studio showed the new dates at once and the live site kept the
+     * old ones for an hour, which reads as a field that does not work.
+     */
+    const actions = read('src/app/(studio)/studio/(console)/actions.ts');
+    const settings = actions.slice(
+      actions.indexOf('updateConferenceSettingsAction'),
+    );
+    const body = settings.slice(0, settings.indexOf('\n};'));
+    expect(body).toContain('publishedEvent(slug)');
+  });
+});

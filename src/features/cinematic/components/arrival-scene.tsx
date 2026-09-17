@@ -103,7 +103,11 @@ const ArrivalScene = ({ arrival, locale }: ArrivalSceneProps) => {
             ) : null}
 
             <div className="cine-hero-line mt-8 [animation-delay:700ms]">
-              <HeroCountdownBadge startsAt={arrival.startsAt} locale={locale} />
+              <HeroCountdownBadge
+                startsAt={arrival.startsAt}
+                endsAt={arrival.endsAt}
+                locale={locale}
+              />
             </div>
 
             <ul className="cine-hero-line mt-7 flex flex-wrap items-center gap-x-10 gap-y-4 [animation-delay:850ms]">

@@ -759,6 +759,13 @@ export const updateConferenceSettingsAction = async (formData: FormData) => {
   );
   revalidatePath('/studio', 'layout');
   revalidatePath(`/studio/experiences/${slug}`);
+  /*
+   * And the public site, which is the point of changing a date. Without
+   * this the Studio showed the new dates immediately and the live site
+   * kept the old ones for up to an hour — long enough for an organiser
+   * to conclude the field does not work.
+   */
+  publishedEvent(slug);
 };
 
 /*

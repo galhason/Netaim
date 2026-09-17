@@ -29,6 +29,12 @@ export interface ArrivalScene {
    * hero's glass panel.
    */
   startsAt?: string;
+  /*
+   * When it is over. Without it the badge could only guess — it assumed
+   * a single day — so a two-day conference announced its own end on the
+   * morning of the second.
+   */
+  endsAt?: string;
   facts?: WhyStatistic[];
   avatars?: string[];
 }

@@ -69,6 +69,8 @@ const MySchedulePage = async ({ params, searchParams }: Props) => {
         mine={model.mine}
         meetings={toMeetingVMs(meetings, lang)}
         todayKey={todayKey}
+        {...(event?.startsAt ? { startsAt: event.startsAt } : {})}
+        {...(event?.endsAt ? { endsAt: event.endsAt } : {})}
         notice={notice ?? null}
         initialActivityId={activity ?? null}
         {...(event?.location ? { venue: event.location } : {})}
