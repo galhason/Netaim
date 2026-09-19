@@ -317,7 +317,12 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
         sessionType: session.sessionType,
         waiting,
         imageUrl: session.image,
-        href: `/${locale}/events/${activeSlug}/program?activity=${session.id}`,
+        /*
+         * This session's own conference, not whichever one is live. The
+         * personal area fans out across every conference the account has
+         * joined, so a card from 2027 must lead to 2027's programme.
+         */
+        href: `/${locale}/events/${slug}/program?activity=${session.id}`,
       },
     });
     const sessionSets = await Promise.all(
