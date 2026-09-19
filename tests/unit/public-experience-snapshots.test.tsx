@@ -49,6 +49,22 @@ import {
   fallbackConference,
 } from '@/features/cinematic';
 
+/*
+ * The conference fixtures name a conference.
+ *
+ * `fallbackConference` deliberately describes none — it is the cinematic
+ * voice the site speaks before anything is published — and a nav built
+ * for no conference correctly leaves the conference pages out. That made
+ * these snapshots lock a navigation of two items instead of five, which
+ * is the opposite of what they are for: the markup they exist to hold is
+ * the full journey. So the fixture is given a slug, and the locked
+ * markup covers every link the migration touched.
+ *
+ * A literal here is a fixture value, not a hardcoded conference: no
+ * source file names one, and the guard for that is a grep over src.
+ */
+const FIXTURE_SLUG = 'demo-conference';
+
 const FIXED_YEAR_PATTERN = /© \d{4}/g;
 
 const stable = (markup: string): string =>
@@ -78,7 +94,10 @@ describe('public experience markup', () => {
   it('renders the conference experience exactly as locked', () => {
     const markup = renderToString(
       <ExperienceStage
-        experience={buildConferenceDescriptor(fallbackConference('he'), 'he')}
+        experience={buildConferenceDescriptor(
+          { ...fallbackConference('he'), slug: FIXTURE_SLUG },
+          'he',
+        )}
         locale="he"
       />,
     );
@@ -88,7 +107,10 @@ describe('public experience markup', () => {
   it('renders the conference experience in English exactly as locked', () => {
     const markup = renderToString(
       <ExperienceStage
-        experience={buildConferenceDescriptor(fallbackConference('en'), 'en')}
+        experience={buildConferenceDescriptor(
+          { ...fallbackConference('en'), slug: FIXTURE_SLUG },
+          'en',
+        )}
         locale="en"
       />,
     );
