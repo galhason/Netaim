@@ -337,7 +337,13 @@ registerScene({
   version: 1,
   placement: 'overlay',
   renderer: NavRenderer,
-  defaultContent: { brand: BRAND_NAME, registerHref: '/', meHref: '/' },
+  defaultContent: {
+    brand: BRAND_NAME,
+    /* No conference, so no conference pages to offer. */
+    links: [],
+    registerHref: '/',
+    meHref: '/',
+  },
 });
 
 registerScene({

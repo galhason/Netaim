@@ -129,11 +129,13 @@ const BadgeIcon = ({ badge }: { badge: string }) => {
 
 const SpeakerCard = ({
   speaker,
+  locale,
   speakersHref,
   hero = false,
   badge,
 }: {
   speaker: Speaker;
+  locale: Locale;
   speakersHref: string;
   hero?: boolean;
   badge?: string;
@@ -258,6 +260,7 @@ const SpeakersScene = ({
         <motion.div key={speaker.name} variants={item}>
           <SpeakerCard
             speaker={speaker}
+            locale={locale}
             speakersHref={speakersHref}
             badge={
               showcase
@@ -289,6 +292,7 @@ const SpeakersScene = ({
               <motion.div key={speaker.name} variants={item}>
                 <SpeakerCard
                   speaker={speaker}
+                  locale={locale}
                   speakersHref={speakersHref}
                   badge={
                     speaker.badge ?? DERIVED_BADGES[i % DERIVED_BADGES.length]
@@ -303,6 +307,7 @@ const SpeakersScene = ({
         <motion.div variants={item} className="lg:order-last lg:w-[36%]">
           <SpeakerCard
             speaker={headliner}
+            locale={locale}
             speakersHref={speakersHref}
             hero
             badge={headliner.badge ?? 'Keynote'}
