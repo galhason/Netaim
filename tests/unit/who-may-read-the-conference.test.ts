@@ -15,12 +15,18 @@ import { siteNavLinks } from '@/features/cinematic';
  */
 const read = (path: string): string => readFileSync(path, 'utf8');
 const FRONTEND = 'src/app/(frontend)/[locale]';
+/*
+ * The four authenticated experience routes live inside the conference
+ * they belong to, so the group sits *below* the [slug] segment and
+ * inherits it. A route group in parentheses adds nothing to the URL.
+ */
+const EXPERIENCE = `${FRONTEND}/events/[slug]/(experience)`;
 
 describe('the conference is read by people who joined it', () => {
   const GUARDED = [
-    `${FRONTEND}/(experience)/program/page.tsx`,
-    `${FRONTEND}/(experience)/speakers/page.tsx`,
-    `${FRONTEND}/(experience)/speakers/[id]/page.tsx`,
+    `${EXPERIENCE}/program/page.tsx`,
+    `${EXPERIENCE}/speakers/page.tsx`,
+    `${EXPERIENCE}/speakers/[id]/page.tsx`,
   ];
 
   it('asks every guarded page for a participant', () => {
@@ -67,9 +73,9 @@ describe('the conference is read by people who joined it', () => {
     `${FRONTEND}/(site)/terms/page.tsx`,
     `${FRONTEND}/(site)/accessibility/page.tsx`,
     `${FRONTEND}/(site)/contact/page.tsx`,
-    `${FRONTEND}/(experience)/info/page.tsx`,
+    `${EXPERIENCE}/info/page.tsx`,
     `${FRONTEND}/(site)/layout.tsx`,
-    `${FRONTEND}/(experience)/layout.tsx`,
+    `${EXPERIENCE}/layout.tsx`,
   ];
 
   it('never puts the gate in front of the way in, or the law', () => {
