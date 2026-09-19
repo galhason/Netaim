@@ -1,5 +1,12 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+/*
+ * posix.join, not join. The exclusions below compare against literals
+ * written with forward slashes, so a path built with the platform
+ * separator would never match them on Windows and every file under
+ * src/features would be reported as an offender. Forward slashes are
+ * accepted by the fs calls on every platform this suite runs on.
+ */
+import { posix } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /*
@@ -64,7 +71,7 @@ const branchesOnSceneType = (source: string): boolean =>
 const walk = (dir: string): string[] => {
   const files: string[] = [];
   for (const entry of readdirSync(dir)) {
-    const path = join(dir, entry);
+    const path = posix.join(dir, entry);
     if (statSync(path).isDirectory()) {
       files.push(...walk(path));
     } else if (/\.(?:ts|tsx)$/.test(entry)) {
