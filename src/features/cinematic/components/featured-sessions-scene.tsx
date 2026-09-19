@@ -24,6 +24,8 @@ interface FeaturedSession extends FeaturedSessionItem {
 interface FeaturedSessionsSceneProps {
   sessions: FeaturedSessionItem[];
   locale: Locale;
+  /* This conference's full programme, resolved by the descriptor. */
+  programHref?: string;
 }
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -277,6 +279,7 @@ const SessionCard = ({
 const FeaturedSessionsScene = ({
   sessions,
   locale,
+  programHref = '/',
 }: FeaturedSessionsSceneProps) => {
   const railRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
@@ -339,7 +342,7 @@ const FeaturedSessionsScene = ({
 
           <div className="flex justify-center md:justify-end">
             <Link
-              href={`/${locale}/program`}
+              href={programHref}
               className="group inline-flex items-center gap-2 text-sm text-accent transition-colors hover:text-text-primary md:text-base"
             >
               <span className="transition-transform duration-200 group-hover:-translate-x-1">
@@ -366,7 +369,7 @@ const FeaturedSessionsScene = ({
               className="w-[16.5rem] flex-none snap-start sm:w-[17.5rem]"
             >
               <Link
-                href={`/${locale}/program?activity=${session.id}`}
+                href={`${programHref}?activity=${session.id}`}
                 className="block h-full rounded-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent/30"
                 aria-label={session.title}
               >

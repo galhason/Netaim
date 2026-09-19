@@ -63,7 +63,11 @@ const SpeakersPage = async ({ params }: SpeakersPageProps) => {
       </header>
 
       {speakers.length > 0 ? (
-        <SpeakersDirectory speakers={speakers} locale={lang} />
+        <SpeakersDirectory
+          speakers={speakers}
+          locale={lang}
+          speakersHref={`/${lang}/events/${slug}/speakers`}
+        />
       ) : (
         <EmptyState
           title={he ? 'רשימת הדוברים בדרך' : 'The lineup is on its way'}

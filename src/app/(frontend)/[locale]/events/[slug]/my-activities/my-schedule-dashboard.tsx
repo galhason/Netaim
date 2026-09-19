@@ -121,7 +121,7 @@ const MyScheduleDashboard = ({
 }: Props) => {
   const he = locale === 'he';
   const favorites = useFavorites();
-  const programHref = `/${locale}/program`;
+  const programHref = `/${locale}/events/${slug}/program`;
   const meHref = `/${locale}/me`;
   const networkingHref = `/${locale}/me/networking`;
 

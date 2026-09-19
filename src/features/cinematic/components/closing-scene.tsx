@@ -14,6 +14,8 @@ import { RevealText } from '@/shared';
 interface ClosingSceneProps {
   closing: ClosingSceneData;
   registerHref?: string;
+  /* This conference's programme, resolved by the descriptor. */
+  programHref?: string;
   facts?: WhyStatistic[];
   locale: Locale;
 }
@@ -54,9 +56,13 @@ const PRIMARY: Record<Locale, string> = {
  * No second hero, no background image; the words and a quiet row of
  * numbers do the work. The button leads to the full Program.
  */
-const ClosingScene = ({ closing, facts = [], locale }: ClosingSceneProps) => {
+const ClosingScene = ({
+  closing,
+  facts = [],
+  locale,
+  programHref = '/',
+}: ClosingSceneProps) => {
   const reduce = useReducedMotion();
-  const programHref = `/${locale}/program`;
   const stats = facts.slice(0, 4);
 
   return (

@@ -15,8 +15,10 @@ const localeOf = (value: string): Locale =>
  */
 export const registerActivityAction = async (formData: FormData) => {
   const locale = localeOf(String(formData.get('locale') ?? ''));
+  const slug = String(formData.get('slug') ?? '');
   const sessionId = String(formData.get('sessionId') ?? '');
-  const base = `/${locale}/program`;
+  /* The button has always submitted the conference; now the way back uses it. */
+  const base = `/${locale}/events/${slug}/program`;
   let target = base;
   if (sessionId) {
     try {
@@ -35,8 +37,9 @@ export const registerActivityAction = async (formData: FormData) => {
 export const leaveActivityAction = async (formData: FormData) => {
   const locale = localeOf(String(formData.get('locale') ?? ''));
   const sessionId = String(formData.get('sessionId') ?? '');
+  const slug = String(formData.get('slug') ?? '');
   if (sessionId) {
     await leaveWorkshop(sessionId, locale).catch(() => null);
   }
-  redirect(`/${locale}/program`);
+  redirect(`/${locale}/events/${slug}/program`);
 };

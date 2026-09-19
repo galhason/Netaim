@@ -317,7 +317,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
         sessionType: session.sessionType,
         waiting,
         imageUrl: session.image,
-        href: `/${locale}/program?activity=${session.id}`,
+        href: `/${locale}/events/${activeSlug}/program?activity=${session.id}`,
       },
     });
     const sessionSets = await Promise.all(
@@ -381,7 +381,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
         sessionsSection={{
           registered: registeredSessions,
           presenting: presentingSessions,
-          programHref: `/${locale}/program`,
+          programHref: `/${locale}/events/${chosen?.slug ?? activeSlug}/program`,
         }}
         homeHref={`/${locale}/me`}
         profileHref={`/${locale}/me/profile`}

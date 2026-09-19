@@ -47,9 +47,11 @@ const COPY = {
 const SpeakersDirectory = ({
   speakers,
   locale,
+  speakersHref,
 }: {
   speakers: DirectorySpeaker[];
   locale: Locale;
+  speakersHref: string;
 }) => {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<FilterKey>('all');
@@ -121,7 +123,7 @@ const SpeakersDirectory = ({
             return (
               <li key={speaker.id}>
                 <Link
-                  href={`/${locale}/speakers/${speaker.id}`}
+                  href={`${speakersHref}/${speaker.id}`}
                   className="group flex h-full flex-col rounded-[var(--x-r-card)] border border-[var(--x-line)] bg-[var(--x-surface)] p-5 shadow-[var(--x-shadow)] transition-all duration-200 hover:-translate-y-1 hover:border-[var(--x-primary)]/25 hover:shadow-[var(--x-shadow-lift)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]"
                 >
                   <div className="flex items-start gap-4">

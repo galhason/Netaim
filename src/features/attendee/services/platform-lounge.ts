@@ -1,4 +1,5 @@
 import type { Locale } from '@/config/locales';
+import { WORDPRESS_HOME } from '@/config/wordpress';
 import type {
   AttendeeExperienceContent,
   AttendeePerson,
@@ -37,8 +38,12 @@ export const buildPlatformLounge = (
       eventDateLabel: he ? 'הבית של הכנסים שלך' : 'The home of your conferences',
       venueLine: '',
       primaryCta: {
-        label: he ? 'לתוכנית' : 'Browse the program',
-        href: `/${locale}/program`,
+        /*
+         * The platform lounge belongs to no conference, so there is no
+         * programme to browse. It points at the conferences instead.
+         */
+        label: he ? 'לכנסים' : 'Browse conferences',
+        href: WORDPRESS_HOME[locale],
       },
     },
     myEvent: {

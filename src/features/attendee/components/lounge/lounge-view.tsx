@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { SUPPORT_EMAIL } from '@/config/brand';
 import type { Locale } from '@/config/locales';
+import { WORDPRESS_HOME } from '@/config/wordpress';
 import { LOUNGE_UI } from '../../constants/lounge-ui';
 import type { AttendeeExperienceContent } from '../../types/attendee-experience';
 
@@ -255,18 +256,22 @@ const LoungeView = ({
    */
   const scheduleHref =
     scheduleHrefProp ??
-    (content.slug ? `${base}/my-activities` : `/${locale}/program`);
+    (content.slug ? `${base}/my-activities` : WORDPRESS_HOME[locale]);
   /*
    * One community, whichever conference the guest came from. The
    * per-conference networking page was retired; pointing at it would
    * only cost a redirect.
    */
   const networkingHref = `${platformBase}/networking`;
-  const workshopsHref = `/${locale}/program`;
+  const workshopsHref = content.slug
+    ? `/${locale}/events/${content.slug}/program`
+    : WORDPRESS_HOME[locale];
   const messagesHref = content.slug
     ? `${base}/me/messages`
     : `${platformBase}/messages`;
-  const speakersHref = `/${locale}/speakers`;
+  const speakersHref = content.slug
+    ? `/${locale}/events/${content.slug}/speakers`
+    : WORDPRESS_HOME[locale];
   const venueHref = content.slug ? `${base}/me/venue` : base;
   const endStamp = Date.parse(content.welcome.endsAt ?? '');
   const ended = !Number.isNaN(endStamp) && endStamp < Date.now();
@@ -702,7 +707,7 @@ const LoungeView = ({
                       }`}
                     />
                     <Link
-                      href={`/${locale}/program?activity=${moment.id}`}
+                      href={`${workshopsHref}?activity=${moment.id}`}
                       className="min-w-0 flex-1 rounded-xl border border-[var(--l-hair)] px-3.5 py-2.5 transition-colors hover:border-[var(--l-bronze)] hover:bg-[var(--l-bronze)]/5"
                     >
                       <span className="flex items-center gap-2">

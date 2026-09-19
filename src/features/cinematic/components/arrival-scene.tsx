@@ -11,6 +11,8 @@ interface ArrivalSceneProps {
   arrival: ArrivalSceneData;
   /* Registration is offered by the navigation bar; the hero leads to the programme. */
   registerHref?: string;
+  /* This conference's programme, resolved by the descriptor. */
+  programHref?: string;
   locale: Locale;
   variant?: string;
   density?: string;
@@ -38,9 +40,12 @@ const yearOf = (arrival: ArrivalSceneData): string | null => {
  * short or wide screen the scene simply grows past the fold instead of
  * letting the rows overlap.
  */
-const ArrivalScene = ({ arrival, locale }: ArrivalSceneProps) => {
+const ArrivalScene = ({
+  arrival,
+  locale,
+  programHref = '/',
+}: ArrivalSceneProps) => {
   const stats = (arrival.facts ?? []).slice(0, HERO_STAT_LIMIT);
-  const programHref = `/${locale}/program`;
   const year = yearOf(arrival);
 
   return (

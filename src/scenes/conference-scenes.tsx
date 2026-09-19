@@ -80,6 +80,26 @@ interface ConferenceNavContent {
   sections?: NavSection[];
 }
 
+/*
+ * The list scenes carry the address of the page that shows the whole
+ * list. Resolved in the descriptor, where the conference is known — a
+ * scene is handed a locale and never a conference.
+ */
+interface FeaturedSessionsContent {
+  sessions: FeaturedSessionItem[];
+  programHref: string;
+}
+
+interface SpeakersContent {
+  speakers: SpeakerItem[];
+  speakersHref: string;
+}
+
+interface ProgramContent {
+  program: ProgramDay[];
+  programHref: string;
+}
+
 interface ConferenceFooterContent {
   brand: string;
   brandLogo?: string;
@@ -133,11 +153,13 @@ const FooterRenderer = ({
 interface ArrivalContent {
   arrival: ArrivalSceneData;
   registerHref: string;
+  programHref: string;
 }
 
 interface ClosingContent {
   closing: ClosingSceneData;
   registerHref: string;
+  programHref: string;
   facts: WhyStatistic[];
 }
 
@@ -151,6 +173,7 @@ const ArrivalRenderer = ({
   <ConferenceArrivalScene
     arrival={content.arrival}
     registerHref={content.registerHref}
+    programHref={content.programHref}
     locale={locale}
     variant={variant}
     density={density}
@@ -195,9 +218,13 @@ const MomentsRenderer = ({
 const FeaturedSessionsRenderer = ({
   content,
   locale,
-}: SceneComponentProps<FeaturedSessionItem[]>) => (
+}: SceneComponentProps<FeaturedSessionsContent>) => (
   <div className={ATMOS.warm}>
-    <ConferenceFeaturedSessionsScene sessions={content} locale={locale} />
+    <ConferenceFeaturedSessionsScene
+      sessions={content.sessions}
+      programHref={content.programHref}
+      locale={locale}
+    />
   </div>
 );
 
@@ -255,10 +282,11 @@ const SpeakersRenderer = ({
   variant,
   density,
   emphasis,
-}: SceneComponentProps<SpeakerItem[]>) => (
+}: SceneComponentProps<SpeakersContent>) => (
   <div className={ATMOS.warm}>
     <ConferenceSpeakersScene
-      speakers={content}
+      speakers={content.speakers}
+      speakersHref={content.speakersHref}
       locale={locale}
       variant={variant}
       density={density}
@@ -270,9 +298,13 @@ const SpeakersRenderer = ({
 const ProgramRenderer = ({
   content,
   locale,
-}: SceneComponentProps<ProgramDay[]>) => (
+}: SceneComponentProps<ProgramContent>) => (
   <div className={ATMOS.neutral}>
-    <ConferenceProgramScene program={content} locale={locale} />
+    <ConferenceProgramScene
+      program={content.program}
+      programHref={content.programHref}
+      locale={locale}
+    />
   </div>
 );
 
@@ -293,6 +325,7 @@ const ClosingRenderer = ({
     <ConferenceClosingScene
       closing={content.closing}
       registerHref={content.registerHref}
+      programHref={content.programHref}
       facts={content.facts}
       locale={locale}
     />
@@ -322,7 +355,7 @@ registerScene({
     densities: ['compact'],
     emphases: ['cinematic'],
     renderer: ArrivalRenderer,
-    defaultContent: { arrival: defaults.arrival, registerHref: '/' },
+    defaultContent: { arrival: defaults.arrival, registerHref: '/', programHref: '/' },
   });
 
 registerScene({
@@ -354,7 +387,7 @@ registerScene({
     type: CONFERENCE_SCENE_TYPES.featuredSessions,
     version: 1,
     renderer: FeaturedSessionsRenderer,
-    defaultContent: defaults.featuredSessions,
+    defaultContent: { sessions: defaults.featuredSessions, programHref: '/' },
   });
 
 registerScene({
@@ -393,14 +426,14 @@ registerScene({
     densities: ['tight', 'airy'],
     emphases: ['featured'],
     renderer: SpeakersRenderer,
-    defaultContent: defaults.speakers,
+    defaultContent: { speakers: defaults.speakers, speakersHref: '/' },
   });
 
 registerScene({
     type: CONFERENCE_SCENE_TYPES.program,
     version: 1,
     renderer: ProgramRenderer,
-    defaultContent: defaults.program,
+    defaultContent: { program: defaults.program, programHref: '/' },
   });
 
 registerScene({
@@ -417,6 +450,7 @@ registerScene({
     defaultContent: {
       closing: defaults.closing,
       registerHref: '/',
+      programHref: '/',
       facts: defaults.facts,
     },
   });

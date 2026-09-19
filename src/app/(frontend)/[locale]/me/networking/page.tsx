@@ -770,7 +770,11 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
                 : 'Sign up for a workshop or a talk, and meet the people in the room with you.'}
             </p>
             <Link
-              href={`/${locale}/program`}
+              href={
+                directorySlug
+                  ? `/${locale}/events/${directorySlug}/program`
+                  : WORDPRESS_HOME[locale as Locale]
+              }
               className="inline-flex min-h-11 items-center rounded-full bg-[var(--n-navy)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--n-deep)]"
             >
               {LOUNGE_UI.myExperience[locale as Locale]}

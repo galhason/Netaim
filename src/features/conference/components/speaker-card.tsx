@@ -13,9 +13,12 @@ import { IconArrow, IconLink } from '../ui/icons';
 const SpeakerCard = ({
   speaker,
   locale,
+  speakersHref,
 }: {
   speaker: SpeakerVM;
   locale: Locale;
+  /* This conference's cast. A speaker page lives inside a conference. */
+  speakersHref: string;
 }) => {
   const role = [speaker.role, speaker.company].filter(Boolean).join(' · ');
   return (
@@ -39,7 +42,7 @@ const SpeakerCard = ({
       <div className="mt-3 flex items-center justify-between gap-3">
         {speaker.registered ? (
           <a
-            href={`/${locale}/speakers/${speaker.id}`}
+            href={`${speakersHref}/${speaker.id}`}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--x-primary)] hover:text-[var(--x-primary-strong)]"
           >
             {locale === 'he' ? 'צפייה בפרופיל' : 'View profile'}

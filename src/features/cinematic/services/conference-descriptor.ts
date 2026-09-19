@@ -1,4 +1,5 @@
 import { brandFor } from '@/config/brand';
+import { WORDPRESS_HOME } from '@/config/wordpress';
 import type { Locale } from '@/config/locales';
 import { applyComposition } from '@/experience-runtime';
 import type { ExperienceDescriptor, SceneInstance } from '@/experience-runtime';
@@ -50,6 +51,25 @@ const deriveSections = (scenes: SceneInstance[]): NavSection[] => {
   ).map((link) => ({ id: link.id, label: link.label }));
 };
 
+/*
+ * Where a scene's "see the whole programme" and "meet everyone" lead.
+ *
+ * Resolved once, here, because a scene component is handed a locale and
+ * never a conference — it cannot know which one it is drawing. With no
+ * conference at all (the cinematic fallback, which describes none) the
+ * only honest destination left is the organisation's own site.
+ */
+const conferencePaths = (
+  locale: Locale,
+  slug: string | null,
+): { programHref: string; speakersHref: string } =>
+  slug
+    ? {
+        programHref: `/${locale}/events/${slug}/program`,
+        speakersHref: `/${locale}/events/${slug}/speakers`,
+      }
+    : { programHref: WORDPRESS_HOME[locale], speakersHref: WORDPRESS_HOME[locale] };
+
 export const buildConferenceDescriptor = (
   experience: ConferenceExperience,
   locale: Locale,
@@ -63,6 +83,10 @@ export const buildConferenceDescriptor = (
   scheduleHref?: string,
 ): ExperienceDescriptor => {
   const brand = brandFor(locale);
+  const { programHref, speakersHref } = conferencePaths(
+    locale,
+    experience.slug ?? null,
+  );
   const scenes = applyComposition(
     [
       {
@@ -93,6 +117,7 @@ export const buildConferenceDescriptor = (
               .slice(0, 5),
           },
           registerHref: experience.registerHref,
+          programHref,
         },
       },
       {
@@ -122,13 +147,13 @@ export const buildConferenceDescriptor = (
       {
         id: 'featured-sessions',
         type: CONFERENCE_SCENE_TYPES.featuredSessions,
-        content: experience.featuredSessions,
+        content: { sessions: experience.featuredSessions, programHref },
       },
       actIntroInstance('intro-people'),
       {
         id: 'speakers',
         type: CONFERENCE_SCENE_TYPES.speakers,
-        content: experience.speakers,
+        content: { speakers: experience.speakers, speakersHref },
       },
       {
         id: 'sponsors',
@@ -139,7 +164,7 @@ export const buildConferenceDescriptor = (
       {
         id: 'program',
         type: CONFERENCE_SCENE_TYPES.program,
-        content: experience.program,
+        content: { program: experience.program, programHref },
       },
       {
         id: 'venue',
@@ -153,6 +178,7 @@ export const buildConferenceDescriptor = (
         content: {
           closing: experience.closing,
           registerHref: experience.registerHref,
+          programHref,
           facts: experience.facts,
         },
       },

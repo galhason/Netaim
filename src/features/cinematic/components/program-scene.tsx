@@ -11,6 +11,8 @@ import { RevealText } from '@/shared';
 interface ProgramSceneProps {
   program: ProgramDay[];
   locale: Locale;
+  /* This conference's full programme, resolved by the descriptor. */
+  programHref?: string;
 }
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -78,7 +80,11 @@ const DayIcon = ({ index }: { index: number }): ReactNode => {
  * page. The line draws itself, the milestones arrive one by one, then each
  * day's story rises. Everything is drawn from the CMS program.
  */
-const ProgramScene = ({ program, locale }: ProgramSceneProps) => {
+const ProgramScene = ({
+  program,
+  locale,
+  programHref = '/',
+}: ProgramSceneProps) => {
   const reduce = useReducedMotion();
   const days = program.filter((d) => d?.items?.length);
 
@@ -201,7 +207,7 @@ const ProgramScene = ({ program, locale }: ProgramSceneProps) => {
         {/* Door to the full program */}
         <div className="mt-20 flex justify-center">
           <Link
-            href={`/${locale}/program`}
+            href={programHref}
             className="group inline-flex min-h-[3.5rem] items-center gap-3 rounded-2xl border border-accent/45 px-12 text-base font-medium text-accent transition-all duration-300 hover:bg-accent/10"
           >
             {CINEMATIC_UI.viewFullProgram[locale]}

@@ -247,7 +247,9 @@ const ActivityDrawer = ({
 
   const from = he ? -28 : 28;
   const shareUrl =
-    typeof window !== 'undefined' ? `${window.location.origin}/${locale}/program` : '';
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/${locale}/events/${slug}/program`
+      : '';
 
   const copyLink = async () => {
     try {
@@ -412,7 +414,12 @@ const ActivityDrawer = ({
                     </h3>
                     <div className="flex flex-col gap-2.5">
                       {activity.speakers.map((sp) => (
-                        <SpeakerCard key={sp.id} speaker={sp} locale={locale} />
+                        <SpeakerCard
+                          key={sp.id}
+                          speaker={sp}
+                          locale={locale}
+                          speakersHref={`/${locale}/events/${slug}/speakers`}
+                        />
                       ))}
                     </div>
                   </div>

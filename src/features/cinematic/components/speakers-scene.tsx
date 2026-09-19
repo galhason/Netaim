@@ -23,6 +23,8 @@ interface Speaker extends SpeakerItem {
 interface SpeakersSceneProps {
   speakers: SpeakerItem[];
   locale: Locale;
+  /* This conference's full cast, resolved by the descriptor. */
+  speakersHref?: string;
   showcase?: boolean;
   variant?: string;
   density?: string;
@@ -127,17 +129,17 @@ const BadgeIcon = ({ badge }: { badge: string }) => {
 
 const SpeakerCard = ({
   speaker,
-  locale,
+  speakersHref,
   hero = false,
   badge,
 }: {
   speaker: Speaker;
-  locale: Locale;
+  speakersHref: string;
   hero?: boolean;
   badge?: string;
 }) => (
   <Link
-    href={speaker.id ? `/${locale}/speakers/${speaker.id}` : `/${locale}/speakers`}
+    href={speaker.id ? `${speakersHref}/${speaker.id}` : speakersHref}
     aria-label={
       speaker.role ? `${speaker.name} — ${speaker.role}` : speaker.name
     }
@@ -234,6 +236,7 @@ const SpeakersScene = ({
   speakers,
   locale,
   showcase = true,
+  speakersHref = '/',
 }: SpeakersSceneProps) => {
   const reduce = useReducedMotion();
   const list = speakers as Speaker[];
@@ -255,7 +258,7 @@ const SpeakersScene = ({
         <motion.div key={speaker.name} variants={item}>
           <SpeakerCard
             speaker={speaker}
-            locale={locale}
+            speakersHref={speakersHref}
             badge={
               showcase
                 ? speaker.badge ?? DERIVED_BADGES[index % DERIVED_BADGES.length]
@@ -286,7 +289,7 @@ const SpeakersScene = ({
               <motion.div key={speaker.name} variants={item}>
                 <SpeakerCard
                   speaker={speaker}
-                  locale={locale}
+                  speakersHref={speakersHref}
                   badge={
                     speaker.badge ?? DERIVED_BADGES[i % DERIVED_BADGES.length]
                   }
@@ -300,7 +303,7 @@ const SpeakersScene = ({
         <motion.div variants={item} className="lg:order-last lg:w-[36%]">
           <SpeakerCard
             speaker={headliner}
-            locale={locale}
+            speakersHref={speakersHref}
             hero
             badge={headliner.badge ?? 'Keynote'}
           />
@@ -345,7 +348,7 @@ const SpeakersScene = ({
         {/* Door to the full cast */}
         <div className="mt-16 flex justify-center">
           <Link
-            href={`/${locale}/speakers`}
+            href={speakersHref}
             className="group inline-flex min-h-14 items-center gap-3 rounded-2xl border border-accent/40 px-10 text-base text-accent transition-all duration-300 hover:bg-accent/10"
           >
             {VIEW_ALL[locale]}
