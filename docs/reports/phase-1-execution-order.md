@@ -24,13 +24,15 @@
 
 `node_modules` holds **Windows-only native binaries** (`@next/swc-win32-x64-msvc`, `@rolldown/binding-win32-x64-msvc`, `@tailwindcss/oxide-win32-x64-msvc`, `@swc/core-win32-x64-msvc`, `lightningcss-win32-x64-msvc`, `@img/sharp-win32-x64`). The cloud shell is `linux-x64` and shares the same folder.
 
-Consequences there: **vitest cannot start** (`Cannot find module '../rolldown-binding.linux-x64-gnu.node'`), **`next build` cannot run**, `tsc` runs but exceeds the 180 s per-call ceiling, and the dev database on `localhost:5433` is unreachable from that VM. `npm ci` was deliberately **not** run, because it would replace those binaries and break the Windows setup.
+Consequences there: **vitest cannot start** (`Cannot find module '../rolldown-binding.linux-x64-gnu.node'`), **`next build` cannot run**, and `tsc` runs but exceeds the 180 s per-call ceiling. `npm ci` was deliberately **not** run, because it would replace those binaries and break the Windows setup.
+
+This blocker has nothing to do with Docker. It is a platform mismatch on a shared `node_modules`, and it is unaffected by anything running or not running on the host.
 
 **On Windows all of this works.** Hence this handoff.
 
 ### 0.3 Outstanding Phase 0 item — the database backup
 
-Not runnable from the cloud shell (`pg_dump` absent, DB unreachable). Run it first:
+Not runnable from the cloud shell. Run it first, on Windows:
 
 ```bash
 BACKUP_DIR="$HOME/hason-backups" npm run backup
@@ -41,7 +43,17 @@ BACKUP_DIR="$HOME/hason-backups" npm run backup:verify
 
 **Note on proportionality, not an excuse to skip it:** Phase 1 is code-only. It runs no migration, changes no Payload collection, and writes nothing to the database. The safety net that matches the actual risk is git, and that is already in place. Run the backup because it is a stated gate — but if it fails for an environment reason, that failure does not endanger Phase 1. Report it and continue.
 
-**Observation, out of scope, do not fix here:** `.env` points at `postgresql://postgres:***@localhost:5433/hason`, while `docker-compose.yml` maps 5433 → `postgres-test` (user `hason`, db `hason_test`) and 5432 → `postgres` (user `hason`, db `hason`). The `.env` target matches neither compose service. Worth a look some other time.
+**Why it cannot run from the cloud shell — three independent reasons, measured with Docker running:**
+
+| | |
+|---|---|
+| `pg_dump` / `pg_restore` / `psql` | absent in that VM, and there is no sudo to install them |
+| `localhost:5433` | not the host's localhost. That VM is a separate Linux machine |
+| `host.docker.internal:5432` and `:5433` | **both answer** — so the route exists — but both refuse the connection: 5432 rejects the credentials, and 5433 returns `no pg_hba.conf entry for host "10.0.0.16"` |
+
+That last line is a deliberate access control on the database, restricting it to local connections. **Do not loosen `pg_hba.conf` to let a backup run from elsewhere.** The backup's natural home is the machine the database is on, where the connection is local and already permitted.
+
+**Observation, out of scope, do not fix here:** the dev database on 5433 is a native Windows Postgres (db `hason`, user `postgres`), not the `docker-compose.yml` stack — the compose `postgres` service on 5432 answers with different credentials than its yml declares, which is the usual sign of a `pgdata` volume initialised before the current values. Two Postgres instances coexisting, not a fault. Worth knowing when reading `.env`.
 
 ---
 
