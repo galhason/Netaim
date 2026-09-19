@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
+import { WORDPRESS_HOME } from '@/config/wordpress';
 import { CinematicNav, ConferenceFooter } from '@/features/cinematic';
 import { getActiveConferenceSlug, getSiteBrand } from '@/features/events';
 import { currentParticipant } from '@/features/registration';
@@ -29,9 +30,14 @@ const SiteLayout = async ({ children, params }: SiteLayoutProps) => {
   const slug = await getActiveConferenceSlug(locale as Locale).catch(
     () => null,
   );
+  /*
+   * With no conference live there is nothing to register for, so the
+   * call to action goes to the organisation's home rather than to
+   * `/${locale}` — which is /en in English, and nothing serves that.
+   */
   const registerHref = slug
     ? `/${locale}/events/${slug}/register`
-    : `/${locale}`;
+    : WORDPRESS_HOME[locale as Locale];
   const meHref = `/${locale}/me`;
   /*
    * Resolved per request, never cached: the nav says who is looking, and

@@ -1,7 +1,8 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { FALLBACK_LOCALE, isSupportedLocale } from '@/config/locales';
+import { FALLBACK_LOCALE, isSupportedLocale, type Locale } from '@/config/locales';
+import { WORDPRESS_HOME } from '@/config/wordpress';
 import {
   clearAllSessions,
   clearSession,
@@ -20,15 +21,22 @@ import {
  * password that may have leaked, and that one revokes every session
  * the account holds before ending this one.
  */
-const localeOf = (formData: FormData): string => {
+const localeOf = (formData: FormData): Locale => {
   const requested = String(formData.get('locale') ?? '');
   return isSupportedLocale(requested) ? requested : FALLBACK_LOCALE;
 };
 
+/*
+ * "The front of the site" is WordPress, and its English front has no
+ * locale prefix. Building `/${locale}` sent an English visitor to /en,
+ * which nothing serves — so leaving the platform ended at a 404, on the
+ * one path taken by everyone who signs out.
+ */
+
 export const signOutAction = async (formData: FormData): Promise<void> => {
   const locale = localeOf(formData);
   await clearSession();
-  redirect(`/${locale}`);
+  redirect(WORDPRESS_HOME[locale]);
 };
 
 export const signOutEverywhereAction = async (formData: FormData): Promise<void> => {
@@ -38,5 +46,5 @@ export const signOutEverywhereAction = async (formData: FormData): Promise<void>
     await clearAllSessions(me.id);
   }
   await clearSession();
-  redirect(`/${locale}`);
+  redirect(WORDPRESS_HOME[locale]);
 };
