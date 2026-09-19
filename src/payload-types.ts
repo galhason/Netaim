@@ -1780,7 +1780,7 @@ export interface OpeningPage {
 export interface Site {
   id: number;
   /**
-   * The published conference shown as the public website (its landing, program, speakers and information).
+   * The conference the front door points at: the site landing, the site chrome, the personal area and the Studio default. The programme, speakers and information pages are named in the address and no longer follow this pointer.
    */
   activeConference?: (number | null) | Event;
   /**
