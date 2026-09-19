@@ -1,12 +1,11 @@
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { getConferenceExperience, Glyph } from '@/features/cinematic';
-import { getActiveConferenceSlug } from '@/features/events';
 import { SectionHeader, EmptyState } from '@/features/conference';
 import type { CinematicIcon } from '@/features/cinematic/types/cinematic';
 
 interface InfoPageProps {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 }
 
 /* A pin, drawn once for the hero and the directions panel. */
@@ -47,15 +46,14 @@ const FACT_HINTS: Record<string, Record<Locale, string>> = {
 };
 
 const InfoPage = async ({ params }: InfoPageProps) => {
-  const { locale } = await params;
+  const { locale, slug } = await params;
   const lang = (isSupportedLocale(locale) ? locale : 'he') as Locale;
   setRequestLocale(lang);
   const he = lang === 'he';
 
-  const slug = await getActiveConferenceSlug(lang).catch(() => null);
-  const experience = slug
-    ? await getConferenceExperience(slug, lang).catch(() => null)
-    : null;
+  const experience = await getConferenceExperience(slug, lang).catch(
+    () => null,
+  );
   const venue = experience?.venue;
 
   if (!venue) {

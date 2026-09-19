@@ -4,7 +4,6 @@ import {
   listConferenceSpeakers,
   activitiesForSpeaker,
 } from '@/features/speakers';
-import { getActiveConferenceSlug } from '@/features/events';
 import { EmptyState } from '@/features/conference';
 import { requireParticipant } from '@/features/registration';
 import SpeakersDirectory, {
@@ -12,26 +11,23 @@ import SpeakersDirectory, {
 } from './speakers-directory';
 
 interface SpeakersPageProps {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 }
 
 /*
- * The full cast of the active conference — every voice on the stage, in the
+ * The full cast of this conference — every voice on the stage, in the
  * Experience design language. Each card is resolved live (a linked account
  * lends its identity; overrides win) and links to the speaker's own page,
  * closing the discovery loop the landing and Program drawers open.
  */
 const SpeakersPage = async ({ params }: SpeakersPageProps) => {
-  const { locale } = await params;
+  const { locale, slug } = await params;
   const lang = (isSupportedLocale(locale) ? locale : 'he') as Locale;
   setRequestLocale(lang);
   await requireParticipant(lang);
   const he = lang === 'he';
 
-  const slug = await getActiveConferenceSlug(lang).catch(() => null);
-  const roster = slug
-    ? await listConferenceSpeakers(slug, lang).catch(() => [])
-    : [];
+  const roster = await listConferenceSpeakers(slug, lang).catch(() => []);
 
   const speakers: DirectorySpeaker[] = await Promise.all(
     roster.map(async (speaker) => {

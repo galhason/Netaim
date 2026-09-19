@@ -15,7 +15,13 @@ import type { SessionType } from '@/features/program';
 import { requireParticipant } from '@/features/registration';
 
 interface SpeakerProfilePageProps {
-  params: Promise<{ locale: string; id: string }>;
+  /*
+   * `slug` is in the address and deliberately unread: a speaker is a
+   * platform record, resolved by id, and the same person may appear at
+   * more than one conference. The segment is here so the page lives
+   * inside the conference it was reached from, not beside it.
+   */
+  params: Promise<{ locale: string; slug: string; id: string }>;
 }
 
 const TYPE_LABELS: Record<string, Record<Locale, string>> = {

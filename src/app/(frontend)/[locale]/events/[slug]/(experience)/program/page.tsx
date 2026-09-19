@@ -1,12 +1,12 @@
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
-import { findPortalEvent, getActiveConferenceSlug } from '@/features/events';
+import { findPortalEvent } from '@/features/events';
 import { buildProgramModel } from '@/features/program';
 import { requireParticipant } from '@/features/registration';
 import ProgramExperience from './program-experience';
 
 interface ProgramPageProps {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: string; slug: string }>;
   searchParams: Promise<{ notice?: string; activity?: string }>;
 }
 
@@ -16,23 +16,22 @@ interface ProgramPageProps {
  * filtered to what the guest holds — one program, two readings.
  */
 const ProgramPage = async ({ params, searchParams }: ProgramPageProps) => {
-  const { locale } = await params;
+  const { locale, slug } = await params;
   const lang = (isSupportedLocale(locale) ? locale : 'he') as Locale;
   setRequestLocale(lang);
   /* The programme is the conference itself — it is read by people who joined it. */
   await requireParticipant(lang);
   const { notice, activity } = await searchParams;
 
-  const slug = await getActiveConferenceSlug(lang).catch(() => null);
   const [event, model] = await Promise.all([
-    slug ? findPortalEvent(slug, lang).catch(() => null) : Promise.resolve(null),
+    findPortalEvent(slug, lang).catch(() => null),
     buildProgramModel(slug, lang),
   ]);
 
   return (
     <ProgramExperience
       locale={lang}
-      slug={slug ?? ''}
+      slug={slug}
       title={event?.title ?? (lang === 'he' ? 'תוכנית הכנס' : 'Conference program')}
       activities={model.activities}
       days={model.days}
