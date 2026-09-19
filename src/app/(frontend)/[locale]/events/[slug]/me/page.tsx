@@ -3,7 +3,9 @@ import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { LoungeView, getAttendeeExperience } from '@/features/attendee';
-import { CinematicNav } from '@/features/cinematic';
+import { CinematicNav,
+  siteNavLinks,
+} from '@/features/cinematic';
 import { getSiteBrand } from '@/features/events';
 import { myConnections } from '@/features/networking';
 import { currentParticipant } from '@/features/registration';
@@ -61,6 +63,7 @@ const AttendeePage = async ({ params }: AttendeePageProps) => {
           <div className="cinematic">
             <CinematicNav
               locale={locale as Locale}
+              links={siteNavLinks(locale as Locale, slug)}
               registerHref={`/${locale}/events/${slug}/register`}
               meHref={`/${locale}/me`}
               brand={brandFor(locale as Locale)}

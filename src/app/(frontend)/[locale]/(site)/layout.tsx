@@ -4,7 +4,11 @@ import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { WORDPRESS_HOME } from '@/config/wordpress';
-import { CinematicNav, ConferenceFooter } from '@/features/cinematic';
+import {
+  CinematicNav,
+  ConferenceFooter,
+  siteNavLinks,
+} from '@/features/cinematic';
 import { getActiveConferenceSlug, getSiteBrand } from '@/features/events';
 import { currentParticipant } from '@/features/registration';
 
@@ -51,6 +55,7 @@ const SiteLayout = async ({ children, params }: SiteLayoutProps) => {
     <div className="cinematic min-h-dvh bg-surface text-text-primary">
       <CinematicNav
         locale={locale as Locale}
+        links={siteNavLinks(locale as Locale, slug)}
         registerHref={registerHref}
         meHref={meHref}
         brand={brandFor(locale as Locale)}

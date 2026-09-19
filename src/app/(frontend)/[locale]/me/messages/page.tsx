@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
+import { WORDPRESS_HOME } from '@/config/wordpress';
 import {
   ACCOUNT_UI,
   JOINED_CONFERENCE_FANOUT,
@@ -9,7 +10,9 @@ import {
   getMyAccount,
 } from '@/features/account';
 import { LOUNGE_UI } from '@/features/attendee';
-import { CinematicNav } from '@/features/cinematic';
+import { CinematicNav,
+  siteNavLinks,
+} from '@/features/cinematic';
 import {
   getActiveConferenceSlug,
   getEventExperience,
@@ -372,7 +375,8 @@ const MessagesPage = async ({ params, searchParams }: MessagesPageProps) => {
       <div className="cinematic bg-transparent [&::after]:content-none [&>header]:border-b [&>header]:border-white/10 [&>header]:bg-[var(--nt-dark-deep)]/95 [&>header]:backdrop-blur-md">
         <CinematicNav
           locale={locale}
-          registerHref={`/${locale}`}
+          links={siteNavLinks(locale, activeSlug)}
+          registerHref={WORDPRESS_HOME[locale]}
           meHref={`/${locale}/me`}
           brand={brandFor(locale)}
           brandLogo={siteLogo.onDark}

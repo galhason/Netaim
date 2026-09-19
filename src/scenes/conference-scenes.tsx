@@ -27,6 +27,7 @@ import type {
   NavSection,
   ProgramDay,
   QuoteSceneData,
+  SiteNavLink,
   SpeakerItem,
   SponsorLogo,
   StorySceneData,
@@ -69,6 +70,11 @@ interface ConferenceNavContent {
    * descriptor is cached and shared, so who is looking is never on it.
    */
   scheduleHref?: string;
+  /*
+   * The site navigation, resolved against this conference. A slug is not
+   * an identity, so unlike the viewer it is safe on cached content.
+   */
+  links: SiteNavLink[];
   registerHref: string;
   meHref: string;
   sections?: NavSection[];
@@ -95,6 +101,7 @@ const NavRenderer = ({
 }: SceneComponentProps<ConferenceNavContent>) => (
   <CinematicNav
     locale={locale}
+    links={content.links}
     registerHref={content.registerHref}
     /*
      * The viewer's own destination wins. `content.meHref` is the

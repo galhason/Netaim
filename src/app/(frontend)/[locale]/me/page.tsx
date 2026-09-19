@@ -4,7 +4,9 @@ import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { WORDPRESS_HOME } from '@/config/wordpress';
-import { CinematicNav } from '@/features/cinematic';
+import { CinematicNav,
+  siteNavLinks,
+} from '@/features/cinematic';
 import {
   ACCOUNT_STATUS_LABELS,
   ACCOUNT_UI,
@@ -392,8 +394,11 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
           <div className="cinematic">
             <CinematicNav
               locale={locale as Locale}
+              links={siteNavLinks(locale as Locale, chosen?.slug ?? activeSlug)}
               registerHref={
-                chosen ? `/${locale}/events/${chosen.slug}/register` : `/${locale}`
+                chosen
+                  ? `/${locale}/events/${chosen.slug}/register`
+                  : WORDPRESS_HOME[locale as Locale]
               }
               meHref={`/${locale}/me`}
               brand={brandFor(locale as Locale)}

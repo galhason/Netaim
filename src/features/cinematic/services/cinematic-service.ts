@@ -286,6 +286,7 @@ const assembleExperience = (
 
   return {
     ...fallback,
+    slug,
     composition,
     registerHref: `/${locale}/events/${slug}/register`,
     /*

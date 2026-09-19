@@ -7,9 +7,10 @@ export { buildConferenceDescriptor } from './services/conference-descriptor';
 export {
   CONFERENCE_SCENE_TYPES,
   CONFERENCE_SCENE_SEQUENCE,
-  SITE_NAV_LINKS,
+  siteNavLinks,
   fallbackConference,
 } from './constants/cinematic-content';
+export type { SiteNavLink } from './constants/cinematic-content';
 export {
   ACT_INTRO_SCENES,
   CONFERENCE_ACTS,

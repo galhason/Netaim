@@ -5,6 +5,7 @@ import type { ExperienceDescriptor, SceneInstance } from '@/experience-runtime';
 import {
   CONFERENCE_SCENE_TYPES,
   NAV_LINKS,
+  siteNavLinks,
 } from '../constants/cinematic-content';
 import {
   ACT_INTRO_SCENES,
@@ -71,6 +72,12 @@ export const buildConferenceDescriptor = (
           brand,
           brandLogo,
           scheduleHref,
+          /*
+           * Resolved here, where the conference is known. The bar itself
+           * cannot work out which conference it is wearing, and a slug
+           * is not an identity, so it may travel on cached content.
+           */
+          links: siteNavLinks(locale, experience.slug ?? null),
           registerHref: experience.registerHref,
           meHref: experience.meHref,
         },

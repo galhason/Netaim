@@ -3,7 +3,10 @@ import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
-import { CinematicNav } from '@/features/cinematic';
+import { WORDPRESS_HOME } from '@/config/wordpress';
+import { CinematicNav,
+  siteNavLinks,
+} from '@/features/cinematic';
 import {
   JOINED_CONFERENCE_FANOUT,
   getMyAccount,
@@ -639,7 +642,8 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
       <div className="cinematic bg-transparent [&::after]:content-none [&>header]:border-b [&>header]:border-white/10 [&>header]:bg-[var(--nt-dark-deep)]/90 [&>header]:backdrop-blur-md">
         <CinematicNav
           locale={locale as Locale}
-          registerHref={`/${locale}`}
+          links={siteNavLinks(locale as Locale, directorySlug)}
+          registerHref={WORDPRESS_HOME[locale as Locale]}
           meHref={`/${locale}/me`}
           brand={brandFor(locale as Locale)}
           brandLogo={siteLogo.onDark}

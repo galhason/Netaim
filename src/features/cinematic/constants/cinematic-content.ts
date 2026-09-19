@@ -1,4 +1,5 @@
 import type { Locale } from '@/config/locales';
+import { WORDPRESS_HOME } from '@/config/wordpress';
 import type { ConferenceExperience } from '../types/cinematic';
 
 export const CONFERENCE_SCENE_TYPES = {
@@ -65,37 +66,61 @@ export const NAV_LINKS = [
   { id: 'register', label: { he: 'הרשמה', en: 'Register' } },
 ] as const;
 
-/*
- * The site navigation (product direction v6): the public site is the
- * active conference, so the top-level links are pages of that
- * conference — never an index of conferences. Paths are locale-relative
- * ('' is the landing); the nav prefixes the current locale.
- */
-export const SITE_NAV_LINKS: {
+export interface SiteNavLink {
   key: string;
-  path: string;
-  label: Record<Locale, string>;
-}[] = [
-  { key: 'home', path: '', label: { he: 'בית', en: 'Home' } },
-  { key: 'program', path: '/program', label: { he: 'תוכנית', en: 'Program' } },
-  { key: 'speakers', path: '/speakers', label: { he: 'דוברים', en: 'Speakers' } },
-  {
-    key: 'info',
-    path: '/info',
-    label: { he: 'מידע למשתתפים', en: 'Information' },
-  },
-  {
-    key: 'networking',
-    path: '/me/networking',
-    label: { he: 'Networking', en: 'Networking' },
-  },
-  /*
-   * Contact used to close this row. It is a page a person visits once,
-   * if ever, and it was costing the bar the width that the conference's
-   * own pages — and "My schedule" — needed. It lives in the footer now,
-   * which is where a reader looks for it.
-   */
-];
+  href: string;
+  label: string;
+}
+
+const SITE_NAV_LABELS: Record<string, Record<Locale, string>> = {
+  home: { he: 'בית', en: 'Home' },
+  program: { he: 'תוכנית', en: 'Program' },
+  speakers: { he: 'דוברים', en: 'Speakers' },
+  info: { he: 'מידע למשתתפים', en: 'Information' },
+  networking: { he: 'Networking', en: 'Networking' },
+};
+
+/*
+ * The site navigation, resolved.
+ *
+ * These used to be locale-relative paths that the two navigation bars
+ * each turned into an address by prefixing `/${locale}`. That produced
+ * `/he/program` — a single programme for a single conference, which is
+ * the assumption this migration exists to remove — and, for the home
+ * entry, `/en`, an address no system serves.
+ *
+ * So the addresses are built here instead, once, where the conference
+ * is known, and both bars render what they are handed. Home leaves the
+ * platform for the organisation's own site; Networking belongs to the
+ * person rather than to any conference, so it stays platform-level.
+ *
+ * Without a conference the three conference entries are left out rather
+ * than pointed somewhere broken. That is the honest state on the site
+ * pages when nothing is published yet.
+ *
+ * Contact used to close this row. It is a page a person visits once, if
+ * ever, and it was costing the bar the width that the conference's own
+ * pages — and "My schedule" — needed. It lives in the footer now, which
+ * is where a reader looks for it.
+ */
+export const siteNavLinks = (
+  locale: Locale,
+  slug: string | null,
+): SiteNavLink[] => {
+  const label = (key: string): string => SITE_NAV_LABELS[key]?.[locale] ?? key;
+  const conference: SiteNavLink[] = slug
+    ? [
+        { key: 'program', href: `/${locale}/events/${slug}/program`, label: label('program') },
+        { key: 'speakers', href: `/${locale}/events/${slug}/speakers`, label: label('speakers') },
+        { key: 'info', href: `/${locale}/events/${slug}/info`, label: label('info') },
+      ]
+    : [];
+  return [
+    { key: 'home', href: WORDPRESS_HOME[locale], label: label('home') },
+    ...conference,
+    { key: 'networking', href: `/${locale}/me/networking`, label: label('networking') },
+  ];
+};
 
 export const CINEMATIC_UI = {
   register: { he: 'הרשמה לכנס', en: 'Register' },

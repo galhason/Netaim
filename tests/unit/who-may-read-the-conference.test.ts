@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { SITE_NAV_LINKS } from '@/features/cinematic';
+import { siteNavLinks } from '@/features/cinematic';
 
 /*
  * Who may read the conference, and what the chrome says.
@@ -81,7 +81,31 @@ describe('the conference is read by people who joined it', () => {
 
 describe('the navigation bar carries the conference, not the contact form', () => {
   it('has no contact link left in it', () => {
-    expect(SITE_NAV_LINKS.some((link) => link.key === 'contact')).toBe(false);
+    expect(
+      siteNavLinks('he', 'any-conference').some((link) => link.key === 'contact'),
+    ).toBe(false);
+  });
+
+  /*
+   * The conference pages are reached through the conference. A bar that
+   * still offered /he/program would be offering one conference's
+   * programme from inside another.
+   */
+  it('names the conference in every conference link', () => {
+    const links = siteNavLinks('he', 'any-conference');
+    for (const key of ['program', 'speakers', 'info']) {
+      const link = links.find((entry) => entry.key === key);
+      expect(link?.href).toBe(`/he/events/any-conference/${key}`);
+    }
+  });
+
+  /*
+   * And with no conference live they are left out rather than pointed
+   * at an address that resolves to nothing.
+   */
+  it('leaves them out when no conference is live', () => {
+    const keys = siteNavLinks('he', null).map((link) => link.key);
+    expect(keys).toEqual(['home', 'networking']);
   });
 
   it('keeps every label on one line', () => {

@@ -36,7 +36,7 @@ import { BRAND_LOGO, brandFor } from '@/config/brand';
 import { BrandMark } from '@/shared';
 import { renderEmailHtml } from '@/notification-engine';
 import ExperienceNav from '@/features/conference/components/experience-nav';
-import { SITE_NAV_LINKS } from '@/features/cinematic';
+import { siteNavLinks } from '@/features/cinematic';
 
 const read = (path: string): string =>
   readFileSync(resolve(process.cwd(), path), 'utf8');
@@ -92,7 +92,7 @@ describe('the navigation bar wears it', () => {
     renderToString(
       <ExperienceNav
         locale="he"
-        links={SITE_NAV_LINKS}
+        links={siteNavLinks('he', 'x')}
         brand={brandFor('he')}
         registerHref="/he/events/x/register"
         meHref="/he/me"

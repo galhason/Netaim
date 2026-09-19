@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { Locale } from '@/config/locales';
+import { WORDPRESS_HOME } from '@/config/wordpress';
 import { chooseLocaleAction } from '@/features/account/actions/choose-locale';
 import { signOutAction } from '@/features/account/actions/sign-out';
 import NavBell from '@/features/notifications/components/nav-bell';
@@ -13,8 +14,8 @@ import { IconCalendar, IconSearch } from '../ui/icons';
 
 interface NavLink {
   key: string;
-  path: string;
-  label: Record<Locale, string>;
+  href: string;
+  label: string;
 }
 
 interface Props {
@@ -71,34 +72,42 @@ const ExperienceNav = ({
   scheduleHref,
 }: Props) => {
   const pathname = usePathname();
-  const home = `/${locale}`;
+  /*
+   * Leaving the platform: the organisation's site, whose English front
+   * has no locale prefix. `/${locale}` would be /en, which nothing serves.
+   */
+  const home = WORDPRESS_HOME[locale];
+  /* The programme of this conference, when the bar was given one. */
+  const programHref = navLinks.find((link) => link.key === 'program')?.href;
   const other: Locale = locale === 'he' ? 'en' : 'he';
   const [open, setOpen] = useState(false);
   const signOutLabel = locale === 'he' ? 'התנתקות' : 'Sign out';
 
-  const isActive = (path: string) => {
-    const href = `${home}${path}`;
-    return path === ''
-      ? pathname === home
-      : pathname === href || pathname?.startsWith(`${href}/`);
-  };
+  /*
+   * The links arrive resolved, so this compares addresses rather than
+   * rebuilding them. Home points at the organisation's site and is never
+   * a page of this app, so it is never the active one.
+   */
+  const isActive = (href: string) =>
+    href.startsWith(`/${locale}/`) &&
+    (pathname === href || pathname?.startsWith(`${href}/`));
 
   const scheduleOn = Boolean(scheduleHref && pathname === scheduleHref);
 
   const links = (
     <>
       {navLinks.map((link) => {
-        const on = isActive(link.path);
+        const on = isActive(link.href);
         return (
           <Link
             key={link.key}
-            href={`${home}${link.path}`}
+            href={link.href}
             onClick={() => setOpen(false)}
             className={`relative whitespace-nowrap py-1.5 text-sm transition-colors ${
               on ? 'font-medium text-white' : 'text-white/70 hover:text-white'
             }`}
           >
-            {link.label[locale]}
+            {link.label}
             {on ? (
               <span className="absolute inset-x-0 -bottom-0.5 h-0.5 rounded-full bg-[var(--x-primary)]" />
             ) : null}
@@ -145,7 +154,7 @@ const ExperienceNav = ({
 
         <div className="flex items-center gap-2 sm:gap-3">
           <Link
-            href={`${home}/program`}
+            href={programHref ?? home}
             aria-label={locale === 'he' ? 'חיפוש' : 'Search'}
             className="hidden size-9 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:grid"
           >

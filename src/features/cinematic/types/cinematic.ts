@@ -151,6 +151,12 @@ export interface FeaturedSessionItem {
 }
 
 export interface ConferenceExperience {
+  /*
+   * Which conference this is. Absent on the cinematic fallback, which
+   * describes no particular conference — the navigation then leaves out
+   * the entries that would need one.
+   */
+  slug?: string;
   composition?: {
     scene: string;
     hidden: boolean;

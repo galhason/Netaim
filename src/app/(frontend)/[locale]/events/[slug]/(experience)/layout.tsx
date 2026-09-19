@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
-import { ConferenceFooter, SITE_NAV_LINKS } from '@/features/cinematic';
+import { ConferenceFooter, siteNavLinks } from '@/features/cinematic';
 import { ExperienceNav } from '@/features/conference';
 import { findPortalEvent, getSiteBrand } from '@/features/events';
 import { currentParticipant } from '@/features/registration';
@@ -49,7 +49,7 @@ const ExperienceLayout = async ({ children, params }: ExperienceLayoutProps) => 
     <div className="experience min-h-dvh bg-[var(--x-bg)] text-[var(--x-ink)]">
       <ExperienceNav
         locale={lang}
-        links={SITE_NAV_LINKS}
+        links={siteNavLinks(lang, slug)}
         brand={brandFor(lang)}
         brandLogo={logo.onDark}
         registerHref={`/${lang}/events/${slug}/register`}

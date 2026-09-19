@@ -5,11 +5,12 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, useReducedMotion } from 'motion/react';
 import type { Locale } from '@/config/locales';
+import { WORDPRESS_HOME } from '@/config/wordpress';
 import { chooseLocaleAction } from '@/features/account/actions/choose-locale';
 import { signOutAction } from '@/features/account/actions/sign-out';
 import NavBell from '@/features/notifications/components/nav-bell';
 import { BrandMark } from '@/shared';
-import { CINEMATIC_UI, SITE_NAV_LINKS } from '../constants/cinematic-content';
+import { CINEMATIC_UI, type SiteNavLink } from '../constants/cinematic-content';
 import type { NavSection } from '../types/cinematic';
 
 /*
@@ -24,6 +25,12 @@ export interface NavViewer {
 
 interface CinematicNavProps {
   locale: Locale;
+  /*
+   * The site navigation, already resolved against the conference this
+   * chrome belongs to. Handed in rather than imported, because the bar
+   * cannot know which conference it is wearing.
+   */
+  links: SiteNavLink[];
   registerHref: string;
   meHref: string;
   brand: string;
@@ -70,6 +77,7 @@ const NAV_ENTER_DELAY = 1.8;
 
 const CinematicNav = ({
   locale,
+  links,
   registerHref,
   meHref,
   brand,
@@ -91,14 +99,18 @@ const CinematicNav = ({
    */
   const currentPath = pathname ?? `/${locale}`;
 
-  const home = `/${locale}`;
-  const isActive = (path: string): boolean => {
-    const href = `${home}${path}`;
-    if (path === '') {
-      return pathname === home || pathname === `${home}/`;
-    }
-    return pathname === href || pathname?.startsWith(`${href}/`) === true;
-  };
+  /*
+   * Leaving the platform: the organisation's site, whose English front
+   * has no locale prefix. `/${locale}` would be /en, which nothing serves.
+   */
+  const home = WORDPRESS_HOME[locale];
+  /*
+   * Addresses arrive resolved, so this compares rather than rebuilds.
+   * Home belongs to the other system and is never the active page here.
+   */
+  const isActive = (href: string): boolean =>
+    href.startsWith(`/${locale}/`) &&
+    (pathname === href || pathname?.startsWith(`${href}/`) === true);
 
   useEffect(() => {
     const onScroll = () => {
@@ -142,18 +154,18 @@ const CinematicNav = ({
         </Link>
 
         <div className="hidden items-center gap-5 md:flex lg:gap-7 xl:gap-9">
-          {SITE_NAV_LINKS.map((link) => {
-            const active = isActive(link.path);
+          {links.map((link) => {
+            const active = isActive(link.href);
             return (
               <Link
                 key={link.key}
-                href={`${home}${link.path}`}
+                href={link.href}
                 aria-current={active ? 'page' : undefined}
                 className={`whitespace-nowrap text-sm tracking-wide transition-colors hover:text-text-primary ${
                   active ? 'text-accent' : 'text-text-secondary'
                 }`}
               >
-                {link.label[locale]}
+                {link.label}
               </Link>
             );
           })}
