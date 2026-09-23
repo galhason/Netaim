@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, useReducedMotion } from 'motion/react';
 import type { Locale } from '@/config/locales';
-import { WORDPRESS_HOME, isWordPressHref } from '@/config/wordpress';
+import { wordpressHref, isWordPressHref } from '@/config/wordpress';
 import { chooseLocaleAction } from '@/features/account/actions/choose-locale';
 import { signOutAction } from '@/features/account/actions/sign-out';
 import NavBell from '@/features/notifications/components/nav-bell';
@@ -103,7 +103,7 @@ const CinematicNav = ({
    * Leaving the platform: the organisation's site, whose English front
    * has no locale prefix. `/${locale}` would be /en, which nothing serves.
    */
-  const home = WORDPRESS_HOME[locale];
+  const home = wordpressHref('home', locale);
   /*
    * Addresses arrive resolved, so this compares rather than rebuilds.
    * Home belongs to the other system and is never the active page here.

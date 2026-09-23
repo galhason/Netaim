@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { Locale } from '@/config/locales';
-import { WORDPRESS_HOME, isWordPressHref } from '@/config/wordpress';
+import { wordpressHref, isWordPressHref } from '@/config/wordpress';
 import { chooseLocaleAction } from '@/features/account/actions/choose-locale';
 import { signOutAction } from '@/features/account/actions/sign-out';
 import NavBell from '@/features/notifications/components/nav-bell';
@@ -76,7 +76,7 @@ const ExperienceNav = ({
    * Leaving the platform: the organisation's site, whose English front
    * has no locale prefix. `/${locale}` would be /en, which nothing serves.
    */
-  const home = WORDPRESS_HOME[locale];
+  const home = wordpressHref('home', locale);
   /* The programme of this conference, when the bar was given one. */
   const programHref = navLinks.find((link) => link.key === 'program')?.href;
   const other: Locale = locale === 'he' ? 'en' : 'he';

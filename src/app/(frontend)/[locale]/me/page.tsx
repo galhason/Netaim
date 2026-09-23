@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
-import { WORDPRESS_HOME } from '@/config/wordpress';
+import { wordpressHref } from '@/config/wordpress';
 import { CinematicNav,
   siteNavLinks,
 } from '@/features/cinematic';
@@ -403,7 +403,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
               registerHref={
                 chosen
                   ? `/${locale}/events/${chosen.slug}/register`
-                  : WORDPRESS_HOME[locale as Locale]
+                  : wordpressHref('home', locale as Locale)
               }
               meHref={`/${locale}/me`}
               brand={brandFor(locale as Locale)}
@@ -435,7 +435,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
         <div className="relative mx-auto flex h-full max-w-5xl flex-col px-6 md:px-10">
           <div className="flex items-center justify-between pt-6 text-white/85">
             <Link
-              href={WORDPRESS_HOME[locale as Locale]}
+              href={wordpressHref('home', locale as Locale)}
               className="text-sm transition-opacity hover:opacity-75"
             >
               ← {he ? 'לדף הבית' : 'Home'}

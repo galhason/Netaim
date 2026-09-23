@@ -1,5 +1,5 @@
 import type { Locale } from '@/config/locales';
-import { WORDPRESS_HOME } from '@/config/wordpress';
+import { wordpressHref } from '@/config/wordpress';
 import type {
   AttendeeExperienceContent,
   AttendeePerson,
@@ -43,7 +43,7 @@ export const buildPlatformLounge = (
          * programme to browse. It points at the conferences instead.
          */
         label: he ? 'לכנסים' : 'Browse conferences',
-        href: WORDPRESS_HOME[locale],
+        href: wordpressHref('home', locale),
       },
     },
     myEvent: {

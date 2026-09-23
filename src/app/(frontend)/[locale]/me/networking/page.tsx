@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
-import { WORDPRESS_HOME } from '@/config/wordpress';
+import { wordpressHref } from '@/config/wordpress';
 import { CinematicNav,
   siteNavLinks,
 } from '@/features/cinematic';
@@ -643,7 +643,7 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
         <CinematicNav
           locale={locale as Locale}
           links={siteNavLinks(locale as Locale, directorySlug)}
-          registerHref={WORDPRESS_HOME[locale as Locale]}
+          registerHref={wordpressHref('home', locale as Locale)}
           meHref={`/${locale}/me`}
           brand={brandFor(locale as Locale)}
           brandLogo={siteLogo.onDark}
@@ -773,7 +773,7 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
               href={
                 directorySlug
                   ? `/${locale}/events/${directorySlug}/program`
-                  : WORDPRESS_HOME[locale as Locale]
+                  : wordpressHref('home', locale as Locale)
               }
               className="inline-flex min-h-11 items-center rounded-full bg-[var(--n-navy)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--n-deep)]"
             >

@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { FALLBACK_LOCALE, isSupportedLocale, type Locale } from '@/config/locales';
-import { WORDPRESS_HOME } from '@/config/wordpress';
+import { wordpressHref } from '@/config/wordpress';
 import {
   clearAllSessions,
   clearSession,
@@ -36,7 +36,7 @@ const localeOf = (formData: FormData): Locale => {
 export const signOutAction = async (formData: FormData): Promise<void> => {
   const locale = localeOf(formData);
   await clearSession();
-  redirect(WORDPRESS_HOME[locale]);
+  redirect(wordpressHref('home', locale));
 };
 
 export const signOutEverywhereAction = async (formData: FormData): Promise<void> => {
@@ -46,5 +46,5 @@ export const signOutEverywhereAction = async (formData: FormData): Promise<void>
     await clearAllSessions(me.id);
   }
   await clearSession();
-  redirect(WORDPRESS_HOME[locale]);
+  redirect(wordpressHref('home', locale));
 };

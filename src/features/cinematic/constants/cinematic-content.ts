@@ -1,5 +1,5 @@
 import type { Locale } from '@/config/locales';
-import { WORDPRESS_HOME } from '@/config/wordpress';
+import { wordpressHref } from '@/config/wordpress';
 import type { ConferenceExperience } from '../types/cinematic';
 
 export const CONFERENCE_SCENE_TYPES = {
@@ -116,7 +116,7 @@ export const siteNavLinks = (
       ]
     : [];
   return [
-    { key: 'home', href: WORDPRESS_HOME[locale], label: label('home') },
+    { key: 'home', href: wordpressHref('home', locale), label: label('home') },
     ...conference,
     { key: 'networking', href: `/${locale}/me/networking`, label: label('networking') },
   ];

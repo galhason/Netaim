@@ -3,7 +3,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { SUPPORT_EMAIL } from '@/config/brand';
 import type { Locale } from '@/config/locales';
-import { WORDPRESS_HOME } from '@/config/wordpress';
+import { wordpressHref } from '@/config/wordpress';
 import { LOUNGE_UI } from '../../constants/lounge-ui';
 import type { AttendeeExperienceContent } from '../../types/attendee-experience';
 
@@ -256,7 +256,7 @@ const LoungeView = ({
    */
   const scheduleHref =
     scheduleHrefProp ??
-    (content.slug ? `${base}/my-activities` : WORDPRESS_HOME[locale]);
+    (content.slug ? `${base}/my-activities` : wordpressHref('home', locale));
   /*
    * One community, whichever conference the guest came from. The
    * per-conference networking page was retired; pointing at it would
@@ -265,13 +265,13 @@ const LoungeView = ({
   const networkingHref = `${platformBase}/networking`;
   const workshopsHref = content.slug
     ? `/${locale}/events/${content.slug}/program`
-    : WORDPRESS_HOME[locale];
+    : wordpressHref('home', locale);
   const messagesHref = content.slug
     ? `${base}/me/messages`
     : `${platformBase}/messages`;
   const speakersHref = content.slug
     ? `/${locale}/events/${content.slug}/speakers`
-    : WORDPRESS_HOME[locale];
+    : wordpressHref('home', locale);
   const venueHref = content.slug ? `${base}/me/venue` : base;
   const endStamp = Date.parse(content.welcome.endsAt ?? '');
   const ended = !Number.isNaN(endStamp) && endStamp < Date.now();

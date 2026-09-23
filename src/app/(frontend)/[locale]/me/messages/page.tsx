@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
-import { WORDPRESS_HOME } from '@/config/wordpress';
+import { wordpressHref } from '@/config/wordpress';
 import {
   ACCOUNT_UI,
   JOINED_CONFERENCE_FANOUT,
@@ -376,7 +376,7 @@ const MessagesPage = async ({ params, searchParams }: MessagesPageProps) => {
         <CinematicNav
           locale={locale}
           links={siteNavLinks(locale, activeSlug)}
-          registerHref={WORDPRESS_HOME[locale]}
+          registerHref={wordpressHref('home', locale)}
           meHref={`/${locale}/me`}
           brand={brandFor(locale)}
           brandLogo={siteLogo.onDark}

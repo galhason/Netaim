@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
-import { WORDPRESS_HOME } from '@/config/wordpress';
+import { wordpressHref } from '@/config/wordpress';
 import {
   CinematicNav,
   ConferenceFooter,
@@ -41,7 +41,7 @@ const SiteLayout = async ({ children, params }: SiteLayoutProps) => {
    */
   const registerHref = slug
     ? `/${locale}/events/${slug}/register`
-    : WORDPRESS_HOME[locale as Locale];
+    : wordpressHref('home', locale as Locale);
   const meHref = `/${locale}/me`;
   /*
    * Resolved per request, never cached: the nav says who is looking, and

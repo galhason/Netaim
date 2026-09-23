@@ -1,5 +1,5 @@
 import { brandFor } from '@/config/brand';
-import { WORDPRESS_HOME } from '@/config/wordpress';
+import { wordpressHref } from '@/config/wordpress';
 import type { Locale } from '@/config/locales';
 import { applyComposition } from '@/experience-runtime';
 import type { ExperienceDescriptor, SceneInstance } from '@/experience-runtime';
@@ -68,7 +68,7 @@ const conferencePaths = (
         programHref: `/${locale}/events/${slug}/program`,
         speakersHref: `/${locale}/events/${slug}/speakers`,
       }
-    : { programHref: WORDPRESS_HOME[locale], speakersHref: WORDPRESS_HOME[locale] };
+    : { programHref: wordpressHref('home', locale), speakersHref: wordpressHref('home', locale) };
 
 export const buildConferenceDescriptor = (
   experience: ConferenceExperience,
