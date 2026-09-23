@@ -208,20 +208,44 @@ Header hrefs, read from the live DOM after the `64ae009` fix:
 
 Signing in was not attempted; no credentials were used.
 
-## J. Multi-conference validation — partial
+## J. Multi-conference validation — passed
 
-The runtime rotation test is **not complete**. The database holds four
-conferences of which one is published, which is correct for the product: the
-site serves one conference at a time.
+Completed in the strongest available form: **two conferences published at the
+same time**, each address serving its own data. This is not the product's
+steady state — the site runs one conference at a time — but it is the state
+that can actually distinguish "the address decides" from "a pointer decides",
+because a pointer can only name one of them.
 
-What is proved: a published conference resolves under its own address and
-serves its own content; a drafted conference and an unknown slug both return
-not found; and no file under the conference tree reads `activeConference`.
+| Address | `<h1>` | Navigation |
+| --- | --- | --- |
+| `/he/events/brkt` | משמידים את ברקת 2026 | every link `/he/events/brkt/*` |
+| `/he/events/222` | 222 2023 | every link `/he/events/222/*` |
+| `/he/events/brkt/info` | האסם · 22 July 2026 | every link `/he/events/brkt/*` |
+| `/he/events/222/info` | טירת יהודה · ארגמן · 21 October 2023 | every link `/he/events/222/*` |
 
-What is not yet proved at runtime: that flipping which conference is published
-moves the content with the address. The operator's own rotation — publish
-`222`, verify, then return `brkt` — remains outstanding and is the last item
-before this phase can be called verified end to end.
+Cross-checked against the API rather than read off the screen: `brkt` holds
+venue name "האסם" with no address, `222` holds venue name "טירת יהודה" with
+address "ארגמן". Each page rendered its own event's values, its own dates and
+its own navigation. No field of one conference appeared on the other's page.
+
+One coincidence in the fixture data was chased down rather than waved past:
+"טירת יהודה" is `222`'s venue *name* and also appears inside `brkt`'s venue
+narrative, which made the two info pages look related at first glance. They
+are not.
+
+The pointer still does its own job: with both conferences published, the site
+landing at `/he` resolved to one of them and rendered it whole. That is
+`Site.activeConference` doing what it is for, and it no longer reaches the
+programme, the speakers or the information pages.
+
+Together with §C's static result — no file under the conference tree reads
+`activeConference` — and §I's not-found results for a drafted slug and an
+unknown one, the address is now the only thing that decides which conference a
+visitor is looking at.
+
+**Note for the operator:** both conferences were left published to run this
+test. The product expects one. Returning the site to a single published
+conference is an operational step, not a code change.
 
 ## K. Not touched
 
@@ -265,12 +289,19 @@ deliberately turned off the local database stopped keeping up.
 
 ## M. Open items
 
-**Blocking sign-off**
+**Blocking sign-off — none.**
 
-1. The rotation test in §J.
-2. `npx vitest run` after `9ee441e`, to confirm the new source guard passes
-   and the suite is 56/56. Two runs have been needed so far; each surfaced
-   real information, and nothing was silenced to get past them.
+Both items that were open are closed: the multi-conference validation in §J
+passed, and the suite reported a clean run after `9ee441e`. Three test runs
+were needed in total; each surfaced real information, three of the six failures
+were fragilities that predated this phase, and nothing was silenced to get past
+any of them.
+
+One caveat stated plainly: the suite results in §H were reported by the
+operator from their own machine and were not observed directly, because vitest
+cannot run in this environment — its native binaries are built for Windows.
+`tsc`, `eslint`, the route behaviour and the §J verification were all run and
+read directly.
 
 **Product decisions, recorded not acted on**
 
