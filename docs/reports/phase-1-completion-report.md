@@ -303,6 +303,51 @@ cannot run in this environment — its native binaries are built for Windows.
 `tsc`, `eslint`, the route behaviour and the §J verification were all run and
 read directly.
 
+**Closed since this report was first written**
+
+*The `/he` versus `/he/` question — VERIFIED, CLOSED.* It was listed here as an
+open item: the platform emits `/he/`, and a bare `/he` arriving from an old link
+also had to reach WordPress. Measured against the running WordPress site on
+23 September 2026, both forms resolve through WordPress and end at the Hebrew
+home's canonical destination with HTTP 200:
+
+| Requested | First hop | Ends at | Status |
+| --- | --- | --- | --- |
+| `/he/` | redirect | `/he/ראשי/` | 200, `he-IL` |
+| `/he` | redirect | `/he/ראשי/` | 200, `he-IL` |
+| `/` | — | `/` | 200, `en-US` |
+
+**No routing rule is required on the platform side for this.** WordPress
+normalises the trailing slash itself. `WORDPRESS_ROUTES.home` is therefore
+correct as it stands, in both languages.
+
+*The WordPress conference listing — recorded.* The listing pages now exist and
+were verified in a browser:
+
+| | URL |
+| --- | --- |
+| English | `/events/` |
+| Hebrew | `/he/כנסים/` |
+
+The Hebrew listing is **not** `/he/events/`, and `/he/events/` is not a
+WordPress page. That namespace belongs to this platform: its dynamic event
+routes remain `/{locale}/events/{slug}/*` exactly as approved, and
+`/he/events/` with no slug is a platform 404, because the tree holds
+`events/[slug]` and no `events/page.tsx`. The reason for the Hebrew address is
+recorded in §3.4 of the integration plan.
+
+*Polylang — no dependency, and it is tested.* WordPress keeps its existing
+Polylang installation, untouched. This platform has zero dependency on it:
+locale handling belongs to next-intl, routing never inspects Polylang, and
+there is no WordPress API call, no shared authentication, no shared language
+state and no cookie synchronisation. Every WordPress address the platform links
+to lives in `src/config/wordpress.ts` and is read through
+`wordpressHref(route, locale)`. A test in
+`tests/unit/leaving-for-the-website.test.ts` fails if any file under `src`
+mentions a WordPress plugin, endpoint or API, and fails if any file outside that
+config writes one of these paths down. This is the current implementation state,
+not an open decision.
+
 **Product decisions, recorded not acted on**
 
 3. A conference that has ended currently returns 404 at every address. The
@@ -313,10 +358,6 @@ read directly.
    and a migration. Three sub-decisions: what happens to the personal area of a
    finished conference; a page with a button rather than an automatic redirect
    (recommended); and `noindex`, which changes both `sitemap.ts` and `robots.ts`.
-4. Whether the routing layer must treat `/he` and `/he/` identically. The
-   platform now emits `/he/`, but a bare `/he` arriving from an old link must
-   still reach WordPress.
-
 **Housekeeping**
 
 5. `generate:types` has not been re-run; `payload-types.ts` was hand-edited to
