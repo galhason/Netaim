@@ -610,7 +610,15 @@ describe('a door that can be entered is visibly leavable', () => {
   });
 
   it('offers sign-out in the site navigation whenever someone is signed in', () => {
-    const signedIn = nav.slice(nav.indexOf('{viewer ? (\n            /*\n             * The way out'), nav.indexOf(') : ('));
+    /*
+     * The closing marker is searched FROM the opening one. Searched from
+     * the start of the file it finds the first ternary in the component,
+     * which need not be this one — and a slice whose end precedes its
+     * start is silently empty, so every assertion below would pass on
+     * nothing rather than fail loudly.
+     */
+    const viewerBlock = nav.indexOf('{viewer ? (\n            /*\n             * The way out');
+    const signedIn = nav.slice(viewerBlock, nav.indexOf(') : (', viewerBlock));
     expect(signedIn.includes('action={signOutAction}')).toBe(true);
     expect(signedIn.includes('name="locale"')).toBe(true);
     expect(signedIn.includes('aria-label={CINEMATIC_UI.signOut[locale]}'), 'the icon-only phone form has a name').toBe(true);
