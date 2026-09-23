@@ -22,3 +22,18 @@ export const WORDPRESS_HOME: Record<Locale, string> = {
   he: '/he/',
   en: '/',
 };
+
+/*
+ * A link to one of these leaves the Next application entirely.
+ *
+ * It must be a plain <a>, never next/link, for two reasons that both
+ * bite only once the two systems share a domain. next/link routes on
+ * the client, so a click would be resolved against this app's routes
+ * and land on its not-found instead of loading WordPress. And Next
+ * normalises the href it renders to the `trailingSlash` setting, which
+ * is the default `false` here — so `/he/` was reaching the browser as
+ * `/he`, an address the platform serves today and WordPress owns
+ * tomorrow. A plain anchor is emitted exactly as written.
+ */
+export const isWordPressHref = (href: string): boolean =>
+  (Object.values(WORDPRESS_HOME) as string[]).includes(href);

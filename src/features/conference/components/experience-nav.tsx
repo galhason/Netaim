@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { Locale } from '@/config/locales';
-import { WORDPRESS_HOME } from '@/config/wordpress';
+import { WORDPRESS_HOME, isWordPressHref } from '@/config/wordpress';
 import { chooseLocaleAction } from '@/features/account/actions/choose-locale';
 import { signOutAction } from '@/features/account/actions/sign-out';
 import NavBell from '@/features/notifications/components/nav-bell';
@@ -98,14 +98,24 @@ const ExperienceNav = ({
     <>
       {navLinks.map((link) => {
         const on = isActive(link.href);
-        return (
+        const className = `relative whitespace-nowrap py-1.5 text-sm transition-colors ${
+          on ? 'font-medium text-white' : 'text-white/70 hover:text-white'
+        }`;
+        return isWordPressHref(link.href) ? (
+          <a
+            key={link.key}
+            href={link.href}
+            onClick={() => setOpen(false)}
+            className={className}
+          >
+            {link.label}
+          </a>
+        ) : (
           <Link
             key={link.key}
             href={link.href}
             onClick={() => setOpen(false)}
-            className={`relative whitespace-nowrap py-1.5 text-sm transition-colors ${
-              on ? 'font-medium text-white' : 'text-white/70 hover:text-white'
-            }`}
+            className={className}
           >
             {link.label}
             {on ? (
@@ -135,7 +145,7 @@ const ExperienceNav = ({
   return (
     <header className="experience sticky top-0 z-50 bg-[var(--x-nav)] shadow-[0_1px_0_rgba(255,255,255,0.06)]">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 md:px-8 xl:px-10">
-        <Link href={home} className="flex flex-none items-center" aria-label={brand}>
+        <a href={home} className="flex flex-none items-center" aria-label={brand}>
           {/*
            * The mark is drawn smaller on a phone: with the bell, the
            * avatar and the menu beside it, a full-size logo pushed the
@@ -148,18 +158,32 @@ const ExperienceNav = ({
             className="h-8 sm:h-[38px]"
             textClassName="font-display text-lg font-extrabold tracking-[0.14em] text-white"
           />
-        </Link>
+        </a>
 
         <div className="hidden items-center gap-5 lg:flex xl:gap-6">{links}</div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <Link
-            href={programHref ?? home}
-            aria-label={locale === 'he' ? 'חיפוש' : 'Search'}
-            className="hidden size-9 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:grid"
-          >
-            <IconSearch className="size-5" />
-          </Link>
+          {/*
+           * Falls back to the organisation's site when no conference is
+           * named in the bar, and that fallback leaves this application.
+           */}
+          {isWordPressHref(programHref ?? home) ? (
+            <a
+              href={programHref ?? home}
+              aria-label={locale === 'he' ? 'חיפוש' : 'Search'}
+              className="hidden size-9 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:grid"
+            >
+              <IconSearch className="size-5" />
+            </a>
+          ) : (
+            <Link
+              href={programHref ?? home}
+              aria-label={locale === 'he' ? 'חיפוש' : 'Search'}
+              className="hidden size-9 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:grid"
+            >
+              <IconSearch className="size-5" />
+            </Link>
+          )}
           {/*
             * The bell opens the notifications, here as everywhere else.
             * It used to be a link to the personal page — the same icon

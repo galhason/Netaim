@@ -97,6 +97,28 @@ describe('the navigation bar carries the conference, not the contact form', () =
    * still offered /he/program would be offering one conference's
    * programme from inside another.
    */
+  /*
+   * The organisation's site is a different application that will share
+   * this domain. next/link would resolve the click against this app's
+   * own routes and land on its not-found, and Next rewrites the href it
+   * renders to the `trailingSlash` setting — which turned `/he/` into
+   * `/he` in the browser while every snapshot, rendering through a
+   * mocked next/link, went on showing `/he/`. A plain anchor is the
+   * only thing that leaves the application with the address intact.
+   */
+  it('leaves the platform with a plain anchor, never next/link', () => {
+    const navs = [
+      'src/features/cinematic/components/cinematic-nav.tsx',
+      'src/features/conference/components/experience-nav.tsx',
+    ];
+    for (const file of navs) {
+      const flat = read(file).replace(/\s+/g, ' ');
+      expect(flat, file).toContain('<a href={home}');
+      expect(flat, file).not.toContain('<Link href={home}');
+      expect(flat, file).toContain('isWordPressHref');
+    }
+  });
+
   it('names the conference in every conference link', () => {
     const links = siteNavLinks('he', 'any-conference');
     for (const key of ['program', 'speakers', 'info']) {

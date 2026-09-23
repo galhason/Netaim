@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, useReducedMotion } from 'motion/react';
 import type { Locale } from '@/config/locales';
-import { WORDPRESS_HOME } from '@/config/wordpress';
+import { WORDPRESS_HOME, isWordPressHref } from '@/config/wordpress';
 import { chooseLocaleAction } from '@/features/account/actions/choose-locale';
 import { signOutAction } from '@/features/account/actions/sign-out';
 import NavBell from '@/features/notifications/components/nav-bell';
@@ -140,7 +140,11 @@ const CinematicNav = ({
        * there is room for them. Nothing is allowed to wrap or collide.
        */}
       <nav className="mx-auto flex h-[88px] max-w-[1560px] items-center justify-between gap-6 px-6 md:px-10 lg:px-14">
-        <Link
+        {/*
+         * A plain anchor, not next/link: the organisation's site is a
+         * different application on the same domain. See isWordPressHref.
+         */}
+        <a
           href={home}
           aria-label={brand}
           className="flex flex-none items-center whitespace-nowrap"
@@ -151,19 +155,24 @@ const CinematicNav = ({
             height={46}
             textClassName="font-display text-lg font-medium tracking-[0.22em] text-text-primary lg:tracking-[0.32em]"
           />
-        </Link>
+        </a>
 
         <div className="hidden items-center gap-5 md:flex lg:gap-7 xl:gap-9">
           {links.map((link) => {
             const active = isActive(link.href);
-            return (
+            const className = `whitespace-nowrap text-sm tracking-wide transition-colors hover:text-text-primary ${
+              active ? 'text-accent' : 'text-text-secondary'
+            }`;
+            return isWordPressHref(link.href) ? (
+              <a key={link.key} href={link.href} className={className}>
+                {link.label}
+              </a>
+            ) : (
               <Link
                 key={link.key}
                 href={link.href}
                 aria-current={active ? 'page' : undefined}
-                className={`whitespace-nowrap text-sm tracking-wide transition-colors hover:text-text-primary ${
-                  active ? 'text-accent' : 'text-text-secondary'
-                }`}
+                className={className}
               >
                 {link.label}
               </Link>
