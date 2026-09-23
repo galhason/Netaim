@@ -35,13 +35,23 @@ const sourceFiles = (pattern: string): string[] =>
 const VENDOR_SHEET = 'src/shared/constants/vendor-marks.ts';
 const EMAIL_LAYOUT = 'src/notification-engine/templates/email-layout.ts';
 
+/*
+ * The two checks below shell out to grep over the whole source tree.
+ * That walk costs a little under five seconds on a Windows checkout,
+ * which is vitest's default per-test budget, so they were passing by a
+ * margin that a busy machine could erase — and a timeout reads like a
+ * broken rule rather than a slow one. The budget is stated instead of
+ * being left to chance.
+ */
+const TREE_WALK_MS = 20_000;
+
 describe('no component writes a colour down', () => {
   it('has no hex literal anywhere in src, outside the two files that may', () => {
     const offenders = sourceFiles('#[0-9a-fA-F]{3,8}')
       .filter((f) => f !== VENDOR_SHEET && f !== EMAIL_LAYOUT)
       .map((f) => `${f}: ${[...new Set(read(f).match(HEX) ?? [])].join(', ')}`);
     expect(offenders).toEqual([]);
-  });
+  }, TREE_WALK_MS);
 
   /*
    * A vendor's logo is the one colour we must NOT take from the brand —
@@ -118,7 +128,7 @@ describe('the brand is declared once', () => {
       }
     }
     expect([...missing]).toEqual([]);
-  });
+  }, TREE_WALK_MS);
 });
 
 /*
