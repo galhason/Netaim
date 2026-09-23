@@ -148,6 +148,27 @@ and `export const dynamic = 'force-dynamic'`, and `info/page.tsx` and the group
 layout must still contain no gate at all. All 27 paths the file reads were
 verified to exist.
 
+A later run, after the plain-anchor fix of §E, surfaced two more, and they
+split the same way.
+
+*One was mine.* `email-verification.test.ts` slices the nav's source between
+two markers to check that the signed-in block offers sign-out. It searched the
+closing marker `') : ('` from position zero, and the new ternary put one at
+6265 while the viewer block starts at 8829 — a slice whose end precedes its
+start is silently empty, so all three assertions ran against `""`. The end
+marker is now searched from the opening one; the assertions are unchanged and
+the slice they read is 1583 characters. Worth recording separately: this test
+could have been passing on an empty string at any point and would have said
+nothing.
+
+*One was pre-existing.* `one-source-of-colour.test.ts` timed out at 5000 ms.
+Both of its tree-walking checks shell out to `grep` across `src`; measured on
+this checkout that walk takes **4.79 s** against vitest's 5 s default, so they
+were passing by a margin a loaded machine erases. The rule itself is intact —
+run directly, the hex search returns no offenders outside the two files allowed
+to hold a colour, and no commit in this phase added one. An explicit budget was
+stated on request, in a commit marked as not part of Phase 1.
+
 *One was pre-existing.* `architecture-guards.test.ts` flagged the two nav
 components. The guard's logic was reproduced and run against the baseline
 commit and against HEAD, under both path separators:
@@ -247,8 +268,9 @@ deliberately turned off the local database stopped keeping up.
 **Blocking sign-off**
 
 1. The rotation test in §J.
-2. `npx vitest run` after `64ae009`, to confirm the new source guard passes
-   and the suite is 56/56.
+2. `npx vitest run` after `9ee441e`, to confirm the new source guard passes
+   and the suite is 56/56. Two runs have been needed so far; each surfaced
+   real information, and nothing was silenced to get past them.
 
 **Product decisions, recorded not acted on**
 
