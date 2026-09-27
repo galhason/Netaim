@@ -102,8 +102,17 @@ const nextConfig: NextConfig = {
      * equal to MAX_VIDEO_BYTES in the upload action and to Nginx's
      * client_max_body_size, because the smallest of the three is what
      * an operator actually meets.
+     *
+     * Behind the Cloudflare Worker/Tunnel the request reaches Next with
+     * `x-forwarded-host` set to the subdomain the tunnel serves while the
+     * browser's `origin` is the public site itself. Next compares the
+     * two and refuses every Server Action ("Invalid Server Actions
+     * request.") unless the origin is named here. Host only, no scheme.
      */
-    serverActions: { bodySizeLimit: '200mb' },
+    serverActions: {
+      bodySizeLimit: '200mb',
+      allowedOrigins: ['netaimtest.info'],
+    },
   },
   images: {
     formats: ['image/avif', 'image/webp'],
