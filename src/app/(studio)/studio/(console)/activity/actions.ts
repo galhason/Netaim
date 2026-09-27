@@ -3,14 +3,19 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { type Locale } from '@/config/locales';
+import { audit } from '@/features/access';
 import { requireCapability } from '@/features/studio';
+import { actorFor } from '@/features/studio/services/studio-auth';
 import { fromDateTimeInputValue } from '@/shared';
+import { publishedEvent } from '@/shared/cache/publish';
 import {
+  archiveSession,
   createSession,
   updateSession,
   deleteSession,
   getSessionSituation,
   isSessionType,
+  restoreSession,
   type CreateSessionInput,
 } from '@/features/program';
 import { addMedia } from '@/features/events';
@@ -21,8 +26,13 @@ import {
   type SpeakerSocialLink,
 } from '@/features/speakers';
 
+/*
+ * Shaping the program (create, edit, duplicate, illustrate) is one
+ * capability; shelving is a second; destroying is a third. Staff hold
+ * the first, supervisors the first two, admins all three.
+ */
 const authorized = async (slug?: string): Promise<boolean> =>
-  (await requireCapability('events:manage', slug)) !== null;
+  (await requireCapability('activities:manage', slug)) !== null;
 
 const text = (value: FormDataEntryValue | null): string | undefined => {
   const s = String(value ?? '').trim();
@@ -125,6 +135,17 @@ export const saveActivityAction = async (formData: FormData) => {
     await updateSession(id, ENGLISH, english).catch(() => null);
   }
 
+  const actor = await actorFor('activities:manage', slug);
+  if (actor && id) {
+    await audit(
+      actor,
+      sessionId ? 'content.sessionUpdated' : 'content.sessionCreated',
+      slug,
+      { session: id, title },
+      title,
+    );
+  }
+  publishedEvent(slug);
   revalidatePath('/studio/activity');
   redirect('/studio/activity');
 };
@@ -139,7 +160,7 @@ export const duplicateActivityAction = async (formData: FormData) => {
   const situation = await getSessionSituation(sessionId, locale);
   if (situation) {
     const s = situation.session;
-    await createSession(slug, locale, {
+    const copy = await createSession(slug, locale, {
       title: `${s.title} (${locale === 'he' ? 'עותק' : 'copy'})`,
       subtitle: s.subtitle,
       description: s.description,
@@ -159,17 +180,62 @@ export const duplicateActivityAction = async (formData: FormData) => {
       track: s.track,
       language: s.language,
     });
+    const actor = await actorFor('activities:manage', slug);
+    if (actor && copy) {
+      await audit(actor, 'content.sessionCreated', slug, { session: copy.id, duplicatedFrom: sessionId, title: copy.title }, copy.title);
+    }
   }
+  publishedEvent(slug);
   revalidatePath('/studio/activity');
 };
 
+/* Off the program, kept on the shelf — a supervisor's way of removing. */
+export const archiveActivityAction = async (formData: FormData) => {
+  const slug = String(formData.get('slug') ?? '');
+  const sessionId = String(formData.get('sessionId') ?? '').trim();
+  const actor = slug ? await actorFor('activities:archive', slug) : null;
+  if (!actor || !sessionId) {
+    return;
+  }
+  const before = await getSessionSituation(sessionId, HEBREW).catch(() => null);
+  const done = await archiveSession(sessionId);
+  if (done) {
+    await audit(actor, 'content.sessionArchived', slug, { session: sessionId, title: before?.session.title ?? '' }, before?.session.title);
+  }
+  publishedEvent(slug);
+  revalidatePath('/studio/activity');
+};
+
+export const restoreActivityAction = async (formData: FormData) => {
+  const slug = String(formData.get('slug') ?? '');
+  const sessionId = String(formData.get('sessionId') ?? '').trim();
+  const actor = slug ? await actorFor('activities:archive', slug) : null;
+  if (!actor || !sessionId) {
+    return;
+  }
+  const done = await restoreSession(sessionId);
+  const after = await getSessionSituation(sessionId, HEBREW).catch(() => null);
+  if (done) {
+    await audit(actor, 'content.sessionRestored', slug, { session: sessionId, title: after?.session.title ?? '' }, after?.session.title);
+  }
+  publishedEvent(slug);
+  revalidatePath('/studio/activity');
+};
+
+/* Gone for good — the admin's alone. */
 export const removeActivityAction = async (formData: FormData) => {
   const slug = String(formData.get('slug') ?? '');
   const sessionId = String(formData.get('sessionId') ?? '').trim();
-  if (!slug || !sessionId || !(await authorized(slug))) {
+  const actor = slug ? await actorFor('activities:delete', slug) : null;
+  if (!actor || !sessionId) {
     return;
   }
-  await deleteSession(sessionId);
+  const before = await getSessionSituation(sessionId, HEBREW).catch(() => null);
+  const done = await deleteSession(sessionId);
+  if (done) {
+    await audit(actor, 'content.sessionDeleted', slug, { session: sessionId, title: before?.session.title ?? '' }, before?.session.title);
+  }
+  publishedEvent(slug);
   revalidatePath('/studio/activity');
 };
 

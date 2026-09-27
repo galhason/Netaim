@@ -29,8 +29,17 @@ describe('event lifecycle engine', () => {
     expect(canTransition('archived', 'live', ['registration'])).toBe(false);
   });
 
+  /*
+   * `archived` joins every phase's list because retiring a conference is
+   * not a step in its progression -- see the map. It is expected in these
+   * two sets, and its absence from the registration filter is the point
+   * of the first assertion.
+   */
   it('hides registration phases from events without the capability', () => {
-    expect(availableTransitions('planning', [])).toEqual(['preparation']);
+    expect(availableTransitions('planning', [])).toEqual([
+      'preparation',
+      'archived',
+    ]);
     expect(canTransition('planning', 'registrationOpen', [])).toBe(false);
   });
 
@@ -42,7 +51,7 @@ describe('event lifecycle engine', () => {
     const result = transitionEvent('draft', 'live', []);
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.allowed).toEqual(['planning']);
+      expect(result.allowed).toEqual(['planning', 'archived']);
     }
   });
 

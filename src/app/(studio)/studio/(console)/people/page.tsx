@@ -1,3 +1,4 @@
+import { ASSIGNABLE_ROLES, ROLE_DESCRIPTIONS, ROLE_LABELS } from '@/permission-engine';
 import Link from 'next/link';
 import { listAllGrants } from '@/features/access';
 import type { AccountGrantView } from '@/features/access';
@@ -6,7 +7,6 @@ import {
   CONSOLE_UI,
   CSelectField,
   ConsoleShell,
-  ROLE_LABELS,
   getStudioCreator,
   getStudioLocale,
   requireCapability,
@@ -31,7 +31,7 @@ const initialOf = (account: { name: string; email: string }): string =>
 const ConsoleAccessPage = async ({ searchParams }: AccessPageProps) => {
   const locale = await getStudioLocale();
   const creator = await getStudioCreator();
-  const access = await requireCapability('platform:manage');
+  const access = await requireCapability('access:manage');
   const { q, grants: grantsState } = await searchParams;
   const query = (q ?? '').trim();
 
@@ -65,9 +65,10 @@ const ConsoleAccessPage = async ({ searchParams }: AccessPageProps) => {
         blocked: false,
       }));
 
-  const roleOptions = Object.entries(ROLE_LABELS).map(([value, label]) => ({
+  /* Only the three Netaim roles are given; legacy ones still show on old grants. */
+  const roleOptions = ASSIGNABLE_ROLES.map((value) => ({
     value,
-    label: label[locale],
+    label: ROLE_LABELS[value][locale],
   }));
   const eventOptions = events.map((event) => ({
     value: event.slug,
@@ -247,6 +248,20 @@ const ConsoleAccessPage = async ({ searchParams }: AccessPageProps) => {
                   })}
                 </ul>
               )}
+            </section>
+
+            <section className="rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-4">
+              <h3 className="mb-2 text-sm font-semibold text-[var(--c-text)]">
+                {locale === 'he' ? 'שלושת התפקידים' : 'The three roles'}
+              </h3>
+              <dl className="grid gap-3 text-xs sm:grid-cols-3">
+                {ASSIGNABLE_ROLES.map((role) => (
+                  <div key={role}>
+                    <dt className="font-semibold text-[var(--c-text)]">{ROLE_LABELS[role][locale]}</dt>
+                    <dd className="mt-1 leading-relaxed text-[var(--c-text-soft)]">{ROLE_DESCRIPTIONS[role][locale]}</dd>
+                  </div>
+                ))}
+              </dl>
             </section>
 
             <p className="text-[11px] leading-relaxed text-[var(--c-text-faint)]">

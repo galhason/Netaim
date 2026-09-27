@@ -132,14 +132,14 @@ const ChannelRow = ({
   channels && (channels.whatsapp || channels.phone || channels.email) ? (
     <p className="mt-2 flex flex-wrap justify-center gap-1.5">
       {channels.whatsapp ? (
-        <a
+        <Link
           href={`/${locale}/me/wa/${connection.id}`}
           target="_blank"
           rel="noopener noreferrer"
           className={contactPill}
         >
           WhatsApp
-        </a>
+        </Link>
       ) : null}
       {channels.phone ? (
         <a href={`tel:${channels.phone}`} dir="ltr" className={contactPill}>

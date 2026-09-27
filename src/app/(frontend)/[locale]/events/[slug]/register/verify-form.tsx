@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import {
   useEffect,
   useRef,
@@ -281,12 +282,12 @@ const VerifyForm = ({
       </form>
 
       <p className="text-center text-xs">
-        <a
+        <Link
           href={`/${locale}/events/${slug}/register`}
           className="text-[var(--x-soft)] underline underline-offset-4 hover:text-[var(--x-primary)]"
         >
           {labels.startOver}
-        </a>
+        </Link>
       </p>
     </div>
   );

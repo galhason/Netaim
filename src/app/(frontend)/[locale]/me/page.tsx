@@ -4,9 +4,8 @@ import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { wordpressHref } from '@/config/wordpress';
-import { CinematicNav,
-  siteNavLinks,
-} from '@/features/cinematic';
+import { ConferenceBar } from '@/features/conference';
+import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
 import {
   ACCOUNT_STATUS_LABELS,
   ACCOUNT_UI,
@@ -113,6 +112,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
   } = await searchParams;
   const account = await getMyAccount(locale);
   const siteLogo = await getSiteBrand();
+  const barViewer = await conferenceBarViewer();
   const ui = ACCOUNT_UI;
   const he = locale === 'he';
 
@@ -165,6 +165,15 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
         registerHref={registerHref}
         switchHref={switchHref}
         brandLogo={siteLogo.onLight}
+        bar={
+          <ConferenceBar
+            locale={locale as Locale}
+            slug={openSlug}
+            viewer={null}
+            brand={brandFor(locale as Locale)}
+            brandLogo={siteLogo.onLight}
+          />
+        }
       />
     );
   }
@@ -396,28 +405,13 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
             }
           : {})}
         siteNav={
-          <div className="cinematic">
-            <CinematicNav
-              locale={locale as Locale}
-              links={siteNavLinks(locale as Locale, chosen?.slug ?? activeSlug)}
-              registerHref={
-                chosen
-                  ? `/${locale}/events/${chosen.slug}/register`
-                  : wordpressHref('home', locale as Locale)
-              }
-              meHref={`/${locale}/me`}
-              brand={brandFor(locale as Locale)}
-              brandLogo={siteLogo.onDark}
-              {...(chosen?.slug ?? activeSlug
-                ? {
-                    scheduleHref: `/${locale}/events/${chosen?.slug ?? activeSlug}/my-activities`,
-                  }
-                : {})}
-              /* This branch only renders for a signed-in account. */
-              viewer={{ name: account.name || account.email }}
-              immediate
-            />
-          </div>
+          <ConferenceBar
+            locale={locale as Locale}
+            slug={chosen?.slug ?? activeSlug ?? null}
+            viewer={barViewer}
+            brand={brandFor(locale as Locale)}
+            brandLogo={siteLogo.onLight}
+          />
         }
       />
     );

@@ -2,8 +2,10 @@ export { CAPABILITIES, isCapability } from './capability/capabilities';
 export type { Capability } from './capability/capabilities';
 export {
   ROLES,
+  ASSIGNABLE_ROLES,
   ROLE_CAPABILITIES,
   ROLE_LABELS,
+  ROLE_DESCRIPTIONS,
   isRole,
 } from './role/roles';
 export type { Role } from './role/roles';

@@ -1,11 +1,13 @@
 import {
+  ConsoleDenied,
   ConsoleShell,
   CONSOLE_UI,
-  getStudioCreator,
+  getStudioAccess,
   getStudioLocale as localeOf,
 } from '@/features/studio';
 import { getActiveConferenceSlug } from '@/features/events';
-import { listConferenceActivities } from '@/features/program';
+import { listArchivedActivities, listConferenceActivities } from '@/features/program';
+import { can } from '@/permission-engine';
 import ActivityManager, { type ActivityRow } from './activity-manager';
 
 /*
@@ -17,14 +19,25 @@ import ActivityManager, { type ActivityRow } from './activity-manager';
  */
 const ActivityPage = async () => {
   const locale = await localeOf();
-  const creator = await getStudioCreator();
+  const access = await getStudioAccess();
   const slug = await getActiveConferenceSlug(locale).catch(() => null);
-  const activities = slug
-    ? await listConferenceActivities(slug, locale).catch(() => [])
-    : [];
+  if (!access || !can(access.grants, 'activities:read', slug ?? undefined)) {
+    return <ConsoleDenied locale={locale} title={CONSOLE_UI.activityTitle[locale]} userName={access?.creator.name ?? ''} />;
+  }
+  const creator = access.creator;
+  const permissions = {
+    manage: can(access.grants, 'activities:manage', slug ?? undefined),
+    archive: can(access.grants, 'activities:archive', slug ?? undefined),
+    delete: can(access.grants, 'activities:delete', slug ?? undefined),
+  };
+  const [activities, shelved] = slug
+    ? await Promise.all([
+        listConferenceActivities(slug, locale).catch(() => []),
+        listArchivedActivities(slug, locale).catch(() => []),
+      ])
+    : [[], []];
 
-  const rows: ActivityRow[] = activities.map(
-    ({ session, capacity, status }) => ({
+  const toRow = ({ session, capacity, status }: (typeof activities)[number]): ActivityRow => ({
       id: session.id,
       title: session.title,
       type: session.sessionType,
@@ -42,8 +55,24 @@ const ActivityPage = async () => {
       available: capacity.available,
       state: capacity.state,
       status,
-    }),
-  );
+  });
+  const rows: ActivityRow[] = activities.map(toRow);
+  const archived: ActivityRow[] = shelved.map((session) => ({
+    id: session.id,
+    title: session.title,
+    type: session.sessionType,
+    startsAt: session.startsAt ?? null,
+    endsAt: session.endsAt ?? null,
+    room: session.room ?? null,
+    speakers: (session.speakers ?? []).map((sp) => ({ name: sp.name, registered: sp.isRegistered })),
+    featured: false,
+    limit: session.capacity,
+    confirmed: 0,
+    waiting: 0,
+    available: null,
+    state: 'unlimited',
+    status: 'available',
+  }));
 
   return (
     <ConsoleShell
@@ -55,7 +84,7 @@ const ActivityPage = async () => {
         </span>
       }
     >
-      <ActivityManager locale={locale} slug={slug} rows={rows} />
+      <ActivityManager locale={locale} slug={slug} rows={rows} archived={archived} can={permissions} />
     </ConsoleShell>
   );
 };

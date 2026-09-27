@@ -1,7 +1,7 @@
 import { Suspense, type ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
-import { Heebo } from 'next/font/google';
+import { M_PLUS_Rounded_1c, Open_Sans } from 'next/font/google';
 import { getTextDirection, isSupportedLocale, type Locale } from '@/config/locales';
 import { AccessibilityWidget } from '@/features/accessibility';
 import { SiteSpotlight } from '@/features/notifications';
@@ -10,17 +10,21 @@ import { AppProviders } from '@/providers';
 import '@/styles/globals.css';
 
 /*
- * One typeface, in both scripts.
- *
- * The product used to set headings in a serif (Frank Ruhl Libre) and the
- * landing in a third face (Rubik), which read as three products. Heebo
- * is the organization's own, it carries Hebrew and Latin with the same
- * voice, and it is loaded as a variable font so a heading can be 800
- * and a label 600 without a second download.
+ * The organisation's own faces, the ones its WordPress site is set in:
+ * Open Sans for text, in both scripts, and M PLUS Rounded 1c for the
+ * large headings. The rounded face carries no Hebrew, so a Hebrew
+ * heading falls to Open Sans — the same fallback the site's stacks
+ * give it — and a page here and a page there read as one site.
  */
-const brandFont = Heebo({
+const bodyFont = Open_Sans({
   subsets: ['hebrew', 'latin'],
   variable: '--font-body',
+});
+
+const displayFont = M_PLUS_Rounded_1c({
+  subsets: ['latin'],
+  weight: ['400', '500', '700', '800'],
+  variable: '--font-display-face',
 });
 
 interface LocaleLayoutProps {
@@ -44,7 +48,7 @@ const LocaleLayout = async ({ children, params }: LocaleLayoutProps) => {
     <html
       lang={locale}
       dir={getTextDirection(locale)}
-      className={brandFont.variable}
+      className={`${bodyFont.variable} ${displayFont.variable}`}
     >
       <body>
         {/*

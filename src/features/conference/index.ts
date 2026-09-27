@@ -18,7 +18,8 @@ export {
 } from './ui/kit';
 export { default as ActivityCard } from './components/activity-card';
 export { default as ActivityDrawer } from './components/activity-drawer';
-export { default as ExperienceNav } from './components/experience-nav';
+export { default as ConferenceBar } from './components/conference-bar';
+export type { ConferenceBarViewer, ConferenceBarProps } from './components/conference-bar';
 export { default as FollowButton } from './components/follow-button';
 export { default as SpeakerCard } from './components/speaker-card';
 export {

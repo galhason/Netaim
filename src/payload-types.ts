@@ -257,6 +257,7 @@ export interface Event {
     | (
         | 'Asia/Jerusalem'
         | 'Europe/Berlin'
+        | 'Europe/Prague'
         | 'Europe/London'
         | 'America/New_York'
         | 'America/Chicago'
@@ -331,7 +332,9 @@ export interface Event {
         | {
             label?: string | null;
             description?: string | null;
-            icon?: ('accessibility' | 'parking' | 'transit' | 'hotel' | 'leaf' | 'coffee') | null;
+            icon?:
+              | ('accessibility' | 'parking' | 'transit' | 'hotel' | 'leaf' | 'coffee' | 'wifi' | 'food' | 'family')
+              | null;
             id?: string | null;
           }[]
         | null;
@@ -804,6 +807,7 @@ export interface Session {
   registrationClosesAt?: string | null;
   allowCancellation?: boolean | null;
   cancellationDeadline?: string | null;
+  archivedAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1577,6 +1581,7 @@ export interface SessionsSelect<T extends boolean = true> {
   registrationClosesAt?: T;
   allowCancellation?: T;
   cancellationDeadline?: T;
+  archivedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

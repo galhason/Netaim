@@ -7,6 +7,9 @@ export type CinematicIcon =
   | 'hotel'
   | 'leaf'
   | 'coffee'
+  | 'wifi'
+  | 'food'
+  | 'family'
   | 'scroll'
   | 'chevron';
 

@@ -6,8 +6,9 @@ import type {
   SpeakerRepository,
   SpeakerSocialLink,
 } from '@/features/speakers/types/speaker';
+import { resolveSpeakerIdentity } from '@/features/speakers/services/speaker-identity';
 import { actorContext, getSystemPayload } from './payload-context';
-import { mediaUrl } from './payload-media';
+import { mediaId, mediaUrl } from './payload-media';
 
 interface AccountRow {
   id?: number | string;
@@ -49,22 +50,25 @@ const toLinks = (
     .filter((link) => link.url !== '');
 
 /*
- * The single resolution point (mirrors toOpeningSpeakers): a linked
- * account lends name, job title, company and photo; any manual field
- * overrides its account value for this conference. Legacy `role` stands
- * in for an empty jobTitle. Bio default (from the account's networking
- * profile) is filled only where it is needed — see getById.
+ * The resolution point for the platform's own pages. The identity rule
+ * itself -- account lends, overrides win, legacy `role` stands in for an
+ * empty jobTitle -- lives in `resolveSpeakerIdentity`, shared with the
+ * marketing API so the two can never disagree about who a speaker is.
+ * What is decided here is only what this shape adds: the links, and the
+ * account facts that must never leave the platform. Bio default (from
+ * the account's networking profile) is filled only where it is needed —
+ * see getById.
  */
 const resolveRow = (row: SpeakerRow): ResolvedSpeaker => {
   const account = accountOf(row);
+  const identity = resolveSpeakerIdentity(row);
   return {
     id: String(row.id),
-    name: clean(row.name) ?? clean(account?.name) ?? '',
-    jobTitle:
-      clean(row.jobTitle) ?? clean(row.role) ?? clean(account?.roleTitle),
-    company: clean(row.company) ?? clean(account?.orgName),
-    bio: clean(row.bio),
-    photoUrl: mediaUrl(row.photo as never) ?? mediaUrl(account?.photo as never),
+    name: identity.name,
+    jobTitle: identity.jobTitle,
+    company: identity.company,
+    bio: identity.bio,
+    photoUrl: mediaUrl(identity.photo as never),
     socialLinks: toLinks(row.socialLinks),
     isRegistered: Boolean(account ?? row.account),
     accountId:
@@ -73,6 +77,13 @@ const resolveRow = (row: SpeakerRow): ResolvedSpeaker => {
         : row.account != null
           ? String(row.account)
           : undefined,
+    own: {
+      name: clean(row.name),
+      jobTitle: clean(row.jobTitle) ?? clean(row.role),
+      company: clean(row.company),
+      bio: clean(row.bio),
+      photoId: mediaId(row.photo as never),
+    },
   };
 };
 
@@ -111,7 +122,7 @@ const readSpeaker = async (
 };
 
 export const payloadSpeakerRepository: SpeakerRepository = {
-  listByEvent: async (slug, locale) => {
+  listByEvent: async (slug, locale, options) => {
     const payload = await getSystemPayload();
     const event = await eventBySlug(payload, slug);
     if (!event) {
@@ -121,6 +132,7 @@ export const payloadSpeakerRepository: SpeakerRepository = {
       collection: 'speakers',
       where: { event: { equals: event.id } },
       locale,
+      ...(options?.fallback === false ? { fallbackLocale: false as const } : {}),
       depth: 2,
       sort: 'name',
       pagination: false,
@@ -289,6 +301,18 @@ export const payloadSpeakerRepository: SpeakerRepository = {
     return doc ? resolveRow(doc as unknown as SpeakerRow) : null;
   },
 
+  remove: async (id) => {
+    const context = await actorContext();
+    if (!context) {
+      throw new Error('Sign-in required');
+    }
+    const { payload, user } = context;
+    const deleted = await payload
+      .delete({ collection: 'speakers', id, overrideAccess: false, user })
+      .catch(() => null);
+    return deleted !== null;
+  },
+
   listCandidates: async () => {
     const context = await actorContext();
     if (!context) {
@@ -321,7 +345,7 @@ export const payloadSpeakerRepository: SpeakerRepository = {
     const result = await payload
       .find({
         collection: 'sessions',
-        where: { speakers: { in: [speakerId] } },
+        where: { and: [{ speakers: { in: [speakerId] } }, { archivedAt: { exists: false } }] },
         locale,
         depth: 0,
         sort: 'startsAt',

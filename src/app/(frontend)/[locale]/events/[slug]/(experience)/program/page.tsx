@@ -23,10 +23,12 @@ const ProgramPage = async ({ params, searchParams }: ProgramPageProps) => {
   await requireParticipant(lang);
   const { notice, activity } = await searchParams;
 
-  const [event, model] = await Promise.all([
-    findPortalEvent(slug, lang).catch(() => null),
-    buildProgramModel(slug, lang),
-  ]);
+  /*
+   * The event first, because the programme is rendered on the
+   * conference's clock and the model needs to be told which one that is.
+   */
+  const event = await findPortalEvent(slug, lang).catch(() => null);
+  const model = await buildProgramModel(slug, lang, Date.now(), event?.timezone);
 
   return (
     <ProgramExperience

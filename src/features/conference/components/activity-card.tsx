@@ -14,6 +14,7 @@ import {
 import { IconClock, IconPin, IconShare, IconStar, IconStarFilled } from '../ui/icons';
 import { useToast } from '../ui/feedback';
 import { useFavorites } from '../ui/favorites';
+import { withBasePath } from '@/config/site';
 
 interface Props {
   activity: ActivityVM;
@@ -84,7 +85,7 @@ const ActivityCard = ({
     );
   };
   const share = async () => {
-    const url = `${window.location.origin}/${locale}/events/${slug}/program`;
+    const url = `${window.location.origin}${withBasePath(`/${locale}/events/${slug}/program`)}`;
     try {
       await navigator.clipboard.writeText(url);
       toast.show(he ? 'הקישור הועתק' : 'Link copied', 'info');

@@ -77,6 +77,32 @@ export const listAgenda = (
   locale: Locale,
 ): Promise<SessionSummary[]> => sessionRepository.listByEvent(slug, locale);
 
+/* The shelf: every archived activity of a conference, for the Studio. */
+export const listArchivedActivities = async (
+  slug: string,
+  locale: Locale,
+): Promise<SessionSummary[]> =>
+  (await sessionRepository.listByEvent(slug, locale, { includeArchived: true })).filter(
+    (session) => Boolean(session.archivedAt),
+  );
+
+/*
+ * Shelving an activity takes it off the program for everyone — the
+ * site, the agenda, workshop selection — without destroying it. The
+ * people registered to it are told, exactly as they would be for a
+ * cancellation, because for them it is one.
+ */
+export const archiveSession = async (sessionId: string): Promise<boolean> => {
+  const titles = await titlesOf(sessionId);
+  if (titles && titles.eventSlug) {
+    await announceSessionCancelled(titles.eventSlug, sessionId, titles);
+  }
+  return sessionRepository.setArchived(sessionId, true);
+};
+
+export const restoreSession = (sessionId: string): Promise<boolean> =>
+  sessionRepository.setArchived(sessionId, false);
+
 export const createSession = (
   slug: string,
   locale: Locale,
@@ -213,6 +239,10 @@ export const selectWorkshop = async (
   }
   const situation = await getSessionSituation(sessionId, locale);
   if (!situation) {
+    throw new Error('Session not found');
+  }
+  /* A shelved activity takes no one; a stale link must not register. */
+  if (situation.session.archivedAt) {
     throw new Error('Session not found');
   }
   /*

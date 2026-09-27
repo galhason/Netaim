@@ -61,6 +61,8 @@ export interface SessionSummary {
   featured?: boolean;
   image?: string;
   imageId?: string;
+  /* Set once shelved; absent while the activity stands on the program. */
+  archivedAt?: string;
 }
 
 export interface SessionCounts {
@@ -88,7 +90,16 @@ export interface SessionWaitlistEntry {
  * capacity rules come from the frozen Registration Engine.
  */
 export interface SessionRepository {
-  listByEvent: (slug: string, locale: Locale) => Promise<SessionSummary[]>;
+  /*
+   * The program: what stands. An archived activity is left out unless
+   * asked for by name — the Studio's archive view is the one reader that
+   * asks.
+   */
+  listByEvent: (
+    slug: string,
+    locale: Locale,
+    options?: { includeArchived?: boolean },
+  ) => Promise<SessionSummary[]>;
   /*
    * The localized text of one activity in one language, as stored —
    * nothing inherited from the other language. The editor needs this
@@ -116,6 +127,8 @@ export interface SessionRepository {
     locale: Locale,
   ) => Promise<SessionSummary | null>;
   remove: (sessionId: string) => Promise<boolean>;
+  /* Shelve and unshelve — the activity keeps its registrations and history. */
+  setArchived: (sessionId: string, archived: boolean) => Promise<boolean>;
 }
 
 export interface SessionRegistrationRepository {

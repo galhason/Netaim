@@ -14,6 +14,7 @@ import {
   subscribeReadState,
   type ReadState,
 } from './read-state';
+import { withBasePath } from '@/config/site';
 
 /*
  * The bell in the navigation — the platform's quiet voice, and the
@@ -101,7 +102,7 @@ const NavBell = ({ locale }: { locale: Locale }) => {
         return;
       }
       try {
-        const res = await fetch(`/${locale}/me/notifications`, {
+        const res = await fetch(withBasePath(`/${locale}/me/notifications`), {
           cache: 'no-store',
         });
         if (res.status === 401) {

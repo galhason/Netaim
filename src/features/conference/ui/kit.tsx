@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { motion, useReducedMotion } from 'motion/react';
 import type { ReactNode } from 'react';
 import type { Locale } from '@/config/locales';
@@ -521,11 +522,11 @@ export const GhostLink = ({
   children: ReactNode;
   href: string;
 }) => (
-  <a
+  <Link
     href={href}
     className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--x-primary)] transition-colors hover:text-[var(--x-primary-strong)]"
   >
     {children}
     <IconArrow className="size-4 rtl:-scale-x-100" />
-  </a>
+  </Link>
 );

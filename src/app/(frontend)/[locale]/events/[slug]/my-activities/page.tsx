@@ -5,6 +5,7 @@ import { findPortalEvent } from '@/features/events';
 import { myMeetings } from '@/features/networking';
 import { buildProgramModel } from '@/features/program';
 import { currentParticipant } from '@/features/registration';
+import { venueDayKey } from '@/shared';
 import AutoRefresh from './auto-refresh';
 import { toMeetingVMs } from './meetings';
 import MyScheduleDashboard from './my-schedule-dashboard';
@@ -48,14 +49,16 @@ const MySchedulePage = async ({ params, searchParams }: Props) => {
     );
   }
 
-  const [event, model, meetings] = await Promise.all([
-    findPortalEvent(slug, lang).catch(() => null),
-    buildProgramModel(slug, lang),
+  /* The event first: the schedule is read on the conference's clock. */
+  const event = await findPortalEvent(slug, lang).catch(() => null);
+  const [model, meetings] = await Promise.all([
+    buildProgramModel(slug, lang, Date.now(), event?.timezone),
     myMeetings(slug).catch(() => []),
   ]);
 
   const title = event?.title ?? (lang === 'he' ? 'הכנס' : 'The conference');
-  const todayKey = new Date().toISOString().slice(0, 10);
+  /* Today at the venue, matching the day keys the model produced. */
+  const todayKey = venueDayKey(new Date().toISOString(), event?.timezone);
 
   return (
     <>

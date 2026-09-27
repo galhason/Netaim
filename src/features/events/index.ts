@@ -25,6 +25,7 @@ export {
   createEvent,
   duplicateEvent,
   archiveEvent,
+  restoreEvent,
   deleteEvent,
   moveEventPhase,
 } from './services/event-management-service';

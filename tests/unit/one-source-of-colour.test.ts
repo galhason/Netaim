@@ -161,12 +161,15 @@ describe('the email carries the same brand as the site', () => {
 });
 
 /*
- * One typeface. The product used to set the Studio in one face, the
+ * The site's faces. The product used to set the Studio in one face, the
  * participant pages in another and the landing in a third, which read
- * as three products wearing the same logo.
+ * as three products wearing the same logo. It now wears the
+ * organisation's own two, the ones its WordPress site is set in: Open
+ * Sans for text, M PLUS Rounded 1c for the large headings — the same
+ * in both roots, so a page here and a page there read as one site.
  */
-describe('the product speaks in one voice', () => {
-  it('loads Heebo, and only Heebo, in both roots', () => {
+describe('the product speaks in the site\'s voice', () => {
+  it('loads the site\'s two faces, and only those, in both roots', () => {
     for (const layout of [
       'src/app/(frontend)/[locale]/layout.tsx',
       'src/app/(studio)/layout.tsx',
@@ -174,13 +177,18 @@ describe('the product speaks in one voice', () => {
       const source = read(layout);
       /* The prose explains which faces were dropped; the code must not load them. */
       const code = source.replace(/\/\*[\s\S]*?\*\//g, '');
-      expect(source, layout).toContain("import { Heebo } from 'next/font/google'");
+      expect(source, layout).toContain("import { M_PLUS_Rounded_1c, Open_Sans } from 'next/font/google'");
+      expect(code, layout).toContain("variable: '--font-body'");
+      expect(code, layout).toContain("variable: '--font-display-face'");
+      expect(code, layout).not.toContain('Heebo');
       expect(code, layout).not.toContain('Frank_Ruhl_Libre');
       expect(code, layout).not.toContain('Rubik');
     }
   });
 
-  it('resolves the display face to the body face', () => {
-    expect(read('src/styles/globals.css')).toContain('--font-display: var(--font-body)');
+  it('falls from the display face to the body face, for the Hebrew it lacks', () => {
+    const css = read('src/styles/globals.css');
+    expect(css).toContain('--font-display: var(--font-display-face), var(--font-body)');
+    expect(css).not.toContain('--font-display: var(--font-body);');
   });
 });

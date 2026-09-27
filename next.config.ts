@@ -7,6 +7,22 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const isProduction = process.env.NODE_ENV === 'production';
 
 /*
+ * The base path is read off NEXT_PUBLIC_SERVER_URL rather than set on
+ * its own, so there is exactly one place the site's address lives (see
+ * src/config/site.ts). Deployed at the root of a domain it is empty and
+ * Next behaves exactly as before; under the local shared-domain
+ * rehearsal (http://localhost/netaim, Apache in front) it is /netaim,
+ * and Next prefixes its own links, chunks and metadata routes with it.
+ */
+const basePath = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SERVER_URL ?? '').pathname.replace(/\/+$/, '');
+  } catch {
+    return '';
+  }
+})();
+
+/*
  * Media may be served from an S3-compatible bucket when one is
  * configured; the connect/image sources must allow it, and nothing else.
  */
@@ -75,6 +91,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  ...(basePath ? { basePath } : {}),
   reactStrictMode: true,
   poweredByHeader: false,
   experimental: {

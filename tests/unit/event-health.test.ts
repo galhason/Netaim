@@ -99,14 +99,24 @@ describe('event health', () => {
   });
 
   it('derives available transitions from phase and capabilities', () => {
+    /*
+     * `archived` trails both sets: retiring a conference is legal from
+     * every phase and is not filtered by capability. What this case is
+     * about is the registration phases, which still appear only for a
+     * conference that declared the capability.
+     */
     const health = computeEventHealth(input());
     expect(health.availableTransitions).toEqual([
       'registrationOpen',
       'preparation',
+      'archived',
     ]);
     const withoutRegistration = computeEventHealth(
       input({ declaredCapabilities: [] }),
     );
-    expect(withoutRegistration.availableTransitions).toEqual(['preparation']);
+    expect(withoutRegistration.availableTransitions).toEqual([
+      'preparation',
+      'archived',
+    ]);
   });
 });

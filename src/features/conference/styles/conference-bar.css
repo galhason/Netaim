@@ -1,0 +1,352 @@
+/*
+ * The conference bar, on the platform.
+ *
+ * A port of `.nt-conf-nav` from the WordPress child theme
+ * (assets/css/nt-conferences.css): same class names, same measures,
+ * same colours — the site's kit palette, written out here because the
+ * platform's own tokens are a different brand scale (navy first) and
+ * the bar must match the site, not the platform. Keep the two files
+ * in step by hand; a change to one is a change to both.
+ */
+.nt-bar {
+  --nt-conf-green: #166633;
+  --nt-conf-green-dark: #0f4a24;
+  --nt-conf-orange: #f99b21;
+  --nt-conf-orange-dark: #b86a00;
+  --nt-conf-ink: #54595f;
+  --nt-conf-line: #e2e6e3;
+  --nt-conf-cream: #f8f8f8;
+  --nt-conf-lime: #83b339;
+
+  /* The bell is a platform component drawn in theme colours; on this
+     light bar those resolve to the site's palette. */
+  --color-surface-raised: #ffffff;
+  --color-text-primary: #333333;
+  --color-text-secondary: var(--nt-conf-ink);
+  --color-accent: var(--nt-conf-green);
+  --color-brand-contrast: #ffffff;
+
+  position: sticky;
+  top: var(--announcement-h, 0px);
+  z-index: 60;
+  background: #fff;
+  color: #333;
+  font-family: var(--font-body, inherit);
+  box-shadow: 0 1px 0 var(--nt-conf-line);
+}
+
+.nt-bar__brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.9rem 1.25rem;
+}
+
+.nt-bar__logo {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.nt-bar__wordmark {
+  color: var(--nt-conf-green);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.nt-bar__lang-button {
+  min-height: 2.5rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--nt-conf-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--nt-conf-ink);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.nt-bar__lang-button:hover,
+.nt-bar__lang-button:focus-visible {
+  background: var(--nt-conf-cream);
+  color: var(--nt-conf-green-dark);
+}
+
+.nt-bar .nt-conf-nav {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.75rem 1.25rem;
+  border-block: 1px solid var(--nt-conf-line);
+}
+
+.nt-bar .nt-conf-nav__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nt-bar .nt-conf-nav__item {
+  margin: 0;
+  padding: 0;
+}
+
+.nt-bar .nt-conf-nav__link {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  color: var(--nt-conf-green);
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.nt-bar .nt-conf-nav__link:hover,
+.nt-bar .nt-conf-nav__link:focus-visible {
+  background: var(--nt-conf-cream);
+  color: var(--nt-conf-green-dark);
+}
+
+.nt-bar .nt-conf-nav__link.is-current {
+  background: var(--nt-conf-green);
+  color: #fff;
+}
+
+.nt-bar .nt-conf-nav__link--register {
+  background: var(--nt-conf-orange);
+  color: #fff;
+}
+
+.nt-bar .nt-conf-nav__link--register:hover,
+.nt-bar .nt-conf-nav__link--register:focus-visible {
+  background: var(--nt-conf-orange-dark);
+  color: #fff;
+}
+
+.nt-bar .nt-conf-nav__link--enter {
+  border: 1px solid var(--nt-conf-green);
+}
+
+.nt-bar .nt-conf-nav__link--networking {
+  color: var(--nt-conf-green-dark);
+}
+
+/* --- the doorway and the chip ---------------------------------- */
+
+.nt-bar .nt-conf-nav__doorway {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nt-bar .nt-conf-nav__item--doorway {
+  display: flex;
+}
+
+.nt-bar .nt-conf-nav__me {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0.35rem 0.3rem 0.9rem;
+  border: 1px solid var(--nt-conf-green);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--nt-conf-green-dark);
+  text-decoration: none;
+  transition: background-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+[dir='ltr'] .nt-bar .nt-conf-nav__me {
+  padding: 0.3rem 0.9rem 0.3rem 0.35rem;
+}
+
+.nt-bar .nt-conf-nav__me:hover,
+.nt-bar .nt-conf-nav__me:focus-visible {
+  background: var(--nt-conf-cream);
+  box-shadow: 0 6px 16px -8px rgba(22, 102, 51, 0.5);
+  transform: translateY(-1px);
+}
+
+.nt-bar .nt-conf-nav__avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--nt-conf-green);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  overflow: hidden;
+}
+
+.nt-bar .nt-conf-nav__avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nt-bar .nt-conf-nav__me-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  text-align: start;
+}
+
+.nt-bar .nt-conf-nav__me-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  color: var(--nt-conf-ink);
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.nt-bar .nt-conf-nav__me-status::before {
+  content: '';
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background: var(--nt-conf-lime);
+  box-shadow: 0 0 0 3px rgba(131, 179, 57, 0.25);
+}
+
+.nt-bar .nt-conf-nav__me-name {
+  max-width: 11rem;
+  overflow: hidden;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.nt-bar .nt-conf-nav__signout {
+  padding: 0.4rem 0.6rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--nt-conf-ink);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.nt-bar .nt-conf-nav__signout:hover,
+.nt-bar .nt-conf-nav__signout:focus-visible {
+  background: var(--nt-conf-cream);
+  color: var(--nt-conf-green-dark);
+}
+
+/* The bell keeps its own drawing; only its resting hover needs a
+   ground that shows on white. */
+.nt-bar .nt-conf-nav__item--bell button[aria-expanded]:hover,
+.nt-bar .nt-conf-nav__item--bell button[aria-expanded='true'] {
+  background: var(--nt-conf-cream);
+}
+
+/* --- the personal area, folded ------------------------------- */
+
+.nt-bar .nt-conf-nav__area {
+  position: relative;
+}
+
+.nt-bar .nt-conf-nav__link--area {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.nt-bar .nt-conf-nav__link--area::-webkit-details-marker {
+  display: none;
+}
+
+.nt-bar .nt-conf-nav__link--area::after {
+  content: '';
+  display: inline-block;
+  width: 0.4em;
+  height: 0.4em;
+  margin-inline-start: 0.45em;
+  border-inline-end: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-0.15em) rotate(45deg);
+  transition: transform 0.2s;
+}
+
+.nt-bar .nt-conf-nav__area[open] > .nt-conf-nav__link--area {
+  background: var(--nt-conf-cream);
+  color: var(--nt-conf-green-dark);
+}
+
+.nt-bar .nt-conf-nav__area[open] > .nt-conf-nav__link--area::after {
+  transform: translateY(0.1em) rotate(225deg);
+}
+
+.nt-bar .nt-conf-nav__menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  inset-inline-end: 0;
+  z-index: 30;
+  min-width: 12rem;
+  margin: 0;
+  padding: 0.4rem;
+  list-style: none;
+  background: #fff;
+  border: 1px solid var(--nt-conf-line);
+  border-radius: 0.9rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+.nt-bar .nt-conf-nav__menu .nt-conf-nav__item {
+  display: block;
+}
+
+.nt-bar .nt-conf-nav__menu .nt-conf-nav__link {
+  display: block;
+  border-radius: 0.6rem;
+  font-weight: 500;
+}
+
+@media (max-width: 767px) {
+  .nt-bar .nt-conf-nav,
+  .nt-bar .nt-conf-nav__list {
+    justify-content: center;
+  }
+  .nt-bar .nt-conf-nav__item--area {
+    flex-basis: 100%;
+    text-align: center;
+  }
+  .nt-bar .nt-conf-nav__area {
+    position: static;
+  }
+  .nt-bar .nt-conf-nav__menu {
+    position: static;
+    min-width: 0;
+    margin-top: 0.4rem;
+    box-shadow: none;
+    text-align: center;
+  }
+}

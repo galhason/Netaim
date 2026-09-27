@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { useFormStatus } from 'react-dom';
 import type { Locale } from '@/config/locales';
@@ -171,10 +172,10 @@ const ScheduleRow = ({
               ) : null}
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <a href={networkingHref} className={detailsBtn}>
+              <Link href={networkingHref} className={detailsBtn}>
                 {t(locale, 'toNetworking')}
                 <IconArrow className="size-4 rtl:rotate-180" />
-              </a>
+              </Link>
             </div>
           </div>
           <span className={`grid size-9 shrink-0 place-items-center rounded-[10px] sm:size-11 sm:rounded-[12px] ${TYPE_TONE.networking}`}>

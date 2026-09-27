@@ -183,7 +183,7 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
                         <Link
                           href={
                             line.eventSlug
-                              ? `/studio/experiences/${line.eventSlug}`
+                              ? `/studio/conference/${line.eventSlug}/content`
                               : '/studio'
                           }
                           className={`${chip} transition-colors hover:border-[var(--c-bronze)]/50 hover:text-[var(--c-text)]`}

@@ -49,7 +49,7 @@ const ArrivalScene = ({
   const year = yearOf(arrival);
 
   return (
-    <section className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-surface">
+    <section className="relative flex min-h-[calc(100dvh-10rem)] flex-col overflow-hidden bg-surface">
       {/* Cinematic photograph - full-bleed, no edge, dissolving into navy */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         {arrival.image ? (
@@ -87,7 +87,7 @@ const ArrivalScene = ({
       </div>
 
       {/* Content */}
-      <div className="relative z-10 mx-auto flex w-full max-w-[1560px] flex-1 flex-col px-6 pb-10 pt-[104px] md:px-12 md:pb-14">
+      <div className="relative z-10 mx-auto flex w-full max-w-[1560px] flex-1 flex-col px-6 pb-10 pt-12 md:px-12 md:pb-14 md:pt-16">
         <div className="grid flex-1 items-center gap-8 lg:grid-cols-2">
           <div aria-hidden="true" className="order-first hidden lg:block" />
 

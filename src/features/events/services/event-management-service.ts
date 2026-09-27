@@ -80,6 +80,18 @@ export const archiveEvent = (slug: string): Promise<TransitionResult> =>
   moveEventPhase(slug, 'archived');
 
 /*
+ * Out of the archive, and back to the beginning of the journey.
+ *
+ * `draft` rather than `completed`: both are legal exits in the lifecycle
+ * map, and this is the one the Studio offers, because a conference is
+ * restored in order to be worked on again. Publishing it is a separate,
+ * later act -- the lifecycle refuses archived → published, and so does
+ * the launch review.
+ */
+export const restoreEvent = (slug: string): Promise<TransitionResult> =>
+  moveEventPhase(slug, 'draft');
+
+/*
  * Permanent deletion (approved decision: keep no data for nothing):
  * the conference and everything born inside it, in one act.
  */
@@ -92,7 +104,7 @@ export const deleteEvent = (slug: string): Promise<boolean> =>
  */
 export const updateEventDetails = (
   slug: string,
-  input: { title?: string; startsAt?: string; endsAt?: string },
+  input: { title?: string; startsAt?: string; endsAt?: string; timezone?: string },
   locale: Locale,
 ): Promise<EventSummary | null> =>
   eventRepository.updateEventDetails(slug, input, locale);

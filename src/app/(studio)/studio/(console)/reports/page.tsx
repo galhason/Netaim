@@ -91,7 +91,7 @@ const ReportCard = ({
       </span>
       {report.eventSlug ? (
         <Link
-          href={`/studio/experiences/${report.eventSlug}`}
+          href={`/studio/conference/${report.eventSlug}/content`}
           className="text-xs text-[var(--c-text-soft)] underline-offset-4 hover:underline"
         >
           {report.eventSlug}

@@ -37,6 +37,8 @@ interface LoungeShellProps {
   backHref?: string;
   backLabel?: string;
   width?: 'narrow' | 'wide';
+  /* The site's navigation, above the page — the conference bar. */
+  bar?: ReactNode;
 }
 
 export const LoungeShell = ({
@@ -44,27 +46,28 @@ export const LoungeShell = ({
   backHref,
   backLabel,
   width = 'wide',
+  bar,
 }: LoungeShellProps) => (
-  <main
-    id="main-content"
-    className="lounge min-h-dvh bg-[var(--l-bg)] font-body text-[var(--l-ink)]"
-  >
-    <div
-      className={`mx-auto w-full px-6 py-10 md:px-10 ${
-        width === 'narrow' ? 'max-w-xl' : 'max-w-5xl'
-      }`}
-    >
-      {backHref ? (
-        <Link
-          href={backHref}
-          className="text-sm text-[var(--l-soft)] transition-colors hover:text-[var(--l-ink)]"
-        >
-          ← {backLabel}
-        </Link>
-      ) : null}
-      {children}
-    </div>
-  </main>
+  <div className="lounge min-h-dvh bg-[var(--l-bg)] font-body text-[var(--l-ink)]">
+    {bar}
+    <main id="main-content">
+      <div
+        className={`mx-auto w-full px-6 py-10 md:px-10 ${
+          width === 'narrow' ? 'max-w-xl' : 'max-w-5xl'
+        }`}
+      >
+        {backHref ? (
+          <Link
+            href={backHref}
+            className="text-sm text-[var(--l-soft)] transition-colors hover:text-[var(--l-ink)]"
+          >
+            ← {backLabel}
+          </Link>
+        ) : null}
+        {children}
+      </div>
+    </main>
+  </div>
 );
 
 interface LoungeCardProps {

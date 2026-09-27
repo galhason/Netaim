@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { Locale } from '@/config/locales';
 import { CONSOLE_UI } from '../../constants/console';
 import { CANVAS_SELECT_SOURCE } from './canvas-select-bridge';
+import { withBasePath } from '@/config/site';
 
 /*
  * The canvas is the live site itself — the one Runtime, framed. No
@@ -105,7 +106,7 @@ const ConsoleCanvas = ({
       >
         <iframe
           key={take}
-          src={src}
+          src={withBasePath(src)}
           title={title}
           className={
             director

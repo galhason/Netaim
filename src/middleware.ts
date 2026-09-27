@@ -1,11 +1,30 @@
 import createMiddleware from 'next-intl/middleware';
 import { NextResponse, type NextRequest } from 'next/server';
 import { LOCALE_PREFERENCE_COOKIE, isSupportedLocale } from '@/config/locales';
+import { SITE_ORIGIN } from '@/config/site';
 import { routing } from '@/i18n/routing';
 
 const intlMiddleware = createMiddleware(routing);
 
 const LOCALE_PREFIX = /^\/(he|en)(?=\/|$)/;
+
+/*
+ * A redirect must name the address the browser knows. Behind a reverse
+ * proxy `request.nextUrl` carries the upstream's own host (127.0.0.1 or
+ * localhost:3000), and a Location header built from it would send the
+ * visitor there. The configured public origin wins; nextUrl keeps the
+ * base path and the query for us.
+ */
+const publicUrl = (request: NextRequest, pathname: string): URL => {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  if (SITE_ORIGIN) {
+    const site = new URL(SITE_ORIGIN);
+    url.protocol = site.protocol;
+    url.host = site.host;
+  }
+  return url;
+};
 
 /*
  * The edge runtime cannot reach the database, so the participant's language
@@ -21,16 +40,14 @@ export default function middleware(request: NextRequest) {
     const match = LOCALE_PREFIX.exec(pathname);
 
     if (!match) {
-      const url = request.nextUrl.clone();
-      url.pathname = `/${preferred}${pathname === '/' ? '' : pathname}`;
-      return NextResponse.redirect(url);
+      return NextResponse.redirect(
+        publicUrl(request, `/${preferred}${pathname === '/' ? '' : pathname}`),
+      );
     }
 
     if (match[1] !== preferred) {
       const rest = pathname.slice(match[0].length);
-      const url = request.nextUrl.clone();
-      url.pathname = `/${preferred}${rest}`;
-      return NextResponse.redirect(url);
+      return NextResponse.redirect(publicUrl(request, `/${preferred}${rest}`));
     }
   }
 

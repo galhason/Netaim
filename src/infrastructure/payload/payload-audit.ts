@@ -1,3 +1,4 @@
+import type { Where } from 'payload';
 import type {
   AuditEntry,
   AuditRepository,
@@ -119,5 +120,30 @@ export const payloadAuditRepository: AuditRepository = {
       overrideAccess: true,
     });
     return (found.docs as unknown as AuditRow[]).map(toEntry);
+  },
+
+  query: async ({ subject, actorEmail, action, from, to, limit, page }) => {
+    const payload = await getSystemPayload();
+    const clauses: Where[] = [];
+    if (subject) clauses.push({ subject: { equals: subject } });
+    if (actorEmail) clauses.push({ actorEmail: { equals: actorEmail } });
+    if (action) clauses.push({ action: { equals: action } });
+    if (from) clauses.push({ createdAt: { greater_than_equal: from } });
+    if (to) clauses.push({ createdAt: { less_than_equal: to } });
+    const found = await payload.find({
+      collection: 'audit-log',
+      ...(clauses.length ? { where: { and: clauses } } : {}),
+      sort: '-createdAt',
+      limit,
+      page: page && page > 0 ? page : 1,
+      depth: 0,
+      overrideAccess: true,
+    });
+    return {
+      entries: (found.docs as unknown as AuditRow[]).map(toEntry),
+      total: found.totalDocs,
+      page: found.page ?? 1,
+      pages: found.totalPages,
+    };
   },
 };

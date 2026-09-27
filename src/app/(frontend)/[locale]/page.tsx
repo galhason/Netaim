@@ -7,6 +7,7 @@ import {
   getConferenceExperience,
 } from '@/features/cinematic';
 import { getActiveConferenceSlug, getSiteBrand } from '@/features/events';
+import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
 import { currentParticipant, myAreaHref } from '@/features/registration';
 import '@/scenes';
 
@@ -44,6 +45,7 @@ const ConferenceLandingPage = async ({
    */
   const me = await currentParticipant().catch(() => null);
   const logo = await getSiteBrand();
+  const barViewer = me ? await conferenceBarViewer() : null;
   /*
    * Where this guest's own area is. Depends on whether they have joined
    * this conference, so it is resolved here beside their name and never
@@ -67,10 +69,17 @@ const ConferenceLandingPage = async ({
           locale as Locale,
           logo.onDark,
           slug ? `/${locale}/events/${slug}/my-activities` : undefined,
+          logo.onLight,
         )}
         locale={locale as Locale}
         viewer={
-          me ? { name: me.name || me.email, ...(meHref ? { href: meHref } : {}) } : null
+          me
+            ? {
+                name: barViewer?.name ?? (me.name || me.email),
+                ...(meHref ? { href: meHref } : {}),
+                ...(barViewer?.photoUrl ? { photoUrl: barViewer.photoUrl } : {}),
+              }
+            : null
         }
       />
     </>

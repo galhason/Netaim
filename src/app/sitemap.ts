@@ -27,7 +27,7 @@ import { listPortalEvents } from '@/features/events';
  */
 
 /* Public, per conference. Everything else there needs a participant. */
-const PUBLIC_CONFERENCE_PATHS = ['', '/register', '/info'] as const;
+const PUBLIC_CONFERENCE_PATHS = ['', '/register'] as const;
 
 const sitemap = async (): Promise<MetadataRoute.Sitemap> => {
   const base = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, '');

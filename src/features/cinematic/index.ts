@@ -28,7 +28,6 @@ export type { ActBlock, ActScene } from './utils/acts';
 export { completeComposition } from './utils/composition';
 export { inspectJourney } from './utils/rhythm';
 export type { JourneyNote, JourneyScene } from './utils/rhythm';
-export { default as CinematicNav } from './components/cinematic-nav';
 export { default as ConferenceFooter } from './components/conference-footer';
 export { default as ConferenceArrivalScene } from './components/arrival-scene';
 export { default as ConferenceStoryScene } from './components/story-scene';

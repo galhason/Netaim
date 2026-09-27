@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import type { Locale } from '@/config/locales';
+import { ASSIGNABLE_ROLES } from '@/permission-engine';
 import {
   addMedia,
   createEvent,
@@ -89,7 +90,7 @@ export const createExperienceAction = async (formData: FormData) => {
   }
   const event = await createEvent(title, startsAt || undefined);
   revalidatePath('/studio', 'layout');
-  redirect(`/studio/experiences/${encodeURIComponent(event.slug)}`);
+  redirect(`/studio/conference/${encodeURIComponent(event.slug)}/content`);
 };
 
 /*
@@ -99,7 +100,7 @@ export const createExperienceAction = async (formData: FormData) => {
  */
 export const deleteEventAction = async (formData: FormData) => {
   const slug = String(formData.get('slug') ?? '');
-  const actor = slug ? await actorFor('events:manage', slug) : null;
+  const actor = slug ? await actorFor('events:delete', slug) : null;
   if (!actor) {
     return;
   }
@@ -306,7 +307,7 @@ export const uploadOpeningImageAction = async (formData: FormData) => {
   }
   publishedEvent(slug);
   revalidatePath('/studio/media');
-  revalidatePath(`/studio/experiences/${slug}`);
+  revalidatePath(`/studio/conference/${slug}`, 'layout');
 };
 
 /*
@@ -351,7 +352,7 @@ const persistEventComposition = async (
     })),
   );
   publishedEvent(slug);
-  revalidatePath(`/studio/experiences/${slug}`);
+  revalidatePath(`/studio/conference/${slug}`, 'layout');
 };
 
 /*
@@ -517,7 +518,7 @@ export const broadcastAnnouncementAction = async (formData: FormData) => {
       targetSessionId = undefined;
     }
   }
-  const actor = slug ? await actorFor('participants:manage', slug) : null;
+  const actor = slug ? await actorFor('communications:manage', slug) : null;
   if (!actor) {
     return;
   }
@@ -605,14 +606,14 @@ export const toggleParticipantBlockedAction = async (formData: FormData) => {
  * grant service itself.
  */
 export const grantRoleAction = async (formData: FormData) => {
-  const access = await requireCapability('platform:manage');
+  const access = await requireCapability('access:manage');
   if (!access) {
     return;
   }
   const accountId = String(formData.get('accountId') ?? '');
   const role = String(formData.get('role') ?? '');
   const eventSlug = String(formData.get('eventSlug') ?? '').trim();
-  if (!accountId || !role) {
+  if (!accountId || !role || !(ASSIGNABLE_ROLES as readonly string[]).includes(role)) {
     return;
   }
   await grantRole(accountId, role, eventSlug || null, access.creator.id);
@@ -625,7 +626,7 @@ export const grantRoleAction = async (formData: FormData) => {
 };
 
 export const revokeGrantAction = async (formData: FormData) => {
-  const actor = await actorFor('platform:manage');
+  const actor = await actorFor('access:manage');
   if (!actor) {
     return;
   }
@@ -711,7 +712,7 @@ export const moveParticipantRegistrationAction = async (
 };
 
 export const deleteParticipantAction = async (formData: FormData) => {
-  const actor = await actorFor('platform:manage');
+  const actor = await actorFor('participants:delete');
   if (!actor) {
     return;
   }
@@ -758,7 +759,7 @@ export const updateConferenceSettingsAction = async (formData: FormData) => {
     contentLocale,
   );
   revalidatePath('/studio', 'layout');
-  revalidatePath(`/studio/experiences/${slug}`);
+  revalidatePath(`/studio/conference/${slug}`, 'layout');
   /*
    * And the public site, which is the point of changing a date. Without
    * this the Studio showed the new dates immediately and the live site
@@ -828,7 +829,7 @@ export const addConferenceSpeakerAction = async (formData: FormData) => {
   await saveEventOpening(slug, contentLocale, { speakers: next });
   publishedEvent(slug);
   revalidatePath('/studio', 'layout');
-  revalidatePath(`/studio/experiences/${slug}`);
+  revalidatePath(`/studio/conference/${slug}`, 'layout');
 };
 
 export const removeConferenceSpeakerAction = async (formData: FormData) => {
@@ -850,7 +851,7 @@ export const removeConferenceSpeakerAction = async (formData: FormData) => {
   await saveEventOpening(slug, contentLocale, { speakers: next });
   publishedEvent(slug);
   revalidatePath('/studio', 'layout');
-  revalidatePath(`/studio/experiences/${slug}`);
+  revalidatePath(`/studio/conference/${slug}`, 'layout');
 };
 
 

@@ -24,7 +24,7 @@ import ImportPanel from './import-panel';
  */
 const ImportActivitiesPage = async () => {
   const locale = await getStudioLocale();
-  const access = await requireCapability('events:manage');
+  const access = await requireCapability('activities:manage');
   const creator = await getStudioCreator();
   const slug = access
     ? await getActiveConferenceSlug(locale).catch(() => null)

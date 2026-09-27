@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Locale } from '@/config/locales';
+import { wordpressHref } from '@/config/wordpress';
 import { BrandMark } from '@/shared';
 import { CINEMATIC_UI } from '../constants/cinematic-content';
 
@@ -55,13 +56,15 @@ const ConferenceFooter = ({
         </Link>
         {/* Contact came down from the navigation bar, where it was
           * spending width a visitor needed for the conference's own
-          * pages. This is where a reader looks for it anyway. */}
-        <Link
-          href={`/${locale}/contact`}
+          * pages. This is where a reader looks for it anyway. It is the
+          * organisation's page on the WordPress site — a plain anchor,
+          * because next/link would resolve it against this app. */}
+        <a
+          href={wordpressHref('contact', locale)}
           className="text-sm text-text-secondary transition-colors hover:text-text-primary"
         >
           {CINEMATIC_UI.contact[locale]}
-        </Link>
+        </a>
         <Link
           href="/studio"
           className="text-sm text-text-secondary transition-colors hover:text-text-primary"

@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Locale } from '@/config/locales';
+import { withBasePath } from '@/config/site';
 
 /*
  * Import, in three plain steps: take the file we hand you, fill it in,
@@ -149,7 +150,7 @@ const ImportPanel = ({ locale, columnLabels }: Props) => {
     if (commit) {
       body.set('commit', 'yes');
     }
-    const response = await fetch('/studio/activity/import/sheet', {
+    const response = await fetch(withBasePath('/studio/activity/import/sheet'), {
       method: 'POST',
       body,
     });

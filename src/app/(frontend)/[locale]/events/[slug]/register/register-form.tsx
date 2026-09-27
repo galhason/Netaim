@@ -780,23 +780,23 @@ const RegisterForm = ({
            */
           <p className="text-xs leading-relaxed text-[var(--x-soft)]">
             {labels.noticeBefore}
-            <a
+            <Link
               href={`/${locale}/terms`}
               target="_blank"
               rel="noopener"
               className="text-[var(--x-primary)] underline underline-offset-4"
             >
               {labels.noticeTerms}
-            </a>
+            </Link>
             {labels.noticeBetween}
-            <a
+            <Link
               href={`/${locale}/privacy`}
               target="_blank"
               rel="noopener"
               className="text-[var(--x-primary)] underline underline-offset-4"
             >
               {labels.noticePrivacy}
-            </a>
+            </Link>
             {labels.noticeAfter}
           </p>
         ) : null}

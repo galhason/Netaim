@@ -8,6 +8,7 @@ import {
   archiveEvent,
   duplicateEvent,
   launchExperience,
+  restoreEvent,
   saveEventOpening,
 } from '@/features/events';
 import { saveHomepage } from '@/features/opening';
@@ -68,6 +69,8 @@ export const duplicateEventAction = async (formData: FormData) => {
   if (slug) {
     await duplicateEvent(slug);
     await audit(actor, 'event.duplicated', slug);
+    /* The new card belongs on the console, which lives at `/studio`. */
+    revalidatePath('/studio', 'layout');
     revalidatePath('/studio/events');
   }
 };
@@ -79,8 +82,47 @@ export const archiveEventAction = async (formData: FormData) => {
     return;
   }
   if (slug) {
-    await archiveEvent(slug);
+    const result = await archiveEvent(slug);
+    /*
+     * Only a move that happened gets written down. This audited
+     * unconditionally, so a refused archive still left `event.archived`
+     * in the trail for a conference that was never archived -- and a
+     * trail that records acts which did not happen is worse than no
+     * trail, because it is believed.
+     */
+    if (!result.ok) {
+      return;
+    }
     await audit(actor, 'event.archived', slug);
+    /*
+     * The console lives at `/studio`, and the conference cards it draws
+     * are what this button changes. Revalidating `/studio/events` alone
+     * left the card showing the old state, which is the second reason
+     * the button looked like it did nothing.
+     */
+    revalidatePath('/studio', 'layout');
+    revalidatePath('/studio/events');
+  }
+};
+
+/*
+ * The way out of the archive. It is the same shape as archiving: the
+ * lifecycle decides whether the move is legal, nothing is written when it
+ * is not, and the trail records only what happened.
+ */
+export const restoreEventAction = async (formData: FormData) => {
+  const slug = String(formData.get('slug') ?? '');
+  const actor = await actorFor('events:manage');
+  if (!actor) {
+    return;
+  }
+  if (slug) {
+    const result = await restoreEvent(slug);
+    if (!result.ok) {
+      return;
+    }
+    await audit(actor, 'event.restored', slug);
+    revalidatePath('/studio', 'layout');
     revalidatePath('/studio/events');
   }
 };
@@ -108,22 +150,24 @@ export const launchExperienceAction = async (formData: FormData) => {
     slug,
     outcome.ok
       ? { outcome: 'live' }
-      : { outcome: 'blocked', blockers: outcome.blockers },
+      : outcome.retired
+        ? { outcome: 'retired' }
+        : { outcome: 'blocked', blockers: outcome.blockers },
   );
   revalidatePath(`/studio/events/${slug}`, 'layout');
   revalidatePath('/studio', 'layout');
   publishedEvent(slug);
   if (outcome.ok) {
-    redirect(`/studio/experiences/${encodeURIComponent(slug)}?launch=live`);
+    redirect(`/studio/conference/${encodeURIComponent(slug)}/settings?publish=live`);
   }
   redirect(
-    `/studio/experiences/${encodeURIComponent(slug)}?launch=blocked&blockers=${outcome.blockers}`,
+    `/studio/conference/${encodeURIComponent(slug)}/settings?publish=blocked`,
   );
 };
 
 export const addSessionAction = async (formData: FormData) => {
   const slug = String(formData.get('slug') ?? '');
-  const actor = slug ? await actorFor('events:manage', slug) : null;
+  const actor = slug ? await actorFor('activities:manage', slug) : null;
   if (!actor) {
     return;
   }
@@ -161,7 +205,7 @@ export const addSessionAction = async (formData: FormData) => {
  */
 export const updateSessionAction = async (formData: FormData) => {
   const slug = String(formData.get('slug') ?? '');
-  const actor = slug ? await actorFor('events:manage', slug) : null;
+  const actor = slug ? await actorFor('activities:manage', slug) : null;
   if (!actor) {
     return;
   }
@@ -195,7 +239,7 @@ export const updateSessionAction = async (formData: FormData) => {
 
 export const deleteSessionAction = async (formData: FormData) => {
   const slug = String(formData.get('slug') ?? '');
-  const actor = slug ? await actorFor('events:manage', slug) : null;
+  const actor = slug ? await actorFor('activities:delete', slug) : null;
   if (!actor) {
     return;
   }

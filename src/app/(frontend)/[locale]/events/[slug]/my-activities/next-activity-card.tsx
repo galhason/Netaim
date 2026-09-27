@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { Locale } from '@/config/locales';
 import {
   IconArrow,
@@ -76,13 +77,13 @@ const NextActivityCard = ({
         <p className="mx-auto mt-1 max-w-sm text-[13px] leading-relaxed text-[var(--x-soft)]">
           {todayIsConferenceDay ? t(locale, 'noMoreTodayHint') : t(locale, 'nothingAheadHint')}
         </p>
-        <a
+        <Link
           href={programHref}
           className="mt-4 inline-flex min-h-[42px] items-center gap-2 rounded-[var(--x-r-pill)] bg-[var(--x-primary)] px-5 text-[13px] font-semibold text-[var(--x-primary-ink)] transition-colors hover:bg-[var(--x-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]"
         >
           {t(locale, 'toProgram')}
           <IconArrow className="size-4 rtl:rotate-180" />
-        </a>
+        </Link>
       </section>
     );
   }
@@ -192,13 +193,13 @@ const NextActivityCard = ({
                 <IconArrow className="size-4 rtl:rotate-180" />
               </button>
             ) : (
-              <a
+              <Link
                 href={networkingHref}
                 className="inline-flex min-h-[42px] items-center gap-2 whitespace-nowrap rounded-[var(--x-r-pill)] border border-[var(--x-primary)]/40 bg-[var(--x-surface)] px-4 text-[13px] font-semibold text-[var(--x-primary)] transition-colors hover:bg-[var(--x-primary)] hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]"
               >
                 {t(locale, 'toNetworking')}
                 <IconArrow className="size-4 rtl:rotate-180" />
-              </a>
+              </Link>
             )}
             {directions ? (
               <a

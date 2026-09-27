@@ -16,6 +16,12 @@ export const toPortal = (event: Event): PortalEvent => ({
   title: event.title,
   startsAt: event.startsAt ?? undefined,
   endsAt: event.endsAt ?? undefined,
+  /*
+   * Only a real value crosses. An empty string is not a timezone, and
+   * passing one on would have the formatters throw rather than fall
+   * back.
+   */
+  timezone: event.timezone ? event.timezone : undefined,
   location: event.location ?? undefined,
   teaser: event.teaser ?? undefined,
   posterUrl: mediaUrl(event.poster),

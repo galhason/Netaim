@@ -19,10 +19,17 @@ export const DEFAULT_VENUE_TIMEZONE = 'Asia/Jerusalem';
  * One long-form date formatter for public surfaces: locale-aware,
  * tolerant of missing or malformed input (returns an empty string so
  * callers can fall back to their own copy).
+ *
+ * It takes the venue clock like its neighbours. Without it this formatted
+ * in whatever zone the runtime happened to be in -- the server's on a
+ * server component, the visitor's in a client one -- so the same instant
+ * could be printed as two different dates depending on where it was
+ * rendered.
  */
 export const formatLongDate = (
   iso: string | undefined,
   locale: Locale,
+  timeZone: string = DEFAULT_VENUE_TIMEZONE,
 ): string => {
   if (!iso) {
     return '';
@@ -35,6 +42,7 @@ export const formatLongDate = (
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone,
   }).format(new Date(parsed));
 };
 
@@ -115,6 +123,35 @@ export const toDateTimeInputValue = (
   const get = (type: string) =>
     parts.find((part) => part.type === type)?.value ?? '00';
   return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;
+};
+
+/*
+ * The calendar day a moment falls on at the venue, as YYYY-MM-DD.
+ *
+ * Grouping a programme by `toISOString().slice(0, 10)` groups it by the
+ * UTC day, which is a different day from the venue's for every session
+ * before 02:00 or 03:00 in Israel -- and for a conference in New York,
+ * for every evening session. `en-CA` is used because its short date
+ * format is exactly YYYY-MM-DD; the locale is a formatting detail here
+ * and never reaches a reader.
+ */
+export const venueDayKey = (
+  iso: string | undefined,
+  timeZone: string = DEFAULT_VENUE_TIMEZONE,
+): string => {
+  if (!iso) {
+    return '';
+  }
+  const parsed = Date.parse(iso);
+  if (Number.isNaN(parsed)) {
+    return '';
+  }
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(parsed));
 };
 
 const venueOffsetMinutes = (at: number, timeZone: string): number => {

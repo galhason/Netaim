@@ -4,9 +4,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { wordpressHref } from '@/config/wordpress';
-import { CinematicNav,
-  siteNavLinks,
-} from '@/features/cinematic';
+import { ConferenceBar } from '@/features/conference';
 import {
   JOINED_CONFERENCE_FANOUT,
   getMyAccount,
@@ -632,28 +630,14 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
       id="main-content"
       className="community lounge min-h-dvh bg-[var(--n-bg)] pb-28 font-body text-[var(--n-ink)] md:pb-16"
     >
-      {/*
-        * The site's own navigation — the same CinematicNav every other
-        * page wears, tokens scoped by the `cinematic` class. Two local
-        * overrides, both visual: the fixed grain overlay stays off this
-        * warm page, and the bar keeps its glass surface from the first
-        * pixel, because here it floats over cream, not over a dark hero.
-        */}
-      <div className="cinematic bg-transparent [&::after]:content-none [&>header]:border-b [&>header]:border-white/10 [&>header]:bg-[var(--nt-dark-deep)]/90 [&>header]:backdrop-blur-md">
-        <CinematicNav
-          locale={locale as Locale}
-          links={siteNavLinks(locale as Locale, directorySlug)}
-          registerHref={wordpressHref('home', locale as Locale)}
-          meHref={`/${locale}/me`}
-          brand={brandFor(locale as Locale)}
-          brandLogo={siteLogo.onDark}
-          {...(directorySlug
-            ? { scheduleHref: `/${locale}/events/${directorySlug}/my-activities` }
-            : {})}
-          viewer={{ name: myself.name }}
-          immediate
-        />
-      </div>
+      {/* The site's one navigation — the conference bar every page wears. */}
+      <ConferenceBar
+        locale={locale as Locale}
+        slug={directorySlug}
+        viewer={{ name: myself.name, ...(myself.photoUrl ? { photoUrl: myself.photoUrl } : {}) }}
+        brand={brandFor(locale as Locale)}
+        brandLogo={siteLogo.onLight}
+      />
       <NetworkingHero
         locale={locale as Locale}
         he={he}

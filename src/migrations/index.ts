@@ -6,6 +6,11 @@ import * as migration_20260823_173813 from './20260823_173813';
 import * as migration_20260915_102537_email_verifications from './20260915_102537_email_verifications';
 import * as migration_20260915_122225_hero_video from './20260915_122225_hero_video';
 import * as migration_20260916_190000_site_logo from './20260916_190000_site_logo';
+import * as migration_20260924_090000_single_published_conference from './20260924_090000_single_published_conference';
+import * as migration_20260924_140000_prague_timezone from './20260924_140000_prague_timezone';
+import * as migration_20260925_090000_restore_single_published_index from './20260925_090000_restore_single_published_index';
+import * as migration_20260926_120000_activity_archive_and_immutable_audit from './20260926_120000_activity_archive_and_immutable_audit';
+import * as migration_20260927_120000_venue_fact_icons from './20260927_120000_venue_fact_icons';
 
 export const migrations = [
   {
@@ -47,5 +52,30 @@ export const migrations = [
     up: migration_20260916_190000_site_logo.up,
     down: migration_20260916_190000_site_logo.down,
     name: '20260916_190000_site_logo'
+  },
+  {
+    up: migration_20260924_090000_single_published_conference.up,
+    down: migration_20260924_090000_single_published_conference.down,
+    name: '20260924_090000_single_published_conference',
+  },
+  {
+    up: migration_20260924_140000_prague_timezone.up,
+    down: migration_20260924_140000_prague_timezone.down,
+    name: '20260924_140000_prague_timezone',
+  },
+  {
+    up: migration_20260925_090000_restore_single_published_index.up,
+    down: migration_20260925_090000_restore_single_published_index.down,
+    name: '20260925_090000_restore_single_published_index',
+  },
+  {
+    up: migration_20260926_120000_activity_archive_and_immutable_audit.up,
+    down: migration_20260926_120000_activity_archive_and_immutable_audit.down,
+    name: '20260926_120000_activity_archive_and_immutable_audit',
+  },
+  {
+    up: migration_20260927_120000_venue_fact_icons.up,
+    down: migration_20260927_120000_venue_fact_icons.down,
+    name: '20260927_120000_venue_fact_icons',
   },
 ];

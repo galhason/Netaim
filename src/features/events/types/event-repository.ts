@@ -11,6 +11,8 @@ export interface EventSummary {
   launched: boolean;
   startsAt?: string;
   endsAt?: string;
+  /* The IANA clock the conference runs on; absent on a legacy row. */
+  timezone?: string;
 }
 
 export interface CreateEventInput {
@@ -32,7 +34,7 @@ export interface EventRepository {
   deleteEvent: (slug: string) => Promise<boolean>;
   updateEventDetails: (
     slug: string,
-    input: { title?: string; startsAt?: string; endsAt?: string },
+    input: { title?: string; startsAt?: string; endsAt?: string; timezone?: string },
     locale: Locale,
   ) => Promise<EventSummary | null>;
   launchEvent: (slug: string) => Promise<EventSummary>;
@@ -103,6 +105,14 @@ export interface PortalEvent {
   title: string;
   startsAt?: string;
   endsAt?: string;
+  /*
+   * The clock the conference runs on, as an IANA zone. Every public
+   * surface that prints a session time reads it from here, so a
+   * conference in Prague is read in Prague. Optional because a legacy
+   * row may carry nothing, and the shared formatters then fall back --
+   * an absent value is never treated as a choice.
+   */
+  timezone?: string;
   location?: string;
   teaser?: string;
   posterUrl?: string;

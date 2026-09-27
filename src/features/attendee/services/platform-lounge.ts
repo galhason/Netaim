@@ -5,6 +5,7 @@ import type {
   AttendeePerson,
   AttendeeUpdate,
 } from '../types/attendee-experience';
+import { withBasePath } from '@/config/site';
 
 /*
  * The platform Lounge (approved: the Lounge IS the profile, always at
@@ -53,7 +54,7 @@ export const buildPlatformLounge = (
       statusLabel: he ? 'הסטטוס שלך' : 'Your status',
       statusValue: he ? 'חשבון פעיל' : 'Active account',
       image: {
-        url: '/placeholder/scene.jpg',
+        url: withBasePath('/placeholder/scene.jpg'),
         alt: 'נטעים',
       },
       updates,

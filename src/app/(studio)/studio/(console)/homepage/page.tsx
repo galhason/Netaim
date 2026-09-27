@@ -251,7 +251,7 @@ const ConsoleHomepage = async ({ searchParams }: ConsoleHomepageProps) => {
               <p>{CONSOLE_UI.editedInEvent[locale]}</p>
               {opening.posters[0]?.slug ? (
                 <Link
-                  href={`/studio/experiences/${opening.posters[0].slug}`}
+                  href={`/studio/conference/${opening.posters[0].slug}/content`}
                   className="text-[var(--c-bronze)] underline underline-offset-4"
                 >
                   {CONSOLE_UI.toEventEditor[locale]}

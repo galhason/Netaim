@@ -3,14 +3,10 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
-import { wordpressHref } from '@/config/wordpress';
-import {
-  CinematicNav,
-  ConferenceFooter,
-  siteNavLinks,
-} from '@/features/cinematic';
+import { ConferenceFooter } from '@/features/cinematic';
+import { ConferenceBar } from '@/features/conference';
+import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
 import { getActiveConferenceSlug, getSiteBrand } from '@/features/events';
-import { currentParticipant } from '@/features/registration';
 
 interface SiteLayoutProps {
   children: ReactNode;
@@ -18,8 +14,8 @@ interface SiteLayoutProps {
 }
 
 /*
- * Shared chrome for the conference site's inner pages (Program,
- * Speakers, Information, Contact): the same route-based navigation and
+ * Shared chrome for the platform's own site pages (privacy, terms,
+ * accessibility): the same route-based navigation and
  * footer that wrap the landing, so every page feels like part of one
  * live conference website. The active conference supplies the register
  * destination; the nav links are the conference's own pages.
@@ -34,37 +30,18 @@ const SiteLayout = async ({ children, params }: SiteLayoutProps) => {
   const slug = await getActiveConferenceSlug(locale as Locale).catch(
     () => null,
   );
-  /*
-   * With no conference live there is nothing to register for, so the
-   * call to action goes to the organisation's home rather than to
-   * `/${locale}` — which is /en in English, and nothing serves that.
-   */
-  const registerHref = slug
-    ? `/${locale}/events/${slug}/register`
-    : wordpressHref('home', locale as Locale);
-  const meHref = `/${locale}/me`;
-  /*
-   * Resolved per request, never cached: the nav says who is looking, and
-   * a shared answer would say it to the wrong person. The layout is
-   * already dynamic because of this read.
-   */
-  const me = await currentParticipant().catch(() => null);
+  /* Resolved per request, never cached: the bar says who is looking. */
+  const viewer = await conferenceBarViewer();
   const logo = await getSiteBrand();
 
   return (
     <div className="cinematic min-h-dvh bg-surface text-text-primary">
-      <CinematicNav
+      <ConferenceBar
         locale={locale as Locale}
-        links={siteNavLinks(locale as Locale, slug)}
-        registerHref={registerHref}
-        meHref={meHref}
+        slug={slug}
+        viewer={viewer}
         brand={brandFor(locale as Locale)}
-        brandLogo={logo.onDark}
-        {...(slug && me
-          ? { scheduleHref: `/${locale}/events/${slug}/my-activities` }
-          : {})}
-        viewer={me ? { name: me.name || me.email } : null}
-        immediate
+        brandLogo={logo.onLight}
       />
       {children}
       <ConferenceFooter
@@ -79,8 +56,6 @@ const SiteLayout = async ({ children, params }: SiteLayoutProps) => {
 /*
  * The nav in this layout says who is looking, so every page beneath it
  * depends on the visitor and none may be prerendered or shared.
- * `/contact` in particular was being served with a one-hour revalidate
- * before this line existed.
  */
 export const dynamic = 'force-dynamic';
 

@@ -61,6 +61,15 @@ const serverEnvSchema = z
     /* Protects the retry endpoint; without it the route stays closed. */
     DISPATCH_SECRET: optionalSecret('DISPATCH_SECRET'),
 
+    /*
+     * The marketing API's own secret, shared with the WordPress site and
+     * with nothing else. Its own key rather than a borrowed one: a secret
+     * that opens two doors cannot be rotated for one of them, and the
+     * marketing page is the least trusted caller the platform has.
+     * Absent, the route stays closed rather than becoming anonymous.
+     */
+    MARKETING_API_SECRET: optionalSecret('MARKETING_API_SECRET'),
+
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     PAYLOAD_DB_PUSH: z.string().optional(),
   })

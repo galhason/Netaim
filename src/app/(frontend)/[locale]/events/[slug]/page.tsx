@@ -7,6 +7,7 @@ import {
   getConferenceExperience,
 } from '@/features/cinematic';
 import { getSiteBrand } from '@/features/events';
+import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
 import { currentParticipant, myAreaHref } from '@/features/registration';
 import '@/scenes';
 
@@ -31,6 +32,7 @@ const EventPage = async ({ params }: EventPageProps) => {
    */
   const me = await currentParticipant().catch(() => null);
   const logo = await getSiteBrand();
+  const barViewer = me ? await conferenceBarViewer() : null;
   /*
    * Resolved beside the name, for the same reason: a guest who has not
    * joined this conference must not be pointed at its lounge.
@@ -51,10 +53,17 @@ const EventPage = async ({ params }: EventPageProps) => {
           locale,
           logo.onDark,
           `/${locale}/events/${slug}/my-activities`,
+          logo.onLight,
         )}
         locale={locale}
         viewer={
-          me ? { name: me.name || me.email, ...(meHref ? { href: meHref } : {}) } : null
+          me
+            ? {
+                name: barViewer?.name ?? (me.name || me.email),
+                ...(meHref ? { href: meHref } : {}),
+                ...(barViewer?.photoUrl ? { photoUrl: barViewer.photoUrl } : {}),
+              }
+            : null
         }
       />
     </>

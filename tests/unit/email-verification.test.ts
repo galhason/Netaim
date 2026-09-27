@@ -595,7 +595,7 @@ describe('sign-in and registration are one place seen from two sides', () => {
 
 describe('a door that can be entered is visibly leavable', () => {
   const action = read('src/features/account/actions/sign-out.ts');
-  const nav = read('src/features/cinematic/components/cinematic-nav.tsx');
+  const nav = read('src/features/conference/components/conference-bar.tsx');
   const profile = read('src/app/(frontend)/[locale]/me/profile/page.tsx');
   const meActions = read('src/app/(frontend)/[locale]/me/actions.ts');
 
@@ -609,27 +609,19 @@ describe('a door that can be entered is visibly leavable', () => {
     expect(/signOutAction,\n\} from '@\/features\/account'/.test(mePage), 'the account screen posts to the shared action').toBe(true);
   });
 
-  it('offers sign-out in the site navigation whenever someone is signed in', () => {
+  it('offers sign-out in the one conference bar whenever someone is signed in', () => {
     /*
-     * The closing marker is searched FROM the opening one. Searched from
-     * the start of the file it finds the first ternary in the component,
-     * which need not be this one — and a slice whose end precedes its
-     * start is silently empty, so every assertion below would pass on
-     * nothing rather than fail loudly.
+     * The signed-in branch is the one that starts at `{viewer ? (`; the
+     * slice ends at its `) : (`, searched FROM the opening so a stray
+     * earlier ternary cannot make it silently empty.
      */
-    const viewerBlock = nav.indexOf('{viewer ? (\n            /*\n             * The way out');
+    expect(nav.includes("from '@/features/account/actions/sign-out'")).toBe(true);
+    const viewerBlock = nav.indexOf('{viewer ? (');
+    expect(viewerBlock).toBeGreaterThan(-1);
     const signedIn = nav.slice(viewerBlock, nav.indexOf(') : (', viewerBlock));
     expect(signedIn.includes('action={signOutAction}')).toBe(true);
     expect(signedIn.includes('name="locale"')).toBe(true);
-    expect(signedIn.includes('aria-label={CINEMATIC_UI.signOut[locale]}'), 'the icon-only phone form has a name').toBe(true);
-  });
-
-  it('offers sign-out in the conference bar too — both bars, one action', () => {
-    const experienceNav = read('src/features/conference/components/experience-nav.tsx');
-    expect(experienceNav.includes("from '@/features/account/actions/sign-out'")).toBe(true);
-    /* In the bar beside the name, and again in words inside the phone menu. */
-    expect(experienceNav.split('action={signOutAction}').length - 1).toBe(2);
-    expect(experienceNav.includes('aria-label={signOutLabel}')).toBe(true);
+    expect(signedIn.includes("{t('signOut')}"), 'the way out is named in words').toBe(true);
   });
 
   it('offers sign-out on the profile, here and everywhere', () => {
@@ -662,7 +654,7 @@ describe('the Lounge carries the site navigation once', () => {
     ]) {
       const page = read(file);
       expect(page.includes('siteNav={'), `${file} passes siteNav`).toBe(true);
-      expect(page.includes('<CinematicNav'), `${file} renders the one bar`).toBe(true);
+      expect(page.includes('<ConferenceBar'), `${file} renders the one bar`).toBe(true);
     }
   });
 });

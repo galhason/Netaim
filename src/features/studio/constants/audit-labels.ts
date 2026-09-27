@@ -11,6 +11,7 @@ const LABELS: Record<AuditAction, Record<Locale, string>> = {
   'event.duplicated': { he: 'כנס שוכפל', en: 'Conference duplicated' },
   'event.launched': { he: 'כנס הושק', en: 'Conference launched' },
   'event.archived': { he: 'כנס הועבר לארכיון', en: 'Conference archived' },
+  'event.restored': { he: 'כנס שוחזר מהארכיון', en: 'Conference restored' },
   'event.deleted': { he: 'כנס נמחק', en: 'Conference deleted' },
   'event.activeConferenceChanged': {
     he: 'הכנס הפעיל באתר הוחלף',
@@ -24,6 +25,14 @@ const LABELS: Record<AuditAction, Record<Locale, string>> = {
   'content.sessionCreated': { he: 'מושב נוסף', en: 'Session added' },
   'content.sessionUpdated': { he: 'מושב עודכן', en: 'Session updated' },
   'content.sessionDeleted': { he: 'מושב נמחק', en: 'Session deleted' },
+  'content.sessionArchived': { he: 'פעילות הועברה לארכיון', en: 'Activity archived' },
+  'content.sessionRestored': { he: 'פעילות שוחזרה מהארכיון', en: 'Activity restored' },
+  'content.speakerSaved': { he: 'דובר/ת נשמר/ה', en: 'Speaker saved' },
+  'content.speakerRemoved': { he: 'דובר/ת הוסר/ה', en: 'Speaker removed' },
+  'content.partnerSaved': { he: 'שותף נשמר', en: 'Partner saved' },
+  'content.partnerRemoved': { he: 'שותף הוסר', en: 'Partner removed' },
+  'content.partnersReordered': { he: 'סדר השותפים שונה', en: 'Partners reordered' },
+  'audit.exported': { he: 'יומן הפעולות יוצא', en: 'Audit log exported' },
 
   'registration.approved': { he: 'הרשמה אושרה', en: 'Registration approved' },
   'registration.declined': { he: 'הרשמה נדחתה', en: 'Registration declined' },

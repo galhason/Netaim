@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import type { Locale } from '@/config/locales';
 import {
@@ -203,12 +204,12 @@ const ProgramExperience = ({
                 placeholder={COPY.search[locale]}
               />
             </div>
-            <a
+            <Link
               href={`/${locale}/events/${slug}/my-activities`}
               className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-[var(--x-r-pill)] border border-[var(--x-line)] bg-[var(--x-surface)] px-6 text-sm font-medium text-[var(--x-primary)] shadow-[var(--x-shadow)] transition-colors hover:bg-[var(--x-primary-wash)]"
             >
               {COPY.mySchedule[locale]}
-            </a>
+            </Link>
           </div>
         </div>
       </header>

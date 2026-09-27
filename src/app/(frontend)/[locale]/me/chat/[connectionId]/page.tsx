@@ -73,14 +73,14 @@ const ChatPage = async ({ params }: ChatPageProps) => {
           </span>
           <span className="flex items-center gap-2 text-xs">
             {channels?.whatsapp ? (
-              <a
+              <Link
                 href={`/${locale}/me/wa/${connectionId}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-full border border-white/25 px-3 py-1.5 transition-colors hover:border-white/60"
               >
                 {TEXT.whatsapp[locale]}
-              </a>
+              </Link>
             ) : null}
             {channels?.phone ? (
               <a

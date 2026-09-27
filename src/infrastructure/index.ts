@@ -46,7 +46,9 @@ import { chooseContentSource } from './selection';
 import { payloadContentSource } from './payload/payload-content-source';
 import { payloadIdentityGateway } from './payload/payload-identity';
 import { payloadEventRepository } from './payload/payload-event-repository';
+import type { MarketingRepository } from '@/features/marketing';
 import { payloadPublicEventRepository } from './payload/payload-public-events';
+import { payloadMarketingRepository } from './payload/payload-marketing';
 import {
   payloadActiveConferenceSlug,
   payloadSetActiveConference,
@@ -185,6 +187,14 @@ export const identityGateway: StudioIdentityGateway = payloadIdentityGateway;
 export const eventRepository: EventRepository = payloadEventRepository;
 export const publicEventRepository: PublicEventRepository =
   payloadPublicEventRepository;
+
+/*
+ * The marketing seam, bound separately from the rest of the public
+ * surface. It is the one repository whose reads are keyed on a verified
+ * event identity rather than on a slug.
+ */
+export const marketingRepository: MarketingRepository =
+  payloadMarketingRepository;
 
 /*
  * The live-site pointer (which conference is the public website) and

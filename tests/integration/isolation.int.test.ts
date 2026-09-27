@@ -1,5 +1,6 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Payload } from 'payload';
+import { waitForTheDatabase, type DatabaseTurn } from './one-suite-at-a-time';
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
 
@@ -24,15 +25,25 @@ describe('organization isolation (integration) — availability', () => {
 
 describe.skipIf(!databaseUrl)('organization isolation (integration)', () => {
   let payload: Payload;
+  let turn: DatabaseTurn | null = null;
   let orgA: { id: string | number };
   let orgB: { id: string | number };
   let adminA: { id: string | number };
+  let eventA: { id: string | number };
   let eventB: { id: string | number };
 
   beforeAll(async () => {
     process.env.DATABASE_URL = databaseUrl as string;
     process.env.PAYLOAD_SECRET =
       process.env.PAYLOAD_SECRET ?? 'test-secret-test-secret-test-secret';
+
+    /*
+     * This suite shares the database with the others, and two Payloads
+     * booting at once push the schema at once -- which is how this suite
+     * died on a parallel run, before it created anything. It waits its
+     * turn like the rest.
+     */
+    turn = await waitForTheDatabase(databaseUrl as string);
 
     const { getPayload } = await import('payload');
     const { default: config } = await import('@payload-config');
@@ -55,7 +66,7 @@ describe.skipIf(!databaseUrl)('organization isolation (integration)', () => {
         grants: [{ role: 'orgAdmin', organization: orgA.id as number }],
       },
     });
-    await payload.create({
+    eventA = await payload.create({
       collection: 'events',
       data: {
         organization: orgA.id as number,
@@ -77,6 +88,11 @@ describe.skipIf(!databaseUrl)('organization isolation (integration)', () => {
     });
   }, 120000);
 
+  afterAll(async () => {
+    await turn?.release();
+    turn = null;
+  }, 120000);
+
   const asAdminA = async () =>
     (
       await payload.findByID({
@@ -86,22 +102,33 @@ describe.skipIf(!databaseUrl)('organization isolation (integration)', () => {
       })
     ) as never;
 
-  it('lets an organization admin read only their own events', async () => {
+  /*
+   * Reading a conference is public, on purpose. `events` carries
+   * `publicContentAccess`, whose `read` is `isPublic` -- an anonymous
+   * visitor must be able to load a conference page, so there is nothing
+   * organization-scoped about the read. What is scoped is every write,
+   * and the drafts behind a published conference.
+   *
+   * This case used to assert the opposite: that an organization admin
+   * reads only their own events. It could not pass on any database, empty
+   * or not, because the suite creates one event in each organization two
+   * lines apart -- and it never ran to say so, because it skipped
+   * silently for its whole life until TEST_DATABASE_URL was set. A gate
+   * that asserts the reverse of the rule it guards is worse than no gate.
+   *
+   * What is worth asserting is that the scoping does not lock an admin
+   * out of their own conference. The isolation that does exist is
+   * covered by the four cases below.
+   */
+  it('lets an organization admin reach their own event', async () => {
     const result = await payload.find({
       collection: 'events',
       overrideAccess: false,
       user: await asAdminA(),
       limit: 100,
     });
-    const organizations = result.docs.map((doc) =>
-      typeof doc.organization === 'object'
-        ? doc.organization.id
-        : doc.organization,
-    );
-    expect(organizations.length).toBeGreaterThan(0);
-    expect(organizations.every((o) => String(o) === String(orgA.id))).toBe(
-      true,
-    );
+    const ids = result.docs.map((doc) => String(doc.id));
+    expect(ids).toContain(String(eventA.id));
   });
 
   it('hides foreign organizations entirely', async () => {

@@ -3,10 +3,10 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
-import { ConferenceFooter, siteNavLinks } from '@/features/cinematic';
-import { ExperienceNav } from '@/features/conference';
+import { ConferenceFooter } from '@/features/cinematic';
+import { ConferenceBar } from '@/features/conference';
+import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
 import { findPortalEvent, getSiteBrand } from '@/features/events';
-import { currentParticipant } from '@/features/registration';
 
 interface ExperienceLayoutProps {
   children: ReactNode;
@@ -42,22 +42,16 @@ const ExperienceLayout = async ({ children, params }: ExperienceLayoutProps) => 
     notFound();
   }
 
-  const participant = await currentParticipant().catch(() => null);
-  const logo = await getSiteBrand();
+  const [viewer, logo] = await Promise.all([conferenceBarViewer(), getSiteBrand()]);
 
   return (
     <div className="experience min-h-dvh bg-[var(--x-bg)] text-[var(--x-ink)]">
-      <ExperienceNav
+      <ConferenceBar
         locale={lang}
-        links={siteNavLinks(lang, slug)}
+        slug={slug}
+        viewer={viewer}
         brand={brandFor(lang)}
-        brandLogo={logo.onDark}
-        registerHref={`/${lang}/events/${slug}/register`}
-        meHref={`/${lang}/me`}
-        userName={participant?.name ?? undefined}
-        {...(participant
-          ? { scheduleHref: `/${lang}/events/${slug}/my-activities` }
-          : {})}
+        brandLogo={logo.onLight}
       />
       {children}
       <ConferenceFooter

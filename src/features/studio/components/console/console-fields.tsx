@@ -2,6 +2,7 @@
 
 import { useId, useState } from 'react';
 import { useFormStatus } from 'react-dom';
+import { withBasePath } from '@/config/site';
 
 /*
  * The Console's field primitives: dark glass over the deep surface,
@@ -209,7 +210,7 @@ export const CMediaPicker = ({
     const body = new FormData();
     body.set('file', file);
     try {
-      const response = await fetch('/studio/media/upload', {
+      const response = await fetch(withBasePath('/studio/media/upload'), {
         method: 'POST',
         body,
       });

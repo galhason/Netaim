@@ -3,12 +3,10 @@ import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { LoungeView, getAttendeeExperience } from '@/features/attendee';
-import { CinematicNav,
-  siteNavLinks,
-} from '@/features/cinematic';
+import { ConferenceBar } from '@/features/conference';
+import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
 import { getSiteBrand } from '@/features/events';
 import { myConnections } from '@/features/networking';
-import { currentParticipant } from '@/features/registration';
 
 /*
  * The Personal Lounge: after registration the guest does not enter an
@@ -34,8 +32,8 @@ const AttendeePage = async ({ params }: AttendeePageProps) => {
     redirect(`/${locale}/events/${slug}/register`);
   }
 
-  const me = await currentParticipant().catch(() => null);
   const siteLogo = await getSiteBrand();
+  const barViewer = await conferenceBarViewer();
   const links = await myConnections(slug).catch(() => []);
   const connections = links.filter(
     (connection) => connection.status === 'accepted',
@@ -60,21 +58,13 @@ const AttendeePage = async ({ params }: AttendeePageProps) => {
          * the Lounge itself carries none of them twice.
          */
         siteNav={
-          <div className="cinematic">
-            <CinematicNav
-              locale={locale as Locale}
-              links={siteNavLinks(locale as Locale, slug)}
-              registerHref={`/${locale}/events/${slug}/register`}
-              meHref={`/${locale}/me`}
-              brand={brandFor(locale as Locale)}
-              brandLogo={siteLogo.onDark}
-              {...(me
-                ? { scheduleHref: `/${locale}/events/${slug}/my-activities` }
-                : {})}
-              viewer={me ? { name: me.name || me.email } : null}
-              immediate
-            />
-          </div>
+          <ConferenceBar
+            locale={locale as Locale}
+            slug={slug}
+            viewer={barViewer}
+            brand={brandFor(locale as Locale)}
+            brandLogo={siteLogo.onLight}
+          />
         }
       />
     </>

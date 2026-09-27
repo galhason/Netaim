@@ -5,6 +5,8 @@ import type {
   AuditActor,
   AuditEntry,
   AuditEntryInput,
+  AuditPage,
+  AuditQuery,
 } from '../types/audit';
 
 const log = createLogger('audit');
@@ -52,3 +54,27 @@ export const eventHistory = (subject: string): Promise<AuditEntry[]> =>
 
 export const platformHistory = (): Promise<AuditEntry[]> =>
   auditRepository.list({ limit: HISTORY_LIMIT }).catch(() => []);
+
+/* The full log, filtered and paged — the admin's view and export. */
+export const queryAudit = (query: AuditQuery): Promise<AuditPage> =>
+  auditRepository.query(query).catch(() => ({ entries: [], total: 0, page: 1, pages: 0 }));
+
+/*
+ * Everything that matches, for an export: pages walked to the end,
+ * capped so a runaway filter cannot pull the whole table into memory.
+ */
+export const EXPORT_CAP = 20_000;
+
+export const exportAudit = async (query: Omit<AuditQuery, 'limit' | 'page'>): Promise<AuditEntry[]> => {
+  const out: AuditEntry[] = [];
+  let page = 1;
+  for (;;) {
+    const chunk = await auditRepository.query({ ...query, limit: 500, page });
+    out.push(...chunk.entries);
+    if (chunk.page >= chunk.pages || out.length >= EXPORT_CAP) {
+      break;
+    }
+    page += 1;
+  }
+  return out.slice(0, EXPORT_CAP);
+};

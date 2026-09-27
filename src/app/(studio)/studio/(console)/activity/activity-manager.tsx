@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { Locale } from '@/config/locales';
 import type { SessionType, WorkshopStatus } from '@/features/program';
-import { removeActivityAction } from './actions';
+import { archiveActivityAction, removeActivityAction, restoreActivityAction } from './actions';
 
 export interface ActivityRow {
   id: string;
@@ -23,10 +23,19 @@ export interface ActivityRow {
   status: WorkshopStatus;
 }
 
+export interface ActivityPermissions {
+  manage: boolean;
+  archive: boolean;
+  delete: boolean;
+}
+
 interface Props {
   locale: Locale;
   slug: string | null;
   rows: ActivityRow[];
+  /* The shelf: archived activities, shown apart and restorable. */
+  archived?: ActivityRow[];
+  can: ActivityPermissions;
 }
 
 const TYPE_LABELS: Record<SessionType, Record<Locale, string>> = {
@@ -84,7 +93,16 @@ const T = (locale: Locale) => ({
   colStatus: locale === 'he' ? 'סטטוס' : 'Status',
   colActions: locale === 'he' ? 'פעולות' : 'Actions',
   edit: locale === 'he' ? 'עריכה' : 'Edit',
+  view: locale === 'he' ? 'צפייה' : 'View',
   del: locale === 'he' ? 'מחיקה' : 'Delete',
+  archive: locale === 'he' ? 'לארכיון' : 'Archive',
+  restore: locale === 'he' ? 'שחזור' : 'Restore',
+  archiveTitle: locale === 'he' ? 'ארכיון פעילויות' : 'Activity archive',
+  archiveSub:
+    locale === 'he'
+      ? 'פעילות בארכיון אינה מפורסמת ואינה בתוכנית. אפשר לשחזר אותה בכל רגע.'
+      : 'An archived activity is unpublished and off the program. It can be restored at any time.',
+  archiveEmpty: locale === 'he' ? 'הארכיון ריק.' : 'The archive is empty.',
   empty: locale === 'he' ? 'אין עדיין פעילויות.' : 'No activities yet.',
   statTotal: locale === 'he' ? 'סך הכל פעילויות' : 'Total activities',
   statRegistered: locale === 'he' ? 'סה״כ נרשמים' : 'Total registered',
@@ -107,7 +125,7 @@ const timeRange = (start: string | null, end: string | null, tag: string) => {
   return { date, times };
 };
 
-const ActivityManager = ({ locale, slug, rows }: Props) => {
+const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
   const t = T(locale);
   const tag = locale === 'he' ? 'he-IL' : 'en-GB';
   const [query, setQuery] = useState('');
@@ -171,6 +189,7 @@ const ActivityManager = ({ locale, slug, rows }: Props) => {
             * imported once, at the start, by somebody who has never seen
             * this screen before.
             */}
+          {can.manage ? (<>
           <Link
             href="/studio/activity/import"
             className="inline-flex items-center gap-2 rounded-lg border border-[var(--c-line-strong)] px-4 py-2 text-sm text-[var(--c-text-soft)] transition-colors hover:border-[var(--c-bronze)]/50 hover:text-[var(--c-bronze)]"
@@ -183,6 +202,7 @@ const ActivityManager = ({ locale, slug, rows }: Props) => {
           >
             + {t.create}
           </Link>
+          </>) : null}
         </div>
       </header>
 
@@ -336,18 +356,32 @@ const ActivityManager = ({ locale, slug, rows }: Props) => {
                           href={`/studio/activity/${r.id}`}
                           className="rounded-md border border-[var(--c-line)] px-2.5 py-1 text-xs text-[var(--c-text-soft)] hover:text-[var(--c-text)]"
                         >
-                          {t.edit}
+                          {can.manage ? t.edit : t.view}
                         </Link>
-                        <form action={removeActivityAction}>
-                          <input type="hidden" name="slug" value={slug ?? ''} />
-                          <input type="hidden" name="sessionId" value={r.id} />
-                          <button
-                            type="submit"
-                            className="rounded-md border border-rose-400/30 px-2.5 py-1 text-xs text-rose-300/90 hover:bg-rose-400/10"
-                          >
-                            {t.del}
-                          </button>
-                        </form>
+                        {can.archive ? (
+                          <form action={archiveActivityAction}>
+                            <input type="hidden" name="slug" value={slug ?? ''} />
+                            <input type="hidden" name="sessionId" value={r.id} />
+                            <button
+                              type="submit"
+                              className="rounded-md border border-amber-400/30 px-2.5 py-1 text-xs text-amber-300/90 hover:bg-amber-400/10"
+                            >
+                              {t.archive}
+                            </button>
+                          </form>
+                        ) : null}
+                        {can.delete ? (
+                          <form action={removeActivityAction}>
+                            <input type="hidden" name="slug" value={slug ?? ''} />
+                            <input type="hidden" name="sessionId" value={r.id} />
+                            <button
+                              type="submit"
+                              className="rounded-md border border-rose-400/30 px-2.5 py-1 text-xs text-rose-300/90 hover:bg-rose-400/10"
+                            >
+                              {t.del}
+                            </button>
+                          </form>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -357,6 +391,56 @@ const ActivityManager = ({ locale, slug, rows }: Props) => {
           </tbody>
         </table>
       </div>
+
+      {can.archive || archived.length > 0 ? (
+        <details className="mt-8 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]">
+          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-[var(--c-text)]">
+            {t.archiveTitle} ({archived.length})
+            <span className="ms-2 text-xs font-normal text-[var(--c-text-faint)]">{t.archiveSub}</span>
+          </summary>
+          {archived.length === 0 ? (
+            <p className="px-4 pb-4 text-sm text-[var(--c-text-soft)]">{t.archiveEmpty}</p>
+          ) : (
+            <ul className="border-t border-[var(--c-line)]">
+              {archived.map((r) => {
+                const when = timeRange(r.startsAt, r.endsAt, tag);
+                return (
+                  <li key={r.id} className="flex flex-wrap items-center gap-3 border-b border-[var(--c-line)] px-4 py-3 text-sm last:border-b-0">
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[var(--c-text)]">{r.title}</span>
+                      <span className="block text-xs text-[var(--c-text-faint)]">
+                        {TYPE_LABELS[r.type][locale]}
+                        {typeof when === 'string' ? '' : ` · ${when.date} ${when.times}`}
+                      </span>
+                    </span>
+                    <Link href={`/studio/activity/${r.id}`} className="rounded-md border border-[var(--c-line)] px-2.5 py-1 text-xs text-[var(--c-text-soft)] hover:text-[var(--c-text)]">
+                      {t.view}
+                    </Link>
+                    {can.archive ? (
+                      <form action={restoreActivityAction}>
+                        <input type="hidden" name="slug" value={slug ?? ''} />
+                        <input type="hidden" name="sessionId" value={r.id} />
+                        <button type="submit" className="rounded-md border border-emerald-400/30 px-2.5 py-1 text-xs text-emerald-300/90 hover:bg-emerald-400/10">
+                          {t.restore}
+                        </button>
+                      </form>
+                    ) : null}
+                    {can.delete ? (
+                      <form action={removeActivityAction}>
+                        <input type="hidden" name="slug" value={slug ?? ''} />
+                        <input type="hidden" name="sessionId" value={r.id} />
+                        <button type="submit" className="rounded-md border border-rose-400/30 px-2.5 py-1 text-xs text-rose-300/90 hover:bg-rose-400/10">
+                          {t.del}
+                        </button>
+                      </form>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </details>
+      ) : null}
     </div>
   );
 };

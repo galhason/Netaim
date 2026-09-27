@@ -34,7 +34,7 @@ const json = (body: unknown, status = 200): Response =>
   });
 
 export const POST = async (request: Request): Promise<Response> => {
-  if (!(await authorized('experiences:manage'))) {
+  if (!(await authorized('activities:manage'))) {
     return json({ ok: false, reason: 'denied' }, 403);
   }
 

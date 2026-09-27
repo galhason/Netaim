@@ -3,6 +3,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
+import { brandFor } from '@/config/brand';
+import { ConferenceBar } from '@/features/conference';
+import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
 import { getSiteBrand } from '@/features/events';
 import {
   ArrowOn,
@@ -137,6 +140,7 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
   } = await searchParams;
   const situation = await getRegistrationSituation(slug, lang);
   const participant = await currentParticipant().catch(() => null);
+  const barViewer = await conferenceBarViewer();
   const m = REGISTRATION_MESSAGES;
   const open =
     situation.settings &&
@@ -186,6 +190,15 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
       locale={lang}
       switchHref={switchHref}
       brandLogo={logo.onLight}
+      bar={
+        <ConferenceBar
+          locale={lang}
+          slug={slug}
+          viewer={barViewer}
+          brand={brandFor(lang)}
+          brandLogo={logo.onLight}
+        />
+      }
       eyebrow={eyebrow}
       title={title}
       intro={intro}

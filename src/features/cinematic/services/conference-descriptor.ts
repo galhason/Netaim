@@ -81,6 +81,8 @@ export const buildConferenceDescriptor = (
   brandLogo?: string,
   /* The signed-in participant's day; the nav scene draws it for a viewer. */
   scheduleHref?: string,
+  /* The logo for the conference bar's light ground. */
+  brandLogoLight?: string,
 ): ExperienceDescriptor => {
   const brand = brandFor(locale);
   const { programHref, speakersHref } = conferencePaths(
@@ -95,6 +97,8 @@ export const buildConferenceDescriptor = (
         content: {
           brand,
           brandLogo,
+          brandLogoLight,
+          slug: experience.slug ?? null,
           scheduleHref,
           /*
            * Resolved here, where the conference is known. The bar itself

@@ -49,14 +49,13 @@ const robots = (): MetadataRoute.Robots => ({
          *
          * `/events/{slug}` and `/events/{slug}/register` are deliberately
          * absent from this list: they are the public face, and the whole
-         * point of the map. So is `/info`, which anyone may read.
+         * point of the map. The conference's public information page
+         * lives on the organisation's WordPress site now, not here.
          */
         '/he/events/*/program',
         '/en/events/*/program',
         '/he/events/*/speakers',
         '/en/events/*/speakers',
-        '/he/events/*/schedule',
-        '/en/events/*/schedule',
         '/he/events/*/workshops',
         '/en/events/*/workshops',
         '/he/events/*/my-activities',

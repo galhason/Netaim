@@ -13,7 +13,9 @@ import {
   CTextField,
   ConsoleShell,
   getParticipantsAdmin,
+  ConsoleDenied,
   getStudioCreator,
+  requireCapability,
   getStudioLocale,
 } from '@/features/studio';
 import { broadcastAnnouncementAction } from '../actions';
@@ -50,6 +52,9 @@ const CommunicationsPage = async ({
   const { broadcast } = await searchParams;
   const locale = await getStudioLocale();
   const creator = await getStudioCreator();
+  if (!(await requireCapability('communications:manage'))) {
+    return <ConsoleDenied locale={locale} title={CONSOLE_UI.communications[locale]} userName={creator?.name ?? ''} />;
+  }
   const events = await listEvents().catch(() => []);
 
   const groups = await Promise.all(

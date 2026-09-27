@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import type { Locale } from '@/config/locales';
 import { ACCOUNT_UI } from '@/features/account';
@@ -43,6 +44,8 @@ interface SignInScreenProps {
   switchHref: string;
   /* The site's logo, resolved by the page and drawn in the header. */
   brandLogo?: string;
+  /* The conference bar, resolved by the page; the header when given. */
+  bar?: ReactNode;
 }
 
 const COPY = {
@@ -154,6 +157,7 @@ const SignInScreen = ({
   registerHref,
   switchHref,
   brandLogo,
+  bar,
 }: SignInScreenProps) => {
   const ui = ACCOUNT_UI;
   const note = noteFor(state, locale);
@@ -191,6 +195,7 @@ const SignInScreen = ({
     return (
       <OnboardingLayout
         locale={locale}
+        bar={bar}
         switchHref={switchHref}
         brandLogo={brandLogo}
         eyebrow={pick(locale, COPY.totpEyebrow)}
@@ -257,6 +262,7 @@ const SignInScreen = ({
       return (
         <OnboardingLayout
           locale={locale}
+          bar={bar}
           switchHref={switchHref}
           brandLogo={brandLogo}
           eyebrow={pick(locale, COPY.resetEyebrow)}
@@ -293,6 +299,7 @@ const SignInScreen = ({
     return (
       <OnboardingLayout
         locale={locale}
+        bar={bar}
         switchHref={switchHref}
         brandLogo={brandLogo}
         eyebrow={pick(locale, COPY.resetEyebrow)}
@@ -344,6 +351,7 @@ const SignInScreen = ({
   return (
     <OnboardingLayout
       locale={locale}
+      bar={bar}
       switchHref={switchHref}
       brandLogo={brandLogo}
       eyebrow={pick(locale, COPY.eyebrow)}

@@ -3,6 +3,10 @@ import { SUPPORTED_LOCALES } from '@/config/locales';
 import { EVENT_CAPABILITIES, EVENT_PHASES } from '@/event-engine';
 import { GUIDING_TONE_KEYS } from '@/shared/utils/guiding-tones';
 import { publicContentAccess } from '../access-presets';
+import {
+  demoteOtherPublishedConferences,
+  pointSiteAtPublishedConference,
+} from '../hooks/single-published-conference';
 
 /*
  * Event is the aggregate root: Event -> Experience -> Scenes.
@@ -18,6 +22,17 @@ export const Events: CollectionConfig = {
   },
   versions: {
     drafts: true,
+  },
+  /*
+   * One conference wears the site, and never two. The rule is enforced
+   * here rather than in the Studio's launch service so that it holds for
+   * every way `_status` can become 'published' -- the button, Payload's
+   * admin screens, REST and GraphQL alike. See the hooks for why the
+   * work is split across two of them.
+   */
+  hooks: {
+    beforeChange: [demoteOtherPublishedConferences],
+    afterChange: [pointSiteAtPublishedConference],
   },
   access: publicContentAccess,
   fields: [
@@ -103,7 +118,8 @@ export const Events: CollectionConfig = {
       defaultValue: 'Asia/Jerusalem',
       options: [
         { label: 'ישראל · Jerusalem (UTC+2/+3)', value: 'Asia/Jerusalem' },
-        { label: 'מרכז אירופה · Berlin, Prague, Paris', value: 'Europe/Berlin' },
+        { label: 'מרכז אירופה · Berlin, Paris', value: 'Europe/Berlin' },
+        { label: 'פראג · Prague (UTC+1/+2)', value: 'Europe/Prague' },
         { label: 'לונדון · London', value: 'Europe/London' },
         { label: 'ניו יורק · New York', value: 'America/New_York' },
         { label: 'שיקגו · Chicago', value: 'America/Chicago' },
@@ -243,6 +259,9 @@ export const Events: CollectionConfig = {
                     { label: 'Hotel', value: 'hotel' },
                     { label: 'Green', value: 'leaf' },
                     { label: 'Coffee', value: 'coffee' },
+                    { label: 'Wi-Fi', value: 'wifi' },
+                    { label: 'Food', value: 'food' },
+                    { label: 'Family', value: 'family' },
                   ],
                 },
               ],

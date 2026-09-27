@@ -121,5 +121,17 @@ export const Sessions: CollectionConfig = {
     { name: 'registrationClosesAt', type: 'date' },
     { name: 'allowCancellation', type: 'checkbox', defaultValue: true },
     { name: 'cancellationDeadline', type: 'date' },
+    {
+      /*
+       * Shelved, not destroyed. Set when a supervisor archives the
+       * activity; null while it stands on the program. Every public
+       * read filters on it, so an archived activity is unpublished the
+       * moment this is written, and a restore is one null away.
+       */
+      name: 'archivedAt',
+      type: 'date',
+      index: true,
+      admin: { position: 'sidebar' },
+    },
   ],
 };

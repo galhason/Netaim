@@ -1,5 +1,10 @@
 import type { Locale } from '@/config/locales';
-import { formatLongDate, formatTimeLabel } from '@/shared';
+import {
+  DEFAULT_VENUE_TIMEZONE,
+  formatLongDate,
+  formatTimeLabel,
+  venueDayKey,
+} from '@/shared';
 import type {
   ActivityFilterVM,
   ActivityVM,
@@ -37,11 +42,18 @@ const FILTER_ORDER: SessionType[] = ['keynote', 'talk', 'workshop', 'tour'];
 
 const HOUR_MS = 3600000;
 
-export const dayKeyOf = (iso?: string): string => {
-  if (!iso) return '';
-  const t = Date.parse(iso);
-  return Number.isNaN(t) ? '' : new Date(t).toISOString().slice(0, 10);
-};
+/*
+ * The day an activity belongs to, in the conference's own calendar.
+ *
+ * This took the UTC day, which put every session before 02:00 or 03:00
+ * Israel time on the day before -- while the time printed beside it came
+ * from the venue clock. A programme cannot group by one clock and label
+ * by another, so both now use the same one.
+ */
+export const dayKeyOf = (
+  iso?: string,
+  timeZone: string = DEFAULT_VENUE_TIMEZONE,
+): string => venueDayKey(iso, timeZone);
 
 const durationLabel = (
   start?: string,
@@ -94,6 +106,11 @@ export const buildProgramModel = async (
   slug: string | null,
   locale: Locale,
   now: number = Date.now(),
+  /*
+   * The conference's zone, passed in by the page that already loaded the
+   * event. Absent on a legacy row, and then the shared default applies.
+   */
+  timeZone: string = DEFAULT_VENUE_TIMEZONE,
 ): Promise<ProgramModel> => {
   if (!slug) return EMPTY;
 
@@ -179,13 +196,13 @@ export const buildProgramModel = async (
         description: session.description,
         room: session.room,
         floor: session.floor,
-        time: formatTimeLabel(session.startsAt, locale) || undefined,
+        time: formatTimeLabel(session.startsAt, locale, timeZone) || undefined,
         endTime: session.endsAt
-          ? formatTimeLabel(session.endsAt, locale) || undefined
+          ? formatTimeLabel(session.endsAt, locale, timeZone) || undefined
           : undefined,
         duration: durationLabel(session.startsAt, session.endsAt, locale),
         language: session.language,
-        dayKey: dayKeyOf(session.startsAt),
+        dayKey: dayKeyOf(session.startsAt, timeZone),
         startMs,
         endMs,
         speakers: toSpeakerVM(session.speakers),
@@ -216,7 +233,7 @@ export const buildProgramModel = async (
       weekday: fmt({ weekday: 'short' }),
       dateNum: fmt({ day: 'numeric', month: 'numeric' }),
       month: fmt({ month: 'long' }),
-      full: formatLongDate(`${key}T00:00:00`, locale),
+      full: formatLongDate(`${key}T00:00:00`, locale, timeZone),
     };
   });
 
@@ -232,13 +249,14 @@ export const buildProgramModel = async (
 
   const schedule: ScheduleItemVM[] = (mineLists?.upcoming ?? []).map((item) => ({
     id: item.session.id,
-    time: formatTimeLabel(item.session.startsAt, locale) || '',
+    time: formatTimeLabel(item.session.startsAt, locale, timeZone) || '',
     title: item.session.title,
     room: item.session.room,
-    dayKey: dayKeyOf(item.session.startsAt),
+    dayKey: dayKeyOf(item.session.startsAt, timeZone),
   }));
 
-  const todayKey = new Date(now).toISOString().slice(0, 10);
+  /* Today at the venue, so "today's activities" means the venue's today. */
+  const todayKey = venueDayKey(new Date(now).toISOString(), timeZone);
   const statuses = [...myStatus.values()];
   const registeredIds = [...myStatus.entries()]
     .filter(([, s]) => s === 'confirmed' || s === 'pending')

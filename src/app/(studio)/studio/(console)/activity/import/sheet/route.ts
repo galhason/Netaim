@@ -36,7 +36,7 @@ const json = (body: unknown, status = 200): Response =>
   });
 
 export const GET = async (): Promise<Response> => {
-  if (!(await authorized('events:manage'))) {
+  if (!(await authorized('activities:manage'))) {
     return json({ ok: false, reason: 'denied' }, 403);
   }
   const locale = await getStudioLocale();
@@ -56,7 +56,7 @@ export const GET = async (): Promise<Response> => {
 export const POST = async (request: Request): Promise<Response> => {
   const locale = await getStudioLocale();
   const slug = await getActiveConferenceSlug(locale).catch(() => null);
-  if (!slug || !(await authorized('events:manage', slug))) {
+  if (!slug || !(await authorized('activities:manage', slug))) {
     return json({ ok: false, reason: 'denied' }, 403);
   }
 

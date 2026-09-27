@@ -21,6 +21,14 @@ export interface ResolvedSpeaker {
   socialLinks: SpeakerSocialLink[];
   isRegistered: boolean;
   accountId?: string;
+  /*
+   * What is written on the roster entry itself, before the account
+   * lends anything — what an editor is actually editing. A linked
+   * speaker with no override shows the account's words on the site and
+   * an empty field here, so saving the form never freezes the account's
+   * current name into an override by accident.
+   */
+  own: { name?: string; jobTitle?: string; company?: string; bio?: string; photoId?: string };
 }
 
 /* An existing platform account offered under "Choose Existing User". */
@@ -65,7 +73,16 @@ export interface SpeakerActivity {
  * overrides) happens inside the repository, mirroring toOpeningSpeakers.
  */
 export interface SpeakerRepository {
-  listByEvent: (slug: string, locale: Locale) => Promise<ResolvedSpeaker[]>;
+  /*
+   * `fallback: false` reads the language as written, without Payload
+   * filling an empty English field from the Hebrew — what an editor
+   * needs in order to see which words are actually translated.
+   */
+  listByEvent: (
+    slug: string,
+    locale: Locale,
+    options?: { fallback?: boolean },
+  ) => Promise<ResolvedSpeaker[]>;
   getById: (id: string, locale: Locale) => Promise<ResolvedSpeaker | null>;
   createExternal: (
     slug: string,
@@ -83,6 +100,8 @@ export interface SpeakerRepository {
     input: SpeakerOverrides,
     locale: Locale,
   ) => Promise<ResolvedSpeaker | null>;
+  /* Takes one voice off the roster; the account behind it is untouched. */
+  remove: (id: string) => Promise<boolean>;
   listCandidates: (locale: Locale) => Promise<SpeakerCandidate[]>;
   activitiesForSpeaker: (
     speakerId: string,

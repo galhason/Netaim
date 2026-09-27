@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from '@/config/locales';
 import { setStudioLocaleAction } from '@/app/(studio)/studio/actions';
 import { getSiteBrand } from '@/features/events';
+import { ROLE_CAPABILITIES, type Capability } from '@/permission-engine';
+import { getStudioAccess } from '../../services/studio-auth';
 import ConsoleSidebar from './console-sidebar';
 
 /*
@@ -79,12 +81,24 @@ const ConsoleShell = async ({
   openReports,
   children,
 }: ConsoleShellProps) => {
-  const logo = await getSiteBrand().catch(() => null);
+  const [logo, access] = await Promise.all([
+    getSiteBrand().catch(() => null),
+    getStudioAccess().catch(() => null),
+  ]);
+  /*
+   * Everything the visitor's roles open, anywhere: the rail is a map of
+   * screens, and a screen is worth listing if any grant reaches it —
+   * the screen itself decides about the particular conference.
+   */
+  const capabilities: Capability[] = [
+    ...new Set((access?.grants ?? []).flatMap((grant) => ROLE_CAPABILITIES[grant.role] ?? [])),
+  ];
   return (
   <div className="console flex min-h-dvh flex-col bg-[var(--c-void)] font-body text-[var(--c-text)] md:grid md:grid-cols-[200px_1fr]">
     <ConsoleSidebar
       locale={locale}
       openReports={openReports ?? 0}
+      capabilities={capabilities}
       {...(logo ? { brandLogo: logo.onDark } : {})}
     />
 

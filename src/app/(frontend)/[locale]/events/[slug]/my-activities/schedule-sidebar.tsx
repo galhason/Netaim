@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { Locale } from '@/config/locales';
 import {
@@ -179,13 +180,13 @@ const ScheduleSidebar = ({
         </ul>
       ) : null}
 
-      <a
+      <Link
         href={programHref}
         className="mt-4 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[var(--x-r-pill)] border border-[var(--x-primary)]/40 bg-[var(--x-surface)] px-4 text-[13px] font-semibold text-[var(--x-primary)] transition-colors hover:bg-[var(--x-primary)] hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]"
       >
         {t(locale, 'toProgram')}
         <IconArrow className="size-4 rtl:rotate-180" />
-      </a>
+      </Link>
     </section>
 
     {exportTarget ? (

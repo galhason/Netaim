@@ -28,7 +28,14 @@ export type RateLimitedAction =
    */
   | 'email-verification'
   | 'email-code'
-  | 'email-check';
+  | 'email-check'
+  /*
+   * The public marketing API. Not credential guessing and not abuse
+   * between guests -- this is one server calling another, and the number
+   * is set for a marketing page that caches its answer, not for a crawler
+   * that does not.
+   */
+  | 'marketing-api';
 
 export interface RateLimitPolicy {
   /* Attempts permitted inside one window. */
@@ -60,6 +67,7 @@ export const RATE_LIMITS: Record<RateLimitedAction, RateLimitPolicy> = {
   'connection-request': { attempts: 40, windowMs: HOUR, blockMs: 15 * MINUTE },
   'chat-message': { attempts: 120, windowMs: 10 * MINUTE, blockMs: 5 * MINUTE },
   report: { attempts: 10, windowMs: HOUR, blockMs: HOUR },
+  'marketing-api': { attempts: 120, windowMs: MINUTE, blockMs: MINUTE },
   /*
    * The two halves of proving an address.
    *

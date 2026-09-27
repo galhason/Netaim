@@ -20,7 +20,7 @@ import type { LogisticsRow } from '@/features/studio';
 export const dynamic = 'force-dynamic';
 
 export const GET = async (request: Request): Promise<Response> => {
-  const access = await requireCapability('registrations:manage');
+  const access = await requireCapability('logistics:read');
   if (!access) {
     return new Response('Forbidden', { status: 403 });
   }

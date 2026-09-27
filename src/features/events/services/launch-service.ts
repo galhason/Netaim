@@ -1,4 +1,8 @@
-import { computeEventHealth, type EventHealth } from '@/event-engine';
+import {
+  computeEventHealth,
+  phaseIsOffAir,
+  type EventHealth,
+} from '@/event-engine';
 import type { Locale } from '@/config/locales';
 import { applyComposition } from '@/experience-runtime';
 import {
@@ -99,12 +103,31 @@ export const reviewLaunch = async (
       experienceFindings: notesAsFindings(inspectJourney(scenes)),
     }),
   );
-  return { event, health, canLaunch: isLaunchable(health) };
+  /*
+   * A retired conference is not launchable, and the rule is stated here
+   * rather than in the button: `canLaunch` is what the workspace reads to
+   * decide between offering the launch and explaining why it cannot, so
+   * both screens and the service itself inherit it from one place.
+   *
+   * The way back is the lifecycle's own -- archived → draft -- and only
+   * then is the conference judged on its readiness like any other.
+   */
+  return {
+    event,
+    health,
+    canLaunch: !phaseIsOffAir(event.phase) && isLaunchable(health),
+  };
 };
 
 export type LaunchOutcome =
   | { ok: true; event: EventSummary }
-  | { ok: false; blockers: number };
+  /*
+   * `retired` separates the two refusals. A conference held back by
+   * blockers has a number worth recording; one that was archived has
+   * nothing to do with readiness, and a trail that said "blocked, 0
+   * blockers" would send whoever reads it looking for blockers.
+   */
+  | { ok: false; blockers: number; retired?: true };
 
 /*
  * Launching is the emotional conclusion of composing: the experience is
@@ -118,6 +141,9 @@ export const launchExperience = async (
   const review = await reviewLaunch(slug, locale);
   if (!review) {
     throw new Error('Event not found');
+  }
+  if (phaseIsOffAir(review.event.phase)) {
+    return { ok: false, blockers: review.health.blockers, retired: true };
   }
   if (!review.canLaunch) {
     return { ok: false, blockers: review.health.blockers };

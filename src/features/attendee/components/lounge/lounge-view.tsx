@@ -382,9 +382,7 @@ const LoungeView = ({
     <div className="lounge grid min-h-dvh bg-[var(--l-bg)] font-body text-[var(--l-ink)] lg:grid-cols-[232px_1fr]">
       {siteNav ? <div className="col-span-full">{siteNav}</div> : null}
       <aside
-        className={`sticky top-0 hidden h-dvh flex-col bg-white/70 p-4 backdrop-blur-sm lg:flex ${
-          siteNav ? 'pt-[100px]' : ''
-        }`}
+        className="sticky top-0 hidden h-dvh flex-col bg-white/70 p-4 backdrop-blur-sm lg:flex"
       >
         <p className="flex items-center gap-2.5 px-2 py-3">
           <span className="grid size-9 flex-none place-items-center rounded-full bg-[var(--l-bronze)]/15 text-sm font-semibold text-[var(--l-bronze)]">
@@ -478,9 +476,7 @@ const LoungeView = ({
             />
           </div>
           <div
-            className={`relative mx-auto max-w-6xl px-6 pb-44 text-white md:px-10 ${
-              siteNav ? 'pt-[104px]' : 'pt-6'
-            }`}
+            className="relative mx-auto max-w-6xl px-6 pb-44 pt-6 text-white md:px-10"
           >
             <div className="flex items-center gap-3 text-[13px] text-white/85">
               <span className="flex items-center gap-2 font-display text-sm font-semibold tracking-wide">
@@ -655,7 +651,7 @@ const LoungeView = ({
               <NavIcon path="M4 6.5h16v13H4zM4 10.5h16M8.5 4v4M15.5 4v4" />
               {LOUNGE_UI.mySchedule[locale]}
               <Link
-                href={`${base}/schedule`}
+                href={`${base}/my-activities`}
                 className="ms-auto text-xs font-normal text-[var(--l-soft)] transition-colors hover:text-[var(--l-bronze)]"
               >
                 {LOUNGE_UI.viewFullAgenda[locale]}

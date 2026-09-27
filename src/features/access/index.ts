@@ -15,6 +15,8 @@ export {
   audit,
   eventHistory,
   platformHistory,
+  queryAudit,
+  exportAudit,
   recordAudit,
 } from './services/audit-service';
 export { AUDIT_ACTIONS } from './types/audit';
@@ -22,6 +24,8 @@ export type {
   AuditAction,
   AuditActor,
   AuditEntry,
+  AuditPage,
+  AuditQuery,
   AuditEntryInput,
   AuditRepository,
 } from './types/audit';

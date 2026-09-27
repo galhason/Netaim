@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import {
   LOCALE_LABELS,
@@ -32,13 +33,13 @@ const EventHeader = ({
       }`}
     >
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-6 py-5 md:px-12">
-        <a
+        <Link
           href={`/${locale}/events/${slug}`}
           className="flex items-center gap-3 font-display text-xl font-medium tracking-wide"
         >
           <span>{brandName}</span>
           <LogoMark />
-        </a>
+        </Link>
         {navigation.length > 0 ? (
           <nav
             aria-label={t('mainNavigation')}

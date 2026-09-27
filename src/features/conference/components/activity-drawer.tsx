@@ -25,6 +25,7 @@ import {
 import { Modal, useToast } from '../ui/feedback';
 import { useFavorites } from '../ui/favorites';
 import SpeakerCard from './speaker-card';
+import { withBasePath } from '@/config/site';
 
 interface Props {
   activity: ActivityVM | null;
@@ -248,7 +249,7 @@ const ActivityDrawer = ({
   const from = he ? -28 : 28;
   const shareUrl =
     typeof window !== 'undefined'
-      ? `${window.location.origin}/${locale}/events/${slug}/program`
+      ? `${window.location.origin}${withBasePath(`/${locale}/events/${slug}/program`)}`
       : '';
 
   const copyLink = async () => {

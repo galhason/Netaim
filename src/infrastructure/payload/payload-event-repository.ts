@@ -1,10 +1,16 @@
-import { isEventPhase, type EventCapability, type EventPhase } from '@/event-engine';
+import {
+  isEventPhase,
+  phaseIsOffAir,
+  type EventCapability,
+  type EventPhase,
+} from '@/event-engine';
 import type {
   EventOpeningDraft,
   EventOpeningInput,
   EventRepository,
   EventSummary,
 } from '@/features/events/types/event-repository';
+import { EVENT_TIMEZONES } from '@/features/events/constants/timezones';
 import type { Event, Participant } from '@/payload-types';
 import { actorContext } from './payload-context';
 import { mediaId, mediaUrl, toMediaRelation } from './payload-media';
@@ -122,6 +128,7 @@ const toSummary = (event: Event): EventSummary => ({
   launched: event._status === 'published',
   startsAt: event.startsAt ?? undefined,
   endsAt: event.endsAt ?? undefined,
+  ...(event.timezone ? { timezone: event.timezone } : {}),
 });
 
 const requireActor = async () => {
@@ -358,13 +365,40 @@ export const payloadEventRepository: EventRepository = {
     if (!event) {
       throw new Error('Event not found');
     }
+    /*
+     * Two kinds of write live here, and `draft` is the difference.
+     *
+     * An ordinary phase change is a Studio edit. It belongs in a draft
+     * version, and the conference goes on being served exactly as it was
+     * until someone launches -- which is what every other Studio write
+     * does and what the draft canvas exists to preview.
+     *
+     * Archiving is not an edit. It is the decision to take the
+     * conference off the public site, so it has to reach the primary
+     * `events` row -- and `draft: true` never does. With drafts enabled,
+     * Payload skips the row write entirely and records a version only:
+     * `if (!isSavingDraft)` guards the single `db.updateOne` call
+     * (payload collections/operations/utilities/update.js:253). Leaving
+     * the flag off is Payload's own unpublish path -- the mirror of what
+     * `launchEvent` does to publish -- and it writes the phase and the
+     * status together, in one operation and one transaction.
+     *
+     * `'draft'` is not a transition into published, so the
+     * single-published hook stands down and nothing else is demoted.
+     *
+     * One consequence worth knowing: like every update, this one is
+     * based on the latest version, so archiving a conference that had
+     * unpublished edits carries those edits into the row it is retiring.
+     * The content that was public remains in the version history.
+     */
+    const offAir = phaseIsOffAir(phase);
     const updated = await payload.update({
       collection: 'events',
       id: event.id,
       overrideAccess: false,
       user,
-      draft: true,
-      data: { phase },
+      draft: !offAir,
+      data: offAir ? { phase, _status: 'draft' } : { phase },
     });
     return toSummary(updated);
   },
@@ -394,6 +428,9 @@ export const payloadEventRepository: EventRepository = {
         ...(input.title !== undefined ? { title: input.title } : {}),
         ...(input.startsAt !== undefined ? { startsAt: input.startsAt } : {}),
         ...(input.endsAt !== undefined ? { endsAt: input.endsAt } : {}),
+        ...(input.timezone !== undefined && EVENT_TIMEZONES.includes(input.timezone)
+          ? { timezone: input.timezone as Event['timezone'] }
+          : {}),
       },
     });
     return toSummary(updated);
@@ -547,6 +584,9 @@ export const payloadEventRepository: EventRepository = {
                       'hotel',
                       'leaf',
                       'coffee',
+                      'wifi',
+                      'food',
+                      'family',
                     ].includes(fact.icon)
                       ? fact.icon
                       : 'accessibility') as
@@ -555,7 +595,10 @@ export const payloadEventRepository: EventRepository = {
                       | 'transit'
                       | 'hotel'
                       | 'leaf'
-                      | 'coffee',
+                      | 'coffee'
+                      | 'wifi'
+                      | 'food'
+                      | 'family',
                   })),
                 }
               : {}),

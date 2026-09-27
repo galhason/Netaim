@@ -9,6 +9,7 @@ export const AUDIT_ACTIONS = [
   'event.duplicated',
   'event.launched',
   'event.archived',
+  'event.restored',
   'event.deleted',
   'event.activeConferenceChanged',
 
@@ -20,6 +21,14 @@ export const AUDIT_ACTIONS = [
   'content.sessionCreated',
   'content.sessionUpdated',
   'content.sessionDeleted',
+  'content.sessionArchived',
+  'content.sessionRestored',
+  'content.speakerSaved',
+  'content.speakerRemoved',
+  'content.partnerSaved',
+  'content.partnerRemoved',
+  'content.partnersReordered',
+  'audit.exported',
 
   /* People at the door */
   'registration.approved',
@@ -72,6 +81,28 @@ export interface AuditEntry {
   at: string;
 }
 
+/*
+ * How the log is asked for: by conference, by person, by kind of act,
+ * by time — and in pages, because a log is the one list that only
+ * grows. Every filter is optional; the page is one-based.
+ */
+export interface AuditQuery {
+  subject?: string;
+  actorEmail?: string;
+  action?: string;
+  from?: string;
+  to?: string;
+  limit: number;
+  page?: number;
+}
+
+export interface AuditPage {
+  entries: AuditEntry[];
+  total: number;
+  page: number;
+  pages: number;
+}
+
 export interface AuditRepository {
   record: (entry: AuditEntryInput) => Promise<void>;
   /* Newest first. `subject` narrows to one conference. */
@@ -79,4 +110,5 @@ export interface AuditRepository {
     subject?: string;
     limit: number;
   }) => Promise<AuditEntry[]>;
+  query: (options: AuditQuery) => Promise<AuditPage>;
 }

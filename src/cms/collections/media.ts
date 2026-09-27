@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload';
+import { withBasePath } from '@/config/site';
 import { orgContentAccess } from '../access-presets';
 
 /*
@@ -29,6 +30,36 @@ export const Media: CollectionConfig = {
     mimeTypes: [...ACCEPTED],
   },
   access: orgContentAccess,
+  hooks: {
+    /*
+     * Payload writes `url` as `/api/media/file/<name>` — the path on
+     * this server. Under the local shared-domain rehearsal the browser
+     * reaches this server at /netaim, so the path the browser must ask
+     * for carries that prefix. Applied here, once, on the way out, so
+     * every reader — the site's <img> and next/image, the marketing
+     * API, the admin thumbnails — sees the address a browser can use.
+     * With no base path configured (production) nothing changes.
+     */
+    afterRead: [
+      ({ doc }) => {
+        if (!doc || typeof doc !== 'object') {
+          return doc;
+        }
+        const prefixed = (value: unknown) =>
+          typeof value === 'string' ? withBasePath(value) : value;
+        doc.url = prefixed(doc.url);
+        doc.thumbnailURL = prefixed(doc.thumbnailURL);
+        if (doc.sizes && typeof doc.sizes === 'object') {
+          for (const size of Object.values(doc.sizes as Record<string, { url?: unknown }>)) {
+            if (size && typeof size === 'object') {
+              size.url = prefixed(size.url);
+            }
+          }
+        }
+        return doc;
+      },
+    ],
+  },
   fields: [
     {
       name: 'organization',

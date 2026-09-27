@@ -287,7 +287,7 @@ const PrivacyPage = async ({ params }: PrivacyPageProps) => {
   return (
     <main
       id="main-content"
-      className="mx-auto flex max-w-3xl flex-col px-6 pb-28 pt-32 md:px-10"
+      className="mx-auto flex max-w-3xl flex-col px-6 pb-28 pt-12 md:px-10"
     >
       <p className="text-xs font-medium uppercase tracking-[0.34em] text-accent">
         {pick(lang, COPY.eyebrow)}

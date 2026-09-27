@@ -4,6 +4,7 @@ import { buildConfig } from 'payload';
 import { postgresAdapter } from '@payloadcms/db-postgres';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { s3Storage } from '@payloadcms/storage-s3';
+import { declareSinglePublishedIndex } from '@/cms/schema/single-published-index';
 import { FALLBACK_LOCALE, SUPPORTED_LOCALES } from '@/config/locales';
 import {
   AccountGrants,
@@ -90,6 +91,13 @@ export default buildConfig({
      * NODE_ENV=production.
      */
     push: process.env.PAYLOAD_DB_PUSH === 'true',
+    /*
+     * The one-published-conference index is part of the schema, not a
+     * side effect of a migration. Declared here it survives a schema
+     * push; declared only in migration SQL it did not — see the file for
+     * the incident and the Drizzle behaviour this relies on.
+     */
+    afterSchemaInit: [declareSinglePublishedIndex],
     pool: {
       connectionString: process.env.DATABASE_URL ?? '',
     },

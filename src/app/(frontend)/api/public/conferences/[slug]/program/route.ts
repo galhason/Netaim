@@ -1,0 +1,76 @@
+import { NextResponse, type NextRequest } from 'next/server';
+import { isSupportedLocale, type Locale } from '@/config/locales';
+import { checkRateLimit } from '@/features/access';
+import { marketingRequestAuthorized, publicProgram } from '@/features/marketing';
+import { newRequestId, withRequestId } from '@/shared/logging/request-context';
+import { siteOrigin } from '@/shared/utils/site-origin';
+
+/*
+ * The public programme of one conference -- every session, by venue day.
+ *
+ * Same door as the conference endpoint: same secret, same locale check,
+ * same throttle, same 404 for "no such conference" and "not published"
+ * alike. What differs is only the body: the full agenda rather than the
+ * landing page's six-session selection, because a programme page lists
+ * where a landing page teases.
+ */
+export const GET = async (
+  request: NextRequest,
+  { params }: { params: Promise<{ slug: string }> },
+): Promise<NextResponse> => {
+  if (
+    !marketingRequestAuthorized(
+      request.headers.get('authorization'),
+      process.env.MARKETING_API_SECRET,
+    )
+  ) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  }
+
+  const locale = request.nextUrl.searchParams.get('locale') ?? '';
+  if (!isSupportedLocale(locale)) {
+    return NextResponse.json(
+      { error: 'locale must be he or en' },
+      { status: 400 },
+    );
+  }
+
+  const { slug: rawSlug } = await params;
+  const slug = decodeURIComponent(rawSlug ?? '').trim();
+  if (!slug) {
+    return NextResponse.json({ error: 'slug is required' }, { status: 400 });
+  }
+
+  const caller =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
+  const throttle = await checkRateLimit('marketing-api', caller);
+  if (!throttle.allowed) {
+    return NextResponse.json(
+      { error: 'too many requests' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(throttle.retryAfterSeconds) },
+      },
+    );
+  }
+
+  const requestId = newRequestId();
+  try {
+    const program = await withRequestId(requestId, () =>
+      publicProgram(slug, locale as Locale, siteOrigin(request)),
+    );
+    if (!program) {
+      return NextResponse.json({ error: 'not found' }, { status: 404 });
+    }
+    return NextResponse.json(program, {
+      headers: { 'Cache-Control': 'no-store', 'x-request-id': requestId },
+    });
+  } catch {
+    return NextResponse.json(
+      { error: 'internal error', requestId },
+      { status: 500, headers: { 'x-request-id': requestId } },
+    );
+  }
+};
+
+export const dynamic = 'force-dynamic';

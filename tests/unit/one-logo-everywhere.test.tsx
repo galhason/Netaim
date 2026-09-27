@@ -35,8 +35,7 @@ vi.mock('next/navigation', () => ({
 import { BRAND_LOGO, brandFor } from '@/config/brand';
 import { BrandMark } from '@/shared';
 import { renderEmailHtml } from '@/notification-engine';
-import ExperienceNav from '@/features/conference/components/experience-nav';
-import { siteNavLinks } from '@/features/cinematic';
+import ConferenceBar from '@/features/conference/components/conference-bar';
 
 const read = (path: string): string =>
   readFileSync(resolve(process.cwd(), path), 'utf8');
@@ -90,12 +89,11 @@ describe('the artwork the build ships', () => {
 describe('the navigation bar wears it', () => {
   const nav = (brandLogo?: string) =>
     renderToString(
-      <ExperienceNav
+      <ConferenceBar
         locale="he"
-        links={siteNavLinks('he', 'x')}
+        slug="x"
+        viewer={null}
         brand={brandFor('he')}
-        registerHref="/he/events/x/register"
-        meHref="/he/me"
         {...(brandLogo ? { brandLogo } : {})}
       />,
     );
@@ -157,8 +155,7 @@ describe('one source for the logo', () => {
    * only on that one surface.
    */
   const CHROME = [
-    'src/features/conference/components/experience-nav.tsx',
-    'src/features/cinematic/components/cinematic-nav.tsx',
+    'src/features/conference/components/conference-bar.tsx',
     'src/features/cinematic/components/conference-footer.tsx',
     'src/features/opening/components/opening-nav.tsx',
     'src/features/opening/components/opening-footer.tsx',

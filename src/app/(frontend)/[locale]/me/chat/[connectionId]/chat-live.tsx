@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Locale } from '@/config/locales';
 import { formatTimeLabel } from '@/shared';
+import { withBasePath } from '@/config/site';
 
 /*
  * A conversation that keeps up with itself.
@@ -92,7 +93,7 @@ const ChatLive = ({
    */
   const atBottom = useRef(true);
 
-  const endpoint = `/${locale}/me/chat/${connectionId}/messages`;
+  const endpoint = withBasePath(`/${locale}/me/chat/${connectionId}/messages`);
 
   const absorb = useCallback((incoming: ChatLine[]) => {
     if (incoming.length === 0) {

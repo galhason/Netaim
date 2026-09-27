@@ -41,6 +41,8 @@ export interface SceneViewer {
    * their own name and sent to a sign-up form when they clicked it.
    */
   href?: string;
+  /* Their picture, for the bar's chip; absent, an initial stands in. */
+  photoUrl?: string;
 }
 
 export interface SceneComponentProps<TContent = unknown> {

@@ -125,6 +125,32 @@ const IconCoffee = ({ className }: IconProps) => (
   </svg>
 );
 
+const IconWifi = ({ className }: IconProps) => (
+  <svg {...base(className)}>
+    <path d="M3.5 9.5a12 12 0 0 1 17 0" />
+    <path d="M6.5 12.75a8 8 0 0 1 11 0" />
+    <path d="M9.5 16a4 4 0 0 1 5 0" />
+    <circle cx="12" cy="19" r="0.9" fill="currentColor" />
+  </svg>
+);
+
+const IconFood = ({ className }: IconProps) => (
+  <svg {...base(className)}>
+    <path d="M7 4v16M4.5 4v5a2.5 2.5 0 0 0 5 0V4" />
+    <path d="M16.5 4c-2 0-3 2.5-3 5.5 0 1.9 1 3 2 3v7.5" />
+    <path d="M16.5 4c1.4 0 2.5 2.2 2.5 5v3.5h-2.5" />
+  </svg>
+);
+
+const IconFamily = ({ className }: IconProps) => (
+  <svg {...base(className)}>
+    <circle cx="8" cy="7" r="2.4" />
+    <circle cx="16.5" cy="8.5" r="1.9" />
+    <path d="M3.5 19v-3.5A4.5 4.5 0 0 1 8 11a4.5 4.5 0 0 1 4.5 4.5V19" />
+    <path d="M13.5 19v-2.5a3 3 0 0 1 6 0V19" />
+  </svg>
+);
+
 const GLYPHS = {
   accessibility: IconAccessibility,
   parking: IconParking,
@@ -132,6 +158,9 @@ const GLYPHS = {
   hotel: IconHotel,
   leaf: IconLeaf,
   coffee: IconCoffee,
+  wifi: IconWifi,
+  food: IconFood,
+  family: IconFamily,
   scroll: IconScroll,
   chevron: IconChevronLeft,
 } satisfies Record<CinematicIcon, (props: IconProps) => ReactNode>;

@@ -7,7 +7,7 @@ import { can, capabilitiesOf, type Grant } from '@/permission-engine';
  */
 describe('permission engine', () => {
   const owner: Grant = { role: 'owner', eventSlug: null };
-  const scopedEditor: Grant = { role: 'editor', eventSlug: 'summit-2026' };
+  const scopedEditor: Grant = { role: 'producer', eventSlug: 'summit-2026' };
   const door: Grant = { role: 'door', eventSlug: null };
 
   it('lets an unscoped owner pass everywhere', () => {

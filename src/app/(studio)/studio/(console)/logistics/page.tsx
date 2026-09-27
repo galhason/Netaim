@@ -10,6 +10,7 @@ import {
 import type { LogisticsRow } from '@/features/studio';
 import { countOpenReports } from '@/features/networking';
 import type { Locale } from '@/config/locales';
+import { withBasePath } from '@/config/site';
 
 /*
  * Logistics: the one screen the conference is run from on the day.
@@ -69,7 +70,7 @@ const Denied = async ({ locale }: { locale: Locale }) => (
 
 const LogisticsPage = async ({ searchParams }: LogisticsPageProps) => {
   const locale = await getStudioLocale();
-  const access = await requireCapability('registrations:manage');
+  const access = await requireCapability('logistics:read');
   if (!access) {
     return <Denied locale={locale} />;
   }
@@ -200,7 +201,7 @@ const LogisticsPage = async ({ searchParams }: LogisticsPageProps) => {
                       : CONSOLE_UI.logisticsPeople[locale]}
                   </p>
                   <a
-                    href={`/studio/logistics/export?event=${encodeURIComponent(chosen.slug)}`}
+                    href={withBasePath(`/studio/logistics/export?event=${encodeURIComponent(chosen.slug)}`)}
                     className={quietButton}
                   >
                     {CONSOLE_UI.logisticsExport[locale]}

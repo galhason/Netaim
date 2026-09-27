@@ -1,21 +1,22 @@
-import Image from 'next/image';
 import Link from 'next/link';
+import type { Locale } from '@/config/locales';
+import { wordpressHref } from '@/config/wordpress';
 import { getActiveConferenceSlug, listEvents } from '@/features/events';
-import {
-  archiveEventAction,
-  duplicateEventAction,
-  launchExperienceAction,
-} from '../actions';
-import { deleteEventAction, setActiveConferenceAction } from './actions';
-import { getOpening } from '@/features/opening';
+import { countOpenReports } from '@/features/networking';
+import { listAgenda } from '@/features/program';
+import { getRegistrationCounts } from '@/features/registration';
+import { listConferenceSpeakers } from '@/features/speakers';
 import {
   CONSOLE_UI,
   ConsoleShell,
-  getStudioCreator,
+  getStudioAccess,
   getStudioLocale,
   requireCapability,
 } from '@/features/studio';
-import { countOpenReports } from '@/features/networking';
+import { marketingRepository } from '@/infrastructure';
+import { ROLE_CAPABILITIES, type Capability } from '@/permission-engine';
+import { formatDayLabel } from '@/shared';
+import { setActiveConferenceAction } from './actions';
 
 /*
  * Open safety reports, for the badge on the rail. Counted only for the
@@ -25,232 +26,207 @@ import { countOpenReports } from '@/features/networking';
 const openReportsFor = async (): Promise<number> =>
   (await requireCapability('participants:manage')) ? countOpenReports() : 0;
 
-/*
- * The Experience Control Center: not a dashboard — a poster wall. The
- * opening experience leads; every launched conference stands beside it
- * as an equal Experience (Constitution v2 §2).
- */
+const t = (he: string, en: string): Record<Locale, string> => ({ he, en });
+
+const UI = {
+  title: t('הכנסים', 'Conferences'),
+  sub: t('הכנס הפעיל הוא מה שהאתר מציג. כל השאר — טיוטות, כנסים שהיו, ומה שיבוא.', 'The active conference is what the site shows. Everything else — drafts, past conferences, and what comes next.'),
+  active: t('הכנס הפעיל', 'Active conference'),
+  noActive: t('אין כנס פעיל. בחרו כנס והגדירו אותו כפעיל בהגדרות שלו.', 'No active conference. Pick one and make it active in its settings.'),
+  registrations: t('נרשמים', 'Registered'),
+  pending: t('ממתינים', 'Pending'),
+  waitlisted: t('ברשימת המתנה', 'Waitlisted'),
+  sessions: t('פעילויות', 'Activities'),
+  speakers: t('דוברים', 'Speakers'),
+  content: t('עריכת תוכן', 'Edit content'),
+  settings: t('הגדרות', 'Settings'),
+  viewOnSite: t('צפייה באתר', 'View on site'),
+  all: t('כל הכנסים', 'All conferences'),
+  open: t('פתיחה', 'Open'),
+  makeActive: t('הגדרה כפעיל', 'Make active'),
+  live: t('מפורסם', 'Published'),
+  changes: t('שינויים לא פורסמו', 'Unpublished changes'),
+  draft: t('טיוטה', 'Draft'),
+  archived: t('בארכיון', 'Archived'),
+  activeTag: t('פעיל', 'Active'),
+  none: t('עדיין אין כנסים.', 'No conferences yet.'),
+  platformHome: t('דף הבית של הפלטפורמה', 'Platform home page'),
+  platformHomeSub: t('העמוד הפנימי /he — לא האתר הציבורי.', 'The internal /he page — not the public site.'),
+};
+
+const CARD = 'rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)]';
+const BTN = 'inline-flex min-h-9 items-center rounded-md border border-[var(--c-line-strong)] px-3 text-sm text-[var(--c-text)] hover:border-[var(--c-bronze)] hover:text-[var(--c-bronze)]';
+const BTN_PRIMARY = 'inline-flex min-h-9 items-center rounded-md bg-[var(--c-bronze)] px-4 text-sm font-semibold text-[var(--c-on-accent)] hover:bg-[var(--c-bronze-hover)]';
+
+const stateOf = (event: { launched: boolean; phase: string }, published: boolean) =>
+  event.phase === 'archived' ? 'archived' : event.launched ? 'live' : published ? 'changes' : 'draft';
+
+const StateTag = ({ state, locale }: { state: 'live' | 'changes' | 'draft' | 'archived'; locale: Locale }) => (
+  <span
+    className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+      state === 'live'
+        ? 'bg-[rgba(52,211,153,0.15)] text-[var(--c-live)]'
+        : state === 'changes'
+          ? 'bg-[rgba(245,158,11,0.15)] text-[var(--c-bronze)]'
+          : 'bg-[rgba(255,255,255,0.08)] text-[var(--c-text-soft)]'
+    }`}
+  >
+    {UI[state][locale]}
+  </span>
+);
+
 const ConsolePage = async () => {
   const locale = await getStudioLocale();
-  const creator = await getStudioCreator();
-  const [opening, events, activeSlug, openReports] = await Promise.all([
-    getOpening(locale),
+  const access = await getStudioAccess();
+  const creator = access?.creator ?? null;
+  const held = new Set<Capability>(
+    (access?.grants ?? []).flatMap((grant) => ROLE_CAPABILITIES[grant.role] ?? []),
+  );
+  const may = (capability: Capability) => held.has(capability);
+  const [events, activeSlug, openReports] = await Promise.all([
     listEvents().catch(() => []),
     getActiveConferenceSlug(locale).catch(() => null),
     openReportsFor().catch(() => 0),
   ]);
-  const posterBySlug = new Map(
-    opening.posters
-      .filter((poster) => poster.slug)
-      .map((poster) => [poster.slug as string, poster]),
+  const publishedFlags = await Promise.all(
+    events.map((event) => marketingRepository.findPublishedIdentity(event.slug, 'he').then(Boolean).catch(() => false)),
   );
+  const publishedBySlug = new Map(events.map((event, index) => [event.slug, publishedFlags[index] ?? false]));
+  const active = events.find((event) => event.slug === activeSlug) ?? null;
+  const [counts, agenda, speakers] = active
+    ? await Promise.all([
+        getRegistrationCounts(active.slug).catch(() => ({ confirmed: 0, pending: 0, waitlisted: 0 })),
+        listAgenda(active.slug, 'he').catch(() => []),
+        listConferenceSpeakers(active.slug, 'he').catch(() => []),
+      ])
+    : [null, [], []];
+  const dates = (event: { startsAt?: string; endsAt?: string }) =>
+    event.startsAt
+      ? `${formatDayLabel(event.startsAt, locale)}${event.endsAt ? ` – ${formatDayLabel(event.endsAt, locale)}` : ''}`
+      : '';
 
   return (
     <ConsoleShell
       locale={locale}
       userName={creator?.name ?? ''}
       openReports={openReports}
-      breadcrumb={
-        <span className="font-medium text-[var(--c-text)]">
-          {CONSOLE_UI.experiences[locale]}
-        </span>
-      }
+      breadcrumb={<span className="font-medium text-[var(--c-text)]">{UI.title[locale]}</span>}
     >
       <div className="mx-auto flex h-full max-w-5xl flex-col gap-6 overflow-y-auto px-6 py-8">
-        <header className="flex items-end gap-4">
-          <div>
-            <h1 className="font-display text-3xl font-medium">
-              {CONSOLE_UI.experiences[locale]}
-            </h1>
-            <p className="mt-1 text-sm text-[var(--c-text-soft)]">
-              {CONSOLE_UI.controlSub[locale]}
-            </p>
+        <header className="flex flex-wrap items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl font-semibold text-[var(--c-text)]">{UI.title[locale]}</h1>
+            <p className="mt-1 text-sm text-[var(--c-text-soft)]">{UI.sub[locale]}</p>
           </div>
-          <Link
-            href="/studio/new"
-            className="ms-auto rounded-lg bg-[var(--c-bronze)] px-5 py-2.5 text-sm font-medium text-[var(--c-on-accent)] transition-colors hover:bg-[var(--c-bronze-hover)]"
-          >
-            {CONSOLE_UI.newExperience[locale]}
-          </Link>
+          {may('events:manage') ? (
+            <Link href="/studio/new" className={BTN_PRIMARY}>
+              {CONSOLE_UI.newExperience[locale]}
+            </Link>
+          ) : null}
         </header>
 
-        <Link
-          href="/studio/homepage"
-          className="group relative flex min-h-44 items-end overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-deep)] p-6 transition-colors hover:border-[var(--c-bronze)]/40"
-        >
-          <span
-            aria-hidden="true"
-            className="cine-hero-glow absolute inset-0 opacity-60"
-          />
-          <span className="relative flex w-full items-end gap-4">
-            <span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-[var(--c-live)]/40 px-3 py-1 text-[10px] font-medium tracking-widest text-[var(--c-live)]">
-                {CONSOLE_UI.live[locale]}
-              </span>
-              <span className="mt-2 block font-display text-2xl">
-                {CONSOLE_UI.homepageName[locale]}
-              </span>
-              <span className="text-sm text-[var(--c-text-soft)]">
-                {CONSOLE_UI.homepageSub[locale]}
-              </span>
-            </span>
-            <span className="ms-auto rounded-lg bg-[var(--c-bronze)] px-5 py-2.5 text-sm font-medium text-[var(--c-on-accent)] transition-colors group-hover:bg-[var(--c-bronze-hover)]">
-              {CONSOLE_UI.openWorkspace[locale]}
-            </span>
-          </span>
-        </Link>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {events.map((event) => {
-            const poster = posterBySlug.get(event.slug);
-            const isActive = event.slug === activeSlug;
-            return (
-              <div
-                key={event.id}
-                className={`group relative rounded-xl border bg-[var(--c-panel)] transition-colors hover:border-[var(--c-bronze)]/40 ${
-                  isActive
-                    ? 'border-[var(--c-bronze)] ring-1 ring-[var(--c-bronze)]/40'
-                    : 'border-[var(--c-line)]'
-                }`}
-              >
-                <details className="absolute end-2 top-2 z-20">
-                  <summary className="grid size-7 cursor-pointer list-none place-items-center rounded-lg bg-[rgba(7,19,36,0.65)] text-[var(--c-text-soft)] backdrop-blur-sm transition-colors hover:text-[var(--c-bronze)]">
-                    ⋮
-                  </summary>
-                  <div className="absolute end-0 top-8 z-30 flex w-44 flex-col rounded-xl border border-[var(--c-line-strong)] bg-[var(--c-deep)] p-1.5 shadow-[0_18px_50px_rgba(0,0,0,0.5)]">
-                    <Link
-                      href={`/studio/experiences/${event.slug}`}
-                      className="rounded-lg px-3 py-2 text-xs text-[var(--c-text)] transition-colors hover:bg-[var(--c-bronze)]/15"
-                    >
-                      {locale === 'he' ? 'פתח סביבת עבודה' : 'Open workspace'}
+        {/* the active conference */}
+        <section className={`${CARD} p-5`}>
+          <p className="text-[10px] font-medium tracking-[0.16em] text-[var(--c-text-faint)]">{UI.active[locale]}</p>
+          {active && counts ? (
+            <>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <h2 className="text-xl font-semibold text-[var(--c-text)]">{active.title}</h2>
+                <StateTag state={stateOf(active, publishedBySlug.get(active.slug) ?? false)} locale={locale} />
+                <span className="text-sm text-[var(--c-text-soft)]">{dates(active)}</span>
+              </div>
+              <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+                {[
+                  [UI.registrations, counts.confirmed],
+                  [UI.pending, counts.pending],
+                  [UI.waitlisted, counts.waitlisted],
+                  [UI.sessions, agenda.length],
+                  [UI.speakers, speakers.length],
+                ].map(([label, value]) => (
+                  <div key={(label as Record<Locale, string>).en} className="rounded-md border border-[var(--c-line)] px-3 py-2">
+                    <dt className="text-[11px] text-[var(--c-text-soft)]">{(label as Record<Locale, string>)[locale]}</dt>
+                    <dd className="text-lg font-semibold text-[var(--c-text)]">{value as number}</dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {may('events:manage') ? (
+                  <>
+                    <Link href={`/studio/conference/${active.slug}/content`} className={BTN_PRIMARY}>
+                      {UI.content[locale]}
                     </Link>
-                    <a
-                      href={`/${locale}/events/${event.slug}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-lg px-3 py-2 text-xs text-[var(--c-text)] transition-colors hover:bg-[var(--c-bronze)]/15"
-                    >
-                      {locale === 'he' ? 'תצוגה מקדימה' : 'Preview'}
-                    </a>
-                    {event.launched && !isActive ? (
+                    <Link href={`/studio/conference/${active.slug}/speakers`} className={BTN}>{UI.speakers[locale]}</Link>
+                  </>
+                ) : null}
+                {may('activities:read') ? <Link href="/studio/activity" className={BTN}>{UI.sessions[locale]}</Link> : null}
+                {may('participants:read') ? <Link href="/studio/participants" className={BTN}>{UI.registrations[locale]}</Link> : null}
+                {may('events:manage') ? <Link href={`/studio/conference/${active.slug}/settings`} className={BTN}>{UI.settings[locale]}</Link> : null}
+                <a href={wordpressHref('conferences', locale)} target="_blank" rel="noreferrer" className={`${BTN} ms-auto`}>
+                  {UI.viewOnSite[locale]}
+                </a>
+              </div>
+            </>
+          ) : (
+            <p className="mt-2 text-sm text-[var(--c-text-soft)]">{UI.noActive[locale]}</p>
+          )}
+        </section>
+
+        {/* every conference */}
+        <section className={CARD}>
+          <h2 className="border-b border-[var(--c-line)] px-5 py-3 text-sm font-semibold text-[var(--c-text)]">{UI.all[locale]}</h2>
+          {events.length === 0 ? (
+            <p className="px-5 py-4 text-sm text-[var(--c-text-soft)]">{UI.none[locale]}</p>
+          ) : (
+            <ul>
+              {events.map((event) => {
+                const isActive = event.slug === activeSlug;
+                return (
+                  <li key={event.slug} className="flex flex-wrap items-center gap-3 border-b border-[var(--c-line)] px-5 py-3 last:border-b-0">
+                    <div className="min-w-0 flex-1">
+                      {may('events:manage') ? (
+                        <Link href={`/studio/conference/${event.slug}/content`} className="text-sm font-medium text-[var(--c-text)] hover:text-[var(--c-bronze)]">
+                          {event.title}
+                        </Link>
+                      ) : (
+                        <span className="text-sm font-medium text-[var(--c-text)]">{event.title}</span>
+                      )}
+                      <p className="text-xs text-[var(--c-text-soft)]">
+                        <span dir="ltr">{event.slug}</span>
+                        {dates(event) ? ` · ${dates(event)}` : ''}
+                      </p>
+                    </div>
+                    {isActive ? (
+                      <span className="rounded-full bg-[rgba(52,211,153,0.15)] px-2 py-0.5 text-[11px] font-medium text-[var(--c-live)]">{UI.activeTag[locale]}</span>
+                    ) : null}
+                    <StateTag state={stateOf(event, publishedBySlug.get(event.slug) ?? false)} locale={locale} />
+                    {may('events:manage') ? (
+                      <Link href={`/studio/conference/${event.slug}/content`} className={BTN}>{UI.open[locale]}</Link>
+                    ) : null}
+                    {!isActive && event.launched && may('experiences:manage') ? (
                       <form action={setActiveConferenceAction}>
                         <input type="hidden" name="slug" value={event.slug} />
-                        <button
-                          type="submit"
-                          className="w-full rounded-lg px-3 py-2 text-start text-xs text-[var(--c-bronze)] transition-colors hover:bg-[var(--c-bronze)]/15"
-                        >
-                          {locale === 'he' ? 'הפוך לאתר הפעיל' : 'Set as active site'}
-                        </button>
+                        <button type="submit" className={BTN}>{UI.makeActive[locale]}</button>
                       </form>
                     ) : null}
-                    {isActive ? (
-                      <span className="rounded-lg px-3 py-2 text-xs text-[var(--c-live)]">
-                        {locale === 'he' ? '✓ האתר הפעיל' : '✓ Active site'}
-                      </span>
-                    ) : null}
-                    <form action={duplicateEventAction}>
-                      <input type="hidden" name="slug" value={event.slug} />
-                      <button
-                        type="submit"
-                        className="w-full rounded-lg px-3 py-2 text-start text-xs text-[var(--c-text)] transition-colors hover:bg-[var(--c-bronze)]/15"
-                      >
-                        {locale === 'he' ? 'שכפול' : 'Duplicate'}
-                      </button>
-                    </form>
-                    {!event.launched ? (
-                      <form action={launchExperienceAction}>
-                        <input type="hidden" name="slug" value={event.slug} />
-                        <button
-                          type="submit"
-                          className="w-full rounded-lg px-3 py-2 text-start text-xs text-[var(--c-live)] transition-colors hover:bg-[var(--c-live)]/10"
-                        >
-                          {locale === 'he' ? 'העלאה לאוויר' : 'Publish'}
-                        </button>
-                      </form>
-                    ) : null}
-                    <form action={archiveEventAction}>
-                      <input type="hidden" name="slug" value={event.slug} />
-                      <button
-                        type="submit"
-                        className="w-full rounded-lg px-3 py-2 text-start text-xs text-[var(--c-danger-text)] transition-colors hover:bg-[var(--c-danger)]/10"
-                      >
-                        {locale === 'he' ? 'העברה לארכיון' : 'Archive'}
-                      </button>
-                    </form>
-                    <details>
-                      <summary className="cursor-pointer list-none rounded-lg px-3 py-2 text-xs text-[var(--c-danger-text)] transition-colors hover:bg-[var(--c-danger)]/10">
-                        {locale === 'he' ? 'מחיקה לצמיתות…' : 'Delete forever…'}
-                      </summary>
-                      <form action={deleteEventAction} className="p-1">
-                        <input type="hidden" name="slug" value={event.slug} />
-                        <button
-                          type="submit"
-                          className="w-full rounded-lg bg-[var(--c-danger)] px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-[var(--c-danger-strong)]"
-                        >
-                          {locale === 'he'
-                            ? 'אישור: מחיקת הכנס וכל נתוניו'
-                            : 'Confirm: delete conference & all its data'}
-                        </button>
-                      </form>
-                    </details>
-                  </div>
-                </details>
-              <Link
-                href={`/studio/experiences/${event.slug}`}
-                className="block"
-              >
-                <span className="relative block h-28 overflow-hidden rounded-t-xl bg-[var(--c-deep)]">
-                  {poster ? (
-                    <Image
-                      src={poster.image}
-                      alt=""
-                      fill
-                      sizes="(max-width: 640px) 100vw, 33vw"
-                      className="object-cover opacity-80 transition-opacity group-hover:opacity-100"
-                    />
-                  ) : (
-                    <span
-                      aria-hidden="true"
-                      className="cine-hero-glow absolute inset-0 opacity-40"
-                    />
-                  )}
-                  <span
-                    className={`absolute start-2.5 top-2.5 rounded-full border px-2.5 py-0.5 text-[10px] tracking-widest backdrop-blur-sm ${
-                      event.launched
-                        ? 'border-[var(--c-live)]/50 bg-[rgba(7,19,36,0.6)] text-[var(--c-live)]'
-                        : 'border-[var(--c-bronze)]/50 bg-[rgba(7,19,36,0.6)] text-[var(--c-bronze)]'
-                    }`}
-                  >
-                    {event.launched
-                      ? CONSOLE_UI.statusLive[locale]
-                      : CONSOLE_UI.statusDraft[locale]}
-                  </span>
-                </span>
-                <span className="block p-4">
-                  <span className="block font-display text-lg">{event.title}</span>
-                  <span className="block text-xs text-[var(--c-text-soft)]">
-                    {poster
-                      ? `${poster.dateLabel} · ${poster.location}`
-                      : CONSOLE_UI.statusDraft[locale]}
-                  </span>
-                </span>
-              </Link>
-              </div>
-            );
-          })}
-        </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
+        {may('experiences:manage') ? (
+          <p className="text-xs text-[var(--c-text-faint)]">
+            <Link href="/studio/homepage" className="underline underline-offset-4 hover:text-[var(--c-bronze)]">{UI.platformHome[locale]}</Link>
+            {' · '}
+            {UI.platformHomeSub[locale]}
+          </p>
+        ) : null}
       </div>
     </ConsoleShell>
   );
 };
 
-/*
- * The response depends on who is asking, so it is rendered per request
- * and never prerendered or shared. Declared rather than left to Next to
- * infer from a cookie read: an inferred guard disappears the moment a
- * refactor moves that read behind a helper, and the failure would be a
- * privacy leak that nothing announces.
- */
 export const dynamic = 'force-dynamic';
 
 export default ConsolePage;

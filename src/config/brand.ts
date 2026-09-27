@@ -1,4 +1,5 @@
 import type { Locale } from './locales';
+import { withBasePath } from './site';
 
 /*
  * The platform's brand mark as it appears in public chrome. A single
@@ -61,8 +62,8 @@ export const SUPPORT_EMAIL =
  */
 export const BRAND_LOGO = {
   /* Emblem and wordmark side by side: navigation bars and mail headers. */
-  onLight: '/brand/netaim-lockup.png',
-  onDark: '/brand/netaim-lockup-light.png',
+  onLight: withBasePath('/brand/netaim-lockup.png'),
+  onDark: withBasePath('/brand/netaim-lockup-light.png'),
   /* The emblem alone, square: avatars, favicons, tight corners. */
-  mark: '/brand/netaim-mark.png',
+  mark: withBasePath('/brand/netaim-mark.png'),
 } as const;

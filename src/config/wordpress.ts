@@ -1,4 +1,5 @@
 import type { Locale } from './locales';
+import { withBasePath } from './site';
 
 /*
  * Every address on the organisation's WordPress site that this platform
@@ -36,6 +37,29 @@ const PATHS = {
     en: '/events/',
     he: '/he/כנסים/',
   },
+  /*
+   * The conference's public pages, one level under the listing: the
+   * speakers, the program, and the practical information. WordPress
+   * renders them from the marketing API; the Studio links to them so an
+   * editor can see what a section became.
+   */
+  conferenceSpeakers: {
+    en: '/events/speakers/',
+    he: '/he/כנסים/דוברים/',
+  },
+  conferenceProgram: {
+    en: '/events/program/',
+    he: '/he/כנסים/תוכנית/',
+  },
+  conferenceInfo: {
+    en: '/events/info/',
+    he: '/he/כנסים/מידע/',
+  },
+  /* The organisation's contact page; the platform has none of its own. */
+  contact: {
+    en: '/contact-us/',
+    he: '/he/צרו-קשר/',
+  },
 } as const satisfies Record<string, Record<Locale, string>>;
 
 export type WordPressRoute = keyof typeof PATHS;
@@ -63,12 +87,20 @@ const encodePaths = <T extends Record<string, Record<Locale, string>>>(paths: T)
 export const WORDPRESS_ROUTES: Record<WordPressRoute, Record<Locale, string>> =
   encodePaths(PATHS);
 
-/** The address of one WordPress page, in one language. */
+/**
+ * The address of one WordPress page, in one language.
+ *
+ * The two systems share one base: at the root of the live domain, and
+ * under /netaim in the local rehearsal of it. So the site's own base
+ * path is WordPress's too, and is put in front here — '' deployed.
+ */
 export const wordpressHref = (route: WordPressRoute, locale: Locale): string =>
-  WORDPRESS_ROUTES[route][locale];
+  withBasePath(WORDPRESS_ROUTES[route][locale]);
 
 const EVERY_WORDPRESS_HREF: ReadonlySet<string> = new Set(
-  Object.values(WORDPRESS_ROUTES).flatMap((byLocale) => Object.values(byLocale)),
+  Object.values(WORDPRESS_ROUTES).flatMap((byLocale) =>
+    Object.values(byLocale).flatMap((path) => [path, withBasePath(path)]),
+  ),
 );
 
 /*

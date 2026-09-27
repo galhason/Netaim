@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { Locale } from '@/config/locales';
 import {
@@ -100,19 +101,19 @@ const SignInPreview = ({ locale, enterHref, signInHref }: Props) => {
           {t(locale, 'signInBody')}
         </p>
         <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <a
+          <Link
             href={enterHref}
             className="inline-flex min-h-12 items-center gap-2 rounded-[var(--x-r-pill)] bg-[var(--x-primary)] px-7 text-[15px] font-semibold text-[var(--x-primary-ink)] shadow-[0_10px_30px_rgb(42 144 200 / 0.28)] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-[var(--x-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] motion-reduce:transition-none"
           >
             {t(locale, 'signInCta')}
             <IconArrow className="size-4 rtl:rotate-180" />
-          </a>
-          <a
+          </Link>
+          <Link
             href={signInHref}
             className="inline-flex min-h-12 items-center rounded-[var(--x-r-pill)] px-4 text-[14px] font-medium text-[var(--x-primary)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]"
           >
             {t(locale, 'signInAlready')}
-          </a>
+          </Link>
         </div>
       </div>
 

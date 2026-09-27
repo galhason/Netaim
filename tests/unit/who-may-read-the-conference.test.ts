@@ -72,8 +72,6 @@ describe('the conference is read by people who joined it', () => {
     `${FRONTEND}/(site)/privacy/page.tsx`,
     `${FRONTEND}/(site)/terms/page.tsx`,
     `${FRONTEND}/(site)/accessibility/page.tsx`,
-    `${FRONTEND}/(site)/contact/page.tsx`,
-    `${EXPERIENCE}/info/page.tsx`,
     `${FRONTEND}/(site)/layout.tsx`,
     `${EXPERIENCE}/layout.tsx`,
   ];
@@ -107,10 +105,7 @@ describe('the navigation bar carries the conference, not the contact form', () =
    * only thing that leaves the application with the address intact.
    */
   it('leaves the platform with a plain anchor, never next/link', () => {
-    const navs = [
-      'src/features/cinematic/components/cinematic-nav.tsx',
-      'src/features/conference/components/experience-nav.tsx',
-    ];
+    const navs = ['src/features/conference/components/conference-bar.tsx'];
     for (const file of navs) {
       const flat = read(file).replace(/\s+/g, ' ');
       expect(flat, file).toContain('<a href={home}');
@@ -121,7 +116,7 @@ describe('the navigation bar carries the conference, not the contact form', () =
 
   it('names the conference in every conference link', () => {
     const links = siteNavLinks('he', 'any-conference');
-    for (const key of ['program', 'speakers', 'info']) {
+    for (const key of ['program', 'speakers']) {
       const link = links.find((entry) => entry.key === key);
       expect(link?.href).toBe(`/he/events/any-conference/${key}`);
     }
@@ -137,30 +132,26 @@ describe('the navigation bar carries the conference, not the contact form', () =
   });
 
   it('keeps every label on one line', () => {
-    const nav = read('src/features/conference/components/experience-nav.tsx');
+    const css = read('src/features/conference/styles/conference-bar.css');
     /* Two Hebrew words on two lines is what a wrapped nav link looks like. */
-    expect(nav).toContain('whitespace-nowrap');
+    expect(css).toContain('white-space: nowrap');
   });
 
-  it('offers the personal day from both chromes', () => {
-    for (const component of [
-      'src/features/conference/components/experience-nav.tsx',
-      'src/features/cinematic/components/cinematic-nav.tsx',
-    ]) {
-      const source = read(component);
-      expect(source, component).toContain('scheduleHref');
-      expect(source, component).toContain('My schedule');
-    }
+  it('offers the personal day from the one bar', () => {
+    const source = read('src/features/conference/components/conference-bar.tsx');
+    expect(source).toContain('/my-activities');
+    expect(source).toContain('My Schedule');
   });
 
-  it('draws the personal day only for someone who has one', () => {
+  it('draws the viewer only from render context on the landing', () => {
     /*
-     * On the landing the nav is a cached scene, so the link rides on the
-     * content while the decision to draw it reads the viewer — which is
+     * On the landing the bar is a cached scene, so the conference rides
+     * on the content while who is looking reads the viewer — which is
      * render context and never cached.
      */
     const scenes = read('src/scenes/conference-scenes.tsx');
-    expect(scenes).toContain('viewer && content.scheduleHref');
+    expect(scenes).toContain('slug={content.slug ?? null}');
+    expect(scenes).toMatch(/viewer\s*\?\s*\{ name: viewer\.name/);
   });
 });
 

@@ -1,7 +1,7 @@
 import { BRAND_NAME } from '@/config/brand';
+import { ConferenceBar } from '@/features/conference';
 import {
   CONFERENCE_SCENE_TYPES,
-  CinematicNav,
   ConferenceActIntroScene,
   ConferenceArrivalScene,
   ConferenceClosingScene,
@@ -58,6 +58,10 @@ const ATMOS = {
 
 interface ConferenceNavContent {
   brand: string;
+  /* The conference the bar belongs to; null on the site's front. */
+  slug?: string | null;
+  /* The logo for the bar's light ground; `brandLogo` is the dark chrome's. */
+  brandLogoLight?: string;
   /*
    * The logo travels on the scene's content, like the name it stands
    * beside: the renderer must stay synchronous, so it cannot go and
@@ -119,23 +123,21 @@ const NavRenderer = ({
   locale,
   viewer,
 }: SceneComponentProps<ConferenceNavContent>) => (
-  <CinematicNav
+  /*
+   * The conference bar — the same bar the organisation's site and every
+   * platform page wear. The viewer (name, picture) is render context and
+   * never on the cached content; the conference is.
+   */
+  <ConferenceBar
     locale={locale}
-    links={content.links}
-    registerHref={content.registerHref}
-    /*
-     * The viewer's own destination wins. `content.meHref` is the
-     * descriptor's guess for someone it cannot see, and is what a
-     * signed-out visitor follows to sign in.
-     */
-    meHref={viewer?.href ?? content.meHref}
+    slug={content.slug ?? null}
+    viewer={
+      viewer
+        ? { name: viewer.name, ...(viewer.photoUrl ? { photoUrl: viewer.photoUrl } : {}) }
+        : null
+    }
     brand={content.brand}
-    brandLogo={content.brandLogo}
-    {...(viewer && content.scheduleHref
-      ? { scheduleHref: content.scheduleHref }
-      : {})}
-    sections={content.sections}
-    viewer={viewer ?? null}
+    brandLogo={content.brandLogoLight ?? content.brandLogo}
   />
 );
 

@@ -2,7 +2,6 @@ import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
-import { wordpressHref } from '@/config/wordpress';
 import {
   ACCOUNT_UI,
   JOINED_CONFERENCE_FANOUT,
@@ -10,9 +9,8 @@ import {
   getMyAccount,
 } from '@/features/account';
 import { LOUNGE_UI } from '@/features/attendee';
-import { CinematicNav,
-  siteNavLinks,
-} from '@/features/cinematic';
+import { ConferenceBar } from '@/features/conference';
+import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
 import {
   getActiveConferenceSlug,
   getEventExperience,
@@ -128,6 +126,7 @@ const MessagesPage = async ({ params, searchParams }: MessagesPageProps) => {
    */
   const activeSlug = await getActiveConferenceSlug(locale).catch(() => null);
   const siteLogo = await getSiteBrand();
+  const barViewer = await conferenceBarViewer();
   const slugs = [
     ...new Set([
       ...(activeSlug ? [activeSlug] : []),
@@ -367,30 +366,18 @@ const MessagesPage = async ({ params, searchParams }: MessagesPageProps) => {
 
   return (
     <div className="experience min-h-dvh overflow-x-clip bg-[var(--x-bg)] text-[var(--x-ink)]">
-      {/*
-        * The site's own navigation — the same bar every page wears, so
-        * the bell that led here is still in reach. It floats fixed over
-        * a light ground here, hence the solid surface from the start.
-        */}
-      <div className="cinematic bg-transparent [&::after]:content-none [&>header]:border-b [&>header]:border-white/10 [&>header]:bg-[var(--nt-dark-deep)]/95 [&>header]:backdrop-blur-md">
-        <CinematicNav
-          locale={locale}
-          links={siteNavLinks(locale, activeSlug)}
-          registerHref={wordpressHref('home', locale)}
-          meHref={`/${locale}/me`}
-          brand={brandFor(locale)}
-          brandLogo={siteLogo.onDark}
-          {...(activeSlug
-            ? { scheduleHref: `/${locale}/events/${activeSlug}/my-activities` }
-            : {})}
-          viewer={{ name: account.name || account.email }}
-          immediate
-        />
-      </div>
+      {/* The site's one navigation — the conference bar every page wears. */}
+      <ConferenceBar
+        locale={locale}
+        slug={activeSlug}
+        viewer={barViewer}
+        brand={brandFor(locale)}
+        brandLogo={siteLogo.onLight}
+      />
 
       <main
         id="main-content"
-        className="relative mx-auto max-w-6xl px-5 pb-20 pt-[6.5rem] md:px-8 md:pt-[7.5rem]"
+        className="relative mx-auto max-w-6xl px-5 pb-20 pt-8 md:px-8 md:pt-10"
       >
         <Leaf />
         <header className="relative flex items-start gap-4 md:gap-5">

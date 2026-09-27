@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '../features/conference/styles/conference-bar.css';
 
 /*
  * ---------------------------------------------------------------
@@ -155,11 +156,11 @@
   --color-sidebar-muted: var(--nt-on-dark-faint);
 
   /*
-   * One typeface. `font-display` stays as a name — hundreds of
-   * components ask for it — but it now resolves to the same Heebo as
-   * everything else, so a heading and its paragraph are one voice.
+   * Two faces, the site's: the rounded display face for headings, Open
+   * Sans for everything else. The display face has no Hebrew, so a
+   * Hebrew heading is Open Sans — the site's own fallback for it.
    */
-  --font-display: var(--font-body);
+  --font-display: var(--font-display-face), var(--font-body);
 
   --space-unit: 0.25rem;
 
@@ -301,7 +302,7 @@ main [id] {
   --color-border-strong: var(--nt-on-dark-line-strong);
   --color-focus-ring: var(--nt-accent-on-dark-soft);
   --radius-lg: var(--nt-r-xl);
-  --font-display: var(--font-body);
+  --font-display: var(--font-display-face), var(--font-body);
   /*
    * Depth replaces borders here. One floating-shadow scale (soft close
    * contact + deep ambient throw) carries every card that lifts off the

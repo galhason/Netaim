@@ -110,6 +110,7 @@ export const OnboardingFrame = ({
   locale,
   switchHref,
   brandLogo,
+  bar,
   children,
 }: {
   locale: Locale;
@@ -120,14 +121,16 @@ export const OnboardingFrame = ({
    * not resolved it — and the sprout and the name stand as before.
    */
   brandLogo?: string;
+  /*
+   * The conference bar, when the page wears it: then it is the header,
+   * and the reduced one below is not drawn. Given by the page, which
+   * knows the conference and who is looking.
+   */
+  bar?: ReactNode;
   children: ReactNode;
 }) => (
   <div className="experience flex min-h-dvh flex-col bg-[var(--x-bg)] text-[var(--x-ink)]">
-    {/*
-      * A person signing in or registering has one thing to do. The
-      * full site navigation is a set of exits; this header keeps one —
-      * home — and the name of the place they are entering.
-      */}
+    {bar ?? (
     <header className="border-b border-[var(--x-line)] bg-[var(--x-surface)]/80 backdrop-blur-sm">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 md:px-8">
         <Link
@@ -195,6 +198,7 @@ export const OnboardingFrame = ({
         </div>
       </div>
     </header>
+    )}
     <div className="flex-1">{children}</div>
     <ConferenceFooter
       locale={locale}
@@ -210,6 +214,7 @@ export const OnboardingLayout = ({
   locale,
   switchHref,
   brandLogo,
+  bar,
   eyebrow,
   title,
   intro,
@@ -219,6 +224,7 @@ export const OnboardingLayout = ({
   locale: Locale;
   switchHref: string;
   brandLogo?: string;
+  bar?: ReactNode;
   eyebrow: string;
   title: string;
   intro: string;
@@ -229,6 +235,7 @@ export const OnboardingLayout = ({
     locale={locale}
     switchHref={switchHref}
     brandLogo={brandLogo}
+    bar={bar}
   >
     <main
       id="main-content"

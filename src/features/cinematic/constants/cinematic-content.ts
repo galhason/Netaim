@@ -1,6 +1,7 @@
 import type { Locale } from '@/config/locales';
 import { wordpressHref } from '@/config/wordpress';
 import type { ConferenceExperience } from '../types/cinematic';
+import { withBasePath } from '@/config/site';
 
 export const CONFERENCE_SCENE_TYPES = {
   nav: 'conference-nav',
@@ -76,7 +77,6 @@ const SITE_NAV_LABELS: Record<string, Record<Locale, string>> = {
   home: { he: 'בית', en: 'Home' },
   program: { he: 'תוכנית', en: 'Program' },
   speakers: { he: 'דוברים', en: 'Speakers' },
-  info: { he: 'מידע למשתתפים', en: 'Information' },
   networking: { he: 'Networking', en: 'Networking' },
 };
 
@@ -94,7 +94,7 @@ const SITE_NAV_LABELS: Record<string, Record<Locale, string>> = {
  * platform for the organisation's own site; Networking belongs to the
  * person rather than to any conference, so it stays platform-level.
  *
- * Without a conference the three conference entries are left out rather
+ * Without a conference the two conference entries are left out rather
  * than pointed somewhere broken. That is the honest state on the site
  * pages when nothing is published yet.
  *
@@ -112,7 +112,6 @@ export const siteNavLinks = (
     ? [
         { key: 'program', href: `/${locale}/events/${slug}/program`, label: label('program') },
         { key: 'speakers', href: `/${locale}/events/${slug}/speakers`, label: label('speakers') },
-        { key: 'info', href: `/${locale}/events/${slug}/info`, label: label('info') },
       ]
     : [];
   return [
@@ -198,7 +197,7 @@ export const CINEMATIC_UI = {
  * name is a misrepresentation, and every portrait surface already
  * renders a calm gradient when the photograph is absent.
  */
-const PLACEHOLDER_SCENE = '/placeholder/scene.jpg';
+const PLACEHOLDER_SCENE = withBasePath('/placeholder/scene.jpg');
 
 
 

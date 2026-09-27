@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
@@ -16,10 +17,9 @@ import { requireParticipant } from '@/features/registration';
 
 interface SpeakerProfilePageProps {
   /*
-   * `slug` is in the address and deliberately unread: a speaker is a
-   * platform record, resolved by id, and the same person may appear at
-   * more than one conference. The segment is here so the page lives
-   * inside the conference it was reached from, not beside it.
+   * A speaker is a platform record, resolved by id, and the same person
+   * may appear at more than one conference. `slug` names the conference
+   * the page was reached from, so its links lead back into that one.
    */
   params: Promise<{ locale: string; slug: string; id: string }>;
 }
@@ -39,7 +39,7 @@ const TYPE_LABELS: Record<string, Record<Locale, string>> = {
  * No links are authored by hand; the profile knows its sessions.
  */
 const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
-  const { locale, id } = await params;
+  const { locale, slug, id } = await params;
   const lang = (isSupportedLocale(locale) ? locale : 'he') as Locale;
   setRequestLocale(lang);
   await requireParticipant(lang);
@@ -72,12 +72,12 @@ const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
           }}
         />
         <div className="relative mx-auto max-w-4xl px-6 pt-24 md:px-10 md:pt-28">
-          <a
-            href={`/${lang}/speakers`}
+          <Link
+            href={`/${lang}/events/${slug}/speakers`}
             className="text-sm font-medium text-white/80 transition-colors hover:text-white"
           >
             {he ? '→ כל הדוברים' : '← All speakers'}
-          </a>
+          </Link>
         </div>
       </div>
 
@@ -176,8 +176,8 @@ const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
                   <span className="relative flex justify-center pt-[22px]">
                     <span className="size-2.5 rounded-full bg-[var(--x-primary)] ring-4 ring-[var(--x-bg)]" />
                   </span>
-                  <a
-                    href={`/${lang}/program`}
+                  <Link
+                    href={`/${lang}/events/${slug}/program`}
                     className={`${surface} group flex items-center gap-4 border border-[var(--x-line)] p-4 transition-all hover:-translate-y-0.5 hover:border-[var(--x-primary)]/25 hover:shadow-[var(--x-shadow-lift)]`}
                   >
                     <span className="min-w-0 flex-1">
@@ -202,7 +202,7 @@ const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
                     >
                       {he ? '←' : '→'}
                     </span>
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ol>
@@ -210,7 +210,7 @@ const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
         </section>
 
         <div className="mt-8">
-          <GhostLink href={`/${lang}/program`}>
+          <GhostLink href={`/${lang}/events/${slug}/program`}>
             {he ? 'לתוכנית הכנס המלאה' : 'View the full program'}
           </GhostLink>
         </div>

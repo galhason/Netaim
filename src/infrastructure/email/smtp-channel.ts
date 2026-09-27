@@ -8,6 +8,7 @@ import {
 import { createLogger } from '@/shared';
 import { BRAND_LOGO } from '@/config/brand';
 import { payloadSiteLogos } from '../payload/payload-site';
+import { SITE_ORIGIN, withBasePath } from '@/config/site';
 
 const log = createLogger('smtp');
 
@@ -32,12 +33,13 @@ const mailLogoUrl = async (): Promise<string | undefined> => {
   if (logoHeld && now - logoHeld.at < LOGO_TTL_MS) {
     return logoHeld.url;
   }
-  const origin = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/+$/, '');
+  const origin = SITE_ORIGIN;
   let url: string | undefined;
   if (origin) {
     const stored = await payloadSiteLogos().catch(() => null);
     const path = stored?.onDark ?? BRAND_LOGO.onDark;
-    url = path.startsWith('http') ? path : `${origin}${path}`;
+    /* Both a shipped and an uploaded logo already carry the base path. */
+    url = path.startsWith('http') ? path : `${origin}${withBasePath(path)}`;
   }
   logoHeld = { url, at: now };
   return url;

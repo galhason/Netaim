@@ -18,7 +18,9 @@ import type {
 export const listConferenceSpeakers = (
   slug: string,
   locale: Locale,
-): Promise<ResolvedSpeaker[]> => speakerRepository.listByEvent(slug, locale);
+  options?: { fallback?: boolean },
+): Promise<ResolvedSpeaker[]> =>
+  speakerRepository.listByEvent(slug, locale, options);
 
 export const getSpeaker = (
   id: string,
@@ -46,6 +48,9 @@ export const updateSpeaker = (
   locale: Locale,
 ): Promise<ResolvedSpeaker | null> =>
   speakerRepository.update(id, input, locale);
+
+export const removeSpeaker = (id: string): Promise<boolean> =>
+  speakerRepository.remove(id);
 
 export const listSpeakerCandidates = (
   locale: Locale,

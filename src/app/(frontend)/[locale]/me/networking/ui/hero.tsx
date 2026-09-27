@@ -3,6 +3,7 @@ import type { Locale } from '@/config/locales';
 import type { MyMeeting } from '@/features/networking';
 import type { FellowParticipant } from '@/infrastructure';
 import { Avatar, clock } from './shared';
+import { withBasePath } from '@/config/site';
 
 /*
  * The entrance to the conference community.
@@ -110,8 +111,8 @@ const NetworkingHero = ({
   myself,
   nextMeeting,
 }: HeroProps) => (
-  /* pt clears the site's fixed 88px navigation bar. */
-  <section className="px-3 pt-[6.25rem] md:px-6 md:pt-[7rem]">
+  /* The conference bar sits in the flow above; only breathing room here. */
+  <section className="px-3 pt-6 md:px-6 md:pt-8">
     <div className="relative mx-auto max-w-6xl rounded-[1.75rem] bg-[var(--n-deep)] md:rounded-[2rem]">
       {/*
         * The moving backdrop — the conference itself, behind the words.
@@ -139,8 +140,8 @@ const NetworkingHero = ({
           preload="auto"
           className="size-full object-cover"
         >
-          <source src="/videos/networking-hero.mp4" type="video/mp4" />
-          <source src="/videos/networking-hero.webm" type="video/webm" />
+          <source src={withBasePath('/videos/networking-hero.mp4')} type="video/mp4" />
+          <source src={withBasePath('/videos/networking-hero.webm')} type="video/webm" />
         </video>
         <span className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(11,27,51,0.72),rgba(11,27,51,0.6)_45%,rgba(11,27,51,0.82))]" />
       </div>

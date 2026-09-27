@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { SITE_ORIGIN, withBasePath } from '@/config/site';
 
 /*
  * Where this site actually lives, as far as the outside world knows.
@@ -18,14 +19,14 @@ import type { NextRequest } from 'next/server';
  * So the deployed address wins when it is configured, and the request's
  * own origin is the fallback for local development, where they agree.
  */
-export const siteOrigin = (request: NextRequest): string => {
-  const configured = process.env.NEXT_PUBLIC_SERVER_URL?.trim();
-  if (configured) {
-    try {
-      return new URL(configured).origin;
-    } catch {
-      /* A malformed value is no reason to strand the visitor. */
-    }
-  }
-  return request.nextUrl.origin;
-};
+export const siteOrigin = (request: NextRequest): string =>
+  SITE_ORIGIN || request.nextUrl.origin;
+
+/*
+ * The absolute address of one of this site's own paths, for a Location
+ * header. The base path is part of the address the browser must be sent
+ * to — `new URL('/he/me', origin)` would silently drop it — so it is
+ * joined here rather than resolved.
+ */
+export const siteRedirect = (request: NextRequest, path: string): string =>
+  `${siteOrigin(request)}${withBasePath(path)}`;

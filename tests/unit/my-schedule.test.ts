@@ -135,8 +135,17 @@ describe('the page stays a reading of the programme', () => {
   const page = read(`${DIR}/page.tsx`);
   const actions = read(`${DIR}/actions.ts`);
 
+  /*
+   * The guarded property is that this page reads the Programme's own model
+   * for the same conference and language rather than assembling one of its
+   * own. The call now carries two more arguments -- the moment and the
+   * conference's timezone -- so the literal is matched up to the language
+   * and no further; a different builder, or a different conference, still
+   * fails here.
+   */
   it('builds the same model the Program builds', () => {
-    expect(page).toContain('buildProgramModel(slug, lang)');
+    expect(page).toContain('buildProgramModel(slug, lang');
+    expect(page).not.toContain('buildProgramModel(slug, locale');
   });
 
   it('joins and leaves through the Program’s own engine', () => {

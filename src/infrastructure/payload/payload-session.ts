@@ -39,6 +39,7 @@ interface SessionRow {
   registrationClosesAt?: string | null;
   allowCancellation?: boolean | null;
   cancellationDeadline?: string | null;
+  archivedAt?: string | null;
   organization?: number | string | { id: number | string };
   event?: number | string | { id: number | string; slug?: string | null };
 }
@@ -96,6 +97,7 @@ const toSession = (row: SessionRow): SessionSummary => ({
       ? undefined
       : Boolean(row.allowCancellation),
   cancellationDeadline: row.cancellationDeadline ?? undefined,
+  archivedAt: row.archivedAt ?? undefined,
 });
 
 const toRegistration = (row: SessionRegRow): SessionRegistrationSummary => ({
@@ -136,7 +138,7 @@ const countSession = async (
 };
 
 export const payloadSessionRepository: SessionRepository = {
-  listByEvent: async (slug, locale) => {
+  listByEvent: async (slug, locale, options) => {
     const payload = await getSystemPayload();
     const eventId = await eventIdBySlug(payload, slug);
     if (eventId === null) {
@@ -144,7 +146,9 @@ export const payloadSessionRepository: SessionRepository = {
     }
     const result = await payload.find({
       collection: 'sessions',
-      where: { event: { equals: eventId } },
+      where: options?.includeArchived
+        ? { event: { equals: eventId } }
+        : { and: [{ event: { equals: eventId } }, { archivedAt: { exists: false } }] },
       locale,
       depth: 2,
       sort: 'startsAt',
@@ -354,6 +358,24 @@ export const payloadSessionRepository: SessionRepository = {
       })
       .catch(() => null);
     return deleted !== null;
+  },
+
+  setArchived: async (sessionId, archived) => {
+    const context = await actorContext();
+    if (!context) {
+      throw new Error('Sign-in required');
+    }
+    const { payload, user } = context;
+    const updated = await payload
+      .update({
+        collection: 'sessions',
+        id: sessionId,
+        data: { archivedAt: archived ? new Date().toISOString() : null },
+        overrideAccess: false,
+        user,
+      })
+      .catch(() => null);
+    return updated !== null;
   },
 };
 

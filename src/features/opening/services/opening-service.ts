@@ -13,6 +13,7 @@ import type {
   OpeningContent,
   PortalPoster,
 } from '../types/opening';
+import { withBasePath } from '@/config/site';
 
 const startValue = (event: PortalEvent): number => {
   const parsed = Date.parse(event.startsAt ?? '');
@@ -20,7 +21,7 @@ const startValue = (event: PortalEvent): number => {
 };
 
 /* One local neutral frame until the production stills arrive. */
-const PLACEHOLDER_SCENE = '/placeholder/scene.jpg';
+const PLACEHOLDER_SCENE = withBasePath('/placeholder/scene.jpg');
 
 const posterImage = (event: PortalEvent): string =>
   event.posterUrl ?? PLACEHOLDER_SCENE;

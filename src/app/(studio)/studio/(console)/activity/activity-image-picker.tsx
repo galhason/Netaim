@@ -23,8 +23,8 @@ const T = (locale: Locale) => ({
   title: locale === 'he' ? 'תמונת הפעילות' : 'Activity cover',
   lead:
     locale === 'he'
-      ? 'התמונה שתופיע בכרטיס בעמוד הבית ובתוכנית. אפשר להעלות תמונה, לבחור אחת מהספרייה, או להשאיר ריק.'
-      : 'The image on the landing-page card and in the programme. Upload one, pick one from the library, or leave it empty.',
+      ? 'התמונה שתופיע בכרטיס בעמוד הבית ובתוכנית, וגם בסקשן "טעימה מהכנס" באתר — כתמונת היום של הפעילות. אפשר להעלות תמונה, לבחור אחת מהספרייה, או להשאיר ריק.'
+      : 'The image on the landing-page card and in the programme, and on the site\'s "A taste of the conference" as the picture of its day. Upload one, pick one from the library, or leave it empty.',
   auto:
     locale === 'he'
       ? 'ללא תמונה — הכרטיס יקבל כריכה מעוצבת אוטומטית, כמו בתצוגה כאן.'

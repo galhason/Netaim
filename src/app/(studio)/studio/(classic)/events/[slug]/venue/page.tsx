@@ -24,7 +24,7 @@ interface VenuePageProps {
 const VenuePage = async ({ params }: VenuePageProps) => {
   const { slug } = await params;
   redirect(
-    `/studio/experiences/${encodeURIComponent(slug)}?scene=conference-venue`,
+    `/studio/conference/${encodeURIComponent(slug)}/content`,
   );
 };
 

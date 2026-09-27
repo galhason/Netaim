@@ -1,6 +1,11 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
-import { isSupportedLocale } from '@/config/locales';
+import { brandFor } from '@/config/brand';
+import { isSupportedLocale, type Locale } from '@/config/locales';
+import { ConferenceBar } from '@/features/conference';
+import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
+import { getSiteBrand } from '@/features/events';
 import {
   LoungeCard,
   LoungeNote,
@@ -95,6 +100,16 @@ const WorkshopsPage = async ({ params, searchParams }: WorkshopsPageProps) => {
   const { error } = await searchParams;
 
   const participant = await currentParticipant().catch(() => null);
+  const [barViewer, siteLogo] = await Promise.all([conferenceBarViewer(), getSiteBrand()]);
+  const bar = (
+    <ConferenceBar
+      locale={locale as Locale}
+      slug={slug}
+      viewer={barViewer}
+      brand={brandFor(locale as Locale)}
+      brandLogo={siteLogo.onLight}
+    />
+  );
   const [sessions, selections] = await Promise.all([
     listAgenda(slug, locale).catch(() => []),
     participant ? myWorkshops(slug) : Promise.resolve([]),
@@ -132,6 +147,7 @@ const WorkshopsPage = async ({ params, searchParams }: WorkshopsPageProps) => {
 
   return (
     <LoungeShell
+      bar={bar}
       backHref={`/${locale}/events/${slug}/me`}
       backLabel={COPY.backToLounge[locale]}
     >
@@ -142,13 +158,13 @@ const WorkshopsPage = async ({ params, searchParams }: WorkshopsPageProps) => {
         <p className="mt-3 text-[15px] text-[var(--l-soft)]">
           {COPY.intro[locale]}
         </p>
-        <a
+        <Link
           href={`/${locale}/events/${slug}/my-activities`}
           className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--l-bronze)] transition-colors hover:text-[var(--l-ink)]"
         >
           {COPY.myActivities[locale]}
           <span aria-hidden="true">←</span>
-        </a>
+        </Link>
       </div>
 
       {error ? (

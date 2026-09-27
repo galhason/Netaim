@@ -1,4 +1,12 @@
-export { EVENT_PHASES, isEventPhase } from './lifecycle/phases';
+export { EVENT_PHASES, isEventPhase, phaseIsOffAir } from './lifecycle/phases';
+export {
+  SESSION_SELECTION_LIMIT,
+  eligibleSessions,
+  marketingSessions,
+  dayPreviewSessions,
+  PROGRAM_PREVIEW_LIMIT,
+} from './program/session-selection';
+export type { SelectableSession } from './program/session-selection';
 export type { EventPhase } from './lifecycle/phases';
 export {
   availableTransitions,
@@ -24,3 +32,13 @@ export { evaluateReadiness } from './readiness/readiness';
 export type { ReadinessInput } from './readiness/readiness';
 export { computeEventHealth } from './health/event-health';
 export type { EventHealth, EventHealthInput } from './health/event-health';
+export {
+  PUBLISHED_STATUS,
+  DRAFT_STATUS,
+  publicationTransition,
+  conferencesToDemote,
+} from './publication/single-published';
+export type {
+  PublicationTransition,
+  PublicationChange,
+} from './publication/single-published';

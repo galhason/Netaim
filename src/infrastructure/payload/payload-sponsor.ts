@@ -4,6 +4,7 @@ import type {
   SponsorRepository,
   SponsorSummary,
   SponsorTier,
+  UpdateSponsorInput,
 } from '@/features/sponsors/types/sponsor';
 import { actorContext, getSystemPayload } from './payload-context';
 
@@ -27,10 +28,23 @@ const logoUrlOf = (value: unknown): string | undefined => {
   return undefined;
 };
 
+const logoIdOf = (value: unknown): string | undefined => {
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+  if (typeof value === 'object' && 'id' in value) {
+    return String((value as { id: number | string }).id);
+  }
+  return typeof value === 'number' || typeof value === 'string'
+    ? String(value)
+    : undefined;
+};
+
 const toSponsor = (row: SponsorRow): SponsorSummary => ({
   id: String(row.id),
   name: row.name ?? '',
   tier: row.tier ?? 'partner',
+  logoId: logoIdOf(row.logo),
   logoUrl: logoUrlOf(row.logo),
   website: row.website ?? undefined,
   description: row.description ?? undefined,
@@ -62,8 +76,9 @@ export const payloadSponsorRepository: SponsorRepository = {
       .map(toSponsor)
       .sort(
         (a, b) =>
+          a.order - b.order ||
           SPONSOR_TIER_RANK[a.tier] - SPONSOR_TIER_RANK[b.tier] ||
-          a.order - b.order,
+          a.name.localeCompare(b.name),
       );
   },
 
@@ -100,10 +115,56 @@ export const payloadSponsorRepository: SponsorRepository = {
         website: input.website,
         description: input.description,
         order: input.order ?? 0,
+        ...(input.logoId ? { logo: Number(input.logoId) } : {}),
       },
       overrideAccess: false,
       user,
     });
     return toSponsor(doc as unknown as SponsorRow);
+  },
+
+  update: async (id, input) => {
+    const context = await actorContext();
+    if (!context) {
+      throw new Error('Sign-in required');
+    }
+    const { payload, user } = context;
+    const data: Record<string, unknown> = {};
+    const copy = (key: keyof UpdateSponsorInput) => {
+      if (input[key] !== undefined) {
+        data[key] = input[key];
+      }
+    };
+    copy('name');
+    copy('tier');
+    copy('website');
+    copy('description');
+    copy('order');
+    if (input.logoId !== undefined) {
+      data.logo = input.logoId === '' ? null : Number(input.logoId);
+    }
+    const updated = await payload
+      .update({
+        collection: 'sponsors',
+        id,
+        data,
+        depth: 1,
+        overrideAccess: false,
+        user,
+      })
+      .catch(() => null);
+    return updated ? toSponsor(updated as unknown as SponsorRow) : null;
+  },
+
+  remove: async (id) => {
+    const context = await actorContext();
+    if (!context) {
+      throw new Error('Sign-in required');
+    }
+    const { payload, user } = context;
+    const deleted = await payload
+      .delete({ collection: 'sponsors', id, overrideAccess: false, user })
+      .catch(() => null);
+    return deleted !== null;
   },
 };

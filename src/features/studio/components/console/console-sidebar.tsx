@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { BRAND_NAME } from '@/config/brand';
 import type { Locale } from '@/config/locales';
+import type { Capability } from '@/permission-engine';
 import { BrandMark } from '@/shared';
 import { CONSOLE_UI } from '../../constants/console';
 
@@ -25,6 +26,12 @@ interface NavEntry {
   soon?: boolean;
   /* A number worth interrupting for — shown as a badge beside the link. */
   badge?: number;
+  /*
+   * What the screen behind the link asks for. A link a person cannot
+   * follow is not shown: the rail is the honest map of what their role
+   * opens. Absent means everyone with a Studio role.
+   */
+  needs?: Capability | Capability[];
 }
 
 const buildGroups = (
@@ -35,37 +42,36 @@ const buildGroups = (
     title: CONSOLE_UI.groupMain[locale],
     items: [
       { href: '/studio', label: CONSOLE_UI.experiences[locale] },
-      { href: '/studio/media', label: CONSOLE_UI.media[locale] },
-      { href: '/studio/people', label: CONSOLE_UI.peopleTitle[locale] },
-      { href: '/studio/participants', label: CONSOLE_UI.participantsTitle[locale] },
-      { href: '/studio/logistics', label: CONSOLE_UI.logisticsTitle[locale] },
-      { href: '/studio/communications', label: CONSOLE_UI.communications[locale] },
+      { href: '/studio/media', label: CONSOLE_UI.media[locale], needs: ['activities:manage', 'events:manage'] },
+      { href: '/studio/people', label: CONSOLE_UI.peopleTitle[locale], needs: 'access:manage' },
+      { href: '/studio/participants', label: CONSOLE_UI.participantsTitle[locale], needs: 'participants:read' },
+      { href: '/studio/logistics', label: CONSOLE_UI.logisticsTitle[locale], needs: 'logistics:read' },
+      { href: '/studio/communications', label: CONSOLE_UI.communications[locale], needs: 'communications:manage' },
       {
         href: '/studio/reports',
         label: CONSOLE_UI.reportsNav[locale],
+        needs: 'participants:manage',
         ...(openReports > 0 ? { badge: openReports } : {}),
       },
-      { href: '/studio/networking', label: CONSOLE_UI.networkingNav[locale] },
-      { href: '/studio/insights', label: CONSOLE_UI.insights[locale] },
-      { href: '/studio/history', label: CONSOLE_UI.history[locale] },
+      { href: '/studio/networking', label: CONSOLE_UI.networkingNav[locale], needs: 'participants:manage' },
+      { href: '/studio/insights', label: CONSOLE_UI.insights[locale], needs: 'registrations:manage' },
+      { href: '/studio/history', label: CONSOLE_UI.history[locale], needs: 'audit:read' },
     ],
   },
   {
     title: CONSOLE_UI.groupWorkspace[locale],
     items: [
-      { href: '/studio/homepage', label: CONSOLE_UI.scenes[locale] },
-      { href: '/studio/events', label: CONSOLE_UI.classicStudio[locale] },
-      { label: CONSOLE_UI.dockDna[locale], soon: true },
-      { href: '/studio/activity', label: CONSOLE_UI.dockActivity[locale] },
+      { href: '/studio/activity', label: CONSOLE_UI.dockActivity[locale], needs: 'activities:read' },
+      { href: '/studio/homepage', label: CONSOLE_UI.platformHome[locale], needs: 'experiences:manage' },
+      { href: '/studio/events', label: CONSOLE_UI.classicStudio[locale], needs: 'events:manage' },
     ],
   },
   {
     title: CONSOLE_UI.groupOrg[locale],
     items: [
-      { href: '/studio/brand', label: CONSOLE_UI.brandNav[locale] },
-      { href: '/studio/organization', label: CONSOLE_UI.organization[locale] },
-      { href: '/studio/team', label: CONSOLE_UI.teams[locale] },
-      { label: CONSOLE_UI.settings[locale], soon: true },
+      { href: '/studio/brand', label: CONSOLE_UI.brandNav[locale], needs: 'experiences:manage' },
+      { href: '/studio/organization', label: CONSOLE_UI.organization[locale], needs: 'platform:manage' },
+      { href: '/studio/team', label: CONSOLE_UI.teams[locale], needs: 'events:manage' },
     ],
   },
 ];
@@ -96,17 +102,28 @@ const Logo = ({ brandLogo }: { brandLogo?: string }) => (
   </Link>
 );
 
+const allowed = (item: NavEntry, held: readonly Capability[]): boolean => {
+  if (!item.needs) return true;
+  const needs = Array.isArray(item.needs) ? item.needs : [item.needs];
+  return needs.some((capability) => held.includes(capability));
+};
+
 const NavList = ({
   locale,
   openReports,
+  capabilities,
   onNavigate,
 }: {
   locale: Locale;
   openReports: number;
+  capabilities: readonly Capability[];
   onNavigate?: () => void;
 }) => (
   <nav className="flex flex-col">
-    {buildGroups(locale, openReports).map((group) => (
+    {buildGroups(locale, openReports)
+      .map((group) => ({ ...group, items: group.items.filter((item) => allowed(item, capabilities)) }))
+      .filter((group) => group.items.length > 0)
+      .map((group) => (
       <div key={group.title} className="flex flex-col">
         <p className={GROUP}>{group.title}</p>
         {group.items.map((item) =>
@@ -143,10 +160,12 @@ const ConsoleSidebar = ({
   locale,
   openReports = 0,
   brandLogo,
+  capabilities = [],
 }: {
   locale: Locale;
   openReports?: number;
   brandLogo?: string;
+  capabilities?: readonly Capability[];
 }) => {
   const [open, setOpen] = useState(false);
   const he = locale === 'he';
@@ -171,7 +190,7 @@ const ConsoleSidebar = ({
       {/* Desktop rail */}
       <aside className="hidden flex-col bg-[var(--c-void)] p-3 md:flex">
         <Logo brandLogo={brandLogo} />
-        <NavList locale={locale} openReports={openReports} />
+        <NavList locale={locale} openReports={openReports} capabilities={capabilities} />
       </aside>
 
       {/* Mobile drawer */}
@@ -200,6 +219,7 @@ const ConsoleSidebar = ({
             <NavList
               locale={locale}
               openReports={openReports}
+              capabilities={capabilities}
               onNavigate={() => setOpen(false)}
             />
           </aside>

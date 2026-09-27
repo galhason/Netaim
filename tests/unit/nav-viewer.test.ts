@@ -105,10 +105,10 @@ describe('the nav viewer never enters cached content', () => {
      * A signed-in guest must not still be asked to register, and a
      * stranger must not see a name. The nav branches once on `viewer`.
      */
-    const nav = read('src/features/cinematic/components/cinematic-nav.tsx');
+    const nav = read('src/features/conference/components/conference-bar.tsx');
     expect(nav).toMatch(/\{viewer \?/);
-    expect(nav).toContain('CINEMATIC_UI.signIn[locale]');
-    expect(nav).toContain('CINEMATIC_UI.registerShort[locale]');
+    expect(nav).toContain("t('enter')");
+    expect(nav).toContain("t('register')");
   });
 
   it('every place that renders the nav decides the viewer', () => {
@@ -118,8 +118,8 @@ describe('the nav viewer never enters cached content', () => {
      */
     const callSites = walk('src').filter(
       (file) =>
-        /<CinematicNav\b/.test(read(file)) &&
-        !file.endsWith('cinematic-nav.tsx'),
+        /<ConferenceBar\b/.test(read(file)) &&
+        !file.endsWith('conference-bar.tsx'),
     );
     expect(callSites.length).toBeGreaterThanOrEqual(3);
 

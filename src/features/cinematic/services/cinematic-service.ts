@@ -1,5 +1,6 @@
 import type { Locale } from '@/config/locales';
-import { formatLongDate } from '@/shared';
+import { DEFAULT_VENUE_TIMEZONE, formatLongDate, venueDayKey } from '@/shared';
+import { eligibleSessions, marketingSessions } from '@/event-engine';
 import { cacheTags, cachedContent } from '@/shared/cache/content-cache';
 import {
   findEventOpeningContent,
@@ -38,33 +39,57 @@ const SPEAKER_LIMIT = 8;
  */
 const NO_PORTRAIT = '';
 
-const timeLabel = (iso?: string): string => {
+/*
+ * The clock a guest reads a session on: the conference's own.
+ *
+ * This printed `toISOString().slice(11, 16)` -- the UTC wall clock -- so
+ * a session a producer entered as 14:00 in Israel appeared on the landing
+ * page as 11:00, three hours off in summer and two in winter, while the
+ * programme page showed 14:00 through the shared formatter. Two public
+ * surfaces of one conference, two different times for the same session.
+ *
+ * Nothing about the stored data was wrong and nothing about it changed:
+ * `startsAt` is an instant and stays one. Only the reading was wrong.
+ */
+const timeLabel = (
+  iso: string | undefined,
+  timeZone: string = DEFAULT_VENUE_TIMEZONE,
+): string => {
   if (!iso) {
     return '';
   }
   const parsed = Date.parse(iso);
-  return Number.isNaN(parsed) ? '' : new Date(parsed).toISOString().slice(11, 16);
-};
-
-const dayKey = (iso?: string): string => {
-  if (!iso) {
+  if (Number.isNaN(parsed)) {
     return '';
   }
-  const parsed = Date.parse(iso);
-  return Number.isNaN(parsed) ? '' : new Date(parsed).toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone,
+  }).format(new Date(parsed));
 };
 
 
 const buildProgram = (
   sessions: SessionSummary[],
   locale: Locale,
+  timeZone: string = DEFAULT_VENUE_TIMEZONE,
 ): ProgramDay[] => {
-  const scheduled = sessions.filter(
-    (session) => session.sessionType !== 'break' && session.startsAt,
-  );
+  /*
+   * The full programme, so no limit and no "upcoming" filter -- what it
+   * shares with the landing selection is only what counts as a session
+   * at all, and that now comes from one place.
+   */
+  const scheduled = eligibleSessions(sessions);
   const byDay = new Map<string, SessionSummary[]>();
   for (const session of scheduled) {
-    const key = dayKey(session.startsAt);
+    /*
+     * The venue's calendar day. Grouped by the UTC day, every session
+     * before 02:00 or 03:00 Israel time landed on the day before -- and
+     * the label beside it was formatted in yet another zone.
+     */
+    const key = venueDayKey(session.startsAt, timeZone);
     const bucket = byDay.get(key) ?? [];
     bucket.push(session);
     byDay.set(key, bucket);
@@ -72,21 +97,19 @@ const buildProgram = (
   return [...byDay.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, daySessions]) => ({
-      label: formatLongDate(daySessions[0]?.startsAt, locale) || key,
+      label: formatLongDate(daySessions[0]?.startsAt, locale, timeZone) || key,
       items: daySessions
         .sort(
           (a, b) => Date.parse(a.startsAt ?? '') - Date.parse(b.startsAt ?? ''),
         )
         .map((session) => ({
-          time: timeLabel(session.startsAt),
+          time: timeLabel(session.startsAt, timeZone),
           title: session.title,
           room: session.room,
           speaker: session.speaker,
         })),
     }));
 };
-
-const FEATURED_SESSION_LIMIT = 6;
 
 const SESSION_TYPE_LABEL: Record<string, Record<Locale, string>> = {
   talk: { he: 'הרצאה', en: 'Talk' },
@@ -97,34 +120,34 @@ const SESSION_TYPE_LABEL: Record<string, Record<Locale, string>> = {
 };
 
 /*
- * The Featured Sessions on the landing: the editor marks sessions as
- * featured, and those lead. A conference that has not chosen yet still
- * looks alive — the first scheduled sessions stand in until it does
- * (Beauty by default), never breaks, never empty when a program exists.
+ * The Featured Sessions on the landing.
+ *
+ * The choosing moved out to `marketingSessions` in the engine, so this
+ * function is now presentation and nothing else: a language, a clock, and
+ * the fields a card draws. The same rule answers for the landing page and
+ * for anything else that later asks what a conference is putting forward,
+ * which is the point of moving it.
+ *
+ * What the editor marked still leads. What changed is the fallback: a
+ * conference that has chosen nothing shows the sessions still ahead of it
+ * rather than the earliest in its schedule, which from the second morning
+ * meant leading with yesterday.
  */
 const buildFeaturedSessions = (
   sessions: SessionSummary[],
   locale: Locale,
-): FeaturedSessionItem[] => {
-  const scheduled = sessions.filter(
-    (session) => session.sessionType !== 'break' && session.startsAt,
-  );
-  const chosen = scheduled.filter((session) => session.featured);
-  const source = chosen.length > 0 ? chosen : scheduled;
-  return source
-    .slice()
-    .sort((a, b) => Date.parse(a.startsAt ?? '') - Date.parse(b.startsAt ?? ''))
-    .slice(0, FEATURED_SESSION_LIMIT)
-    .map((session) => ({
-      id: session.id,
-      time: timeLabel(session.startsAt),
-      title: session.title,
-      speaker: session.speaker,
-      typeLabel: SESSION_TYPE_LABEL[session.sessionType]?.[locale],
-      room: session.room,
-      image: session.image,
-    }));
-};
+  timeZone: string = DEFAULT_VENUE_TIMEZONE,
+  now: number = Date.now(),
+): FeaturedSessionItem[] =>
+  marketingSessions(sessions, now).map((session) => ({
+    id: session.id,
+    time: timeLabel(session.startsAt, timeZone),
+    title: session.title,
+    speaker: session.speaker,
+    typeLabel: SESSION_TYPE_LABEL[session.sessionType]?.[locale],
+    room: session.room,
+    image: session.image,
+  }));
 
 const buildSpeakers = (
   sessions: SessionSummary[],
@@ -205,7 +228,13 @@ const assembleExperience = (
   roster: ResolvedSpeaker[] = [],
 ): ConferenceExperience => {
   const fallback = fallbackConference(locale);
-  const program = buildProgram(sessions, locale).map((day, index) => ({
+  /*
+   * One clock for the whole conference, read from its own record. Absent
+   * on a legacy row, and then the shared default applies -- never a
+   * silent override of a value somebody chose.
+   */
+  const timeZone = event.timezone ?? DEFAULT_VENUE_TIMEZONE;
+  const program = buildProgram(sessions, locale, timeZone).map((day, index) => ({
     ...day,
     theme: opening?.programDays?.[index]?.theme || undefined,
     description: opening?.programDays?.[index]?.description || undefined,
@@ -252,7 +281,7 @@ const assembleExperience = (
   ].slice(0, SPEAKER_LIMIT);
   const facts = buildFacts(program, speakers, fallback.facts, locale);
 
-  const ICONS: CinematicIcon[] = ['accessibility', 'parking', 'transit', 'hotel', 'leaf', 'coffee'];
+  const ICONS: CinematicIcon[] = ['accessibility', 'parking', 'transit', 'hotel', 'leaf', 'coffee', 'wifi', 'food', 'family'];
   const isIcon = (value: string | undefined): value is CinematicIcon =>
     Boolean(value && (ICONS as string[]).includes(value));
 
@@ -359,7 +388,7 @@ const assembleExperience = (
     },
     speakers,
     program: program.length > 0 ? program : fallback.program,
-    featuredSessions: buildFeaturedSessions(sessions, locale),
+    featuredSessions: buildFeaturedSessions(sessions, locale, timeZone),
     countdown: { startsAt: event.startsAt },
     facts,
     sponsors: buildSponsorLogos(sponsors),

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import type { Locale } from '@/config/locales';
 import {
@@ -428,13 +429,13 @@ const MyScheduleDashboard = ({
         {/* ---- header ---- */}
         <header className="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="min-w-0">
-            <a
+            <Link
               href={meHref}
               className="inline-flex min-h-[32px] items-center gap-1.5 text-[13px] font-medium text-[var(--x-soft)] transition-colors hover:text-[var(--x-primary)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] rounded-[var(--x-r-pill)]"
             >
               <IconArrow className="size-4 rotate-180 rtl:rotate-0" />
               {t(locale, 'backToMe')}
-            </a>
+            </Link>
             <div className="mt-2 flex items-center gap-4">
               <span className="hidden size-14 shrink-0 place-items-center rounded-full bg-[var(--x-primary-wash)] text-[var(--x-primary)] sm:grid">
                 <IconCalendar className="size-7" />
@@ -453,14 +454,14 @@ const MyScheduleDashboard = ({
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row md:w-[200px] md:flex-col md:items-stretch">
-            <a href={programHref} className={primaryBtn}>
+            <Link href={programHref} className={primaryBtn}>
               <span aria-hidden="true" className="text-[18px] leading-none">+</span>
               {t(locale, 'addActivity')}
-            </a>
-            <a href={programHref} className={ghostBtn}>
+            </Link>
+            <Link href={programHref} className={ghostBtn}>
               <IconCalendar className="size-4" />
               {t(locale, 'toProgram')}
-            </a>
+            </Link>
           </div>
         </header>
 
@@ -473,10 +474,10 @@ const MyScheduleDashboard = ({
             <p className="mx-auto mt-2 max-w-sm text-[15px] leading-relaxed text-[var(--x-soft)]">
               {t(locale, 'emptyHint')}
             </p>
-            <a href={programHref} className={`${primaryBtn} mt-6`}>
+            <Link href={programHref} className={`${primaryBtn} mt-6`}>
               {t(locale, 'toProgram')}
               <IconArrow className="size-4 rtl:rotate-180" />
-            </a>
+            </Link>
             {cancelledSection}
           </section>
         ) : (
@@ -571,10 +572,10 @@ const MyScheduleDashboard = ({
                     <p className="mt-1 text-[14px] text-[var(--x-soft)]">
                       {items.length > 0 ? t(locale, 'emptyDayHint') : t(locale, 'emptyHint')}
                     </p>
-                    <a href={programHref} className={`${ghostBtn} mt-5`}>
+                    <Link href={programHref} className={`${ghostBtn} mt-5`}>
                       {t(locale, 'toProgram')}
                       <IconArrow className="size-4 rtl:rotate-180" />
-                    </a>
+                    </Link>
                   </section>
                 ) : (
                   <ol

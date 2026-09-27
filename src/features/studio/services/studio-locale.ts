@@ -4,6 +4,7 @@ import {
   isSupportedLocale,
   type Locale,
 } from '@/config/locales';
+import { withBasePath } from '@/config/site';
 
 const STUDIO_LOCALE_COOKIE = 'studio-locale';
 
@@ -19,5 +20,5 @@ export const getStudioLocale = async (): Promise<Locale> => {
 
 export const writeStudioLocale = async (locale: Locale): Promise<void> => {
   const store = await cookies();
-  store.set(STUDIO_LOCALE_COOKIE, locale, { path: '/studio' });
+  store.set(STUDIO_LOCALE_COOKIE, locale, { path: withBasePath('/studio') });
 };
