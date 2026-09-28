@@ -133,7 +133,11 @@ const NavRenderer = ({
     slug={content.slug ?? null}
     viewer={
       viewer
-        ? { name: viewer.name, ...(viewer.photoUrl ? { photoUrl: viewer.photoUrl } : {}) }
+        ? {
+            name: viewer.name,
+            ...(viewer.photoUrl ? { photoUrl: viewer.photoUrl } : {}),
+            ...(viewer.studio ? { studio: true } : {}),
+          }
         : null
     }
     brand={content.brand}

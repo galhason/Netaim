@@ -78,6 +78,7 @@ const ConferenceLandingPage = async ({
                 name: barViewer?.name ?? (me.name || me.email),
                 ...(meHref ? { href: meHref } : {}),
                 ...(barViewer?.photoUrl ? { photoUrl: barViewer.photoUrl } : {}),
+                ...(barViewer?.studio ? { studio: true } : {}),
               }
             : null
         }

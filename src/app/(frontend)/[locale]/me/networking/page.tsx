@@ -9,6 +9,7 @@ import {
   JOINED_CONFERENCE_FANOUT,
   getMyAccount,
 } from '@/features/account';
+import { staffRolesByAccount } from '@/features/access';
 import { LOUNGE_UI } from '@/features/attendee';
 import {
   findPortalEvent,
@@ -135,7 +136,7 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
     ...account.joined.slice(0, JOINED_CONFERENCE_FANOUT),
   ];
 
-  const [allPeople, details, myPrefs, perSlug, peers] = await Promise.all([
+  const [allPeople, details, myPrefs, perSlug, peers, staffRoles] = await Promise.all([
     directorySlug
       ? listDirectoryParticipants(directorySlug).catch(() => [])
       : Promise.resolve([] as FellowParticipant[]),
@@ -163,6 +164,11 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
     directorySlug
       ? sharedActivityPeers(directorySlug, account.id, locale).catch(() => [])
       : Promise.resolve([]),
+    /*
+     * The Netaim team, by rank: a gold ring and their title under the
+     * name wherever they appear in the room. One read for the page.
+     */
+    staffRolesByAccount().catch(() => new Map<string, never>()),
   ]);
 
   const activitiesWith = new Map(
@@ -179,13 +185,18 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
     myBlockedPeople(),
   ]);
 
-  const people = allPeople.filter(
-    (person) =>
-      person.participantId !== account.id &&
-      !hiddenIds.has(person.participantId) &&
-      (!person.email ||
-        person.email.toLowerCase() !== account.email.toLowerCase()),
-  );
+  const people = allPeople
+    .filter(
+      (person) =>
+        person.participantId !== account.id &&
+        !hiddenIds.has(person.participantId) &&
+        (!person.email ||
+          person.email.toLowerCase() !== account.email.toLowerCase()),
+    )
+    .map((person) => {
+      const staffRole = staffRoles.get(person.participantId);
+      return staffRole ? { ...person, staffRole } : person;
+    });
   /*
    * The same consent-filtered directory listing, keyed by person, so a
    * connection tile can borrow the photo and headline its owner already
@@ -634,7 +645,11 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
       <ConferenceBar
         locale={locale as Locale}
         slug={directorySlug}
-        viewer={{ name: myself.name, ...(myself.photoUrl ? { photoUrl: myself.photoUrl } : {}) }}
+        viewer={{
+          name: myself.name,
+          ...(myself.photoUrl ? { photoUrl: myself.photoUrl } : {}),
+          ...(staffRoles.has(account.id) ? { studio: true } : {}),
+        }}
         brand={brandFor(locale as Locale)}
         brandLogo={siteLogo.onLight}
       />
@@ -728,6 +743,7 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
               unread={unread}
               channelsById={channelsById}
               fellowById={fellowById}
+              staffById={staffRoles}
               directorySlug={directorySlug ?? ''}
             />
             <MeetingsSection
@@ -736,6 +752,7 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
               accepted={acceptedAll}
               meetings={meetings}
               fellowById={fellowById}
+              staffById={staffRoles}
               banner={meetingBanner}
             />
           </section>

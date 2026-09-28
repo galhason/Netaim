@@ -43,6 +43,8 @@ export interface SceneViewer {
   href?: string;
   /* Their picture, for the bar's chip; absent, an initial stands in. */
   photoUrl?: string;
+  /* A member of the Netaim team: the bar's personal menu offers the Studio. */
+  studio?: boolean;
 }
 
 export interface SceneComponentProps<TContent = unknown> {

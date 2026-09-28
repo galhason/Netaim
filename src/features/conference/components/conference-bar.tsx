@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { Locale } from '@/config/locales';
+import { withBasePath } from '@/config/site';
 import { isWordPressHref, wordpressHref } from '@/config/wordpress';
 import { chooseLocaleAction } from '@/features/account/actions/choose-locale';
 import { signOutAction } from '@/features/account/actions/sign-out';
@@ -37,6 +38,8 @@ import { BrandMark } from '@/shared';
 export interface ConferenceBarViewer {
   name: string;
   photoUrl?: string;
+  /* A member of the Netaim team: the menu offers the Studio. */
+  studio?: boolean;
 }
 
 export interface ConferenceBarProps {
@@ -60,6 +63,7 @@ const WORDS = {
   schedule: { he: 'הלו״ז שלי', en: 'My Schedule' },
   profile: { he: 'הפרופיל שלי', en: 'My Profile' },
   messages: { he: 'הודעות', en: 'Messages' },
+  studio: { he: 'סטודיו', en: 'Studio' },
   myArea: { he: 'האזור שלי', en: 'My area' },
   areaLabel: { he: 'האזור האישי בפלטפורמת הכנס', en: 'Your personal area on the conference platform' },
   navLabel: { he: 'ניווט בכנס', en: 'Conference navigation' },
@@ -228,6 +232,17 @@ const ConferenceBar = ({ locale, slug, viewer, brandLogo, brand }: ConferenceBar
                     {link(item)}
                   </li>
                 ))}
+                {viewer?.studio ? (
+                  /*
+                   * A plain anchor: the Studio is another root layout, and a
+                   * client-side hop between the two would be a full load anyway.
+                   */
+                  <li className="nt-conf-nav__item nt-conf-nav__item--app nt-conf-nav__item--studio">
+                    <a href={withBasePath('/studio')} className="nt-conf-nav__link nt-conf-nav__link--studio" data-nt-dest="studio">
+                      {t('studio')}
+                    </a>
+                  </li>
+                ) : null}
               </ul>
             </details>
           </li>

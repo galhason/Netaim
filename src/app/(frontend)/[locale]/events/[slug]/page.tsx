@@ -62,6 +62,7 @@ const EventPage = async ({ params }: EventPageProps) => {
                 name: barViewer?.name ?? (me.name || me.email),
                 ...(meHref ? { href: meHref } : {}),
                 ...(barViewer?.photoUrl ? { photoUrl: barViewer.photoUrl } : {}),
+                ...(barViewer?.studio ? { studio: true } : {}),
               }
             : null
         }

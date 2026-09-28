@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { SITE_ORIGIN, withBasePath } from '@/config/site';
+import { staffRoleOf } from '@/features/access';
 import { getActiveConferenceSlug } from '@/features/events';
 import { mySpotlight } from '@/features/notifications';
 import {
@@ -67,9 +68,14 @@ export async function GET(request: NextRequest) {
   const asked = request.nextUrl.searchParams.get('locale');
   const preferred = request.cookies.get('participant_locale')?.value;
   const locale = asked === 'en' || asked === 'he' ? asked : preferred === 'en' ? 'en' : 'he';
-  const [details, slug] = await Promise.all([
+  const [details, slug, staffRole] = await Promise.all([
     getMyDetails().catch(() => null),
     getActiveConferenceSlug(locale).catch(() => null),
+    /*
+     * The Studio door is offered to the Netaim team only. This is a
+     * convenience, not the lock: /studio checks the grants itself.
+     */
+    staffRoleOf(me.id).catch(() => null),
   ]);
   const spotlight = slug
     ? await mySpotlight(slug, locale).catch(() => ({ banner: null, popup: null }))
@@ -93,6 +99,7 @@ export async function GET(request: NextRequest) {
         networking: withBasePath(`/${locale}/me/networking`),
         notifications: withBasePath(`/${locale}/me/notifications`),
         signOut: withBasePath('/api/session'),
+        ...(staffRole ? { studio: withBasePath('/studio') } : {}),
       },
     },
     { headers: NO_STORE },

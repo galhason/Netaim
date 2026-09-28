@@ -5,7 +5,7 @@ import type { ConnectionChannels, MyConnection } from '@/features/networking';
 import type { FellowParticipant } from '@/infrastructure';
 import { manageConnectionAction } from '../actions';
 import SafetyMenu from './safety-menu';
-import { RingedAvatar, personLine } from './shared';
+import { RingedAvatar, StaffTitle, personLine, type StaffRole } from './shared';
 
 /*
  * "My connections" — the people already reached, drawn in the same
@@ -220,6 +220,7 @@ const ConnectionsSection = ({
   unread,
   channelsById,
   fellowById,
+  staffById,
   directorySlug,
 }: {
   locale: Locale;
@@ -229,6 +230,8 @@ const ConnectionsSection = ({
   unread: Map<string, number>;
   channelsById: Map<string, ConnectionChannels | null>;
   fellowById: Map<string, FellowParticipant>;
+  /* The Netaim team, for a connection who is not in this conference's directory. */
+  staffById?: Map<string, StaffRole>;
   directorySlug: string;
 }) => {
   const total = connections.length;
@@ -239,6 +242,7 @@ const ConnectionsSection = ({
     const fellow = fellowById.get(connection.otherId);
     const line = fellow ? personLine(fellow) : connection.title;
     const open = fellow?.openToMeetings ?? false;
+    const staff = fellow?.staffRole ?? staffById?.get(connection.otherId);
     return (
       <li
         key={connection.id}
@@ -264,6 +268,7 @@ const ConnectionsSection = ({
               photoUrl={fellow?.photoUrl}
               tone={open ? 'green' : 'purple'}
               open={open}
+              staff={Boolean(staff)}
               dim="size-16 md:size-[4.75rem]"
             />
           </span>
@@ -271,6 +276,7 @@ const ConnectionsSection = ({
           <h3 className="n-name">
             {connection.otherName}
           </h3>
+          {staff ? <StaffTitle role={staff} he={he} /> : null}
           {line ? (
             <p className="mt-0.5 w-full truncate text-[11px] leading-snug text-[var(--n-faint)]">
               {line}
@@ -324,6 +330,7 @@ const ConnectionsSection = ({
     const fellow = fellowById.get(connection.otherId);
     const line = fellow ? personLine(fellow) : connection.title;
     const open = fellow?.openToMeetings ?? false;
+    const staff = fellow?.staffRole ?? staffById?.get(connection.otherId);
     return (
       <div className="mx-auto mt-6 flex max-w-xs flex-col items-center text-center">
         <article className="lounge-rise group relative flex w-full flex-col items-center">
@@ -343,6 +350,7 @@ const ConnectionsSection = ({
               photoUrl={fellow?.photoUrl}
               tone={open ? 'green' : 'purple'}
               open={open}
+              staff={Boolean(staff)}
               dim="size-[4.75rem] md:size-24"
             />
           </span>
@@ -350,6 +358,7 @@ const ConnectionsSection = ({
           <h3 className="mt-3 w-full truncate font-display text-xl font-semibold leading-snug">
             {connection.otherName}
           </h3>
+          {staff ? <StaffTitle role={staff} he={he} className="text-[12px]" /> : null}
           {line ? (
             <p className="mt-0.5 w-full truncate text-[13px] leading-snug text-[var(--n-faint)]">
               {line}

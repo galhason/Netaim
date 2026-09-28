@@ -14,6 +14,13 @@ const LOCALE_PREFIX = /^\/(he|en)(?=\/|$)/;
  * localhost:3000), and a Location header built from it would send the
  * visitor there. The configured public origin wins; nextUrl keeps the
  * base path and the query for us.
+ *
+ * Without a configured origin, the host is the one the proxy forwarded
+ * — which is right — but Next appends the port the process listens on,
+ * and that port is nobody's business outside the machine: the browser
+ * reached us on the scheme's own port. Staging sent visitors to
+ * netaimtest.info:3000 this way. A browser-facing address never carries
+ * the listener's port.
  */
 const publicUrl = (request: NextRequest, pathname: string): URL => {
   const url = request.nextUrl.clone();
@@ -22,6 +29,8 @@ const publicUrl = (request: NextRequest, pathname: string): URL => {
     const site = new URL(SITE_ORIGIN);
     url.protocol = site.protocol;
     url.host = site.host;
+  } else {
+    url.port = '';
   }
   return url;
 };
@@ -29,7 +38,8 @@ const publicUrl = (request: NextRequest, pathname: string): URL => {
 /*
  * The edge runtime cannot reach the database, so the participant's language
  * preference is mirrored into a cookie when the session is established. While
- * that cookie is present every page is served in the preferred language.
+ * that cookie is present, an address that names no language is served in the
+ * preferred one; an address that names its language is served as written.
  */
 export default function middleware(request: NextRequest) {
   const stored = request.cookies.get(LOCALE_PREFERENCE_COOKIE)?.value;
@@ -39,15 +49,20 @@ export default function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const match = LOCALE_PREFIX.exec(pathname);
 
+    /*
+     * The preference answers only where the address does not: a path
+     * with no language prefix goes to the preferred language. A path
+     * that names its language is honoured as written — the public site
+     * links a Hebrew reader to /he/me/networking and an English reader
+     * to /en/me/networking, and turning one into the other on the way
+     * in sent people to a page in the wrong language (and, on staging,
+     * to the wrong origin). Changing the preference is the language
+     * switch's job (chooseLocaleAction), not the router's.
+     */
     if (!match) {
       return NextResponse.redirect(
         publicUrl(request, `/${preferred}${pathname === '/' ? '' : pathname}`),
       );
-    }
-
-    if (match[1] !== preferred) {
-      const rest = pathname.slice(match[0].length);
-      return NextResponse.redirect(publicUrl(request, `/${preferred}${rest}`));
     }
   }
 

@@ -565,6 +565,13 @@ export interface FellowParticipant {
    */
   openToMeetings: boolean;
   photoUrl?: string;
+  /*
+   * A member of the Netaim team, at their highest rank (owner = מנהל,
+   * producer = מפקח, editor = צוות). Never read from the listing: the
+   * networking page adds it from the grants, so the directory query and
+   * its consent filter stay exactly as they were.
+   */
+  staffRole?: 'owner' | 'producer' | 'editor';
 }
 
 interface FellowRow {

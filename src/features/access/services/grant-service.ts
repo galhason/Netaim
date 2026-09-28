@@ -24,6 +24,45 @@ export const accountGrants = async (accountId: string): Promise<Grant[]> => {
 export const listAllGrants = (): Promise<AccountGrantView[]> =>
   accountGrantRepository.listGrants().catch(() => []);
 
+/*
+ * Netaim's own people, by rank — the three roles a person is given today
+ * (owner = מנהל, producer = מפקח, editor = צוות). Legacy door/viewer
+ * grants are reading access, not membership of the team, and count for
+ * nothing here. Someone with several grants is shown at their highest.
+ */
+export type StaffRole = 'owner' | 'producer' | 'editor';
+
+const STAFF_RANK: Record<StaffRole, number> = { owner: 3, producer: 2, editor: 1 };
+
+const isStaffRole = (role: string): role is StaffRole => role in STAFF_RANK;
+
+const highest = (roles: string[]): StaffRole | null =>
+  roles
+    .filter(isStaffRole)
+    .sort((a, b) => STAFF_RANK[b] - STAFF_RANK[a])[0] ?? null;
+
+/** This account's rank on the Netaim team, or null for everyone else. */
+export const staffRoleOf = async (accountId: string): Promise<StaffRole | null> =>
+  highest((await accountGrants(accountId)).map((grant) => grant.role));
+
+/** Every team member's rank, by account id — one read for a whole room. */
+export const staffRolesByAccount = async (): Promise<Map<string, StaffRole>> => {
+  const byAccount = new Map<string, string[]>();
+  for (const grant of await listAllGrants()) {
+    const list = byAccount.get(grant.accountId) ?? [];
+    list.push(grant.role);
+    byAccount.set(grant.accountId, list);
+  }
+  const ranks = new Map<string, StaffRole>();
+  for (const [accountId, roles] of byAccount) {
+    const role = highest(roles);
+    if (role) {
+      ranks.set(accountId, role);
+    }
+  }
+  return ranks;
+};
+
 export type GrantOutcome =
   | { ok: true; grant: AccountGrantView }
   | { ok: false; reason: 'invalidRole' | 'failed' };

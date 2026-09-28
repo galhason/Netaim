@@ -9,6 +9,7 @@ import {
   connectBtn,
   liftable,
   personLine,
+  StaffTitle,
   type ReasonTone,
 } from './shared';
 
@@ -63,11 +64,14 @@ const RecommendedPeople = ({
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="flex items-start gap-3">
-                <Avatar name={person.name} photoUrl={person.photoUrl} />
+                <Avatar name={person.name} photoUrl={person.photoUrl} staff={Boolean(person.staffRole)} />
                 <span className="min-w-0 flex-1 pt-0.5">
                   <span className="block truncate font-display text-base font-semibold">
                     {person.name}
                   </span>
+                  {person.staffRole ? (
+                    <StaffTitle role={person.staffRole} he={he} />
+                  ) : null}
                   {personLine(person) ? (
                     <span className="block truncate text-xs text-[var(--n-soft)]">
                       {personLine(person)}

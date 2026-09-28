@@ -62,6 +62,49 @@ export const TONE_TEXT: Record<ReasonTone, string> = {
   purple: 'text-[var(--n-purple)]',
 };
 
+/*
+ * The Netaim team, marked in the room.
+ *
+ * Every other person wears a ring that says why they are on your screen;
+ * a member of the team wears gold, a shade richer and a hair thicker, so
+ * it reads as a mark of office rather than one more reason. Their title
+ * sits under the name, beside whatever they wrote about themselves.
+ */
+export type StaffRole = NonNullable<FellowParticipant['staffRole']>;
+
+export const STAFF_TITLE: Record<StaffRole, Record<Locale, string>> = {
+  owner: { he: 'מנהל נטעים', en: 'Netaim Admin' },
+  producer: { he: 'מפקח נטעים', en: 'Netaim Supervisor' },
+  editor: { he: 'צוות נטעים', en: 'Netaim Staff' },
+};
+
+export const STAFF_RING =
+  'bg-[linear-gradient(135deg,#f3cf5b,#b8860b_55%,#f7dd8c)]';
+
+export const StaffTitle = ({
+  role,
+  he,
+  className = '',
+}: {
+  role: StaffRole;
+  he: boolean;
+  className?: string;
+}) => (
+  <span
+    className={`inline-flex max-w-full items-center gap-1 truncate text-[11px] font-semibold leading-snug text-[#9a6b00] ${className}`}
+  >
+    <svg
+      viewBox="0 0 12 12"
+      aria-hidden="true"
+      className="size-2.5 flex-none"
+      fill="currentColor"
+    >
+      <path d="M6 .8l1.5 3.3 3.6.4-2.7 2.4.8 3.5L6 8.6 2.8 10.4l.8-3.5L.9 4.5l3.6-.4z" />
+    </svg>
+    {STAFF_TITLE[role][he ? 'he' : 'en']}
+  </span>
+);
+
 export const clock = (iso: string, locale: Locale): string =>
   [formatDayLabel(iso, locale), formatTimeLabel(iso, locale)]
     .filter(Boolean)
@@ -96,10 +139,13 @@ export const Avatar = ({
   name,
   photoUrl,
   size = 'md',
+  staff = false,
 }: {
   name: string;
   photoUrl?: string;
   size?: 'sm' | 'md' | 'lg';
+  /* A member of the Netaim team: framed in gold. */
+  staff?: boolean;
 }) => {
   const dim =
     size === 'lg'
@@ -107,6 +153,15 @@ export const Avatar = ({
       : size === 'sm'
         ? 'size-10 text-sm'
         : 'size-12 text-lg';
+  if (staff) {
+    return (
+      <span className={`block flex-none rounded-full p-[2.5px] ${STAFF_RING}`}>
+        <span className="block rounded-full bg-[var(--n-bg)] p-[1.5px]">
+          <Avatar name={name} photoUrl={photoUrl} size={size} />
+        </span>
+      </span>
+    );
+  }
   return photoUrl ? (
     // eslint-disable-next-line @next/next/no-img-element -- participant portrait from the media API
     <img
@@ -134,16 +189,23 @@ export const RingedAvatar = ({
   photoUrl,
   tone,
   open,
+  staff = false,
   dim = 'size-16 md:size-20',
 }: {
   name: string;
   photoUrl?: string;
   tone: ReasonTone;
   open?: boolean;
+  /* A member of the Netaim team: gold, whatever the reason tone. */
+  staff?: boolean;
   dim?: string;
 }) => (
   <span className="relative inline-block">
-    <span className={`block rounded-full p-[2.5px] ${RING_GRADIENT[tone]} shadow-[0_6px_18px_rgba(23,32,51,0.14)]`}>
+    <span
+      className={`block rounded-full ${
+        staff ? `p-[3px] ${STAFF_RING}` : `p-[2.5px] ${RING_GRADIENT[tone]}`
+      } shadow-[0_6px_18px_rgba(23,32,51,0.14)]`}
+    >
       <span className="block rounded-full bg-[var(--n-bg)] p-[2.5px]">
         {photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- participant portrait from the media API

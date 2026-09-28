@@ -4,8 +4,10 @@ export {
   grantRole,
   listAllGrants,
   revokeGrant,
+  staffRoleOf,
+  staffRolesByAccount,
 } from './services/grant-service';
-export type { GrantOutcome, RevokeOutcome } from './services/grant-service';
+export type { GrantOutcome, RevokeOutcome, StaffRole } from './services/grant-service';
 export {
   checkRateLimit,
   clearRateLimit,

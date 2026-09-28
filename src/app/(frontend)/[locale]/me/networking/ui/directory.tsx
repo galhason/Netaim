@@ -9,6 +9,8 @@ import {
   ghostBtn,
   listInterests,
   personLine,
+  STAFF_RING,
+  StaffTitle,
   stateChip,
 } from './shared';
 
@@ -56,10 +58,12 @@ interface DirectoryProps {
 const CardAvatar = ({ person }: { person: FellowParticipant }) => (
   <span className="relative inline-block">
     <span
-      className={`block rounded-full p-[2px] ${
-        person.openToMeetings
-          ? 'bg-[linear-gradient(135deg,var(--n-green),var(--n-green-soft))]'
-          : 'bg-[linear-gradient(135deg,var(--n-purple-soft),var(--n-purple-soft))]'
+      className={`block rounded-full ${
+        person.staffRole
+          ? `p-[3px] ${STAFF_RING}`
+          : person.openToMeetings
+            ? 'p-[2px] bg-[linear-gradient(135deg,var(--n-green),var(--n-green-soft))]'
+            : 'p-[2px] bg-[linear-gradient(135deg,var(--n-purple-soft),var(--n-purple-soft))]'
       }`}
     >
       <span className="block rounded-full bg-[var(--n-bg)] p-[2px]">
@@ -200,6 +204,9 @@ const ParticipantDirectory = ({
                   <h3 className="n-name">
                     {person.name}
                   </h3>
+                  {person.staffRole ? (
+                    <StaffTitle role={person.staffRole} he={he} className="justify-center" />
+                  ) : null}
                   {personLine(person) ? (
                     <p className="w-full truncate text-[11px] text-[var(--n-soft)]">
                       {personLine(person)}

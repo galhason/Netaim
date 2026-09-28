@@ -1,3 +1,4 @@
+import { staffRoleOf } from '@/features/access';
 import { getActiveConferenceSlug } from '@/features/events';
 import { currentParticipant, getMyDetails } from '@/features/registration';
 import type { Locale } from '@/config/locales';
@@ -19,11 +20,16 @@ export const conferenceBarViewer = async (): Promise<ConferenceBarViewer | null>
   if (!me) {
     return null;
   }
-  const details = await getMyDetails().catch(() => null);
+  const [details, staffRole] = await Promise.all([
+    getMyDetails().catch(() => null),
+    staffRoleOf(me.id).catch(() => null),
+  ]);
   const name = (details?.name ?? me.name ?? me.email).trim();
   return {
     name,
     ...(details?.photoUrl ? { photoUrl: details.photoUrl } : {}),
+    /* The Studio door, for the Netaim team only; /studio checks again. */
+    ...(staffRole ? { studio: true } : {}),
   };
 };
 

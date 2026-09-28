@@ -1,4 +1,4 @@
-import { RingedAvatar, TONE_TEXT, type ReasonTone } from './shared';
+import { RingedAvatar, StaffTitle, TONE_TEXT, type ReasonTone } from './shared';
 import type { FellowParticipant } from '@/infrastructure';
 
 /*
@@ -66,6 +66,7 @@ const PeopleBubbles = ({
                   photoUrl={person.photoUrl}
                   tone={tone}
                   open={person.openToMeetings}
+                  staff={Boolean(person.staffRole)}
                   dim="size-16 md:size-[4.5rem]"
                 />
               </span>
@@ -73,6 +74,9 @@ const PeopleBubbles = ({
                 <span className="n-name-sm">
                   {person.name}
                 </span>
+                {person.staffRole ? (
+                  <StaffTitle role={person.staffRole} he={he} className="w-full justify-center text-[10.5px]" />
+                ) : null}
                 <span
                   className={`block truncate text-[10.5px] leading-tight ${TONE_TEXT[tone]}`}
                 >

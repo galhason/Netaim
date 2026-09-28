@@ -6,7 +6,7 @@ import {
   confirmMeetingAction,
   proposeMeetingAction,
 } from '../actions';
-import { card, personLine, primaryBtn } from './shared';
+import { card, personLine, primaryBtn, StaffTitle, type StaffRole } from './shared';
 import { DEFAULT_VENUE_TIMEZONE, formatTimeLabel } from '@/shared';
 
 /*
@@ -143,6 +143,7 @@ const MeetingsSection = ({
   accepted,
   meetings,
   fellowById,
+  staffById,
   banner,
 }: {
   locale: Locale;
@@ -150,6 +151,8 @@ const MeetingsSection = ({
   accepted: (MyConnection & { slug: string; title: string })[];
   meetings: (MyMeeting & { slug: string })[];
   fellowById: Map<string, FellowParticipant>;
+  /* The Netaim team, for someone who is not in this conference's directory. */
+  staffById?: Map<string, StaffRole>;
   banner: string | null;
 }) => {
   if (accepted.length === 0) {
@@ -311,6 +314,7 @@ const MeetingsSection = ({
                 {day.items.map((meeting, index) => {
                   const fellow = fellowById.get(meeting.otherId);
                   const line = fellow ? personLine(fellow) : '';
+                  const staff = fellow?.staffRole ?? staffById?.get(meeting.otherId);
                   const cancelled = meeting.status === 'cancelled';
                   const minutes = minutesOf(meeting);
                   const tone = STATUS_TONE[meeting.status] ?? 'var(--n-hair)';
@@ -348,6 +352,7 @@ const MeetingsSection = ({
                           <span className="block truncate font-display text-[15px] font-semibold">
                             {meeting.otherName}
                           </span>
+                          {staff ? <StaffTitle role={staff} he={he} /> : null}
                           {line ? (
                             <span className="block truncate text-xs text-[var(--n-faint)]">
                               {line}
