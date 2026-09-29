@@ -12,6 +12,8 @@ import {
   currentParticipant,
   getRegistrationSituation,
   dietaryOptionsFor,
+  LATIN_NAME_ERROR,
+  LATIN_NAME_HINT,
   OnboardingLayout,
   onboardingCls,
   PASSWORD_POLICY_TEXT,
@@ -351,6 +353,7 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
               labels={{
                 firstName: he ? 'שם פרטי' : 'First name',
                 lastName: he ? 'שם משפחה' : 'Last name',
+                nameHint: LATIN_NAME_HINT[lang],
                 email: m.public.email[lang],
                 phone: m.public.phone[lang],
                 password: he ? 'סיסמה' : 'Password',
@@ -358,6 +361,8 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
                 passwordHint: PASSWORD_POLICY_TEXT[lang],
                 organization: m.public.organization[lang],
                 role: m.public.role[lang],
+                country: he ? 'מדינה' : 'Country',
+                countryPlaceholder: he ? 'בחרו מדינה' : 'Choose a country',
                 dietary: m.public.dietary[lang],
                 dietaryPlaceholder: he ? 'בחרו העדפה' : 'Choose a preference',
                 accessibility: m.public.accessibility[lang],
@@ -420,6 +425,9 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
                   tooManyCodes: he
                     ? 'ביקשתם קודים רבים מדי לכתובת הזו. נסו שוב בעוד שעה.'
                     : 'Too many codes were requested for that address. Try again in an hour.',
+                  firstNameScript: LATIN_NAME_ERROR[lang],
+                  lastNameScript: LATIN_NAME_ERROR[lang],
+                  country: he ? 'יש לבחור מדינה מהרשימה' : 'Please choose a country from the list',
                 },
                 fieldErrors: {
                   required: he ? 'שדה חובה' : 'Required',
@@ -434,6 +442,7 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
                   passwordMismatch: he
                     ? 'הסיסמאות אינן זהות'
                     : 'The passwords do not match',
+                  nameScript: LATIN_NAME_ERROR[lang],
                 },
               }}
             />

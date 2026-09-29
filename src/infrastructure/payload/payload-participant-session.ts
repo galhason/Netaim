@@ -405,6 +405,7 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
         accessibility: doc.accessibilityNeeds ?? undefined,
         organization: doc.orgName ?? undefined,
         role: doc.roleTitle ?? undefined,
+        country: doc.country ?? undefined,
         interests: doc.interests ?? undefined,
         headline: doc.headline ?? undefined,
         bio: doc.bio ?? undefined,
@@ -476,6 +477,13 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
             ? { orgName: input.organization }
             : {}),
           ...(input.role !== undefined ? { roleTitle: input.role } : {}),
+          /*
+           * An empty string is an answer here — the person cleared the
+           * field — so it is written through rather than skipped, and
+           * only `undefined` (the caller not asking) leaves the stored
+           * country alone.
+           */
+          ...(input.country !== undefined ? { country: input.country } : {}),
           ...(input.interests !== undefined
             ? { interests: input.interests }
             : {}),

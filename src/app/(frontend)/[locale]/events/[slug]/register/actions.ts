@@ -10,6 +10,7 @@ import {
   beginEmailVerification,
   confirmEmailVerification,
   establishSession,
+  isLatinName,
   isStrongPassword,
   parseRegisterForm,
   passwordHashFor,
@@ -18,6 +19,7 @@ import {
   signInWithPassword,
 } from '@/features/registration';
 import { scheduleConflictFor } from '@/features/account';
+import { isCountryCode } from '@/shared/constants/countries';
 
 const localeOf = (value: string): Locale =>
   isSupportedLocale(value) ? value : FALLBACK_LOCALE;
@@ -53,6 +55,7 @@ export interface RegisterKeptValues {
   phone: string;
   organization: string;
   role: string;
+  country: string;
   dietary: string;
   accessibility: string;
   directory: boolean;
@@ -82,6 +85,7 @@ const keptFrom = (formData: FormData): RegisterKeptValues => {
     phone: text('phone'),
     organization: text('organization'),
     role: text('role'),
+    country: text('country').toUpperCase(),
     dietary: text('dietary'),
     accessibility: text('accessibility'),
     directory: formData.get('directory') === 'on',
@@ -120,6 +124,31 @@ export const requestCodeAction = async (
   const conflictWith = await scheduleConflictFor(slug, locale).catch(() => null);
   if (conflictWith) {
     return refuse('conflict', { conflictWith });
+  }
+
+  /*
+   * The two names are printed on a badge and read by hotels and
+   * venues abroad, so they are written in the Latin alphabet — the
+   * form says so beside the fields and refuses to advance past them,
+   * and this is the same rule at the only place it is binding. Each
+   * name answers for itself, so the message lands under the box that
+   * has to change rather than above both.
+   */
+  if (!isLatinName(kept.firstName)) {
+    return refuse('firstNameScript');
+  }
+  if (!isLatinName(kept.lastName)) {
+    return refuse('lastNameScript');
+  }
+
+  /*
+   * The country is asked on the second step and is not optional there.
+   * Checked against the list rather than for mere presence: what is
+   * stored is a code, and a code no list knows is a row that can
+   * never be counted or translated back into a country.
+   */
+  if (!isCountryCode(kept.country)) {
+    return refuse('country');
   }
 
   const password = String(formData.get('password') ?? '');

@@ -177,6 +177,7 @@ export const payloadRegistrationRepository: RegistrationRepository = {
       dietary: participant.dietary,
       orgName: participant.organization,
       roleTitle: participant.role,
+      country: participant.country,
     };
 
     const priorRow = existing.docs[0] as

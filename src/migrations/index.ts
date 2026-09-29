@@ -11,6 +11,7 @@ import * as migration_20260924_140000_prague_timezone from './20260924_140000_pr
 import * as migration_20260925_090000_restore_single_published_index from './20260925_090000_restore_single_published_index';
 import * as migration_20260926_120000_activity_archive_and_immutable_audit from './20260926_120000_activity_archive_and_immutable_audit';
 import * as migration_20260927_120000_venue_fact_icons from './20260927_120000_venue_fact_icons';
+import * as migration_20260929_120000_participant_country from './20260929_120000_participant_country';
 
 export const migrations = [
   {
@@ -77,5 +78,10 @@ export const migrations = [
     up: migration_20260927_120000_venue_fact_icons.up,
     down: migration_20260927_120000_venue_fact_icons.down,
     name: '20260927_120000_venue_fact_icons',
+  },
+  {
+    up: migration_20260929_120000_participant_country.up,
+    down: migration_20260929_120000_participant_country.down,
+    name: '20260929_120000_participant_country',
   },
 ];

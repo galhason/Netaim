@@ -180,17 +180,44 @@ const WhenField = ({
   }, [open]);
 
   /*
-   * The hidden input is the field as far as the form is concerned. A
-   * `change` event is dispatched on every write so the field that
-   * follows this one hears it.
+   * The hidden input is the field as far as the form is concerned, and
+   * React owns its value.
+   *
+   * It used to be uncontrolled -- `defaultValue`, with the chosen value
+   * written into the DOM by the effect below -- and that lost every
+   * date silently. `<input type="hidden">` has no dirty value flag: its
+   * `value` IDL attribute is in "default" mode, so the property and the
+   * content attribute are one and the same. React, seeing an input with
+   * a `defaultValue` prop and no `value` prop, assigns
+   * `node.defaultValue` back to that prop on *every* commit -- which
+   * overwrites whatever the effect had written. The effect does not run
+   * again, because the state did not change. So any re-render of the
+   * wizard (a step change, a keystroke in the title) reset a new
+   * activity's date to empty and an existing one's back to its stored
+   * value, and that is what the form posted. A text input survives this
+   * because it keeps a dirty flag; a hidden one cannot.
+   *
+   * Controlled, React writes the value itself on every commit and there
+   * is nothing left to overwrite. No `onChange` is needed and none is
+   * warned about: `hidden` is one of the types React treats as having a
+   * read-only value.
    */
   const hidden = useRef<HTMLInputElement | null>(null);
+  /*
+   * The field that follows this one listens for a `change` on the
+   * input, and React fires none for a value it sets itself -- so it is
+   * dispatched here. Once per real move, and never on mount, which is
+   * exactly what the old `element.value !== value` guard amounted to:
+   * an end that legitimately sits on another day must not be dragged
+   * onto the start's day merely because the editor opened.
+   */
+  const announced = useRef(defaultValue);
   useEffect(() => {
-    const element = hidden.current;
-    if (element && element.value !== value) {
-      element.value = value;
-      element.dispatchEvent(new Event('change', { bubbles: true }));
+    if (announced.current === value) {
+      return;
     }
+    announced.current = value;
+    hidden.current?.dispatchEvent(new Event('change', { bubbles: true }));
   }, [value]);
 
   const cells = gridOf(view.year, view.month);
@@ -206,7 +233,7 @@ const WhenField = ({
       <span className="mb-1.5 block text-[10px] font-medium tracking-[0.16em] text-[var(--c-text-faint)]">
         {label}
       </span>
-      <input ref={hidden} type="hidden" name={name} defaultValue={defaultValue} />
+      <input ref={hidden} type="hidden" name={name} value={value} />
 
       <div className="flex items-stretch gap-2">
         <button

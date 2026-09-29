@@ -627,8 +627,20 @@ const ActivityWizard = ({
             </button>
           )}
 
+          {/*
+            * Keyed, and it matters. Without keys React sees a <button>
+            * in the same slot on both sides of this branch and patches
+            * it in place -- so the button clicked as type="button" has
+            * already become type="submit" by the time the browser runs
+            * the click's default action, and the last press of "next"
+            * both advances the step and submits the form. Distinct keys
+            * make them two elements, and a click on one cannot land on
+            * the other. The registration form carries the same note for
+            * the same reason.
+            */}
           {step < last ? (
             <button
+              key="next"
               type="button"
               onClick={goNext}
               disabled={!canAdvance}
@@ -638,6 +650,7 @@ const ActivityWizard = ({
             </button>
           ) : (
             <button
+              key="save"
               type="submit"
               className="rounded-lg bg-[var(--c-bronze)] px-6 py-2 text-sm font-medium text-[var(--c-on-accent)]"
             >

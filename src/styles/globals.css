@@ -212,6 +212,23 @@ main [id] {
   scroll-margin-top: 4rem;
 }
 
+/*
+ * A country's flag.
+ *
+ * The flag font first, and nothing but flags is in it, so any other
+ * character in the same span falls straight through to the body face.
+ * Where the font has not arrived — or a code has no flag — the two
+ * regional indicator letters show instead, which is the country
+ * spelled rather than drawn. `line-height: 1` keeps the glyph from
+ * pushing the line it sits on taller than its neighbours.
+ */
+.nt-flag {
+  font-family: var(--font-flags), var(--font-body), 'Segoe UI', sans-serif;
+  line-height: 1;
+  font-variant-emoji: emoji;
+}
+
+
 :focus-visible {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 3px;

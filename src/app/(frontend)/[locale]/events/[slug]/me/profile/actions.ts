@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { FALLBACK_LOCALE, isSupportedLocale, type Locale } from '@/config/locales';
 import { updateMyDetails } from '@/features/registration';
+import { isCountryCode } from '@/shared/constants/countries';
 
 /*
  * The guest edits only themselves: the participant id comes from the
@@ -27,6 +28,10 @@ export const saveMyProfileAction = async (formData: FormData) => {
     accessibility: text(formData.get('accessibility')),
     organization: text(formData.get('organization')),
     role: text(formData.get('role')),
+    /* A code the list knows, or nothing — see the account profile. */
+    country: isCountryCode(formData.get('country') as string)
+      ? String(formData.get('country')).trim().toUpperCase()
+      : '',
   }).catch(() => false);
   const base = `/${locale}/events/${slug}/me/profile`;
   revalidatePath(`/${locale}/events/${slug}/me`, 'layout');

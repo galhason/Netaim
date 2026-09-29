@@ -19,6 +19,8 @@ import {
   loungeQuiet,
 } from '@/features/attendee';
 import {
+  CountryFlag,
+  CountrySelect,
   DietarySelect,
   PASSWORD_POLICY_TEXT,
   getMyDetails,
@@ -204,6 +206,16 @@ const AccountProfilePage = async ({
                     {LOUNGE_UI.fieldPhone[locale]}
                   </dt>
                   <dd className="text-sm">{details.phone}</dd>
+                </div>
+              ) : null}
+              {details.country ? (
+                <div>
+                  <dt className={loungeLabel}>
+                    {LOUNGE_UI.fieldCountry[locale]}
+                  </dt>
+                  <dd className="text-sm">
+                    <CountryFlag code={details.country} withName={locale} />
+                  </dd>
                 </div>
               ) : null}
               {details.dietary ? (
@@ -408,6 +420,16 @@ const AccountProfilePage = async ({
                   <input
                     name="role"
                     defaultValue={details.role}
+                    className={loungeField}
+                  />
+                </label>
+                <label>
+                  <span className={loungeLabel}>
+                    {LOUNGE_UI.fieldCountry[locale]}
+                  </span>
+                  <CountrySelect
+                    locale={locale}
+                    defaultValue={details.country}
                     className={loungeField}
                   />
                 </label>

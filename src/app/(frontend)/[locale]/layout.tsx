@@ -6,6 +6,7 @@ import { getTextDirection, isSupportedLocale, type Locale } from '@/config/local
 import { AccessibilityWidget } from '@/features/accessibility';
 import { SiteSpotlight } from '@/features/notifications';
 import { routing } from '@/i18n/routing';
+import { flagFont } from '@/styles/flags';
 import { AppProviders } from '@/providers';
 import '@/styles/globals.css';
 
@@ -45,10 +46,15 @@ const LocaleLayout = async ({ children, params }: LocaleLayoutProps) => {
   setRequestLocale(locale);
 
   return (
+    /*
+      * The two faces the site is set in, and beside them the flag font
+      * — not a third face: it holds only flag glyphs, and only the
+      * `.nt-flag` stack asks for it. See src/styles/flags.ts.
+      */
     <html
       lang={locale}
       dir={getTextDirection(locale)}
-      className={`${bodyFont.variable} ${displayFont.variable}`}
+      className={`${bodyFont.variable} ${displayFont.variable} ${flagFont.variable}`}
     >
       <body>
         {/*

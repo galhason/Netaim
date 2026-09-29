@@ -52,6 +52,8 @@ export interface RegisterInput {
   dietary?: string;
   organization?: string;
   role?: string;
+  /* ISO 3166-1 alpha-2, the country chosen on the form */
+  country?: string;
   /* the answer to the directory question, chosen on the form */
   directory?: boolean;
 }

@@ -1,3 +1,5 @@
+export { default as CountryFlag } from './components/country-flag';
+export { default as CountrySelect } from './components/country-select';
 export { default as DietarySelect } from './components/dietary-select';
 export {
   DIETARY_KEYS,
@@ -57,6 +59,11 @@ export {
   isStrongPassword,
   passwordSchema,
 } from './schemas/password';
+export {
+  LATIN_NAME_ERROR,
+  LATIN_NAME_HINT,
+  isLatinName,
+} from './schemas/latin-name';
 export {
   getMyDetails,
   getParticipantRegistration,

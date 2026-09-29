@@ -84,7 +84,7 @@ const ConferenceBar = ({ locale, slug, viewer, brandLogo, brand }: ConferenceBar
   const publicLinks: { key: string; href: string; label: string }[] = [
     { key: 'hub', href: wordpressHref('conferences', locale), label: t('conference') },
     { key: 'speakers', href: wordpressHref('conferenceSpeakers', locale), label: t('speakers') },
-    ...(conf ? [{ key: 'program', href: `${conf}/program`, label: t('program') }] : []),
+    ...(conf ? [{ key: 'program', href: wordpressHref('conferenceProgram', locale), label: t('program') }] : []),
     { key: 'info', href: wordpressHref('conferenceInfo', locale), label: t('info') },
     { key: 'networking', href: `/${locale}/me/networking`, label: t('networking') },
   ];

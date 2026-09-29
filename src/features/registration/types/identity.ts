@@ -18,6 +18,11 @@ export interface ParticipantDetailsInput {
   accessibility?: string;
   organization?: string;
   role?: string;
+  /*
+   * ISO 3166-1 alpha-2. The code, not the name: the name is whichever
+   * language the person happened to be reading the form in.
+   */
+  country?: string;
   interests?: string;
   /* How this person introduces themselves, wherever they are listed. */
   headline?: string;

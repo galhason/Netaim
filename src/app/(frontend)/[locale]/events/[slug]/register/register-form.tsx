@@ -11,6 +11,8 @@ import {
 import Link from 'next/link';
 import type { Locale } from '@/config/locales';
 import { isStrongPassword } from '@/features/registration/schemas/password';
+import { isLatinName } from '@/features/registration/schemas/latin-name';
+import { CountrySelect } from '@/features/registration/components';
 import {
   checkEmailAvailableAction,
   requestCodeAction,
@@ -51,6 +53,8 @@ import StepProgress from './ui/step-progress';
 export interface RegisterFormLabels {
   firstName: string;
   lastName: string;
+  /* "English letters only", said before anyone types rather than after. */
+  nameHint: string;
   email: string;
   phone: string;
   password: string;
@@ -58,6 +62,8 @@ export interface RegisterFormLabels {
   passwordHint: string;
   organization: string;
   role: string;
+  country: string;
+  countryPlaceholder: string;
   dietary: string;
   dietaryPlaceholder: string;
   accessibility: string;
@@ -87,6 +93,7 @@ export interface RegisterFormLabels {
     phone: string;
     password: string;
     passwordMismatch: string;
+    nameScript: string;
   };
   conflictBefore: string;
   conflictAfter: string;
@@ -113,6 +120,7 @@ type Values = {
   phone: string;
   organization: string;
   role: string;
+  country: string;
   dietary: string;
   accessibility: string;
   directory: boolean;
@@ -125,6 +133,7 @@ const EMPTY: Values = {
   phone: '',
   organization: '',
   role: '',
+  country: '',
   dietary: '',
   accessibility: '',
   directory: false,
@@ -143,6 +152,13 @@ const REFUSAL_FIELD: Record<string, { step: 1 | 2; field?: string }> = {
    */
   exists: { step: 1 },
   passwordMismatch: { step: 1, field: 'passwordConfirm' },
+  /*
+   * Each name answers for itself: a message under "first name" when
+   * that is the field to change, rather than one notice above both.
+   */
+  firstNameScript: { step: 1, field: 'firstName' },
+  lastNameScript: { step: 1, field: 'lastName' },
+  country: { step: 2, field: 'country' },
   invalid: { step: 1 },
   conflict: { step: 2 },
   tooManyCodes: { step: 2 },
@@ -190,6 +206,21 @@ const Lock = () => (
   >
     <rect x="4" y="9" width="12" height="8" rx="2" />
     <path d="M7 9V6.5a3 3 0 0 1 6 0V9" />
+  </svg>
+);
+
+const Globe = () => (
+  <svg
+    viewBox="0 0 20 20"
+    aria-hidden="true"
+    className="mt-0.5 size-3.5 flex-none"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.6"
+  >
+    <circle cx="10" cy="10" r="7.2" />
+    <ellipse cx="10" cy="10" rx="3.1" ry="7.2" />
+    <path d="M3 7.7h14M3 12.3h14" strokeLinecap="round" />
   </svg>
 );
 
@@ -302,7 +333,9 @@ const RegisterForm = ({
     const errors: Record<string, string> = {};
     const f = labels.fieldErrors;
     if (!values.firstName.trim()) errors.firstName = f.required;
+    else if (!isLatinName(values.firstName)) errors.firstName = f.nameScript;
     if (!values.lastName.trim()) errors.lastName = f.required;
+    else if (!isLatinName(values.lastName)) errors.lastName = f.nameScript;
     if (!values.email.trim()) errors.email = f.required;
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim()))
       errors.email = f.email;
@@ -322,6 +355,7 @@ const RegisterForm = ({
     const f = labels.fieldErrors;
     if (!values.organization.trim()) errors.organization = f.required;
     if (!values.role.trim()) errors.role = f.required;
+    if (!values.country) errors.country = f.required;
     if (!values.dietary) errors.dietary = f.required;
     return errors;
   };
@@ -448,7 +482,7 @@ const RegisterForm = ({
                   value={values.firstName}
                   onChange={set('firstName')}
                   aria-invalid={Boolean(fieldErrors.firstName)}
-                  aria-describedby={describe('firstName')}
+                  aria-describedby={describe('firstName', 'reg-name-hint')}
                   className={cls('firstName')}
                 />
                 <FieldError id="err-firstName" text={fieldErrors.firstName} />
@@ -466,12 +500,25 @@ const RegisterForm = ({
                   value={values.lastName}
                   onChange={set('lastName')}
                   aria-invalid={Boolean(fieldErrors.lastName)}
-                  aria-describedby={describe('lastName')}
+                  aria-describedby={describe('lastName', 'reg-name-hint')}
                   className={cls('lastName')}
                 />
                 <FieldError id="err-lastName" text={fieldErrors.lastName} />
               </div>
             </div>
+
+            {/*
+              * The alphabet rule, said before anybody types. Announced
+              * by both name fields, so a screen reader hears it on the
+              * way into the first box rather than after being refused.
+              */}
+            <p
+              id="reg-name-hint"
+              className="-mt-3 flex items-start gap-2 text-[13px] leading-relaxed text-[var(--x-soft)]"
+            >
+              <Globe />
+              <span>{labels.nameHint}</span>
+            </p>
 
             <div>
               <label htmlFor="reg-email" className={labelCls}>
@@ -583,6 +630,7 @@ const RegisterForm = ({
             {/* Step two's values travel along, unseen. */}
             <input type="hidden" name="organization" value={values.organization} />
             <input type="hidden" name="role" value={values.role} />
+            <input type="hidden" name="country" value={values.country} />
             <input type="hidden" name="dietary" value={values.dietary} />
             <input type="hidden" name="accessibility" value={values.accessibility} />
             {values.directory ? (
@@ -628,6 +676,32 @@ const RegisterForm = ({
                 />
                 <FieldError id="err-role" text={fieldErrors.role} />
               </div>
+            </div>
+
+            {/*
+              * Where the guest comes from. A list, not a box: "ישראל",
+              * "Israel" and "IL" are one country and three rows in any
+              * count taken afterwards. The stored answer is the code.
+              */}
+            <div>
+              <label htmlFor="reg-country" className={labelCls}>
+                {labels.country} <span aria-hidden="true">*</span>
+              </label>
+              <CountrySelect
+                id="reg-country"
+                locale={locale}
+                defaultValue={values.country}
+                onChange={(code) => {
+                  setValues((current) => ({ ...current, country: code }));
+                  clearError('country');
+                }}
+                required
+                placeholder={labels.countryPlaceholder}
+                aria-invalid={Boolean(fieldErrors.country)}
+                aria-describedby={describe('country')}
+                className={cls('country')}
+              />
+              <FieldError id="err-country" text={fieldErrors.country} />
             </div>
 
             <div>

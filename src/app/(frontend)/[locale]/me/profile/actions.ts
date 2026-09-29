@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { isSupportedLocale } from '@/config/locales';
+import { isCountryCode } from '@/shared/constants/countries';
 import {
   beginTotpEnrollment,
   confirmTotpEnrollment,
@@ -61,6 +62,16 @@ export const saveAccountProfileAction = async (formData: FormData) => {
     phone: optional(formData.get('phone')),
     organization: optional(formData.get('organization')),
     role: optional(formData.get('role')),
+    /*
+     * A code the list knows, or nothing. `''` and not `undefined` for
+     * an unrecognised value, so that clearing the field in the form
+     * actually clears the stored country instead of quietly keeping
+     * the old one — and so that nothing outside the list is ever
+     * written, whatever was posted.
+     */
+    country: isCountryCode(formData.get('country') as string)
+      ? String(formData.get('country')).trim().toUpperCase()
+      : '',
     dietary: optional(formData.get('dietary')),
     accessibility: optional(formData.get('accessibility')),
     interests: optional(formData.get('interests')),

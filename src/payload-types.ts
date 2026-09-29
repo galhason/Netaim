@@ -471,6 +471,10 @@ export interface Participant {
   orgName?: string | null;
   roleTitle?: string | null;
   /**
+   * ISO 3166-1 alpha-2 country code, e.g. IL
+   */
+  country?: string | null;
+  /**
    * Comma-separated interests shown on the profile card
    */
   interests?: string | null;
@@ -1341,6 +1345,7 @@ export interface ParticipantsSelect<T extends boolean = true> {
   dietary?: T;
   orgName?: T;
   roleTitle?: T;
+  country?: T;
   interests?: T;
   headline?: T;
   bio?: T;

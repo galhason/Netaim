@@ -159,6 +159,7 @@ export const LOUNGE_UI = {
   fieldPhone: { he: 'נייד', en: 'Mobile' },
   fieldOrganization: { he: 'ארגון / מוסד', en: 'Organization' },
   fieldRole: { he: 'תפקיד', en: 'Role' },
+  fieldCountry: { he: 'מדינה', en: 'Country' },
   fieldDietary: { he: 'העדפות תזונה', en: 'Dietary preferences' },
   fieldAccessibility: { he: 'צורכי נגישות', en: 'Accessibility needs' },
   saveProfile: { he: 'שמירה', en: 'Save' },

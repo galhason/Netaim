@@ -129,6 +129,23 @@ export const Participants: CollectionConfig = {
       type: 'text',
     },
     {
+      /*
+       * Where this person comes from: ISO 3166-1 alpha-2, upper case.
+       *
+       * The code and not the name, because the name is a translation —
+       * the same guest is "ישראל" on one screen and "Israel" on the
+       * next, and a participants export that groups by the label
+       * counts one country twice. src/shared/constants/countries.ts
+       * holds the list and both names; this holds the answer.
+       */
+      name: 'country',
+      type: 'text',
+      maxLength: 2,
+      admin: {
+        description: 'ISO 3166-1 alpha-2 country code, e.g. IL',
+      },
+    },
+    {
       name: 'interests',
       type: 'text',
       admin: {
