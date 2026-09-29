@@ -331,7 +331,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
          * personal area fans out across every conference the account has
          * joined, so a card from 2027 must lead to 2027's programme.
          */
-        href: `/${locale}/events/${slug}/program?activity=${session.id}`,
+        href: `/${locale}/events/${slug}/agenda?activity=${session.id}`,
       },
     });
     const sessionSets = await Promise.all(
@@ -395,7 +395,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
         sessionsSection={{
           registered: registeredSessions,
           presenting: presentingSessions,
-          programHref: `/${locale}/events/${chosen?.slug ?? activeSlug}/program`,
+          programHref: `/${locale}/events/${chosen?.slug ?? activeSlug}/agenda`,
         }}
         homeHref={`/${locale}/me`}
         profileHref={`/${locale}/me/profile`}

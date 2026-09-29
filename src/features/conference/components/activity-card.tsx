@@ -85,7 +85,7 @@ const ActivityCard = ({
     );
   };
   const share = async () => {
-    const url = `${window.location.origin}${withBasePath(`/${locale}/events/${slug}/program`)}`;
+    const url = `${window.location.origin}${withBasePath(`/${locale}/events/${slug}/agenda`)}`;
     try {
       await navigator.clipboard.writeText(url);
       toast.show(he ? 'הקישור הועתק' : 'Link copied', 'info');

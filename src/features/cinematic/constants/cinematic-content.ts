@@ -110,7 +110,7 @@ export const siteNavLinks = (
   const label = (key: string): string => SITE_NAV_LABELS[key]?.[locale] ?? key;
   const conference: SiteNavLink[] = slug
     ? [
-        { key: 'program', href: `/${locale}/events/${slug}/program`, label: label('program') },
+        { key: 'program', href: `/${locale}/events/${slug}/agenda`, label: label('program') },
         { key: 'speakers', href: `/${locale}/events/${slug}/speakers`, label: label('speakers') },
       ]
     : [];

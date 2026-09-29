@@ -85,7 +85,7 @@ describe('the way out to the organisation website', () => {
       '/he/events/',
       '/en/events/',
       '/he/events/netaim-2026',
-      '/he/events/netaim-2026/program',
+      '/he/events/netaim-2026/agenda',
       '/en/events/netaim-2031/networking',
       '/he/me',
       '/he',

@@ -65,7 +65,7 @@ const conferencePaths = (
 ): { programHref: string; speakersHref: string } =>
   slug
     ? {
-        programHref: `/${locale}/events/${slug}/program`,
+        programHref: `/${locale}/events/${slug}/agenda`,
         speakersHref: `/${locale}/events/${slug}/speakers`,
       }
     : { programHref: wordpressHref('home', locale), speakersHref: wordpressHref('home', locale) };

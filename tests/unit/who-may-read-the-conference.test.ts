@@ -24,7 +24,7 @@ const EXPERIENCE = `${FRONTEND}/events/[slug]/(experience)`;
 
 describe('the conference is read by people who joined it', () => {
   const GUARDED = [
-    `${EXPERIENCE}/program/page.tsx`,
+    `${EXPERIENCE}/agenda/page.tsx`,
     `${EXPERIENCE}/speakers/page.tsx`,
     `${EXPERIENCE}/speakers/[id]/page.tsx`,
   ];
@@ -114,11 +114,21 @@ describe('the navigation bar carries the conference, not the contact form', () =
     }
   });
 
+  /*
+   * The key and the segment are not always the same word. The
+   * programme's own key stayed `program` -- it is what the link is
+   * called to a reader -- while its address moved to `/agenda`,
+   * because the edge gives every URL ending in `/program` to
+   * WordPress and a platform page cannot live at one.
+   */
   it('names the conference in every conference link', () => {
     const links = siteNavLinks('he', 'any-conference');
-    for (const key of ['program', 'speakers']) {
+    for (const [key, segment] of [
+      ['program', 'agenda'],
+      ['speakers', 'speakers'],
+    ] as const) {
       const link = links.find((entry) => entry.key === key);
-      expect(link?.href).toBe(`/he/events/any-conference/${key}`);
+      expect(link?.href, key).toBe(`/he/events/any-conference/${segment}`);
     }
   });
 

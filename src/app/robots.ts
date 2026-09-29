@@ -52,8 +52,8 @@ const robots = (): MetadataRoute.Robots => ({
          * point of the map. The conference's public information page
          * lives on the organisation's WordPress site now, not here.
          */
-        '/he/events/*/program',
-        '/en/events/*/program',
+        '/he/events/*/agenda',
+        '/en/events/*/agenda',
         '/he/events/*/speakers',
         '/en/events/*/speakers',
         '/he/events/*/workshops',

@@ -773,7 +773,7 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
             <Link
               href={
                 directorySlug
-                  ? `/${locale}/events/${directorySlug}/program`
+                  ? `/${locale}/events/${directorySlug}/agenda`
                   : wordpressHref('home', locale as Locale)
               }
               className="inline-flex min-h-11 items-center rounded-full bg-[var(--n-navy)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--n-deep)]"

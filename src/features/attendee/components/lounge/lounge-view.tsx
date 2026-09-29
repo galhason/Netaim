@@ -264,7 +264,7 @@ const LoungeView = ({
    */
   const networkingHref = `${platformBase}/networking`;
   const workshopsHref = content.slug
-    ? `/${locale}/events/${content.slug}/program`
+    ? `/${locale}/events/${content.slug}/agenda`
     : wordpressHref('home', locale);
   const messagesHref = content.slug
     ? `${base}/me/messages`

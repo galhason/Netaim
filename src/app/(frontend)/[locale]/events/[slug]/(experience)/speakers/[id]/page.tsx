@@ -177,7 +177,7 @@ const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
                     <span className="size-2.5 rounded-full bg-[var(--x-primary)] ring-4 ring-[var(--x-bg)]" />
                   </span>
                   <Link
-                    href={`/${lang}/events/${slug}/program`}
+                    href={`/${lang}/events/${slug}/agenda`}
                     className={`${surface} group flex items-center gap-4 border border-[var(--x-line)] p-4 transition-all hover:-translate-y-0.5 hover:border-[var(--x-primary)]/25 hover:shadow-[var(--x-shadow-lift)]`}
                   >
                     <span className="min-w-0 flex-1">
@@ -210,7 +210,7 @@ const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
         </section>
 
         <div className="mt-8">
-          <GhostLink href={`/${lang}/events/${slug}/program`}>
+          <GhostLink href={`/${lang}/events/${slug}/agenda`}>
             {he ? 'לתוכנית הכנס המלאה' : 'View the full program'}
           </GhostLink>
         </div>

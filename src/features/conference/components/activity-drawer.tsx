@@ -249,7 +249,7 @@ const ActivityDrawer = ({
   const from = he ? -28 : 28;
   const shareUrl =
     typeof window !== 'undefined'
-      ? `${window.location.origin}${withBasePath(`/${locale}/events/${slug}/program`)}`
+      ? `${window.location.origin}${withBasePath(`/${locale}/events/${slug}/agenda`)}`
       : '';
 
   const copyLink = async () => {
