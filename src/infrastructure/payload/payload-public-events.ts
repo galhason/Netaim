@@ -97,7 +97,13 @@ export const toOpeningContent = (event: Event): EventOpeningContent => {
     programDays: (event.opening?.programDays ?? []).map((row) => ({
       theme: row.theme ?? undefined,
       description: row.description ?? undefined,
+      imageUrl: mediaUrl(row.image),
     })),
+    preview: {
+      title: opening?.preview?.title ?? undefined,
+      lede: opening?.preview?.lede ?? undefined,
+      imageUrl: mediaUrl(opening?.preview?.image),
+    },
     venue: {
       name: opening?.venue?.name ?? undefined,
       address: opening?.venue?.address ?? undefined,

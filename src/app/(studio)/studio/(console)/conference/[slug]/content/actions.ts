@@ -28,7 +28,7 @@ export interface SectionSaveInput {
   shared: Record<string, string>;
   facts?: { icon: string; he: { label: string; description: string }; en: { label: string; description: string } }[];
   moments?: { imageId: string; he: string; en: string }[];
-  programDays?: { he: { theme: string; description: string }; en: { theme: string; description: string } }[];
+  programDays?: { imageId?: string; he: { theme: string; description: string }; en: { theme: string; description: string } }[];
 }
 
 export type SectionSaveOutcome =
@@ -106,6 +106,13 @@ export const saveConferenceSectionAction = async (
         write.programDays = input.programDays.map((day) => ({
           theme: locale === 'he' ? day.he.theme : day.en.theme,
           description: locale === 'he' ? day.he.description : day.en.description,
+          /*
+           * A picture is not a translation, so both passes write the
+           * same one — otherwise the English save would clear what the
+           * Hebrew save had just set. '' is a real instruction: the
+           * day has no picture of its own and the site falls back.
+           */
+          imageId: day.imageId ? day.imageId : null,
         }));
       }
 

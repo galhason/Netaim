@@ -310,12 +310,21 @@ export interface Event {
         }[]
       | null;
     /**
+     * The "a taste of the conference" section: heading, line and backdrop
+     */
+    preview?: {
+      title?: string | null;
+      lede?: string | null;
+      image?: (number | null) | Media;
+    };
+    /**
      * Per-day themes for the program journey (Day 1, 2, 3…): one row per conference day, in order
      */
     programDays?:
       | {
           theme?: string | null;
           description?: string | null;
+          image?: (number | null) | Media;
           id?: string | null;
         }[]
       | null;
@@ -1212,11 +1221,19 @@ export interface EventsSelect<T extends boolean = true> {
               photo?: T;
               id?: T;
             };
+        preview?:
+          | T
+          | {
+              title?: T;
+              lede?: T;
+              image?: T;
+            };
         programDays?:
           | T
           | {
               theme?: T;
               description?: T;
+              image?: T;
               id?: T;
             };
         venue?:

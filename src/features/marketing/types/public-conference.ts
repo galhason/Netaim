@@ -146,6 +146,13 @@ export interface PublicConference {
   closingLine?: string;
   closing?: PublicClosing;
   venue?: PublicVenue;
+  /*
+   * The "a taste of the conference" band: its heading, the line under
+   * it and the picture behind it. Absent when the conference has said
+   * nothing, which is the site's cue to keep its own wording -- these
+   * are an override, not a requirement.
+   */
+  preview?: PublicPreview;
   sessions: PublicSession[];
   speakers: PublicSpeaker[];
   sponsors: PublicSponsor[];
@@ -167,10 +174,39 @@ export interface PublicConference {
  * places remain, or whether the reader may attend -- that is the
  * platform's own programme, behind sign-in, and it stays there.
  */
+export interface PublicPreviewDay {
+  theme?: string;
+  description?: string;
+  image?: PublicImage;
+}
+
+export interface PublicPreview {
+  title?: string;
+  lede?: string;
+  image?: PublicImage;
+  /*
+   * What the conference calls each of its days, in order: row one is
+   * day one. The same list the programme endpoint resolves onto its
+   * dated days, carried here as well because the conference page draws
+   * this band without asking for the full programme. A row may be
+   * entirely empty -- a conference that named only its second day.
+   */
+  days?: PublicPreviewDay[];
+}
+
 export interface PublicProgramDay {
   /* YYYY-MM-DD, on the venue clock. */
   date: string;
   sessions: PublicSession[];
+  /*
+   * What the conference calls this day, and its picture -- the Studio's
+   * "day themes", one row per day in order. They were editable long
+   * before anything published them, so a conference could name its days
+   * and no reader ever saw it. Each is absent when unset.
+   */
+  theme?: string;
+  description?: string;
+  image?: PublicImage;
   /*
    * A taste of the day: up to three of its sessions, chosen by the same
    * rule the landing page teases with (featured, else the nearest

@@ -19,6 +19,8 @@ import type {
   PublicSponsor,
   PublicStory,
   PublicVenue,
+  PublicPreview,
+  PublicPreviewDay,
   PublicProgram,
   PublicProgramDay,
 } from '../types/public-conference';
@@ -100,6 +102,48 @@ const closingOf = (
   return {
     ...(closing.line ? { line: closing.line } : {}),
     ...(picture ? { image: picture } : {}),
+  };
+};
+
+/*
+ * The "a taste of the conference" band. Absent when the conference has
+ * said nothing about it -- silence is the site's cue to keep its own
+ * heading rather than render an empty one.
+ */
+const previewDaysOf = (
+  opening: EventOpeningContent | null,
+  origin: string,
+): PublicPreviewDay[] =>
+  (opening?.programDays ?? []).map((day) => {
+    const picture = image(day.imageUrl, origin);
+    return {
+      ...(day.theme ? { theme: day.theme } : {}),
+      ...(day.description ? { description: day.description } : {}),
+      ...(picture ? { image: picture } : {}),
+    };
+  });
+
+const previewOf = (
+  opening: EventOpeningContent | null,
+  origin: string,
+): PublicPreview | undefined => {
+  const preview = opening?.preview;
+  const days = previewDaysOf(opening, origin);
+  const named = days.filter((day) => Object.keys(day).length > 0);
+  const picture = image(preview?.imageUrl, origin);
+  if (!preview?.title && !preview?.lede && !picture && named.length === 0) {
+    return undefined;
+  }
+  return {
+    ...(preview?.title ? { title: preview.title } : {}),
+    ...(preview?.lede ? { lede: preview.lede } : {}),
+    ...(picture ? { image: picture } : {}),
+    /*
+     * The whole list, trailing empties and all, because position is
+     * what identifies a day here -- dropping the blank rows would
+     * shift every row after them onto the wrong day.
+     */
+    ...(named.length > 0 ? { days } : {}),
   };
 };
 
@@ -256,6 +300,7 @@ const conferenceOf = (
   ...(opening?.closing?.line ? { closingLine: opening.closing.line } : {}),
   ...(closingOf(opening, origin) ? { closing: closingOf(opening, origin) } : {}),
   ...(venueOf(opening, origin) ? { venue: venueOf(opening, origin) } : {}),
+  ...(previewOf(opening, origin) ? { preview: previewOf(opening, origin) } : {}),
   sessions,
   speakers,
   sponsors,
@@ -373,8 +418,9 @@ export const publicProgram = async (
     return null;
   }
 
-  const [portal, sessions, speakers] = await Promise.all([
+  const [portal, opening, sessions, speakers] = await Promise.all([
     findPortalEvent(slug, locale),
+    findEventOpeningContent(slug, locale).catch(() => null),
     marketingRepository.sessionsOfEvent(identity.id, locale),
     marketingRepository.speakersOfEvent(identity.id, locale),
   ]);
@@ -414,6 +460,24 @@ export const publicProgram = async (
       String(session.id),
     );
   }
+
+  /*
+   * What the conference calls each day, laid onto the days it actually
+   * has. The Studio's list is positional -- "Day 1, 2, 3…" -- so row N
+   * belongs to the Nth dated day of the programme, and a list longer or
+   * shorter than the programme simply runs out. Nothing is invented: a
+   * day the conference never named carries no theme.
+   */
+  const named = previewDaysOf(opening, origin);
+  days.forEach((day, index) => {
+    const row = named[index];
+    if (!row) {
+      return;
+    }
+    if (row.theme) day.theme = row.theme;
+    if (row.description) day.description = row.description;
+    if (row.image) day.image = row.image;
+  });
 
   return {
     slug: portal.slug,

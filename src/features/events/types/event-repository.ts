@@ -172,6 +172,14 @@ export interface EventOpeningInput {
   closingLine?: string;
   closingImageId?: string | null;
   /*
+   * The "a taste of the conference" section: its heading, the line
+   * beneath it and the picture behind the band. Words the WordPress
+   * theme used to hold.
+   */
+  previewTitle?: string;
+  previewLede?: string;
+  previewImageId?: string | null;
+  /*
    * Replaces the whole gallery: the images in order, each with its
    * caption for the locale being saved.
    */
@@ -189,7 +197,13 @@ export interface EventOpeningInput {
     role?: string;
     photoId?: string | null;
   }[];
-  programDays?: { theme?: string; description?: string }[];
+  /*
+   * One row per conference day, in order. `imageId` is the day's own
+   * picture in the preview section; left empty the site falls back to
+   * the cover of that day's first activity, which is what it used
+   * before the field existed.
+   */
+  programDays?: { theme?: string; description?: string; imageId?: string | null }[];
 }
 
 export interface EventOpeningDraft {
@@ -224,6 +238,7 @@ export interface EventOpeningDraft {
     imageId?: string;
   };
   closing: { line?: string; imageId?: string };
+  preview: { title?: string; lede?: string; imageId?: string };
   moments: { imageId?: string; caption?: string }[];
   speakers: {
     id?: string;
@@ -236,7 +251,7 @@ export interface EventOpeningDraft {
     photoId?: string;
     photoUrl?: string;
   }[];
-  programDays: { theme?: string; description?: string }[];
+  programDays: { theme?: string; description?: string; imageId?: string }[];
 }
 
 export interface SceneCompositionEntry {
@@ -297,5 +312,6 @@ export interface EventOpeningContent {
     facts: { label?: string; icon?: string; description?: string }[];
   };
   closing: { line?: string; imageUrl?: string; videoUrl?: string };
-  programDays: { theme?: string; description?: string }[];
+  preview: { title?: string; lede?: string; imageUrl?: string };
+  programDays: { theme?: string; description?: string; imageUrl?: string }[];
 }

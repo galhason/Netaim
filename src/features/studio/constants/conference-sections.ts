@@ -146,9 +146,28 @@ export const CONFERENCE_SECTIONS: ConferenceSection[] = [
     scene: 'venue',
   },
   {
+    id: 'preview',
+    label: t('טעימה מהכנס', 'A taste of the conference'),
+    description: t(
+      'הסקשן באתר שמראה את ימי הכנס וכמה פעילויות מכל יום. כאן הכותרת, המשפט שמתחתיה והתמונה שברקע; הימים עצמם והפעילויות מגיעים מהתוכנית.',
+      'The section on the site that shows the conference days and a few activities from each. The heading, the line beneath it and the backdrop live here; the days and the activities come from the program.',
+    ),
+    fields: [
+      { key: 'previewTitle', kind: 'text', localized: true, label: t('כותרת הסקשן', 'Section heading'), hint: t('ריק = האתר מציג את הנוסח שלו.', 'Empty = the site shows its own wording.'), onSite: true },
+      { key: 'previewLede', kind: 'textarea', localized: true, rows: 2, label: t('המשפט שמתחת', 'The line beneath'), onSite: true },
+    ],
+    media: [
+      { key: 'previewImageId', kind: 'image', label: t('תמונת רקע לסקשן', 'Section backdrop'), hint: t('התמונה הרחבה מאחורי כל הסקשן. מומלץ לרוחב, 1600px לפחות.', 'The wide picture behind the whole band. Landscape, at least 1600px.'), onSite: true },
+    ],
+    scene: 'program',
+  },
+  {
     id: 'programDays',
     label: t('נושאי הימים', 'Day themes'),
-    description: t('כותרת ותיאור לכל יום כנס — מעל התוכנית.', 'A theme and a line for each conference day — above the program.'),
+    description: t(
+      'כותרת, תיאור ותמונה לכל יום כנס — מה שמופיע על הטאב של היום בסקשן "טעימה מהכנס". בלי תמונה, האתר מציג את תמונת הפעילות הראשונה של אותו יום.',
+      'A theme, a line and a picture for each conference day — what the day\'s tab shows in the "a taste of the conference" section. Without a picture, the site shows the first activity of that day.',
+    ),
     fields: [],
     media: [],
     special: 'programDays',
@@ -236,6 +255,7 @@ export const CONTENT_EDITOR_UI = {
   library: t('הספרייה', 'Library'),
   close: t('סגירה', 'Close'),
   addRow: t('הוספה', 'Add'),
+  dayImage: t('תמונת היום', "The day's picture"),
   removeRow: t('הסרה', 'Remove'),
   factLabel: t('כותרת', 'Label'),
   factDescription: t('תיאור', 'Description'),

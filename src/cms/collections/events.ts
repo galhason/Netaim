@@ -207,6 +207,27 @@ export const Events: CollectionConfig = {
           ],
         },
         {
+          /*
+           * The "a taste of the conference" section on the WordPress
+           * page (#nt-preview): its heading, the line beneath it, and
+           * the picture behind the whole band. All three were written
+           * into the theme, so the only way to change a word of them
+           * was to edit PHP. They are content, and content belongs to
+           * whoever runs the conference.
+           */
+          name: 'preview',
+          type: 'group',
+          admin: {
+            description:
+              'The "a taste of the conference" section: heading, line and backdrop',
+          },
+          fields: [
+            { name: 'title', type: 'text', localized: true },
+            { name: 'lede', type: 'textarea', localized: true },
+            { name: 'image', type: 'relationship', relationTo: 'media' },
+          ],
+        },
+        {
           name: 'programDays',
           type: 'array',
           admin: {
@@ -216,6 +237,19 @@ export const Events: CollectionConfig = {
           fields: [
             { name: 'theme', type: 'text', localized: true },
             { name: 'description', type: 'textarea', localized: true },
+            {
+              /*
+               * The day's own picture in the preview section. Until now
+               * that slot borrowed the cover of the day's first
+               * activity, which meant the only way to change it was to
+               * change an activity's cover — and the two are not the
+               * same decision. Left empty the site may still fall back
+               * to the activity's cover; set, this wins.
+               */
+              name: 'image',
+              type: 'relationship',
+              relationTo: 'media',
+            },
           ],
         },
         {

@@ -41,6 +41,8 @@ const flat = (draft: EventOpeningDraft): Record<string, string> => ({
   venueAccessibility: draft.venue.accessibility ?? '',
   venueEmergency: draft.venue.emergency ?? '',
   closingLine: draft.closing.line ?? '',
+  previewTitle: draft.preview.title ?? '',
+  previewLede: draft.preview.lede ?? '',
 });
 
 const shared = (draft: EventOpeningDraft): Record<string, string> => ({
@@ -53,6 +55,7 @@ const shared = (draft: EventOpeningDraft): Record<string, string> => ({
   quoteImageId: draft.quote.imageId ?? '',
   venueImageId: draft.venue.imageId ?? '',
   closingImageId: draft.closing.imageId ?? '',
+  previewImageId: draft.preview.imageId ?? '',
 });
 
 const toValues = (he: EventOpeningDraft, en: EventOpeningDraft): EditorValues => {
@@ -73,6 +76,8 @@ const toValues = (he: EventOpeningDraft, en: EventOpeningDraft): EditorValues =>
     }));
   const count = Math.max(he.programDays.length, en.programDays.length);
   const programDays = Array.from({ length: count }, (_, index) => ({
+    /* The picture is written once, not per language — read from the Hebrew pass. */
+    imageId: he.programDays[index]?.imageId ?? '',
     he: { theme: he.programDays[index]?.theme ?? '', description: he.programDays[index]?.description ?? '' },
     en: { theme: en.programDays[index]?.theme ?? '', description: en.programDays[index]?.description ?? '' },
   }));

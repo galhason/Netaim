@@ -16,4 +16,6 @@ export type {
   PublicSponsor,
   PublicVenue,
   PublicClosing,
+  PublicPreview,
+  PublicPreviewDay,
 } from './types/public-conference';

@@ -100,6 +100,11 @@ const toOpeningDraft = (event: Event): EventOpeningDraft => ({
     line: event.opening?.closing?.line ?? undefined,
     imageId: mediaId(event.opening?.closing?.image),
   },
+  preview: {
+    title: event.opening?.preview?.title ?? undefined,
+    lede: event.opening?.preview?.lede ?? undefined,
+    imageId: mediaId(event.opening?.preview?.image),
+  },
   moments: (event.opening?.moments ?? []).map((moment) => ({
     imageId: mediaId(moment.image),
     caption: moment.caption ?? undefined,
@@ -108,6 +113,7 @@ const toOpeningDraft = (event: Event): EventOpeningDraft => ({
   programDays: (event.opening?.programDays ?? []).map((row) => ({
     theme: row.theme ?? undefined,
     description: row.description ?? undefined,
+    imageId: mediaId(row.image),
   })),
 });
 
@@ -608,6 +614,11 @@ export const payloadEventRepository: EventRepository = {
             line: openingText(input.closingLine),
             image: toMediaRelation(input.closingImageId),
           },
+          preview: {
+            title: openingText(input.previewTitle),
+            lede: openingText(input.previewLede),
+            image: toMediaRelation(input.previewImageId),
+          },
           ...(input.moments !== undefined
             ? {
                 moments: input.moments.map((moment) => ({
@@ -632,6 +643,7 @@ export const payloadEventRepository: EventRepository = {
                 programDays: input.programDays.map((day) => ({
                   theme: openingText(day.theme) ?? null,
                   description: openingText(day.description) ?? null,
+                  image: toMediaRelation(day.imageId),
                 })),
               }
             : {}),
