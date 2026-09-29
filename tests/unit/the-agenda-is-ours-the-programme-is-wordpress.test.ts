@@ -122,10 +122,19 @@ describe('WordPress keeps its own programme, untouched', () => {
     expect(isWordPressHref('/he/כנסים/תוכנית/')).toBe(true);
   });
 
-  /* And the conference bar still sends "programme" to WordPress. */
-  it('leaves the conference bar pointing at WordPress', () => {
+  /*
+   * WordPress keeps its listing, but no participant is sent to it: the
+   * bar's "programme" is the agenda, where registering is possible. The
+   * address stays declared in the one table of WordPress addresses and
+   * is used nowhere else in the platform.
+   */
+  it('is where no participant-facing link leads', () => {
+    const offenders = walk('src')
+      .filter((file) => file !== 'src/config/wordpress.ts')
+      .filter((file) => read(file).includes("'conferenceProgram'"));
+    expect(offenders).toEqual([]);
     const bar = read('src/features/conference/components/conference-bar.tsx');
-    expect(bar).toContain("wordpressHref('conferenceProgram', locale)");
+    expect(bar).toContain('href: `${conf}/agenda`');
   });
 });
 

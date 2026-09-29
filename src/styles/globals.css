@@ -40,6 +40,13 @@
   --nt-blue-ink: #1b5e82; /* 7.07 on white, 7.07 white-on */
   --nt-green-ink: #117b3c; /* 5.35 on white, 5.35 white-on */
   --nt-amber-ink: #8f5904; /* 5.84 on white, 5.24 on its own wash */
+  /*
+   * The programme's green: the colour of the organisation's own
+   * programme page (its green-600 and green-800), where a chosen day,
+   * a chosen filter and every primary button are this, not navy.
+   */
+  --nt-green-deep: #166633; /* 7.04 on white, 7.04 white-on, 6.25 on green-wash */
+  --nt-green-deeper: #0f4a24; /* 10.37 on white, 9.20 on green-wash — the pressed green */
 
   /* --- washes: a brand colour at the strength of a background --- */
   --nt-navy-wash: #eef3fa;
@@ -114,6 +121,8 @@
 
   /* The focus ring: brand blue, at the strength of a halo. */
   --nt-ring: rgb(42 144 200 / 0.35);
+  /* The same halo in the programme's green. */
+  --nt-green-ring: rgb(22 102 51 / 0.22);
 
   /*
    * What the accessibility widget's high-contrast mode swaps the two
@@ -753,6 +762,9 @@ main [id] {
   --x-ring: var(--nt-ring);
   --x-interactive: var(--nt-blue-ink);
   --x-interactive-wash: var(--nt-blue-wash);
+  /* A tour's pill: the interactive blue here, amber in the programme. */
+  --x-tour: var(--x-interactive);
+  --x-tour-wash: var(--x-interactive-wash);
 
   --x-ok: var(--nt-green-ink);
   --x-ok-wash: var(--nt-green-wash);
@@ -778,12 +790,49 @@ main [id] {
   --x-r-card: var(--nt-r-lg);
   --x-r-field: var(--nt-r-md);
   --x-r-pill: var(--nt-r-pill);
+  /* The registration button: a field-shaped control, medium weight. */
+  --x-r-button: var(--x-r-field);
+  --x-button-weight: 500;
   --x-shadow: var(--nt-shadow);
   --x-shadow-lift: var(--nt-shadow-lift);
   --x-shadow-drawer: var(--nt-shadow-drawer);
 
   color: var(--x-ink);
   font-family: var(--font-body), 'Segoe UI', sans-serif;
+}
+
+/*
+ * The agenda, in the organisation's programme colours.
+ *
+ * The public programme on the WordPress site is this same page —
+ * ported from it, down to the 54px time column and the 336px aside —
+ * drawn in Netaim green where the platform draws navy. A participant
+ * moves between the two constantly, and the one they register on
+ * should not look like a different organisation's. So the agenda
+ * renames the handful of `--x-*` values that differ and inherits
+ * everything else: the same layout, the same surfaces, the same
+ * neutrals, which the two already share value for value.
+ *
+ * Scoped to the agenda and nothing wider. The personal schedule,
+ * registration and the speaker pages keep the navy they were
+ * designed in; they are not the programme.
+ *
+ * Orange stays decoration here, never text: at 2.07 on white it
+ * cannot carry a word, which is why the eyebrow is green — as it is
+ * in the WordPress programme itself.
+ */
+.experience--programme {
+  --x-primary: var(--nt-green-deep);
+  --x-primary-strong: var(--nt-green-deeper);
+  --x-primary-wash: var(--nt-green-wash);
+  --x-ring: var(--nt-green-ring);
+  --x-tour: var(--nt-amber-ink);
+  --x-tour-wash: var(--nt-orange-wash);
+  /* The chosen filter chip — the one thing the platform draws in --x-nav. */
+  --x-nav: var(--nt-green-deep);
+  /* The programme's buttons are pills, and bold. */
+  --x-r-button: var(--x-r-pill);
+  --x-button-weight: 700;
 }
 
 @keyframes x-rise {

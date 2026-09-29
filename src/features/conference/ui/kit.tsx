@@ -115,7 +115,7 @@ const TYPE_TONE: Record<SessionType, string> = {
   talk: 'bg-[var(--x-mute-wash)] text-[var(--x-mute)]',
   workshop: 'bg-[var(--x-ok-wash)] text-[var(--x-ok)]',
   panel: 'bg-[var(--x-wait-wash)] text-[var(--x-wait)]',
-  tour: 'bg-[var(--x-interactive-wash)] text-[var(--x-interactive)]',
+  tour: 'bg-[var(--x-tour-wash)] text-[var(--x-tour)]',
   break: 'bg-[var(--x-mute-wash)] text-[var(--x-soft)]',
 } as unknown as Record<SessionType, string>;
 
@@ -247,14 +247,20 @@ interface RegProps {
   block?: boolean;
 }
 
+/*
+ * The registration control's shape and weight come from the page it is
+ * on. Across the platform it is the field-radius, medium-weight button
+ * it always was; in the agenda it is the organisation's programme
+ * button — a pill, set bold (see `.experience--programme`).
+ */
 const PRIMARY_BTN =
-  'inline-flex items-center justify-center gap-2 rounded-[var(--x-r-field)] bg-[var(--x-primary)] font-medium text-[var(--x-primary-ink)] transition-colors hover:bg-[var(--x-primary-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--x-primary)]';
+  'inline-flex items-center justify-center gap-2 rounded-[var(--x-r-button)] bg-[var(--x-primary)] [font-weight:var(--x-button-weight)] text-[var(--x-primary-ink)] transition-colors hover:bg-[var(--x-primary-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--x-primary)]';
 const WAIT_BTN =
-  'inline-flex items-center justify-center gap-2 rounded-[var(--x-r-field)] bg-[var(--x-warn-wash)] font-medium text-[var(--x-warn)] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--x-warn)]';
+  'inline-flex items-center justify-center gap-2 rounded-[var(--x-r-button)] bg-[var(--x-warn-wash)] [font-weight:var(--x-button-weight)] text-[var(--x-warn)] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--x-warn)]';
 const DONE_BTN =
-  'inline-flex items-center justify-center gap-2 rounded-[var(--x-r-field)] bg-[var(--x-ok-wash)] font-medium text-[var(--x-ok)]';
+  'inline-flex items-center justify-center gap-2 rounded-[var(--x-r-button)] bg-[var(--x-ok-wash)] [font-weight:var(--x-button-weight)] text-[var(--x-ok)]';
 const MUTED_BTN =
-  'inline-flex items-center justify-center gap-2 rounded-[var(--x-r-field)] bg-[var(--x-mute-wash)] font-medium text-[var(--x-faint)] cursor-not-allowed';
+  'inline-flex items-center justify-center gap-2 rounded-[var(--x-r-button)] bg-[var(--x-mute-wash)] [font-weight:var(--x-button-weight)] text-[var(--x-faint)] cursor-not-allowed';
 
 export const RegistrationButton = ({
   state,

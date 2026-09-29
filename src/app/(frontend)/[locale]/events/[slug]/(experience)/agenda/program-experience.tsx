@@ -176,7 +176,13 @@ const ProgramExperience = ({
         : null;
 
   return (
-    <main id="main-content" className="experience min-h-dvh bg-[var(--x-bg)]">
+    /*
+      * `experience--programme`: the agenda wears the organisation's
+      * programme green rather than the platform's navy (globals.css). It
+      * reaches everything inside, the drawer included, because the drawer
+      * renders in place rather than through a portal.
+      */
+    <main id="main-content" className="experience experience--programme min-h-dvh bg-[var(--x-bg)]">
       <ToastProvider
         initial={noticeText ? { message: noticeText, tone: 'warn' } : undefined}
       >
@@ -184,15 +190,24 @@ const ProgramExperience = ({
       <header className="relative overflow-hidden border-b border-[var(--x-line)]">
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-[radial-gradient(120%_120%_at_50%_-20%,var(--nt-navy-wash)_0%,var(--nt-raise)_55%,var(--x-bg)_100%)]"
+          className="absolute inset-0 bg-[radial-gradient(120%_120%_at_50%_-20%,var(--x-primary-wash)_0%,var(--nt-raise)_55%,var(--x-bg)_100%)]"
         />
         <div className="relative mx-auto max-w-6xl px-6 pb-7 pt-10 text-center md:px-10 md:pt-12">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--x-primary)]">
             {COPY.eyebrow[locale]}
           </p>
-          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-tight text-[var(--x-ink)] md:text-5xl">
+          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-tight text-[var(--x-primary)] md:text-5xl">
             {title}
           </h1>
+          {/*
+            * The short orange rule under a Netaim heading — on the
+            * organisation's programme page and under every day heading
+            * there. Decoration only: orange cannot carry text on white.
+            */}
+          <span
+            aria-hidden="true"
+            className="mx-auto mt-4 block h-[3px] w-12 rounded-full bg-[var(--nt-orange)]"
+          />
           <p className="mx-auto mt-3 max-w-xl text-[15px] text-[var(--x-soft)] md:text-base">
             {COPY.sub[locale]}
           </p>
@@ -206,7 +221,7 @@ const ProgramExperience = ({
             </div>
             <Link
               href={`/${locale}/events/${slug}/my-activities`}
-              className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-[var(--x-r-pill)] border border-[var(--x-line)] bg-[var(--x-surface)] px-6 text-sm font-medium text-[var(--x-primary)] shadow-[var(--x-shadow)] transition-colors hover:bg-[var(--x-primary-wash)]"
+              className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-[var(--x-r-pill)] border border-[var(--x-line)] bg-[var(--x-surface)] px-6 text-sm font-semibold text-[var(--x-primary)] shadow-[var(--x-shadow)] transition-colors hover:bg-[var(--x-primary-wash)] hover:text-[var(--x-primary-strong)]"
             >
               {COPY.mySchedule[locale]}
             </Link>

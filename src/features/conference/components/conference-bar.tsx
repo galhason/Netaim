@@ -84,7 +84,16 @@ const ConferenceBar = ({ locale, slug, viewer, brandLogo, brand }: ConferenceBar
   const publicLinks: { key: string; href: string; label: string }[] = [
     { key: 'hub', href: wordpressHref('conferences', locale), label: t('conference') },
     { key: 'speakers', href: wordpressHref('conferenceSpeakers', locale), label: t('speakers') },
-    ...(conf ? [{ key: 'program', href: wordpressHref('conferenceProgram', locale), label: t('program') }] : []),
+    /*
+     * The programme is the platform's own agenda, not the WordPress
+     * listing. A participant reads it to register for activities, and
+     * WordPress has no way to register anyone -- sending "תוכנית" there
+     * left a reader on a page where the one thing they came to do was
+     * impossible, and, since the edge collapses every locale onto one
+     * page, in English. `/agenda` rather than `/program` because the
+     * edge gives every address ending in `/program` to WordPress.
+     */
+    ...(conf ? [{ key: 'program', href: `${conf}/agenda`, label: t('program') }] : []),
     { key: 'info', href: wordpressHref('conferenceInfo', locale), label: t('info') },
     { key: 'networking', href: `/${locale}/me/networking`, label: t('networking') },
   ];
