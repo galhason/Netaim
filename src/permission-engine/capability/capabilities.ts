@@ -35,6 +35,12 @@ export const CAPABILITIES = [
   'logistics:manage',
   /* Announcements to participants. */
   'communications:manage',
+  /*
+   * The conference gallery: adding and removing photographs, and
+   * reviewing the ones participants send. Held by all three Netaim
+   * roles — the staff who keep the programme keep the gallery too.
+   */
+  'gallery:manage',
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];

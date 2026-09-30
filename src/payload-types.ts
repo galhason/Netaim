@@ -75,6 +75,7 @@ export interface Config {
     scenes: Scene;
     speakers: Speaker;
     sponsors: Sponsor;
+    'gallery-items': GalleryItem;
     participants: Participant;
     'account-grants': AccountGrant;
     registrations: Registration;
@@ -108,6 +109,7 @@ export interface Config {
     scenes: ScenesSelect<false> | ScenesSelect<true>;
     speakers: SpeakersSelect<false> | SpeakersSelect<true>;
     sponsors: SponsorsSelect<false> | SponsorsSelect<true>;
+    'gallery-items': GalleryItemsSelect<false> | GalleryItemsSelect<true>;
     participants: ParticipantsSelect<false> | ParticipantsSelect<true>;
     'account-grants': AccountGrantsSelect<false> | AccountGrantsSelect<true>;
     registrations: RegistrationsSelect<false> | RegistrationsSelect<true>;
@@ -430,6 +432,7 @@ export interface Media {
    * Video only: the still shown before playback.
    */
   poster?: (number | null) | Media;
+  reviewHold?: boolean | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -562,6 +565,30 @@ export interface Sponsor {
   website?: string | null;
   description?: string | null;
   order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gallery-items".
+ */
+export interface GalleryItem {
+  id: number;
+  organization: number | Organization;
+  event: number | Event;
+  media?: (number | null) | Media;
+  poster?: (number | null) | Media;
+  title?: string | null;
+  caption?: string | null;
+  alt?: string | null;
+  credit?: string | null;
+  category?: ('moments' | 'stage' | 'people' | 'networking' | 'venue' | 'food' | 'behind-the-scenes') | null;
+  durationSeconds?: number | null;
+  featured?: boolean | null;
+  published?: boolean | null;
+  order?: number | null;
+  status?: ('approved' | 'pending') | null;
+  submittedBy?: (number | null) | Participant;
   updatedAt: string;
   createdAt: string;
 }
@@ -980,6 +1007,10 @@ export interface PayloadLockedDocument {
         value: number | Sponsor;
       } | null)
     | ({
+        relationTo: 'gallery-items';
+        value: number | GalleryItem;
+      } | null)
+    | ({
         relationTo: 'participants';
         value: number | Participant;
       } | null)
@@ -1142,6 +1173,7 @@ export interface MediaSelect<T extends boolean = true> {
   organization?: T;
   alt?: T;
   poster?: T;
+  reviewHold?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -1333,6 +1365,29 @@ export interface SponsorsSelect<T extends boolean = true> {
   website?: T;
   description?: T;
   order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gallery-items_select".
+ */
+export interface GalleryItemsSelect<T extends boolean = true> {
+  organization?: T;
+  event?: T;
+  media?: T;
+  poster?: T;
+  title?: T;
+  caption?: T;
+  alt?: T;
+  credit?: T;
+  category?: T;
+  durationSeconds?: T;
+  featured?: T;
+  published?: T;
+  order?: T;
+  status?: T;
+  submittedBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }

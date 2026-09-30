@@ -76,6 +76,7 @@ export interface SiteNavLink {
 const SITE_NAV_LABELS: Record<string, Record<Locale, string>> = {
   home: { he: 'בית', en: 'Home' },
   program: { he: 'תוכנית', en: 'Program' },
+  gallery: { he: 'גלריה', en: 'Gallery' },
   speakers: { he: 'דוברים', en: 'Speakers' },
   networking: { he: 'Networking', en: 'Networking' },
 };
@@ -111,6 +112,7 @@ export const siteNavLinks = (
   const conference: SiteNavLink[] = slug
     ? [
         { key: 'program', href: `/${locale}/events/${slug}/agenda`, label: label('program') },
+        { key: 'gallery', href: `/${locale}/events/${slug}/gallery`, label: label('gallery') },
         { key: 'speakers', href: `/${locale}/events/${slug}/speakers`, label: label('speakers') },
       ]
     : [];

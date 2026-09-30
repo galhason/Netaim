@@ -7,6 +7,7 @@ import {
   type PortalEvent,
 } from '@/features/events';
 import { marketingRepository } from '@/infrastructure';
+import type { GalleryEntry } from '@/features/gallery/types/gallery';
 import { DEFAULT_VENUE_TIMEZONE, venueDayKey } from '@/shared';
 import { absoluteUrl } from '../utils/absolute-url';
 import type {
@@ -23,6 +24,8 @@ import type {
   PublicPreviewDay,
   PublicProgram,
   PublicProgramDay,
+  PublicGallery,
+  PublicGalleryItem,
 } from '../types/public-conference';
 
 /*
@@ -485,5 +488,79 @@ export const publicProgram = async (
     title: portal.title,
     timezone,
     days,
+  };
+};
+
+/*
+ * One gallery item across the boundary. Written out field by field, as
+ * everything here is: the entry carries nothing private today, and this
+ * is what keeps it that way when it does.
+ */
+const publicGalleryItem = (
+  entry: GalleryEntry,
+  origin: string,
+): PublicGalleryItem | null => {
+  const url = absoluteUrl(entry.file.url, origin);
+  if (!url) {
+    return null;
+  }
+  const poster = entry.poster
+    ? publicImage(
+        {
+          url: entry.poster.url,
+          ...(typeof entry.poster.width === 'number' ? { width: entry.poster.width } : {}),
+          ...(typeof entry.poster.height === 'number' ? { height: entry.poster.height } : {}),
+        },
+        origin,
+      )
+    : undefined;
+  return {
+    id: entry.id,
+    kind: entry.kind,
+    url,
+    ...(typeof entry.file.width === 'number' ? { width: entry.file.width } : {}),
+    ...(typeof entry.file.height === 'number' ? { height: entry.file.height } : {}),
+    ...(entry.kind === 'video' && entry.file.mimeType ? { mimeType: entry.file.mimeType } : {}),
+    ...(poster ? { poster } : {}),
+    alt: entry.alt,
+    ...(entry.title ? { title: entry.title } : {}),
+    ...(entry.caption ? { caption: entry.caption } : {}),
+    ...(entry.credit ? { credit: entry.credit } : {}),
+    ...(entry.category ? { category: entry.category } : {}),
+    ...(typeof entry.durationSeconds === 'number' ? { durationSeconds: entry.durationSeconds } : {}),
+    featured: entry.featured,
+  };
+};
+
+/*
+ * The conference's gallery -- published items, in the Studio's order.
+ *
+ * Behind the same gate as the landing page and the programme: the
+ * published conference is resolved first, and the gallery is read by the
+ * id that answer returned, so a slug cannot point it at a draft.
+ */
+export const publicGallery = async (
+  slug: string,
+  locale: Locale,
+  origin: string,
+): Promise<PublicGallery | null> => {
+  const identity = await marketingRepository.findPublishedIdentity(slug, locale);
+  if (!identity) {
+    return null;
+  }
+  const [portal, entries] = await Promise.all([
+    findPortalEvent(slug, locale),
+    marketingRepository.galleryOfEvent(identity.id, locale),
+  ]);
+  if (!portal) {
+    return null;
+  }
+  return {
+    slug: portal.slug,
+    locale,
+    title: portal.title,
+    items: entries
+      .map((entry) => publicGalleryItem(entry, origin))
+      .filter((item): item is PublicGalleryItem => item !== null),
   };
 };

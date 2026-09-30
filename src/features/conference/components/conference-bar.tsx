@@ -23,7 +23,7 @@ import { BrandMark } from '@/shared';
  * organisation's mark with the language switch, and the conference's
  * own row — the public pages, then the doorway.
  *
- *   public    הכנס · דוברים · תוכנית · מידע · נטוורקינג
+ *   public    הכנס · דוברים · תוכנית · גלריה · מידע · נטוורקינג
  *   doorway   signed out: התחברות · הרשמה
  *             signed in:  the bell · the person's chip · התנתקות ·
  *                         האזור שלי ▾ (הלו״ז שלי, הפעילויות שלי,
@@ -56,6 +56,7 @@ const WORDS = {
   conference: { he: 'הכנס', en: 'Event' },
   speakers: { he: 'דוברים', en: 'Speakers' },
   program: { he: 'תוכנית', en: 'Program' },
+  gallery: { he: 'גלריה', en: 'Gallery' },
   info: { he: 'מידע', en: 'Info' },
   networking: { he: 'נטוורקינג', en: 'Networking' },
   enter: { he: 'התחברות', en: 'Sign in' },
@@ -94,6 +95,11 @@ const ConferenceBar = ({ locale, slug, viewer, brandLogo, brand }: ConferenceBar
      * edge gives every address ending in `/program` to WordPress.
      */
     ...(conf ? [{ key: 'program', href: `${conf}/agenda`, label: t('program') }] : []),
+    /*
+     * The conference's gallery: public, on the platform, beside the
+     * programme as the approved design places it.
+     */
+    ...(conf ? [{ key: 'gallery', href: `${conf}/gallery`, label: t('gallery') }] : []),
     { key: 'info', href: wordpressHref('conferenceInfo', locale), label: t('info') },
     { key: 'networking', href: `/${locale}/me/networking`, label: t('networking') },
   ];

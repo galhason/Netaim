@@ -32,6 +32,11 @@ const LABELS: Record<AuditAction, Record<Locale, string>> = {
   'content.partnerSaved': { he: 'שותף נשמר', en: 'Partner saved' },
   'content.partnerRemoved': { he: 'שותף הוסר', en: 'Partner removed' },
   'content.partnersReordered': { he: 'סדר השותפים שונה', en: 'Partners reordered' },
+  'content.galleryItemSaved': { he: 'פריט בגלריה נשמר', en: 'Gallery item saved' },
+  'content.galleryItemRemoved': { he: 'פריט הוסר מהגלריה', en: 'Gallery item removed' },
+  'content.galleryReordered': { he: 'סדר הגלריה שונה', en: 'Gallery reordered' },
+  'content.gallerySubmissionApproved': { he: 'תמונה שנשלחה אושרה לגלריה', en: 'Submitted photo approved' },
+  'content.gallerySubmissionRejected': { he: 'תמונה שנשלחה נמחקה', en: 'Submitted photo declined' },
   'audit.exported': { he: 'יומן הפעולות יוצא', en: 'Audit log exported' },
 
   'registration.approved': { he: 'הרשמה אושרה', en: 'Registration approved' },

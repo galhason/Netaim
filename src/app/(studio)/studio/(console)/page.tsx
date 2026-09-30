@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Locale } from '@/config/locales';
 import { wordpressHref } from '@/config/wordpress';
 import { getActiveConferenceSlug, listEvents } from '@/features/events';
+import { listGallerySubmissions } from '@/features/gallery';
 import { countOpenReports } from '@/features/networking';
 import { listAgenda } from '@/features/program';
 import { getRegistrationCounts } from '@/features/registration';
@@ -25,6 +26,12 @@ import { setActiveConferenceAction } from './actions';
  */
 const openReportsFor = async (): Promise<number> =>
   (await requireCapability('participants:manage')) ? countOpenReports() : 0;
+
+/* Photographs waiting for review on the live conference, for those who review them. */
+const pendingGalleryFor = async (slug: string | null): Promise<number> =>
+  slug && (await requireCapability('gallery:manage', slug))
+    ? (await listGallerySubmissions(slug)).length
+    : 0;
 
 const t = (he: string, en: string): Record<Locale, string> => ({ he, en });
 
@@ -88,6 +95,7 @@ const ConsolePage = async () => {
     getActiveConferenceSlug(locale).catch(() => null),
     openReportsFor().catch(() => 0),
   ]);
+  const pendingGallery = await pendingGalleryFor(activeSlug).catch(() => 0);
   const publishedFlags = await Promise.all(
     events.map((event) => marketingRepository.findPublishedIdentity(event.slug, 'he').then(Boolean).catch(() => false)),
   );
@@ -110,6 +118,7 @@ const ConsolePage = async () => {
       locale={locale}
       userName={creator?.name ?? ''}
       openReports={openReports}
+      pendingGallery={pendingGallery}
       breadcrumb={<span className="font-medium text-[var(--c-text)]">{UI.title[locale]}</span>}
     >
       <div className="mx-auto flex h-full max-w-5xl flex-col gap-6 overflow-y-auto px-6 py-8">

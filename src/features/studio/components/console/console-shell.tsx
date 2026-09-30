@@ -23,6 +23,8 @@ interface ConsoleShellProps {
    * database read behind each one.
    */
   openReports?: number;
+  /* Participants' photographs waiting for review — passed in the same way. */
+  pendingGallery?: number;
   children: ReactNode;
 }
 
@@ -79,6 +81,7 @@ const ConsoleShell = async ({
   breadcrumb,
   actions,
   openReports,
+  pendingGallery,
   children,
 }: ConsoleShellProps) => {
   const [logo, access] = await Promise.all([
@@ -98,6 +101,7 @@ const ConsoleShell = async ({
     <ConsoleSidebar
       locale={locale}
       openReports={openReports ?? 0}
+      pendingGallery={pendingGallery ?? 0}
       capabilities={capabilities}
       {...(logo ? { brandLogo: logo.onDark } : {})}
     />

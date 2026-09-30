@@ -26,8 +26,12 @@ import { listPortalEvents } from '@/features/events';
  * because a sitemap of localhost URLs is worse than no sitemap at all.
  */
 
-/* Public, per conference. Everything else there needs a participant. */
-const PUBLIC_CONFERENCE_PATHS = ['', '/register'] as const;
+/*
+ * Public, per conference: the landing, the registration form and the
+ * gallery, which nobody signs in to see. Everything else there needs a
+ * participant.
+ */
+const PUBLIC_CONFERENCE_PATHS = ['', '/register', '/gallery'] as const;
 
 const sitemap = async (): Promise<MetadataRoute.Sitemap> => {
   const base = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, '');

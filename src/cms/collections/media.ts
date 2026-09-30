@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload';
+import type { Access, CollectionConfig } from 'payload';
 import { withBasePath } from '@/config/site';
 import { orgContentAccess } from '../access-presets';
 
@@ -21,6 +21,23 @@ const ACCEPTED = [
   'video/webm',
 ] as const;
 
+/*
+ * Who may see a file in the library.
+ *
+ * Everything stays public as before, with one exception: a photograph a
+ * visitor sent to the gallery is held until the team reviews it, and a
+ * held file is left out of every listing and lookup an anonymous caller
+ * can make. Its bytes are still served to whoever holds its address
+ * (`isReadingStaticFile`) — the Studio shows it to the reviewer that way,
+ * and the address is a random name no listing ever reveals.
+ */
+const NOT_HELD = {
+  or: [{ reviewHold: { equals: false } }, { reviewHold: { exists: false } }],
+};
+
+export const mediaReadAccess: Access = ({ req, isReadingStaticFile }) =>
+  isReadingStaticFile || req.user ? true : NOT_HELD;
+
 export const Media: CollectionConfig = {
   slug: 'media',
   admin: {
@@ -29,7 +46,7 @@ export const Media: CollectionConfig = {
   upload: {
     mimeTypes: [...ACCEPTED],
   },
-  access: orgContentAccess,
+  access: { ...orgContentAccess, read: mediaReadAccess },
   hooks: {
     /*
      * Payload writes `url` as `/api/media/file/<name>` — the path on
@@ -89,6 +106,14 @@ export const Media: CollectionConfig = {
         condition: (data) => Boolean(data?.mimeType?.startsWith('video/')),
         description: 'Video only: the still shown before playback.',
       },
+    },
+    {
+      /* A visitor's gallery photo awaiting review: not listed until approved. */
+      name: 'reviewHold',
+      type: 'checkbox',
+      defaultValue: false,
+      index: true,
+      admin: { readOnly: true },
     },
   ],
 };

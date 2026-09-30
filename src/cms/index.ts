@@ -6,6 +6,7 @@ export { Experiences } from './collections/experiences';
 export { Scenes } from './collections/scenes';
 export { Speakers } from './collections/speakers';
 export { Sponsors } from './collections/sponsors';
+export { GalleryItems } from './collections/gallery-items';
 export { Participants } from './collections/participants';
 export { AccountGrants } from './collections/account-grants';
 export { Registrations } from './collections/registrations';

@@ -37,6 +37,7 @@ interface NavEntry {
 const buildGroups = (
   locale: Locale,
   openReports: number,
+  pendingGallery: number,
 ): { title: string; items: NavEntry[] }[] => [
   {
     title: CONSOLE_UI.groupMain[locale],
@@ -62,6 +63,12 @@ const buildGroups = (
     title: CONSOLE_UI.groupWorkspace[locale],
     items: [
       { href: '/studio/activity', label: CONSOLE_UI.dockActivity[locale], needs: 'activities:read' },
+      {
+        href: '/studio/gallery',
+        label: CONSOLE_UI.galleryNav[locale],
+        needs: 'gallery:manage',
+        ...(pendingGallery > 0 ? { badge: pendingGallery } : {}),
+      },
       { href: '/studio/homepage', label: CONSOLE_UI.platformHome[locale], needs: 'experiences:manage' },
       { href: '/studio/events', label: CONSOLE_UI.classicStudio[locale], needs: 'events:manage' },
     ],
@@ -111,16 +118,18 @@ const allowed = (item: NavEntry, held: readonly Capability[]): boolean => {
 const NavList = ({
   locale,
   openReports,
+  pendingGallery,
   capabilities,
   onNavigate,
 }: {
   locale: Locale;
   openReports: number;
+  pendingGallery: number;
   capabilities: readonly Capability[];
   onNavigate?: () => void;
 }) => (
   <nav className="flex flex-col">
-    {buildGroups(locale, openReports)
+    {buildGroups(locale, openReports, pendingGallery)
       .map((group) => ({ ...group, items: group.items.filter((item) => allowed(item, capabilities)) }))
       .filter((group) => group.items.length > 0)
       .map((group) => (
@@ -159,11 +168,13 @@ const NavList = ({
 const ConsoleSidebar = ({
   locale,
   openReports = 0,
+  pendingGallery = 0,
   brandLogo,
   capabilities = [],
 }: {
   locale: Locale;
   openReports?: number;
+  pendingGallery?: number;
   brandLogo?: string;
   capabilities?: readonly Capability[];
 }) => {
@@ -190,7 +201,7 @@ const ConsoleSidebar = ({
       {/* Desktop rail */}
       <aside className="hidden flex-col bg-[var(--c-void)] p-3 md:flex">
         <Logo brandLogo={brandLogo} />
-        <NavList locale={locale} openReports={openReports} capabilities={capabilities} />
+        <NavList locale={locale} openReports={openReports} pendingGallery={pendingGallery} capabilities={capabilities} />
       </aside>
 
       {/* Mobile drawer */}
@@ -219,6 +230,7 @@ const ConsoleSidebar = ({
             <NavList
               locale={locale}
               openReports={openReports}
+              pendingGallery={pendingGallery}
               capabilities={capabilities}
               onNavigate={() => setOpen(false)}
             />

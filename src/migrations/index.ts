@@ -13,6 +13,8 @@ import * as migration_20260926_120000_activity_archive_and_immutable_audit from 
 import * as migration_20260927_120000_venue_fact_icons from './20260927_120000_venue_fact_icons';
 import * as migration_20260929_120000_participant_country from './20260929_120000_participant_country';
 import * as migration_20260929_160000_conference_preview_section from './20260929_160000_conference_preview_section';
+import * as migration_20260929_200000_gallery_items from './20260929_200000_gallery_items';
+import * as migration_20260930_090000_gallery_submissions from './20260930_090000_gallery_submissions';
 
 export const migrations = [
   {
@@ -89,5 +91,15 @@ export const migrations = [
     up: migration_20260929_160000_conference_preview_section.up,
     down: migration_20260929_160000_conference_preview_section.down,
     name: '20260929_160000_conference_preview_section',
+  },
+  {
+    up: migration_20260929_200000_gallery_items.up,
+    down: migration_20260929_200000_gallery_items.down,
+    name: '20260929_200000_gallery_items',
+  },
+  {
+    up: migration_20260930_090000_gallery_submissions.up,
+    down: migration_20260930_090000_gallery_submissions.down,
+    name: '20260930_090000_gallery_submissions',
   },
 ];

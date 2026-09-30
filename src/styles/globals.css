@@ -47,6 +47,16 @@
    */
   --nt-green-deep: #166633; /* 7.04 on white, 7.04 white-on, 6.25 on green-wash */
   --nt-green-deeper: #0f4a24; /* 10.37 on white, 9.20 on green-wash — the pressed green */
+  /*
+   * The organisation's paper and forest: the cream ground and the deep
+   * green band of its conference pages (the partners, the final
+   * invitation), and the sand of a button laid on that green.
+   */
+  --nt-cream: #faf9f4; /* ink 15.43 on it, ink-soft 4.72, green-deep 6.68 */
+  --nt-cream-deep: #f5f4ec;
+  --nt-forest: #0b3a1d; /* white-on 12.83, 12.17 on cream */
+  --nt-on-forest-soft: #d5e4d9; /* 9.73 on forest */
+  --nt-sand: #e2cf9e; /* forest on it 8.34; 6.74 on green-deeper */
 
   /* --- washes: a brand colour at the strength of a background --- */
   --nt-navy-wash: #eef3fa;
@@ -833,6 +843,40 @@ main [id] {
   /* The programme's buttons are pills, and bold. */
   --x-r-button: var(--x-r-pill);
   --x-button-weight: 700;
+}
+
+/*
+ * The gallery: the programme's green, on the organisation's cream.
+ *
+ * Applied beside .experience--programme, so every token above holds and
+ * only the ground and the three gallery colours are added: the forest
+ * of the film band, the text that reads on it, and the sand of the
+ * button there. Orange stays decoration — a rule, a leaf — never text.
+ */
+.experience--gallery {
+  --x-bg: var(--nt-cream);
+  --x-bg-deep: var(--nt-cream-deep);
+  --x-forest: var(--nt-forest);
+  --x-on-forest: var(--nt-on-dark);
+  --x-on-forest-soft: var(--nt-on-forest-soft);
+  --x-sand: var(--nt-sand);
+  --x-accent: var(--nt-orange);
+}
+
+/*
+ * The gallery's second grid: justified rows. Each item is as wide as its
+ * proportion (--r, width over height) asks at a common height, and grows
+ * with that proportion to close the row, so every picture in a row keeps
+ * its shape and the row keeps one height.
+ */
+.gallery-rows__item {
+  flex-basis: calc(var(--r, 1.333) * 7rem);
+  aspect-ratio: var(--r, 1.333);
+}
+@media (min-width: 768px) {
+  .gallery-rows__item {
+    flex-basis: calc(var(--r, 1.333) * 14rem);
+  }
 }
 
 @keyframes x-rise {

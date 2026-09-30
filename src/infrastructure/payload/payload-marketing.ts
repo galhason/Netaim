@@ -9,6 +9,7 @@ import type {
 import type { Media } from '@/payload-types';
 import { resolveSpeakerIdentity } from '@/features/speakers/services/speaker-identity';
 import { getSystemPayload } from './payload-context';
+import { payloadGalleryEntriesOfEvent } from './payload-gallery';
 
 /*
  * The marketing seam.
@@ -248,4 +249,8 @@ export const payloadMarketingRepository: MarketingRepository = {
       }),
     );
   },
+
+  /* By verified id, like everything above; published items only. */
+  galleryOfEvent: (eventId: string, locale: Locale) =>
+    payloadGalleryEntriesOfEvent(eventId, locale),
 };

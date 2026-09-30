@@ -56,6 +56,7 @@ export const CONSOLE_UI = {
   dockAssets: { he: 'נכסים', en: 'Assets' },
   dockDna: { he: 'DNA', en: 'DNA' },
   dockActivity: { he: 'פעילויות', en: 'Activities' },
+  galleryNav: { he: 'גלריה', en: 'Gallery' },
   dockHistory: { he: 'היסטוריה', en: 'History' },
   backToConsole: { he: 'למרכז הכנסים', en: 'All conferences' },
   visibleScene: { he: 'מוצגת', en: 'Showing' },

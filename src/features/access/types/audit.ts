@@ -28,6 +28,11 @@ export const AUDIT_ACTIONS = [
   'content.partnerSaved',
   'content.partnerRemoved',
   'content.partnersReordered',
+  'content.galleryItemSaved',
+  'content.galleryItemRemoved',
+  'content.galleryReordered',
+  'content.gallerySubmissionApproved',
+  'content.gallerySubmissionRejected',
   'audit.exported',
 
   /* People at the door */

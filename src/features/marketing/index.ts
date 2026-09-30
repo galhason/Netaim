@@ -2,6 +2,7 @@ export {
   publicConference,
   publicConferences,
   publicProgram,
+  publicGallery,
 } from './services/marketing-service';
 export { absoluteUrl } from './utils/absolute-url';
 export { marketingRequestAuthorized } from './utils/api-access';
@@ -18,4 +19,6 @@ export type {
   PublicClosing,
   PublicPreview,
   PublicPreviewDay,
+  PublicGallery,
+  PublicGalleryItem,
 } from './types/public-conference';

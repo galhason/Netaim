@@ -1,4 +1,5 @@
 import type { Locale } from '@/config/locales';
+import type { GalleryEntry } from '@/features/gallery/types/gallery';
 
 /*
  * What the marketing site is allowed to know about a conference.
@@ -225,6 +226,40 @@ export interface PublicProgram {
 }
 
 /*
+ * One picture or film in the conference's gallery, as another site may
+ * show it. Published items only; no organization, no event id, no
+ * "published" flag, no media id -- the item's own id is there so a page
+ * can key a list and link to one picture, nothing more.
+ */
+export interface PublicGalleryItem {
+  id: string;
+  kind: 'image' | 'video';
+  /* The photograph, or the film. Absolute. */
+  url: string;
+  width?: number;
+  height?: number;
+  /* Films only: what a <source type> needs. */
+  mimeType?: string;
+  /* Films only: the still shown before playing. */
+  poster?: PublicImage;
+  alt: string;
+  title?: string;
+  caption?: string;
+  credit?: string;
+  category?: string;
+  durationSeconds?: number;
+  featured: boolean;
+}
+
+export interface PublicGallery {
+  slug: string;
+  locale: Locale;
+  title: string;
+  /* In the order the Studio set. */
+  items: PublicGalleryItem[];
+}
+
+/*
  * The one door the marketing API reads through.
  *
  * `findPublishedIdentity` is the gate and it comes first: it answers only
@@ -249,4 +284,6 @@ export interface MarketingRepository {
     locale: Locale,
   ) => Promise<PublicSpeaker[]>;
   sponsorsOfEvent: (eventId: string) => Promise<PublicSponsor[]>;
+  /* Published gallery items of a verified conference, in one language. */
+  galleryOfEvent: (eventId: string, locale: Locale) => Promise<GalleryEntry[]>;
 }

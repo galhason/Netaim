@@ -102,6 +102,7 @@ import {
 } from './payload/payload-session';
 import { payloadSpeakerRepository } from './payload/payload-speaker';
 import { payloadSponsorRepository } from './payload/payload-sponsor';
+import { payloadGalleryRepository } from './payload/payload-gallery';
 import { payloadConnectionRepository } from './payload/payload-networking-connection';
 import { payloadChatRepository } from './payload/payload-networking-chat';
 import {
@@ -127,6 +128,7 @@ import type {
 } from '@/features/program/types/session';
 import type { SpeakerRepository } from '@/features/speakers/types/speaker';
 import type { SponsorRepository } from '@/features/sponsors/types/sponsor';
+import type { GalleryRepository } from '@/features/gallery/types/gallery';
 import type { ConnectionRepository } from '@/features/networking/types/connection';
 import type { MeetingRepository } from '@/features/networking/types/meeting';
 import { subscribeRegistration } from '@/foundation/event-bus';
@@ -352,6 +354,8 @@ export const sessionRegistrationRepository: SessionRegistrationRepository =
   payloadSessionRegistrationRepository;
 
 export const sponsorRepository: SponsorRepository = payloadSponsorRepository;
+
+export const galleryRepository: GalleryRepository = payloadGalleryRepository;
 
 export const connectionRepository: ConnectionRepository =
   payloadConnectionRepository;

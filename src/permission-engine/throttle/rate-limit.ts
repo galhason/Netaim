@@ -35,7 +35,13 @@ export type RateLimitedAction =
    * is set for a marketing page that caches its answer, not for a crawler
    * that does not.
    */
-  | 'marketing-api';
+  | 'marketing-api'
+  /*
+   * A participant sending a photograph to the gallery. Every one lands
+   * in a person's review queue, so the ceiling is what a guest shares
+   * in an evening, not what a script can push.
+   */
+  | 'gallery-submission';
 
 export interface RateLimitPolicy {
   /* Attempts permitted inside one window. */
@@ -88,6 +94,7 @@ export const RATE_LIMITS: Record<RateLimitedAction, RateLimitPolicy> = {
    * but bounded, so the form cannot be held open against one address.
    */
   'email-check': { attempts: 40, windowMs: HOUR, blockMs: 10 * MINUTE },
+  'gallery-submission': { attempts: 10, windowMs: HOUR, blockMs: HOUR },
 };
 
 /* The counter as stored. `blockedUntil` is null while the door is open. */

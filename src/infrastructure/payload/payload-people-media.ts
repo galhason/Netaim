@@ -89,14 +89,18 @@ export const payloadMediaRepository: MediaRepository = {
       limit: 60,
       /* depth 1 so a video's poster arrives with it, not as an id. */
       depth: 1,
-      where: search
-        ? {
-            or: [
-              { alt: { contains: search } },
-              { filename: { contains: search } },
-            ],
-          }
-        : undefined,
+      /*
+       * Never a participant's gallery photo still waiting for review: it
+       * joins the library when the team approves it, not before.
+       */
+      where: {
+        and: [
+          { or: [{ reviewHold: { equals: false } }, { reviewHold: { exists: false } }] },
+          ...(search
+            ? [{ or: [{ alt: { contains: search } }, { filename: { contains: search } }] }]
+            : []),
+        ],
+      },
     });
     return result.docs.map(toMedia);
   },

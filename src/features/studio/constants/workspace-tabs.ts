@@ -23,6 +23,7 @@ export const WORKSPACE_TABS: WorkspaceTab[] = [
   { id: 'content', label: { he: 'תוכן', en: 'Content' }, path: 'content', scoped: true, needs: 'events:manage' },
   { id: 'speakers', label: { he: 'דוברים', en: 'Speakers' }, path: 'speakers', scoped: true, needs: 'events:manage' },
   { id: 'partners', label: { he: 'שותפים', en: 'Partners' }, path: 'partners', scoped: true, needs: 'events:manage' },
+  { id: 'gallery', label: { he: 'גלריה', en: 'Gallery' }, path: '/studio/gallery', scoped: false, needs: 'gallery:manage' },
   { id: 'activity', label: { he: 'פעילויות', en: 'Activities' }, path: '/studio/activity', scoped: false, needs: 'activities:read' },
   { id: 'participants', label: { he: 'הרשמה ומשתתפים', en: 'Registration & participants' }, path: '/studio/participants', scoped: false, needs: 'participants:read' },
   { id: 'logistics', label: { he: 'לוגיסטיקה', en: 'Logistics' }, path: '/studio/logistics', scoped: false, needs: 'logistics:read' },

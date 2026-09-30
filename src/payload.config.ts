@@ -35,6 +35,7 @@ import {
   Sessions,
   Speakers,
   Sponsors,
+  GalleryItems,
   Users,
 } from '@/cms';
 
@@ -112,6 +113,7 @@ export default buildConfig({
     Scenes,
     Speakers,
     Sponsors,
+    GalleryItems,
     Participants,
     AccountGrants,
     Registrations,

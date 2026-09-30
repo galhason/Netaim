@@ -11,8 +11,9 @@ import type { Capability } from '../capability/capabilities';
  *   producer  מפקח Netaim   — everything but destruction: no deleting
  *                             people, activities or conferences, no log,
  *                             no granting roles; activities are archived
- *   editor    צוות Netaim   — the program (see, create, edit activities)
- *                             and a look at logistics; nothing else
+ *   editor    צוות Netaim   — the program (see, create, edit activities),
+ *                             the gallery, and a look at logistics;
+ *                             nothing else
  *
  * — and `door` / `viewer` remain valid so that a grant written under the
  * old scheme keeps working (each is reduced to reading), but are no
@@ -47,6 +48,7 @@ const EVERYTHING: readonly Capability[] = [
   'logistics:read',
   'logistics:manage',
   'communications:manage',
+  'gallery:manage',
 ];
 
 const SUPERVISOR: readonly Capability[] = [
@@ -62,6 +64,7 @@ const SUPERVISOR: readonly Capability[] = [
   'logistics:read',
   'logistics:manage',
   'communications:manage',
+  'gallery:manage',
 ];
 
 const STAFF: readonly Capability[] = [
@@ -69,6 +72,7 @@ const STAFF: readonly Capability[] = [
   'activities:read',
   'activities:manage',
   'logistics:read',
+  'gallery:manage',
 ];
 
 export const ROLE_CAPABILITIES: Record<Role, readonly Capability[]> = {
@@ -99,8 +103,8 @@ export const ROLE_DESCRIPTIONS: Record<Role, { he: string; en: string }> = {
     en: 'Full working access, without deletion: edits and creates conferences and activities, manages registrations, participants, logistics and communications. Activities can only be archived; accounts cannot be deleted; no access to the log or to roles.',
   },
   editor: {
-    he: 'התוכנית בלבד: צפייה, יצירה ועריכה של פעילויות והרצאות (בלי מחיקה או ארכיון), וצפייה בלוגיסטיקה.',
-    en: 'The program only: view, create and edit activities and talks (no deleting or archiving), and a view of logistics.',
+    he: 'התוכנית והגלריה: צפייה, יצירה ועריכה של פעילויות והרצאות (בלי מחיקה או ארכיון), ניהול הגלריה ואישור תמונות שנשלחו, וצפייה בלוגיסטיקה.',
+    en: 'The program and the gallery: view, create and edit activities and talks (no deleting or archiving), manage the gallery and review submitted photos, and a view of logistics.',
   },
   door: { he: 'תפקיד ישן — קריאה בלבד. מומלץ להחליף באחד משלושת התפקידים.', en: 'Legacy — read only. Reissue as one of the three roles.' },
   viewer: { he: 'תפקיד ישן — קריאה בלבד. מומלץ להחליף באחד משלושת התפקידים.', en: 'Legacy — read only. Reissue as one of the three roles.' },
