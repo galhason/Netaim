@@ -3,7 +3,7 @@ import sharp from 'sharp';
 import { relationshipId } from '@/auth';
 import { SUPPORTED_LOCALES, type Locale } from '@/config/locales';
 import {
-  isGalleryCategory,
+  isGalleryPlacement,
   type GalleryEntry,
   type GalleryFile,
   type GalleryItemInput,
@@ -45,9 +45,8 @@ interface GalleryRow {
   caption?: Localized<string>;
   alt?: Localized<string>;
   credit?: string | null;
-  category?: string | null;
+  placement?: string | null;
   durationSeconds?: number | null;
-  featured?: boolean | null;
   published?: boolean | null;
   order?: number | null;
   status?: string | null;
@@ -61,6 +60,10 @@ const CURATED = {
 };
 
 const LOCALIZED_WORDS = ['title', 'caption', 'alt'] as const;
+
+/* A stored placement, or the main grid for a row written before there was one. */
+const placementOf = (value: string | null | undefined) =>
+  value && isGalleryPlacement(value) ? value : 'story';
 
 /* A populated relationship, or nothing — an id alone is not a file. */
 const mediaOf = (value: unknown): MediaRow | undefined =>
@@ -124,7 +127,6 @@ export const toGalleryEntry = (row: GalleryRow, locale: Locale): GalleryEntry | 
   const alt =
     wordIn(row.alt, locale) || wordIn(media?.alt, locale) || title || FALLBACK_ALT[locale][kind];
   const credit = row.credit?.trim() ?? '';
-  const category = row.category && isGalleryCategory(row.category) ? row.category : undefined;
   return {
     id: String(row.id),
     kind,
@@ -134,11 +136,10 @@ export const toGalleryEntry = (row: GalleryRow, locale: Locale): GalleryEntry | 
     ...(title ? { title } : {}),
     ...(caption ? { caption } : {}),
     ...(credit ? { credit } : {}),
-    ...(category ? { category } : {}),
     ...(typeof row.durationSeconds === 'number' && row.durationSeconds > 0
       ? { durationSeconds: Math.round(row.durationSeconds) }
       : {}),
-    featured: row.featured === true,
+    placement: placementOf(row.placement),
     order: typeof row.order === 'number' ? row.order : 0,
   };
 };
@@ -167,9 +168,8 @@ const toSummary = (row: GalleryRow): GalleryItemSummary => {
     ...(media ? { kind: isVideoFile(media) ? ('video' as const) : ('image' as const) } : {}),
     words,
     credit: row.credit?.trim() ?? '',
-    ...(row.category && isGalleryCategory(row.category) ? { category: row.category } : {}),
     ...(typeof row.durationSeconds === 'number' ? { durationSeconds: row.durationSeconds } : {}),
-    featured: row.featured === true,
+    placement: placementOf(row.placement),
     published: row.published === true,
     order: typeof row.order === 'number' ? row.order : 0,
   };
@@ -236,14 +236,11 @@ const sharedData = (input: GalleryItemInput): Record<string, unknown> => {
   if (input.credit !== undefined) {
     data.credit = input.credit;
   }
-  if (input.category !== undefined) {
-    data.category = input.category === '' ? null : input.category;
-  }
   if (input.durationSeconds !== undefined) {
     data.durationSeconds = input.durationSeconds;
   }
-  if (input.featured !== undefined) {
-    data.featured = input.featured;
+  if (input.placement !== undefined) {
+    data.placement = input.placement;
   }
   if (input.published !== undefined) {
     data.published = input.published;
@@ -461,7 +458,7 @@ export const payloadGalleryRepository: GalleryRepository = {
       locale: input.locale,
       data: {
         organization,
-        alt: input.caption || FALLBACK_ALT[input.locale].image,
+        alt: FALLBACK_ALT[input.locale].image,
         reviewHold: true,
       },
       file: {
@@ -480,11 +477,10 @@ export const payloadGalleryRepository: GalleryRepository = {
           organization,
           event: Number(event.id),
           media: Number(media.id),
-          caption: input.caption,
           credit: input.credit,
           status: 'pending',
           published: false,
-          featured: false,
+          placement: 'more',
           submittedBy: Number(input.participantId),
         } as never,
         overrideAccess: true,
@@ -543,7 +539,7 @@ export const payloadGalleryRepository: GalleryRepository = {
       const item = await payload.update({
         collection: 'gallery-items',
         id,
-        data: { status: 'approved', published: true, order } as never,
+        data: { status: 'approved', published: true, placement: 'more', order } as never,
         depth: 0,
         overrideAccess: false,
         user,

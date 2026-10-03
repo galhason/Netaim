@@ -4,18 +4,19 @@ import type { GalleryEntry } from '@/features/gallery/types/gallery';
 /*
  * How a gallery is laid out, and what one row becomes.
  *
- * The page is composed from two things the Studio sets — the order and
- * the featured marks — and nothing else. These pin the composition
- * (hero, film, the story and what follows it) and the mapping of a stored row into something a visitor may see: a
- * row without a file is not shown, a film prefers its own still, and
- * one language never borrows the other's words.
+ * The page is composed from two things the Studio sets — where each
+ * item is placed and the order — and nothing else; an empty place stays
+ * empty. These pin the composition and the mapping of a stored row into
+ * something a visitor may see: a row without a file is not shown, a film
+ * prefers its own still, and one language never borrows the other's
+ * words.
  */
 vi.mock('@/infrastructure/payload/payload-context', () => ({
   getSystemPayload: async () => ({}),
   actorContext: async () => null,
 }));
 
-const { STORY_SIZE, composeGallery, formatDuration, parseDuration } = await import(
+const { composeGallery, formatDuration, parseDuration } = await import(
   '@/features/gallery/utils/compose'
 );
 const { toGalleryEntry } = await import('@/infrastructure/payload/payload-gallery');
@@ -25,7 +26,7 @@ const photo = (id: string, over: Partial<GalleryEntry> = {}): GalleryEntry => ({
   kind: 'image',
   file: { url: `/api/media/file/${id}.jpg`, width: 1600, height: 1067 },
   alt: `alt ${id}`,
-  featured: false,
+  placement: 'story',
   order: Number(id.replace(/\D/g, '')) || 0,
   ...over,
 });
@@ -35,70 +36,58 @@ const film = (id: string, over: Partial<GalleryEntry> = {}): GalleryEntry => ({
   kind: 'video',
   file: { url: `/api/media/file/${id}.mp4`, mimeType: 'video/mp4' },
   alt: `alt ${id}`,
-  featured: false,
+  placement: 'story',
   order: Number(id.replace(/\D/g, '')) || 0,
   ...over,
 });
 
 describe('the composition', () => {
-  it('opens on the first featured photograph, and plays the first featured film', () => {
-    const entries = [photo('p1'), film('v2'), photo('p3', { featured: true }), film('v4', { featured: true }), photo('p5')];
+  it('opens on the photograph placed as the hero, and plays the film placed as the film', () => {
+    const entries = [photo('p1'), film('v2'), photo('p3', { placement: 'hero' }), film('v4', { placement: 'film' }), photo('p5')];
     const page = composeGallery(entries);
     expect(page.hero?.id).toBe('p3');
     expect(page.film?.id).toBe('v4');
   });
 
-  it('falls back to the first photograph and the first film when nothing is featured', () => {
+  it('chooses nothing by itself: no hero placed, no hero; no film placed, no band', () => {
     const page = composeGallery([film('v1'), photo('p2'), photo('p3'), film('v4')]);
-    expect(page.hero?.id).toBe('p2');
-    expect(page.film?.id).toBe('v1');
+    expect(page.hero).toBeUndefined();
+    expect(page.film).toBeUndefined();
+    expect(page.story.map((entry) => entry.id)).toEqual(['v1', 'p2', 'p3', 'v4']);
   });
 
-  it('never shows the hero or the film twice', () => {
-    const page = composeGallery([photo('p1'), photo('p2'), film('v3'), film('v4')]);
+  it('puts each item in the grid it was placed in, in the Studio order', () => {
+    const page = composeGallery([
+      photo('p1'),
+      photo('p2', { placement: 'more' }),
+      photo('p3'),
+      photo('p4', { placement: 'more' }),
+    ]);
+    expect(page.story.map((entry) => entry.id)).toEqual(['p1', 'p3']);
+    expect(page.more.map((entry) => entry.id)).toEqual(['p2', 'p4']);
+  });
+
+  it('never shows the hero or the film in a grid', () => {
+    const page = composeGallery([photo('p1', { placement: 'hero' }), photo('p2'), film('v3', { placement: 'film' }), film('v4', { placement: 'more' })]);
     const shown = [...page.story, ...page.more].map((entry) => entry.id);
     expect(shown).toEqual(['p2', 'v4']);
-    expect(shown).not.toContain(page.hero?.id);
-    expect(shown).not.toContain(page.film?.id);
   });
 
-  it('keeps the Studio order in the grids', () => {
-    const entries = Array.from({ length: 6 }, (_, i) => photo(`p${i + 1}`));
-    expect(composeGallery(entries).story.map((entry) => entry.id)).toEqual(['p2', 'p3', 'p4', 'p5', 'p6']);
-  });
-
-  it('fills the story first and continues below the film', () => {
-    const entries = Array.from({ length: STORY_SIZE + 6 }, (_, i) => photo(`p${i + 1}`));
-    const page = composeGallery(entries);
-    expect(page.story).toHaveLength(STORY_SIZE);
-    expect(page.more).toHaveLength(5);
-    expect(page.more[0]?.id).toBe(`p${STORY_SIZE + 2}`);
-  });
-
-  it('has no film band when there is no film', () => {
-    const page = composeGallery([photo('p1'), photo('p2')]);
+  it('ignores a film placed as the hero and a photograph placed as the film', () => {
+    const page = composeGallery([film('v1', { placement: 'hero' }), photo('p2', { placement: 'film' })]);
+    expect(page.hero).toBeUndefined();
     expect(page.film).toBeUndefined();
   });
 
-  it('shows a lone photograph as the hero alone', () => {
-    const page = composeGallery([photo('p1')]);
+  it('shows a lone photograph placed as the hero alone', () => {
+    const page = composeGallery([photo('p1', { placement: 'hero' })]);
     expect(page.hero?.id).toBe('p1');
     expect(page.story).toEqual([]);
     expect(page.more).toEqual([]);
   });
 
-  it('has no hero when there are only films', () => {
-    const page = composeGallery([film('v1'), film('v2')]);
-    expect(page.hero).toBeUndefined();
-    expect(page.film?.id).toBe('v1');
-    expect(page.story.map((entry) => entry.id)).toEqual(['v2']);
-  });
-
   it('is empty, not broken, with nothing to show', () => {
-    const page = composeGallery([]);
-    expect(page).toEqual({ story: [], more: [] });
-    expect(page.hero).toBeUndefined();
-    expect(page.film).toBeUndefined();
+    expect(composeGallery([])).toEqual({ story: [], more: [] });
   });
 });
 
@@ -139,7 +128,7 @@ describe('a stored row, as a visitor meets it', () => {
 
   it('carries the file, its size and the Studio’s words', () => {
     const entry = toGalleryEntry(
-      { id: 5, media: media(7), title: 'Opening night', caption: 'The hall', credit: ' Dana ', category: 'stage', featured: true, order: 3 },
+      { id: 5, media: media(7), title: 'Opening night', caption: 'The hall', credit: ' Dana ', placement: 'hero', order: 3 },
       'en',
     );
     expect(entry).toEqual({
@@ -150,8 +139,7 @@ describe('a stored row, as a visitor meets it', () => {
       title: 'Opening night',
       caption: 'The hall',
       credit: 'Dana',
-      category: 'stage',
-      featured: true,
+      placement: 'hero',
       order: 3,
     });
   });
@@ -189,7 +177,8 @@ describe('a stored row, as a visitor meets it', () => {
     expect(toGalleryEntry({ id: 1, media: media(7, { alt: null }), title: 'A title' }, 'en')?.alt).toBe('A title');
   });
 
-  it('drops a category it does not know', () => {
-    expect(toGalleryEntry({ id: 1, media: media(7), category: 'secret' }, 'en')?.category).toBeUndefined();
+  it('reads an unknown or missing placement as the main grid', () => {
+    expect(toGalleryEntry({ id: 1, media: media(7), placement: 'secret' }, 'en')?.placement).toBe('story');
+    expect(toGalleryEntry({ id: 1, media: media(7) }, 'en')?.placement).toBe('story');
   });
 });

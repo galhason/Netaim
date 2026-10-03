@@ -45,7 +45,7 @@ const Tile = ({ entry, locale, sizes, onOpen, className = '' }: TileProps) => {
         {entry.kind === 'video' ? <FilmStill entry={entry} sizes={sizes} /> : <GalleryPicture file={entry.file} alt="" sizes={sizes} />}
       </span>
       {entry.kind === 'video' ? <PlayMark duration={entry.durationSeconds} /> : null}
-      {entry.featured && entry.title ? (
+      {entry.title ? (
         <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-[linear-gradient(to_top,rgb(11_58_29/0.82),transparent)] px-3 pb-3 pt-8 text-start text-sm font-semibold text-[var(--x-on-forest)]">
           {entry.title}
         </span>

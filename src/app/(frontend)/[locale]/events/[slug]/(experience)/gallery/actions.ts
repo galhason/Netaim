@@ -53,9 +53,6 @@ export const submitGalleryPhotoAction = async (
 
   const outcome = await submitGalleryPhoto(slug, participant, locale, {
     file: { name: photo.name, type: photo.type, data: new Uint8Array(await photo.arrayBuffer()) },
-    caption: text(formData, 'caption'),
-    credit: text(formData, 'credit'),
-    rightsConfirmed: formData.get('rights') === 'on',
   });
   return outcome.ok ? { status: 'sent' } : { status: 'error', reason: outcome.reason };
 };

@@ -15,6 +15,7 @@ import * as migration_20260929_120000_participant_country from './20260929_12000
 import * as migration_20260929_160000_conference_preview_section from './20260929_160000_conference_preview_section';
 import * as migration_20260929_200000_gallery_items from './20260929_200000_gallery_items';
 import * as migration_20260930_090000_gallery_submissions from './20260930_090000_gallery_submissions';
+import * as migration_20261003_090000_gallery_placement from './20261003_090000_gallery_placement';
 
 export const migrations = [
   {
@@ -101,5 +102,10 @@ export const migrations = [
     up: migration_20260930_090000_gallery_submissions.up,
     down: migration_20260930_090000_gallery_submissions.down,
     name: '20260930_090000_gallery_submissions',
+  },
+  {
+    up: migration_20261003_090000_gallery_placement.up,
+    down: migration_20261003_090000_gallery_placement.down,
+    name: '20261003_090000_gallery_placement',
   },
 ];

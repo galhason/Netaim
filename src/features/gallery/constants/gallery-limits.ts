@@ -12,5 +12,4 @@ export const SUBMISSION_MAX_BYTES = 8 * 1024 * 1024;
 export const SUBMISSION_MAX_MB = SUBMISSION_MAX_BYTES / (1024 * 1024);
 export const SUBMISSION_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 export const SUBMISSION_ACCEPT = SUBMISSION_TYPES.join(',');
-export const SUBMISSION_CAPTION_MAX = 280;
 export const SUBMISSION_CREDIT_MAX = 80;

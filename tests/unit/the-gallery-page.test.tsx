@@ -48,7 +48,7 @@ const photo = (id: string, over: Partial<GalleryEntry> = {}): GalleryEntry => ({
   kind: 'image',
   file: { url: `/api/media/file/${id}.jpg`, width: 1200, height: 800 },
   alt: `Alt ${id}`,
-  featured: false,
+  placement: 'story',
   order: 0,
   ...over,
 });
@@ -59,7 +59,7 @@ const film: GalleryEntry = {
   poster: { url: '/api/media/file/still.jpg', width: 1600, height: 900 },
   alt: 'Alt film',
   durationSeconds: 134,
-  featured: true,
+  placement: 'film',
   order: 5,
 };
 
@@ -69,14 +69,14 @@ const page = (locale: 'he' | 'en', entries: GalleryEntry[]) => {
     <main>
       <GalleryHero locale={locale} image={composition.hero} />
       <GalleryExperience locale={locale} composition={composition} />
-      <GalleryCta locale={locale} slug="ntaym-2026" submitterName={null} shareAction={share} />
+      <GalleryCta locale={locale} slug="ntaym-2026" signedIn={false} shareAction={share} />
     </main>,
   );
 };
 
 const share = async () => ({ status: 'idle' as const });
 
-const full = [photo('p1', { featured: true }), photo('p2'), photo('p3'), film, photo('p4')];
+const full = [photo('p1', { placement: 'hero' }), photo('p2'), photo('p3'), film, photo('p4')];
 
 describe('the page in Hebrew', () => {
   const html = page('he', full);
@@ -135,7 +135,7 @@ describe('the edges', () => {
   });
 
   it('offers no filter row, whatever the gallery holds', () => {
-    const html = page('en', [photo('p1', { category: 'stage' }), photo('p2', { category: 'food' }), film]);
+    const html = page('en', [photo('p1'), photo('p2', { placement: 'more' }), film]);
     expect(html).not.toContain('aria-pressed');
     expect(html).not.toMatch(/>(All|Photos|Video)</);
   });
@@ -156,30 +156,31 @@ describe('the edges', () => {
 describe('the closing invitation', () => {
   it('leads back to the agenda, never to /program', () => {
     for (const locale of ['he', 'en'] as const) {
-      const html = renderToString(<GalleryCta locale={locale} slug="ntaym-2026" submitterName={null} shareAction={share} />);
+      const html = renderToString(<GalleryCta locale={locale} slug="ntaym-2026" signedIn={false} shareAction={share} />);
       expect(html).toContain(`href="/${locale}/events/ntaym-2026/agenda"`);
       expect(html).not.toMatch(/\/program\b/);
     }
   });
 
   it('asks a visitor who is not signed in to sign in before sharing', () => {
-    const he = renderToString(<GalleryCta locale="he" slug="ntaym-2026" submitterName={null} shareAction={share} />);
+    const he = renderToString(<GalleryCta locale="he" slug="ntaym-2026" signedIn={false} shareAction={share} />);
     expect(he).toContain('href="/he/me"');
     expect(he).toContain('התחברו כדי לשתף תמונה');
-    const en = renderToString(<GalleryCta locale="en" slug="ntaym-2026" submitterName={null} shareAction={share} />);
+    const en = renderToString(<GalleryCta locale="en" slug="ntaym-2026" signedIn={false} shareAction={share} />);
     expect(en).toContain('Sign in to share a photo');
   });
 
-  it('offers a signed-in participant to share a photo, closed until asked', () => {
-    const html = renderToString(<GalleryCta locale="he" slug="ntaym-2026" submitterName="דנה לוי" shareAction={share} />);
+  it('offers a signed-in participant to share a photo, in a small window opened only when asked', () => {
+    const html = renderToString(<GalleryCta locale="he" slug="ntaym-2026" signedIn shareAction={share} />);
     expect(html).toContain('שתפו תמונה');
-    expect(html).toContain('aria-expanded="false"');
+    expect(html).toContain('aria-haspopup="dialog"');
+    expect(html).not.toContain('role="dialog"');
     expect(html).not.toContain('type="file"');
     expect(html).not.toContain('href="/he/me"');
   });
 
   it('says the photo is reviewed before it appears', () => {
-    const html = renderToString(<GalleryCta locale="en" slug="ntaym-2026" submitterName="Dana" shareAction={share} />);
+    const html = renderToString(<GalleryCta locale="en" slug="ntaym-2026" signedIn shareAction={share} />);
     expect(html).toContain('once the Netaim team approves it');
   });
 });

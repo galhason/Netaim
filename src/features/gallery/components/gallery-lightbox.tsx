@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react';
 import type { Locale } from '@/config/locales';
 import { IconChevronLeft, IconChevronRight, IconClose } from '@/features/conference';
-import { GALLERY_CATEGORY_LABELS, GALLERY_COPY, fill } from '../constants/gallery-copy';
+import { GALLERY_COPY, fill } from '../constants/gallery-copy';
 import type { GalleryEntry } from '../types/gallery';
 
 /*
@@ -123,7 +123,6 @@ const GalleryLightbox = ({ locale, entries, index, onIndex, onClose }: GalleryLi
   }
 
   const heading = entry.title ?? entry.alt;
-  const category = entry.category ? GALLERY_CATEGORY_LABELS[entry.category][locale] : '';
 
   return (
     <div
@@ -199,9 +198,6 @@ const GalleryLightbox = ({ locale, entries, index, onIndex, onClose }: GalleryLi
       </div>
 
       <div className="mx-auto w-full max-w-3xl px-5 pb-6 pt-3 text-center">
-        {category ? (
-          <p className="text-xs font-semibold tracking-[0.12em] text-[var(--x-sand)]">{category}</p>
-        ) : null}
         {entry.title ? <h2 className="mt-1 font-display text-lg font-bold md:text-xl">{entry.title}</h2> : null}
         {entry.caption ? (
           <p className="mt-1 text-sm leading-relaxed text-[var(--x-on-forest-soft)]">{entry.caption}</p>

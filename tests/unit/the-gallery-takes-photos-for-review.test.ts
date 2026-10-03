@@ -9,11 +9,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
  * page's action refuses a visitor who is not signed in, a conference
  * that is not published and a sender over the allowance, and refuses a
  * file over the ceiling before reading it; the service refuses what is
- * not really a JPEG, PNG or WebP whatever it is called, and a photo sent
- * without the sender's word that they may share it; the store keeps it
- * as a pending, unpublished item whose file is held from every listing,
- * re-encoded without the camera's metadata; and the library's read rule
- * leaves a held file out of anything an anonymous caller can list.
+ * not really a JPEG, PNG or WebP whatever it is called, and credits the
+ * sender by their own name — nothing else is asked of them; the store
+ * keeps it as a pending, unpublished item whose file is held from every
+ * listing, re-encoded without the camera's metadata, bound for the grid
+ * further down; and the library's read rule leaves a held file out of
+ * anything an anonymous caller can list.
  */
 const MB = 1024 * 1024;
 const calls: { payload: { op: string; args: Record<string, unknown> }[] } = { payload: [] };
@@ -103,15 +104,17 @@ describe('the service', () => {
   const participant = { id: '7', name: 'Dana Levi' };
   const request = async (over: Record<string, unknown> = {}) => ({
     file: { name: 'a.jpg', type: 'image/jpeg', data: await jpeg() },
-    caption: '  At the opening  ',
-    credit: '',
-    rightsConfirmed: true,
     ...over,
   });
 
-  it('queues a real photograph with the sender’s name as the credit', async () => {
+  it('queues a real photograph with the sender’s own name as the credit', async () => {
     expect(await submitGalleryPhoto('summit', participant, 'he', await request())).toEqual({ ok: true });
-    expect(queued[0]).toMatchObject({ slug: 'summit', input: { participantId: '7', credit: 'Dana Levi', caption: 'At the opening', locale: 'he' } });
+    expect(queued[0]).toMatchObject({ slug: 'summit', input: { participantId: '7', credit: 'Dana Levi', locale: 'he' } });
+  });
+
+  it('takes the credit from the account, never from the form', async () => {
+    await submitGalleryPhotoAction(idle, form({ slug: 'summit', locale: 'he', credit: 'Someone Else', photo: new File([await jpeg()], 'a.jpg', { type: 'image/jpeg' }) }));
+    expect(queued[0]).toMatchObject({ input: { credit: 'Dana Levi' } });
   });
 
   it('refuses a file over the ceiling', async () => {
@@ -125,11 +128,6 @@ describe('the service', () => {
     expect(await submitGalleryPhoto('summit', participant, 'he', await request({ file: { name: 'a.jpg', type: 'image/jpeg', data: fake } }))).toEqual({ ok: false, reason: 'type' });
   });
 
-  it('refuses a photograph sent without the sender’s word that they may share it', async () => {
-    expect(await submitGalleryPhoto('summit', participant, 'he', await request({ rightsConfirmed: false }))).toEqual({ ok: false, reason: 'rights' });
-    expect(queued).toEqual([]);
-  });
-
   it('refuses nothing sent', async () => {
     expect(await submitGalleryPhoto('summit', participant, 'he', await request({ file: null }))).toEqual({ ok: false, reason: 'missing' });
   });
@@ -138,7 +136,7 @@ describe('the service', () => {
 describe('the gallery page’s action', () => {
   const photo = async (size?: number) =>
     size ? new File([new Uint8Array(size)], 'big.jpg', { type: 'image/jpeg' }) : new File([await jpeg()], 'a.jpg', { type: 'image/jpeg' });
-  const fields = async (over: Record<string, string | File> = {}) => ({ slug: 'summit', locale: 'he', rights: 'on', photo: await photo(), ...over });
+  const fields = async (over: Record<string, string | File> = {}) => ({ slug: 'summit', locale: 'he', photo: await photo(), ...over });
 
   it('refuses a visitor who is not signed in', async () => {
     gate.participant = null;
@@ -173,7 +171,6 @@ describe('the store', () => {
       file: { name: 'IMG_0001.jpg', type: 'image/jpeg', data: await jpeg() },
       participantId: '7',
       credit: 'Dana Levi',
-      caption: 'At the opening',
       locale: 'he',
     });
     expect(outcome).toEqual({ id: '901' });
@@ -185,7 +182,7 @@ describe('the store', () => {
     expect(file.mimetype).toBe('image/jpeg');
     expect((await sharp(file.data).metadata()).exif).toBeUndefined();
     const item = calls.payload.find((call) => call.op === 'create' && call.args.collection === 'gallery-items')!.args;
-    expect(item.data).toMatchObject({ event: 42, media: 900, status: 'pending', published: false, featured: false, submittedBy: 7 });
+    expect(item.data).toMatchObject({ event: 42, media: 900, credit: 'Dana Levi', status: 'pending', published: false, placement: 'more', submittedBy: 7 });
   });
 
   it('keeps nothing that does not decode as an image', async () => {
@@ -193,7 +190,6 @@ describe('the store', () => {
       file: { name: 'x.jpg', type: 'image/jpeg', data: new Uint8Array([0xff, 0xd8, 0xff, 0, 1, 2, 3]) },
       participantId: '7',
       credit: '',
-      caption: '',
       locale: 'he',
     });
     expect(outcome).toBeNull();

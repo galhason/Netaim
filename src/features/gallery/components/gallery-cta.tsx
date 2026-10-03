@@ -16,12 +16,12 @@ import { OliveBranch } from './olive-branch';
 interface GalleryCtaProps {
   locale: Locale;
   slug: string;
-  /* The signed-in participant's name; null for a visitor who is not. */
-  submitterName: string | null;
+  /* Whether a participant is signed in — only they may send a photo. */
+  signedIn: boolean;
   shareAction: (state: GallerySubmissionState, formData: FormData) => Promise<GallerySubmissionState>;
 }
 
-const GalleryCta = ({ locale, slug, submitterName, shareAction }: GalleryCtaProps) => {
+const GalleryCta = ({ locale, slug, signedIn, shareAction }: GalleryCtaProps) => {
   const words = GALLERY_COPY.cta;
   const base = `/${locale}/events/${encodeURIComponent(slug)}`;
   return (
@@ -36,9 +36,9 @@ const GalleryCta = ({ locale, slug, submitterName, shareAction }: GalleryCtaProp
           {words.title[locale]}
         </h2>
         <p className="mt-3 text-base text-[var(--x-soft)] md:text-lg">{words.lede[locale]}</p>
-        <div className="mx-auto mt-8 flex max-w-sm flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:flex-wrap sm:items-start sm:justify-center">
-          {submitterName !== null ? (
-            <GalleryShare locale={locale} slug={slug} submitterName={submitterName} action={shareAction} />
+        <div className="mx-auto mt-8 flex max-w-sm flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:justify-center">
+          {signedIn ? (
+            <GalleryShare locale={locale} slug={slug} action={shareAction} />
           ) : (
             <Link
               href={`/${locale}/me`}

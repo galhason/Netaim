@@ -63,7 +63,7 @@ const entry = (over: Partial<GalleryEntry> = {}): GalleryEntry => ({
   kind: 'image',
   file: { url: '/api/media/file/a.jpg', width: 1200, height: 800, mimeType: 'image/jpeg' },
   alt: 'A hall',
-  featured: false,
+  placement: 'story',
   order: 0,
   ...over,
 });
@@ -165,8 +165,7 @@ describe('the marketing API', () => {
         title: 'Opening',
         caption: 'The hall',
         credit: 'Dana',
-        category: 'stage',
-        featured: true,
+        placement: 'hero',
       }),
       entry({
         id: '12',
@@ -192,8 +191,7 @@ describe('the marketing API', () => {
           title: 'Opening',
           caption: 'The hall',
           credit: 'Dana',
-          category: 'stage',
-          featured: true,
+          placement: 'hero',
         },
         {
           id: '12',
@@ -203,7 +201,7 @@ describe('the marketing API', () => {
           poster: { url: `${ORIGIN}/api/media/file/still.jpg`, width: 1600, height: 900 },
           alt: 'A hall',
           durationSeconds: 134,
-          featured: false,
+          placement: 'story',
         },
       ],
     });

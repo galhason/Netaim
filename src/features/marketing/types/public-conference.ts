@@ -246,9 +246,9 @@ export interface PublicGalleryItem {
   title?: string;
   caption?: string;
   credit?: string;
-  category?: string;
   durationSeconds?: number;
-  featured: boolean;
+  /* Where the Studio placed it: the hero, the main grid, the film band or further down. */
+  placement: 'hero' | 'story' | 'film' | 'more';
 }
 
 export interface PublicGallery {

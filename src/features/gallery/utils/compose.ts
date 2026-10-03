@@ -1,39 +1,24 @@
-import type { GalleryComposition, GalleryEntry } from '../types/gallery';
+import type { GalleryComposition, GalleryEntry, GalleryPlacement } from '../types/gallery';
 
 /*
- * How many pictures the first, editorial block holds before the film.
- * The rest continue below it, so a gallery of twelve reads as one story
- * and a gallery of sixty does not bury the film under forty photographs.
- */
-export const STORY_SIZE = 12;
-
-/*
- * The page, laid out from the Studio's order and its featured marks.
+ * The page, laid out exactly as the Studio placed it.
  *
- * The hero is the first featured photograph, or the first photograph at
- * all; the green band plays the first featured film, or the first film.
- * Both are taken out of the grids so nothing is shown twice — unless
- * the hero is the only photograph there is, in which case it is the
- * hero alone, and the grid is simply empty. Nothing is invented: no
- * photograph, no hero; no film, no band.
+ * Nothing is chosen here. The opening photograph is the item placed as
+ * the hero, the film in the green band the item placed as the film, and
+ * the two grids are what was placed in each, in the Studio's order. An
+ * empty slot stays empty: no hero chosen, the page opens on the brand's
+ * green; no film chosen, there is no band.
  */
 export const composeGallery = (entries: readonly GalleryEntry[]): GalleryComposition => {
-  const all = [...entries];
-  const images = all.filter((entry) => entry.kind === 'image');
-  const videos = all.filter((entry) => entry.kind === 'video');
-
-  const hero = images.find((entry) => entry.featured) ?? images[0];
-  const film = videos.find((entry) => entry.featured) ?? videos[0];
-
-  const rest = all.filter((entry) => entry !== hero && entry !== film);
-  const story = rest.slice(0, STORY_SIZE);
-  const more = rest.slice(STORY_SIZE);
-
+  const placed = (placement: GalleryPlacement) =>
+    entries.filter((entry) => entry.placement === placement);
+  const hero = placed('hero').find((entry) => entry.kind === 'image');
+  const film = placed('film').find((entry) => entry.kind === 'video');
   return {
     ...(hero ? { hero } : {}),
     ...(film ? { film } : {}),
-    story,
-    more,
+    story: placed('story'),
+    more: placed('more'),
   };
 };
 

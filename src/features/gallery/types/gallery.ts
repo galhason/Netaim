@@ -9,20 +9,21 @@ import type { Locale } from '@/config/locales';
  * already resolved to a file a browser can load. An item whose file has
  * gone from the library is not an entry at all.
  */
-export const GALLERY_CATEGORIES = [
-  'moments',
-  'stage',
-  'people',
-  'networking',
-  'venue',
-  'food',
-  'behind-the-scenes',
-] as const;
 
-export type GalleryCategory = (typeof GALLERY_CATEGORIES)[number];
+/*
+ * Where an item sits on the page, chosen in the Studio — never guessed.
+ *
+ *   hero   the opening photograph (one; a photograph)
+ *   film   the film in the green band (one; a film)
+ *   story  the main grid, above the film
+ *   more   the grid that continues below it
+ */
+export const GALLERY_PLACEMENTS = ['hero', 'story', 'film', 'more'] as const;
 
-export const isGalleryCategory = (value: string): value is GalleryCategory =>
-  (GALLERY_CATEGORIES as readonly string[]).includes(value);
+export type GalleryPlacement = (typeof GALLERY_PLACEMENTS)[number];
+
+export const isGalleryPlacement = (value: string): value is GalleryPlacement =>
+  (GALLERY_PLACEMENTS as readonly string[]).includes(value);
 
 export const GALLERY_STATUSES = ['approved', 'pending'] as const;
 
@@ -49,9 +50,8 @@ export interface GalleryEntry {
   title?: string;
   caption?: string;
   credit?: string;
-  category?: GalleryCategory;
   durationSeconds?: number;
-  featured: boolean;
+  placement: GalleryPlacement;
   order: number;
 }
 
@@ -75,9 +75,8 @@ export interface GalleryItemSummary {
   kind?: GalleryKind;
   words: Record<Locale, GalleryWords>;
   credit: string;
-  category?: GalleryCategory;
   durationSeconds?: number;
-  featured: boolean;
+  placement: GalleryPlacement;
   published: boolean;
   order: number;
 }
@@ -88,11 +87,9 @@ export interface GalleryItemInput {
   posterId?: string;
   words?: Partial<Record<Locale, Partial<GalleryWords>>>;
   credit?: string;
-  /* '' clears the category. */
-  category?: GalleryCategory | '';
   /* null clears the running time. */
   durationSeconds?: number | null;
-  featured?: boolean;
+  placement?: GalleryPlacement;
   published?: boolean;
   order?: number;
 }
@@ -116,15 +113,15 @@ export type GallerySubmissionState =
   | { status: 'sent' }
   | {
       status: 'error';
-      reason: 'missing' | 'size' | 'type' | 'rights' | 'failed' | 'signed-out' | 'busy' | 'closed';
+      reason: 'missing' | 'size' | 'type' | 'failed' | 'signed-out' | 'busy' | 'closed';
     };
 
 /* What the gallery page hands over when a participant sends a photograph. */
 export interface GallerySubmissionInput {
   file: { name: string; type: string; data: Uint8Array };
   participantId: string;
+  /* The sender's own name: only a registered participant may send. */
   credit: string;
-  caption: string;
   locale: Locale;
 }
 
@@ -139,7 +136,7 @@ export interface GalleryRepository {
   /* A participant's photograph: stored, held, and queued — never shown. */
   submit: (slug: string, input: GallerySubmissionInput) => Promise<{ id: string } | null>;
   listPending: (slug: string) => Promise<GallerySubmission[]>;
-  /* Into the gallery at `order`, shown, and its file released from the hold. */
+  /* Into the gallery, further down at `order`, shown, and its file released from the hold. */
   approve: (id: string, order: number) => Promise<boolean>;
   /* Gone: the queued item and the file it brought. */
   reject: (id: string) => Promise<boolean>;
@@ -147,8 +144,8 @@ export interface GalleryRepository {
 
 /*
  * The page's composition: the photograph on the hero, the film in the
- * green band, the story above it and the rest below. Decided once, on
- * the server, from the order and the featured flags the Studio set.
+ * green band, the story above it and the rest below — each exactly as
+ * the Studio placed it, in the Studio's order.
  */
 export interface GalleryComposition {
   hero?: GalleryEntry;

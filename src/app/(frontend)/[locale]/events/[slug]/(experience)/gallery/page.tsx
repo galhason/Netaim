@@ -81,7 +81,7 @@ const GalleryPage = async ({ params }: GalleryPageProps) => {
       <GalleryCta
         locale={lang}
         slug={slug}
-        submitterName={participant ? participant.name : null}
+        signedIn={participant !== null}
         shareAction={submitGalleryPhotoAction}
       />
     </main>

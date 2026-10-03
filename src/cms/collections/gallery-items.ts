@@ -1,7 +1,7 @@
 import type { Access, CollectionConfig, Where } from 'payload';
 import type { Grant } from '@/auth';
 import { organizationsWithPermission } from '@/auth';
-import { GALLERY_CATEGORIES, GALLERY_STATUSES } from '@/features/gallery/types/gallery';
+import { GALLERY_PLACEMENTS, GALLERY_STATUSES } from '@/features/gallery/types/gallery';
 import { scopedByOrganization, scopedCreate } from '../access';
 
 /*
@@ -51,7 +51,7 @@ export const GalleryItems: CollectionConfig = {
   admin: {
     group: 'Content',
     useAsTitle: 'title',
-    defaultColumns: ['title', 'media', 'featured', 'published', 'order'],
+    defaultColumns: ['title', 'media', 'placement', 'published', 'order'],
   },
   fields: [
     {
@@ -99,17 +99,23 @@ export const GalleryItems: CollectionConfig = {
     },
     { name: 'credit', type: 'text' },
     {
-      name: 'category',
-      type: 'select',
-      options: GALLERY_CATEGORIES.map((value) => ({ label: value, value })),
-    },
-    {
       /* A film's running time, in seconds, for the badge on its poster. */
       name: 'durationSeconds',
       type: 'number',
       min: 0,
     },
-    { name: 'featured', type: 'checkbox', defaultValue: false },
+    {
+      /*
+       * Where it sits on the page — the opening photograph, the main grid,
+       * the film band or further down — as the Studio placed it. Only one
+       * item holds `hero` and one `film`; the Studio's action keeps it so.
+       */
+      name: 'placement',
+      type: 'select',
+      defaultValue: 'story',
+      index: true,
+      options: GALLERY_PLACEMENTS.map((value) => ({ label: value, value })),
+    },
     {
       /* Nothing is shown until the Studio says so. */
       name: 'published',

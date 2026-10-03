@@ -526,9 +526,8 @@ const publicGalleryItem = (
     ...(entry.title ? { title: entry.title } : {}),
     ...(entry.caption ? { caption: entry.caption } : {}),
     ...(entry.credit ? { credit: entry.credit } : {}),
-    ...(entry.category ? { category: entry.category } : {}),
     ...(typeof entry.durationSeconds === 'number' ? { durationSeconds: entry.durationSeconds } : {}),
-    featured: entry.featured,
+    placement: entry.placement,
   };
 };
 

@@ -582,9 +582,8 @@ export interface GalleryItem {
   caption?: string | null;
   alt?: string | null;
   credit?: string | null;
-  category?: ('moments' | 'stage' | 'people' | 'networking' | 'venue' | 'food' | 'behind-the-scenes') | null;
   durationSeconds?: number | null;
-  featured?: boolean | null;
+  placement?: ('hero' | 'story' | 'film' | 'more') | null;
   published?: boolean | null;
   order?: number | null;
   status?: ('approved' | 'pending') | null;
@@ -1381,9 +1380,8 @@ export interface GalleryItemsSelect<T extends boolean = true> {
   caption?: T;
   alt?: T;
   credit?: T;
-  category?: T;
   durationSeconds?: T;
-  featured?: T;
+  placement?: T;
   published?: T;
   order?: T;
   status?: T;

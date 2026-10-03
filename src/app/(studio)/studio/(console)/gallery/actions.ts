@@ -6,12 +6,14 @@ import { SUPPORTED_LOCALES, type Locale } from '@/config/locales';
 import { audit } from '@/features/access';
 import {
   addGalleryItem,
+  addGalleryItems,
   approveGallerySubmission,
-  isGalleryCategory,
+  isGalleryPlacement,
   listGalleryItems,
   listGallerySubmissions,
   moveGalleryItem,
   parseDuration,
+  placeGalleryItem,
   rejectGallerySubmission,
   removeGalleryItem,
   updateGalleryItem,
@@ -63,18 +65,17 @@ const wordsOf = (formData: FormData): Partial<Record<Locale, Partial<GalleryWord
     ]),
   );
 
-const inputOf = (formData: FormData): GalleryItemInput => {
-  const category = text(formData, 'category');
-  return {
-    words: wordsOf(formData),
-    credit: text(formData, 'credit'),
-    category: isGalleryCategory(category) ? category : '',
-    durationSeconds: parseDuration(text(formData, 'duration')),
-    featured: formData.get('featured') === 'on',
-    published: formData.get('published') === 'on',
-    ...(formData.has('posterId') ? { posterId: text(formData, 'posterId') } : {}),
-  };
-};
+/* The fields the item editor sends; where the item sits is set apart. */
+const inputOf = (formData: FormData): GalleryItemInput => ({
+  words: wordsOf(formData),
+  credit: text(formData, 'credit'),
+  durationSeconds: parseDuration(text(formData, 'duration')),
+  published: formData.get('published') === 'on',
+  ...(formData.has('posterId') ? { posterId: text(formData, 'posterId') } : {}),
+});
+
+/* A grid to add into: the main grid unless "further down" was chosen. */
+const gridOf = (formData: FormData): 'story' | 'more' => (text(formData, 'placement') === 'more' ? 'more' : 'story');
 
 /* The item, if it is one of this conference's; null otherwise. */
 const itemOf = async (slug: string, id: string) =>
@@ -83,6 +84,28 @@ const itemOf = async (slug: string, id: string) =>
 const nameOf = (formData: FormData): string =>
   text(formData, 'title_he') || text(formData, 'title_en') || text(formData, 'alt_he') || '';
 
+/* Files just uploaded through the library's own upload, placed in one grid. */
+export const addGalleryItemsAction = async (formData: FormData) => {
+  const slug = text(formData, 'slug');
+  const actor = slug ? await actorFor(CAPABILITY, slug) : null;
+  if (!actor) {
+    return;
+  }
+  const mediaIds = text(formData, 'mediaIds')
+    .split(',')
+    .map((id) => id.trim())
+    .filter((id) => /^\d+$/.test(id));
+  if (mediaIds.length === 0) {
+    redirect(`${GALLERY}?notice=media-required`);
+  }
+  const placement = gridOf(formData);
+  const created = await addGalleryItems(slug, mediaIds, placement);
+  await audit(actor, 'content.galleryItemSaved', slug, { items: created.map((item) => item.id).join(','), created: true, placement });
+  changed(slug);
+  redirect(`${GALLERY}?notice=added#zone-${placement}`);
+};
+
+/* One file chosen from the media library. */
 export const addGalleryItemAction = async (formData: FormData) => {
   const slug = text(formData, 'slug');
   const actor = slug ? await actorFor(CAPABILITY, slug) : null;
@@ -91,10 +114,11 @@ export const addGalleryItemAction = async (formData: FormData) => {
   }
   const mediaId = text(formData, 'mediaId');
   if (!mediaId) {
-    redirect(`${GALLERY}?notice=media-required#gallery-add`);
+    redirect(`${GALLERY}?notice=media-required`);
   }
-  const created = await addGalleryItem(slug, { ...inputOf(formData), mediaId });
-  await audit(actor, 'content.galleryItemSaved', slug, { item: created.id, created: true, published: created.published }, nameOf(formData));
+  const placement = gridOf(formData);
+  const created = await addGalleryItem(slug, { mediaId, placement, published: true });
+  await audit(actor, 'content.galleryItemSaved', slug, { item: created.id, created: true, placement });
   changed(slug);
   redirect(`${GALLERY}?notice=added#item-${created.id}`);
 };
@@ -103,20 +127,50 @@ export const updateGalleryItemAction = async (formData: FormData) => {
   const slug = text(formData, 'slug');
   const id = text(formData, 'id');
   const actor = slug ? await actorFor(CAPABILITY, slug) : null;
-  if (!actor || !id || !(await itemOf(slug, id))) {
+  const item = actor && id ? await itemOf(slug, id) : null;
+  if (!actor || !item) {
     return;
   }
   const mediaId = text(formData, 'mediaId');
   if (!mediaId) {
-    redirect(`${GALLERY}?notice=media-required#item-${id}`);
+    redirect(`${GALLERY}?edit=${id}&notice=media-required#editor`);
   }
   const updated = await updateGalleryItem(id, { ...inputOf(formData), mediaId });
   if (!updated) {
-    redirect(`${GALLERY}?notice=failed#item-${id}`);
+    redirect(`${GALLERY}?edit=${id}&notice=failed#editor`);
   }
-  await audit(actor, 'content.galleryItemSaved', slug, { item: id, published: updated.published }, nameOf(formData));
+  const placement = text(formData, 'placement');
+  if (isGalleryPlacement(placement) && placement !== item.placement) {
+    const placed = await placeGalleryItem(slug, id, placement);
+    if (!placed.ok) {
+      redirect(`${GALLERY}?edit=${id}&notice=wrong-kind#editor`);
+    }
+  }
+  await audit(actor, 'content.galleryItemSaved', slug, { item: id, published: updated.published, placement }, nameOf(formData));
   changed(slug);
-  redirect(`${GALLERY}?notice=saved#item-${id}`);
+  redirect(`${GALLERY}?edit=${id}&notice=saved#editor`);
+};
+
+/*
+ * Where an item sits: the hero, the main grid, the film band or further
+ * down. The hero and the film take one each, and only a photograph or
+ * a film respectively; the service keeps both rules.
+ */
+export const placeGalleryItemAction = async (formData: FormData) => {
+  const slug = text(formData, 'slug');
+  const id = text(formData, 'id');
+  const placement = text(formData, 'placement');
+  const actor = slug ? await actorFor(CAPABILITY, slug) : null;
+  if (!actor || !id || !isGalleryPlacement(placement) || !(await itemOf(slug, id))) {
+    return;
+  }
+  const placed = await placeGalleryItem(slug, id, placement);
+  if (!placed.ok) {
+    redirect(`${GALLERY}?notice=wrong-kind`);
+  }
+  await audit(actor, 'content.galleryItemSaved', slug, { item: id, placement });
+  changed(slug);
+  redirect(`${GALLERY}?notice=placed#zone-${placement}`);
 };
 
 /* Show or hide one item without opening its form. */

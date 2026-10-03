@@ -36,12 +36,20 @@ vi.mock('@/features/gallery', async () => {
   const types = await import('@/features/gallery/types/gallery');
   return {
     parseDuration: compose.parseDuration,
-    isGalleryCategory: types.isGalleryCategory,
+    isGalleryPlacement: types.isGalleryPlacement,
     listGalleryItems: async (slug: string) =>
-      [...items.values()].filter((item) => item.slug === slug).map((item) => ({ ...item, published: true })),
+      [...items.values()].filter((item) => item.slug === slug).map((item) => ({ ...item, published: true, placement: 'story' })),
     addGalleryItem: async (slug: string) => {
       writes.push(`add:${slug}`);
       return { id: '99', published: true };
+    },
+    addGalleryItems: async (slug: string, ids: string[], placement: string) => {
+      writes.push(`add-many:${slug}:${ids.join('+')}:${placement}`);
+      return ids.map((id) => ({ id: `n${id}` }));
+    },
+    placeGalleryItem: async (slug: string, id: string, placement: string) => {
+      writes.push(`place:${slug}:${id}:${placement}`);
+      return { ok: true };
     },
     updateGalleryItem: async (id: string) => {
       writes.push(`update:${id}`);
@@ -99,6 +107,8 @@ const run = async (action: (data: FormData) => Promise<void>, fields: Record<str
 const every = (fields: Record<string, string>) =>
   [
     [actions.addGalleryItemAction, { ...fields, mediaId: '7' }],
+    [actions.addGalleryItemsAction, { ...fields, mediaIds: '7,8', placement: 'more' }],
+    [actions.placeGalleryItemAction, { ...fields, id: '1', placement: 'hero' }],
     [actions.updateGalleryItemAction, { ...fields, id: '1', mediaId: '7' }],
     [actions.setGalleryItemPublishedAction, { ...fields, id: '1', published: 'false' }],
     [actions.removeGalleryItemAction, { ...fields, id: '1' }],
@@ -166,6 +176,8 @@ describe('the actions', () => {
       }
       expect(writes, role).toEqual([
         'add:summit',
+        'add-many:summit:7+8:more',
+        'place:summit:1:hero',
         'update:1',
         'update:1',
         'remove:1',
@@ -196,6 +208,20 @@ describe('the actions', () => {
   it('will not add an item without a file', async () => {
     session.grants = [{ role: 'owner', eventSlug: null } as Grant];
     await run(actions.addGalleryItemAction, { slug: 'summit' });
+    await run(actions.addGalleryItemsAction, { slug: 'summit', mediaIds: 'x,../1' });
     expect(writes).toEqual([]);
+  });
+
+  it('will not place an item of another conference, or in a place that does not exist', async () => {
+    session.grants = [{ role: 'owner', eventSlug: null } as Grant];
+    await run(actions.placeGalleryItemAction, { slug: 'summit', id: '2', placement: 'hero' });
+    await run(actions.placeGalleryItemAction, { slug: 'summit', id: '1', placement: 'banner' });
+    expect(writes).toEqual([]);
+  });
+
+  it('moves an item when its editor changes where it sits', async () => {
+    session.grants = [{ role: 'editor', eventSlug: null } as Grant];
+    await run(actions.updateGalleryItemAction, { slug: 'summit', id: '1', mediaId: '7', placement: 'more' });
+    expect(writes).toEqual(['update:1', 'place:summit:1:more']);
   });
 });

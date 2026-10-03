@@ -2,7 +2,6 @@ import type { Locale } from '@/config/locales';
 import { galleryRepository } from '@/infrastructure';
 import { cacheTags, cachedContent } from '@/shared/cache/content-cache';
 import {
-  SUBMISSION_CAPTION_MAX,
   SUBMISSION_CREDIT_MAX,
   SUBMISSION_MAX_BYTES,
   SUBMISSION_TYPES,
@@ -11,6 +10,7 @@ import type {
   GalleryEntry,
   GalleryItemInput,
   GalleryItemSummary,
+  GalleryPlacement,
   GallerySubmission,
 } from '../types/gallery';
 
@@ -32,14 +32,71 @@ export const publishedGallery = (slug: string, locale: Locale): Promise<GalleryE
     [cacheTags.event(slug)],
   )(slug, locale);
 
-/* A new item joins at the end, so the list the team sees is the page's order. */
+const nextOrder = (items: readonly GalleryItemSummary[]): number =>
+  items.reduce((max, item) => Math.max(max, item.order), -1) + 1;
+
+/*
+ * A new item joins the end of the grid it is placed in — the main grid
+ * unless said otherwise. The hero and the film are single places, so
+ * an item is put there by placeGalleryItem, which also clears whoever
+ * held it; adding never takes one over.
+ */
 export const addGalleryItem = async (
   slug: string,
   input: GalleryItemInput,
 ): Promise<GalleryItemSummary> => {
   const existing = await galleryRepository.listByEvent(slug);
-  const last = existing.reduce((max, item) => Math.max(max, item.order), -1);
-  return galleryRepository.create(slug, { ...input, order: input.order ?? last + 1 });
+  const placement = input.placement === 'more' ? 'more' : 'story';
+  return galleryRepository.create(slug, { ...input, placement, order: input.order ?? nextOrder(existing) });
+};
+
+/* Several files at once, in the order chosen, into one grid. */
+export const addGalleryItems = async (
+  slug: string,
+  mediaIds: readonly string[],
+  placement: 'story' | 'more',
+): Promise<GalleryItemSummary[]> => {
+  const existing = await galleryRepository.listByEvent(slug);
+  const first = nextOrder(existing);
+  const created: GalleryItemSummary[] = [];
+  for (const [index, mediaId] of mediaIds.entries()) {
+    created.push(await galleryRepository.create(slug, { mediaId, placement, published: true, order: first + index }));
+  }
+  return created;
+};
+
+export type PlacementRefusal = 'missing' | 'kind';
+
+/*
+ * Where an item sits on the page, set by hand.
+ *
+ * The hero takes a photograph and the film a film — anything else is
+ * refused, not quietly shown somewhere odd. Each holds one item: the
+ * one it held before goes back to the main grid. An item moved into a
+ * grid joins the end of it.
+ */
+export const placeGalleryItem = async (
+  slug: string,
+  id: string,
+  placement: GalleryPlacement,
+): Promise<{ ok: true } | { ok: false; reason: PlacementRefusal }> => {
+  const items = await galleryRepository.listByEvent(slug);
+  const item = items.find((entry) => entry.id === id);
+  if (!item) {
+    return { ok: false, reason: 'missing' };
+  }
+  if ((placement === 'hero' && item.kind !== 'image') || (placement === 'film' && item.kind !== 'video')) {
+    return { ok: false, reason: 'kind' };
+  }
+  if (placement === 'hero' || placement === 'film') {
+    await Promise.all(
+      items
+        .filter((entry) => entry.placement === placement && entry.id !== id)
+        .map((entry) => galleryRepository.update(entry.id, { placement: 'story' })),
+    );
+  }
+  await galleryRepository.update(id, { placement, order: nextOrder(items) });
+  return { ok: true };
 };
 
 export const updateGalleryItem = (
@@ -51,9 +108,10 @@ export const updateGalleryItem = (
 export const removeGalleryItem = (id: string): Promise<boolean> => galleryRepository.remove(id);
 
 /*
- * One step earlier or later. The whole list is renumbered 0..n-1 in its
- * new order, as the partners strip does, so gaps and ties left by an
- * older list cannot swallow the move.
+ * One step earlier or later within its own grid — past the neighbour in
+ * the same grid, never into another one. The whole list is renumbered
+ * 0..n-1 in its new order, as the partners strip does, so gaps and ties
+ * left by an older list cannot swallow the move.
  */
 export const moveGalleryItem = async (
   slug: string,
@@ -65,7 +123,12 @@ export const moveGalleryItem = async (
   if (index === -1) {
     return list;
   }
-  const target = direction === 'up' ? index - 1 : index + 1;
+  const placement = list[index]!.placement;
+  const step = direction === 'up' ? -1 : 1;
+  let target = index + step;
+  while (target >= 0 && target < list.length && list[target]!.placement !== placement) {
+    target += step;
+  }
   if (target < 0 || target >= list.length) {
     return list;
   }
@@ -98,13 +161,10 @@ export const sniffImageType = (data: Uint8Array): (typeof SUBMISSION_TYPES)[numb
   return null;
 };
 
-export type SubmissionRefusal = 'missing' | 'size' | 'type' | 'rights' | 'failed';
+export type SubmissionRefusal = 'missing' | 'size' | 'type' | 'failed';
 
 export interface SubmissionRequest {
   file: { name: string; type: string; data: Uint8Array } | null;
-  caption: string;
-  credit: string;
-  rightsConfirmed: boolean;
 }
 
 /*
@@ -113,8 +173,9 @@ export interface SubmissionRequest {
  * Who may send, and to which conference, is the caller's question (the
  * gallery page's action answers it: signed in, published conference,
  * within the allowance). This answers what may be sent: one photograph,
- * no larger than the ceiling, really one of the three formats, with the
- * sender's word that they may share it. It never publishes anything.
+ * no larger than the ceiling, really one of the three formats. The
+ * credit is the sender's own name — only a registered participant can
+ * send, so there is always one. It never publishes anything.
  */
 export const submitGalleryPhoto = async (
   slug: string,
@@ -132,15 +193,11 @@ export const submitGalleryPhoto = async (
   if (!sniffImageType(file.data)) {
     return { ok: false, reason: 'type' };
   }
-  if (!request.rightsConfirmed) {
-    return { ok: false, reason: 'rights' };
-  }
   const queued = await galleryRepository
     .submit(slug, {
       file,
       participantId: participant.id,
-      caption: request.caption.trim().slice(0, SUBMISSION_CAPTION_MAX),
-      credit: (request.credit.trim() || participant.name).slice(0, SUBMISSION_CREDIT_MAX),
+      credit: participant.name.trim().slice(0, SUBMISSION_CREDIT_MAX),
       locale,
     })
     .catch(() => null);
@@ -151,12 +208,9 @@ export const submitGalleryPhoto = async (
 export const listGallerySubmissions = (slug: string): Promise<GallerySubmission[]> =>
   galleryRepository.listPending(slug);
 
-/* Into the gallery, at the end of it, shown. */
-export const approveGallerySubmission = async (slug: string, id: string): Promise<boolean> => {
-  const existing = await galleryRepository.listByEvent(slug);
-  const last = existing.reduce((max, item) => Math.max(max, item.order), -1);
-  return galleryRepository.approve(id, last + 1);
-};
+/* Into the gallery — at the end of the grid further down — shown. */
+export const approveGallerySubmission = async (slug: string, id: string): Promise<boolean> =>
+  galleryRepository.approve(id, nextOrder(await galleryRepository.listByEvent(slug)));
 
 /* Out, with the file it brought. */
 export const rejectGallerySubmission = (id: string): Promise<boolean> => galleryRepository.reject(id);

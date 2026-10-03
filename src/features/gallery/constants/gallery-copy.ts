@@ -1,5 +1,4 @@
 import type { Locale } from '@/config/locales';
-import type { GalleryCategory } from '../types/gallery';
 
 type Words = Record<Locale, string>;
 
@@ -44,36 +43,25 @@ export const GALLERY_COPY = {
   share: {
     open: t('שתפו תמונה', 'Share a photo'),
     signIn: t('התחברו כדי לשתף תמונה', 'Sign in to share a photo'),
-    formTitle: t('שליחת תמונה לגלריה', 'Send a photo to the gallery'),
-    formNote: t(
-      'התמונה תגיע לצוות נטעים ותופיע בגלריה רק אחרי אישור.',
-      'Your photo goes to the Netaim team and appears in the gallery only once approved.',
-    ),
-    file: t('התמונה', 'The photo'),
-    fileHint: t('JPG, PNG או WebP, עד {mb}MB.', 'JPG, PNG or WebP, up to {mb}MB.'),
-    choose: t('בחירת תמונה', 'Choose a photo'),
-    change: t('החלפת תמונה', 'Choose another'),
+    title: t('שליחת תמונה', 'Send a photo'),
+    choose: t('לחצו לבחירת תמונה', 'Tap to choose a photo'),
+    change: t('החלפה', 'Change'),
+    limits: t('JPG, PNG או WebP · עד {mb}MB', 'JPG, PNG or WebP · up to {mb}MB'),
     preview: t('התמונה שנבחרה', 'The chosen photo'),
-    caption: t('כיתוב (לא חובה)', 'Caption (optional)'),
-    credit: t('קרדיט לצילום', 'Photo credit'),
-    creditHint: t('ריק — השם שלכם.', 'Empty — your name.'),
-    rights: t(
-      'צילמתי את התמונה או שיש לי רשות לשתף אותה, והאנשים שמופיעים בה מסכימים שתתפרסם.',
-      'I took this photo or have permission to share it, and the people in it agree to its publication.',
+    note: t(
+      'התמונה תעלה לגלריה אחרי אישור צוות נטעים, בקרדיט על שמכם. בשליחה אתם מאשרים שצילמתם אותה או שמותר לכם לשתף אותה.',
+      'Your photo joins the gallery once the Netaim team approves it, credited to you. By sending it you confirm you took it or may share it.',
     ),
-    send: t('שליחה לאישור', 'Send for approval'),
+    send: t('שליחה', 'Send'),
     sending: t('שולחים…', 'Sending…'),
     cancel: t('ביטול', 'Cancel'),
-    sent: t(
-      'תודה! התמונה נשלחה לצוות נטעים ותופיע בגלריה אחרי אישור.',
-      'Thank you! Your photo was sent to the Netaim team and will appear in the gallery once approved.',
-    ),
-    another: t('שליחת תמונה נוספת', 'Send another photo'),
+    close: t('סגירה', 'Close'),
+    sent: t('תודה! התמונה נשלחה לאישור.', 'Thank you! Your photo was sent for approval.'),
+    another: t('תמונה נוספת', 'Another photo'),
     errors: {
       missing: t('בחרו תמונה לשליחה.', 'Choose a photo to send.'),
       size: t('התמונה גדולה מדי — עד {mb}MB.', 'That photo is too large — up to {mb}MB.'),
       type: t('אפשר לשלוח רק תמונות JPG, PNG או WebP.', 'Only JPG, PNG or WebP photos can be sent.'),
-      rights: t('יש לאשר שמותר לשתף את התמונה.', 'Please confirm you may share this photo.'),
       failed: t('השליחה לא הצליחה. נסו שוב.', 'Sending did not work. Try again.'),
       'signed-out': t('צריך להתחבר כדי לשלוח תמונה.', 'You need to sign in to send a photo.'),
       busy: t('שלחתם הרבה תמונות בזמן קצר. נסו שוב בעוד שעה.', 'You have sent many photos in a short time. Try again in an hour.'),
@@ -99,16 +87,6 @@ export const GALLERY_COPY = {
     credit: t('צילום', 'Photo'),
   },
 } as const;
-
-export const GALLERY_CATEGORY_LABELS: Record<GalleryCategory, Words> = {
-  moments: t('רגעים', 'Moments'),
-  stage: t('על הבמה', 'On stage'),
-  people: t('אנשים', 'People'),
-  networking: t('נטוורקינג', 'Networking'),
-  venue: t('המקום', 'The venue'),
-  food: t('אוכל', 'Food'),
-  'behind-the-scenes': t('מאחורי הקלעים', 'Behind the scenes'),
-};
 
 /* "{n} פריטים" with the number in. */
 export const fill = (template: string, values: Record<string, string | number>): string =>
