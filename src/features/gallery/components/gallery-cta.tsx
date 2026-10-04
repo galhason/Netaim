@@ -31,7 +31,7 @@ const GalleryCta = ({ locale, slug, signedIn, shareAction }: GalleryCtaProps) =>
     >
       <OliveBranch className="pointer-events-none absolute -bottom-12 -start-12 -z-10 size-64 text-[var(--x-primary)] opacity-[0.18] md:size-80" />
       <OliveBranch className="pointer-events-none absolute -end-16 -top-16 -z-10 hidden size-56 rotate-180 text-[var(--x-accent)] opacity-[0.22] md:block" />
-      <div className="mx-auto max-w-3xl px-5 py-16 text-center md:py-20">
+      <div className="mx-auto max-w-3xl px-5 py-14 text-center md:py-16">
         <h2 id="gallery-cta-title" className="font-display text-3xl font-bold leading-tight text-[var(--x-ink)] md:text-4xl">
           {words.title[locale]}
         </h2>

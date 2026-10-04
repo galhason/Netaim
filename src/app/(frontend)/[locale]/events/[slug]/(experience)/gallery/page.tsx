@@ -65,18 +65,21 @@ const GalleryPage = async ({ params }: GalleryPageProps) => {
   const lang = (isSupportedLocale(locale) ? locale : 'he') as Locale;
   setRequestLocale(lang);
 
-  const [entries, participant] = await Promise.all([
+  const [entries, participant, event] = await Promise.all([
     publishedGallery(slug, lang).catch(() => []),
     currentParticipant().catch(() => null),
+    findPortalEvent(slug, lang).catch(() => null),
   ]);
   const composition = composeGallery(entries);
+  /* "רגעים מנטעים 2026" — the year is the conference's own. */
+  const year = event?.startsAt?.match(/^\d{4}/)?.[0];
 
   return (
     <main
       id="main-content"
       className="experience experience--programme experience--gallery bg-[var(--x-bg)] text-[var(--x-ink)]"
     >
-      <GalleryHero locale={lang} image={composition.hero} />
+      <GalleryHero locale={lang} image={composition.hero} year={year} />
       <GalleryExperience locale={lang} composition={composition} />
       <GalleryCta
         locale={lang}

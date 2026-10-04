@@ -83,7 +83,7 @@ describe('the page in Hebrew', () => {
 
   it('opens on the gallery’s name and line', () => {
     expect(html).toMatch(/<h1[^>]*>.*גלריה.*רגעים מנטעים.*<\/h1>/s);
-    expect(html).toContain('שהופכים את נטעים לקהילה חיה');
+    expect(html).toContain('שהופכים את נטעים לחוויה');
   });
 
   it('offers no filters: the gallery is one story, top to bottom', () => {
@@ -97,7 +97,7 @@ describe('the page in Hebrew', () => {
     expect(html).toContain('/api/media/file/p2.jpg');
     expect(html).toContain('חיים בתנועה');
     expect(html).toContain('02:14');
-    expect(html).toContain('יש לכם רגע שראוי להישמר?');
+    expect(html).toContain('יש לכם רגע מנטעים שתרצו לשתף?');
   });
 
   it('names every picture button for a screen reader', () => {
@@ -115,7 +115,7 @@ describe('the page in English', () => {
 
   it('speaks English only', () => {
     expect(html).toContain('Moments from Netaim');
-    expect(html).toContain('Have a moment worth remembering?');
+    expect(html).toContain('Have a Netaim moment you&#x27;d like to share?');
     expect(html.replace(/<[^>]+>/g, ' ')).not.toMatch(HEBREW);
   });
 });
@@ -131,7 +131,7 @@ describe('the edges', () => {
   it('has no film band with no film', () => {
     const html = page('en', [photo('p1'), photo('p2')]);
     expect(html).not.toContain('gallery-film-title');
-    expect(html).not.toContain('Life in motion');
+    expect(html).not.toContain('Life in Motion');
   });
 
   it('offers no filter row, whatever the gallery holds', () => {
@@ -181,7 +181,7 @@ describe('the closing invitation', () => {
 
   it('says the photo is reviewed before it appears', () => {
     const html = renderToString(<GalleryCta locale="en" slug="ntaym-2026" signedIn shareAction={share} />);
-    expect(html).toContain('once the Netaim team approves it');
+    expect(html).toContain('after approval by the Netaim team');
   });
 });
 

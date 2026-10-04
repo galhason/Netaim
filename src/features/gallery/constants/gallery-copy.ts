@@ -13,8 +13,8 @@ export const GALLERY_COPY = {
   eyebrow: t('גלריה', 'Gallery'),
   title: t('רגעים מנטעים', 'Moments from Netaim'),
   lede: t(
-    'האנשים, המפגשים, הרעיונות והרגעים שהופכים את נטעים לקהילה חיה.',
-    'The people, the encounters, the ideas and the moments that make Netaim a living community.',
+    'אנשים, רעיונות, מפגשים ורגעים שהופכים את נטעים לחוויה.',
+    'People, ideas, encounters and moments that make Netaim what it is.',
   ),
   metaDescription: t(
     'הגלריה של הכנס: תמונות וסרטונים מהאנשים, המפגשים והרגעים של נטעים.',
@@ -24,21 +24,21 @@ export const GALLERY_COPY = {
   moreLabel: t('עוד רגעים', 'More moments'),
   showMore: t('הצגת תמונות נוספות', 'Show more'),
   film: {
-    title: t('חיים בתנועה', 'Life in motion'),
+    title: t('חיים בתנועה', 'Life in Motion'),
     lede: t(
-      'סרטון קצר שמסכם את הרגעים, האנשים והאווירה של נטעים.',
-      'A short film of the moments, the people and the atmosphere of Netaim.',
+      'רגעים, אנשים וקשרים שהופכים את נטעים למה שהיא.',
+      'Moments, people and connections that make Netaim what it is.',
     ),
     watch: t('צפו בסרטון', 'Watch the film'),
     duration: t('משך', 'Length'),
   },
   cta: {
-    title: t('יש לכם רגע שראוי להישמר?', 'Have a moment worth remembering?'),
+    title: t('יש לכם רגע מנטעים שתרצו לשתף?', "Have a Netaim moment you'd like to share?"),
     lede: t(
-      'הגלריה מתמלאת לאורך הדרך — שלחו לנו תמונה מהכנס, והיא תעלה לגלריה אחרי אישור צוות נטעים.',
-      'The gallery keeps growing along the way — send us a photo from the conference, and it joins the gallery once the Netaim team approves it.',
+      'הגלריה מתמלאת לאורך הדרך — שלחו לנו תמונה מהכנס, והיא תעלה לגלריה לאחר אישור צוות נטעים.',
+      'The gallery grows throughout the event — send us a photo from the conference and it may be added to the gallery after approval by the Netaim team.',
     ),
-    agenda: t('חזרה לתוכנית', 'Back to the programme'),
+    agenda: t('חזרה לתוכנית', 'Back to programme'),
   },
   share: {
     open: t('שתפו תמונה', 'Share a photo'),

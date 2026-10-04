@@ -875,7 +875,22 @@ main [id] {
 }
 @media (min-width: 768px) {
   .gallery-rows__item {
-    flex-basis: calc(var(--r, 1.333) * 14rem);
+    flex-basis: calc(var(--r, 1.333) * 11rem);
+  }
+}
+
+/*
+ * The gallery's pictures rise into place as they scroll in — where the
+ * browser ties an animation to scrolling, and the visitor has not asked
+ * for less motion. Elsewhere they are simply there.
+ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .gallery-reveal {
+      animation: x-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
   }
 }
 
