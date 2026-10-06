@@ -47,6 +47,13 @@ const LABELS: Record<AuditAction, Record<Locale, string>> = {
     en: 'Promoted from waitlist',
   },
   'registration.checkedIn': { he: 'כניסה נרשמה', en: 'Checked in' },
+  'system.updatePublished': { he: 'עדכון מערכת פורסם', en: 'System update published' },
+  'system.updateEdited': { he: 'עדכון מערכת נערך', en: 'System update edited' },
+  'system.updateRemoved': { he: 'עדכון מערכת נמחק', en: 'System update deleted' },
+  'registration.rosterExported': {
+    he: 'רשימת נרשמים לפעילויות יוצאה לאקסל',
+    en: 'Activity registrants exported to Excel',
+  },
   'participant.blocked': {
     he: 'חשבון נחסם או שוחרר',
     en: 'Account blocked or unblocked',

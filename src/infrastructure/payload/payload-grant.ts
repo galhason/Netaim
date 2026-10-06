@@ -45,6 +45,7 @@ const PRINCIPAL_ROLE: Record<
   { role: PrincipalRole; platformWide: boolean }
 > = {
   owner: { role: 'platformOwner', platformWide: true },
+  developer: { role: 'platformOwner', platformWide: true },
   producer: { role: 'orgAdmin', platformWide: false },
   editor: { role: 'contentEditor', platformWide: false },
   door: { role: 'registrationManager', platformWide: false },
@@ -274,11 +275,11 @@ export const payloadAccountGrantRepository: GrantRepository = {
     return view;
   },
 
-  ownerGrantCount: async () => {
+  grantCount: async (role) => {
     const payload = await getSystemPayload();
     const found = await payload.find({
       collection: 'account-grants',
-      where: { role: { equals: 'owner' } },
+      where: { role: { equals: role } },
       limit: 0,
       depth: 0,
       overrideAccess: true,

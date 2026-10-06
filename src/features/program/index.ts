@@ -38,6 +38,7 @@ export type {
   ImportRow,
 } from './services/activity-import';
 export { readCsv, readFirstSheet, readGrid, writeWorkbook } from './services/sheet-codec';
+export type { SheetData } from './services/sheet-codec';
 export type { CreateSessionInput } from './types/session';
 export {
   TOUR_STATUS_LABELS,

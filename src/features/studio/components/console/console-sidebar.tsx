@@ -79,6 +79,7 @@ const buildGroups = (
       { href: '/studio/brand', label: CONSOLE_UI.brandNav[locale], needs: 'experiences:manage' },
       { href: '/studio/organization', label: CONSOLE_UI.organization[locale], needs: 'platform:manage' },
       { href: '/studio/team', label: CONSOLE_UI.teams[locale], needs: 'events:manage' },
+      { href: '/studio/system', label: CONSOLE_UI.systemNav[locale], needs: 'system:read' },
     ],
   },
 ];

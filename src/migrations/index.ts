@@ -16,6 +16,8 @@ import * as migration_20260929_160000_conference_preview_section from './2026092
 import * as migration_20260929_200000_gallery_items from './20260929_200000_gallery_items';
 import * as migration_20260930_090000_gallery_submissions from './20260930_090000_gallery_submissions';
 import * as migration_20261003_090000_gallery_placement from './20261003_090000_gallery_placement';
+import * as migration_20261005_090000_registration_media_consent from './20261005_090000_registration_media_consent';
+import * as migration_20261006_090000_developer_role_and_system_updates from './20261006_090000_developer_role_and_system_updates';
 
 export const migrations = [
   {
@@ -107,5 +109,15 @@ export const migrations = [
     up: migration_20261003_090000_gallery_placement.up,
     down: migration_20261003_090000_gallery_placement.down,
     name: '20261003_090000_gallery_placement',
+  },
+  {
+    up: migration_20261005_090000_registration_media_consent.up,
+    down: migration_20261005_090000_registration_media_consent.down,
+    name: '20261005_090000_registration_media_consent',
+  },
+  {
+    up: migration_20261006_090000_developer_role_and_system_updates.up,
+    down: migration_20261006_090000_developer_role_and_system_updates.down,
+    name: '20261006_090000_developer_role_and_system_updates',
   },
 ];

@@ -1,6 +1,6 @@
-import { ASSIGNABLE_ROLES, ROLE_DESCRIPTIONS, ROLE_LABELS } from '@/permission-engine';
+import { ASSIGNABLE_ROLES, ROLE_DESCRIPTIONS, ROLE_LABELS, mayRevokeRole } from '@/permission-engine';
 import Link from 'next/link';
-import { listAllGrants } from '@/features/access';
+import { listAllGrants, rolesGrantableBy } from '@/features/access';
 import type { AccountGrantView } from '@/features/access';
 import { listEvents } from '@/features/events';
 import {
@@ -25,6 +25,17 @@ interface AccessPageProps {
   searchParams: Promise<{ q?: string; grants?: string }>;
 }
 
+/* A refused grant change, said in the words of the rule that refused it. */
+const GRANT_NOTES = {
+  lastOwner: CONSOLE_UI.lastOwnerNote,
+  lastDeveloper: CONSOLE_UI.lastDeveloperNote,
+  forbidden: CONSOLE_UI.developerOnlyNote,
+  protected: CONSOLE_UI.protectedAccountNote,
+} as const;
+
+const grantNote = (state: string | undefined) =>
+  state && state in GRANT_NOTES ? GRANT_NOTES[state as keyof typeof GRANT_NOTES] : null;
+
 const initialOf = (account: { name: string; email: string }): string =>
   (account.name || account.email).slice(0, 1).toUpperCase();
 
@@ -35,15 +46,16 @@ const ConsoleAccessPage = async ({ searchParams }: AccessPageProps) => {
   const { q, grants: grantsState } = await searchParams;
   const query = (q ?? '').trim();
 
-  const [allGrants, events, results] = access
+  const [allGrants, events, results, grantable] = access
     ? await Promise.all([
         listAllGrants().catch(() => [] as AccountGrantView[]),
         listEvents().catch(() => []),
         query
           ? searchAccounts(query).catch(() => [] as AccountSearchView[])
           : Promise.resolve([] as AccountSearchView[]),
+        rolesGrantableBy(access.grants, true),
       ])
-    : [[] as AccountGrantView[], [], [] as AccountSearchView[]];
+    : [[] as AccountGrantView[], [], [] as AccountSearchView[], []];
 
   const grantsByAccount = new Map<string, AccountGrantView[]>();
   for (const grant of allGrants) {
@@ -65,8 +77,12 @@ const ConsoleAccessPage = async ({ searchParams }: AccessPageProps) => {
         blocked: false,
       }));
 
-  /* Only the three Netaim roles are given; legacy ones still show on old grants. */
-  const roleOptions = ASSIGNABLE_ROLES.map((value) => ({
+  /*
+   * Only the current Netaim roles are given — and of those, only the
+   * ones this person may give (the developer role is a developer's).
+   * Legacy ones still show on old grants.
+   */
+  const roleOptions = grantable.map((value) => ({
     value,
     label: ROLE_LABELS[value][locale],
   }));
@@ -101,9 +117,9 @@ const ConsoleAccessPage = async ({ searchParams }: AccessPageProps) => {
           </p>
         ) : (
           <>
-            {grantsState === 'lastOwner' ? (
+            {grantNote(grantsState) ? (
               <p className="rounded-xl border border-[var(--c-danger)]/40 bg-[var(--c-danger)]/10 px-4 py-2.5 text-sm text-[var(--c-danger-text)]">
-                {CONSOLE_UI.lastOwnerNote[locale]}
+                {grantNote(grantsState)?.[locale]}
               </p>
             ) : null}
 
@@ -189,6 +205,7 @@ const ConsoleAccessPage = async ({ searchParams }: AccessPageProps) => {
                                   {grant.eventTitle ??
                                     CONSOLE_UI.platformWide[locale]}
                                 </span>
+{access && mayRevokeRole(access.grants, grant.role) ? (
                                 <form action={revokeGrantAction}>
                                   <input
                                     type="hidden"
@@ -207,6 +224,7 @@ const ConsoleAccessPage = async ({ searchParams }: AccessPageProps) => {
                                     {CONSOLE_UI.revokeGrant[locale]}
                                   </button>
                                 </form>
+                                ) : null}
                               </li>
                             ))}
                           </ul>

@@ -244,6 +244,7 @@ export const payloadRegistrationRepository: RegistrationRepository = {
       } satisfies RegisterPersisted;
     }
 
+    const submittedAt = new Date().toISOString();
     const registration = await payload.create({
       collection: 'registrations',
       data: {
@@ -252,7 +253,9 @@ export const payloadRegistrationRepository: RegistrationRepository = {
         event: Number(event.id),
         status,
         waitlistPosition: waitlistPosition ?? undefined,
-        submittedAt: new Date().toISOString(),
+        submittedAt,
+        /* When the person ticked the consent — only ever from their own yes. */
+        mediaConsentAt: participant.mediaConsent === true ? submittedAt : undefined,
       },
       overrideAccess: true,
     });
@@ -572,7 +575,7 @@ export interface FellowParticipant {
    * networking page adds it from the grants, so the directory query and
    * its consent filter stay exactly as they were.
    */
-  staffRole?: 'owner' | 'producer' | 'editor';
+  staffRole?: 'developer' | 'owner' | 'producer' | 'editor';
 }
 
 interface FellowRow {

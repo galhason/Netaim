@@ -188,42 +188,25 @@ describe('the programme wears the day names', () => {
 });
 
 /*
- * The Studio is where these words are written, so the section must
- * exist there and its keys must be the ones the write path knows.
+ * The WordPress band does not draw these words: its heading and line are
+ * the theme's own, and its pictures come from the activities. So the
+ * Studio no longer offers a section that would change nothing on the
+ * page. The marketing API above still carries what was written, so the
+ * band can take it up again without losing anything.
  */
-describe('the Studio offers the band as a section', () => {
-  it('declares it, with the two texts and the backdrop', async () => {
+describe('the Studio offers only what the page shows', () => {
+  it('has no section for the band, nor for the day themes, the quote or the moments', async () => {
     const { CONFERENCE_SECTIONS } = await import(
       '@/features/studio/constants/conference-sections'
     );
-    const section = CONFERENCE_SECTIONS.find((entry) => entry.id === 'preview');
-    expect(section, 'a section with id "preview"').toBeDefined();
-    expect(section?.fields.map((field) => field.key)).toEqual([
-      'previewTitle',
-      'previewLede',
-    ]);
-    expect(section?.media.map((slot) => slot.key)).toEqual(['previewImageId']);
-    /* Every one of them reaches the site, so every one is marked. */
-    expect(section?.fields.every((field) => field.onSite)).toBe(true);
-    expect(section?.media.every((slot) => slot.onSite)).toBe(true);
+    const ids = CONFERENCE_SECTIONS.map((entry) => entry.id);
+    expect(ids).toEqual(['identity', 'story', 'venue', 'closing']);
   });
 
-  /*
-   * A section key that is not a field of `EventOpeningInput` is saved
-   * into nothing: the editor's action picks by name and the repository
-   * writes by name, and neither would complain.
-   */
-  it('names keys the write path actually carries', () => {
+  it('keeps what was written: the write path still knows every field', () => {
     const input = readFileSync('src/features/events/types/event-repository.ts', 'utf8');
     for (const key of ['previewTitle', 'previewLede', 'previewImageId']) {
       expect(input, key).toContain(`${key}?:`);
     }
-    const repository = readFileSync(
-      'src/infrastructure/payload/payload-event-repository.ts',
-      'utf8',
-    );
-    expect(repository).toContain('title: openingText(input.previewTitle)');
-    expect(repository).toContain('lede: openingText(input.previewLede)');
-    expect(repository).toContain('image: toMediaRelation(input.previewImageId)');
   });
 });

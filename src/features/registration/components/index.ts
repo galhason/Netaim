@@ -10,3 +10,4 @@
 export { default as CountryFlag } from './country-flag';
 export { default as CountrySelect } from './country-select';
 export { default as DietarySelect } from './dietary-select';
+export { default as MediaConsentDialog } from './media-consent-dialog';

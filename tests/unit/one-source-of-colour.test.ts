@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { execSync } from 'node:child_process';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /*
@@ -21,12 +21,21 @@ import { describe, expect, it } from 'vitest';
 const read = (path: string): string => readFileSync(path, 'utf8');
 const HEX = /#[0-9a-fA-F]{3,8}\b/g;
 
-const sourceFiles = (pattern: string): string[] =>
-  execSync(`grep -rl -E -e '${pattern}' --include=*.tsx --include=*.ts src || true`, {
-    encoding: 'utf8',
-  })
-    .split('\n')
-    .filter(Boolean);
+/*
+ * Every .ts/.tsx file under src whose text matches — walked with Node
+ * rather than handed to grep, which a Windows shell does not have.
+ * Paths come back with forward slashes on every platform, so the
+ * allow-list below compares the same way everywhere.
+ */
+const walk = (dir: string): string[] =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) return walk(path);
+    return /\.tsx?$/.test(entry.name) ? [path.split('\\').join('/')] : [];
+  });
+
+const sourceFiles = (pattern: RegExp): string[] =>
+  walk('src').filter((file) => pattern.test(read(file)));
 
 /*
  * The two files that are allowed to write a colour out in full, each
@@ -36,18 +45,16 @@ const VENDOR_SHEET = 'src/shared/constants/vendor-marks.ts';
 const EMAIL_LAYOUT = 'src/notification-engine/templates/email-layout.ts';
 
 /*
- * The two checks below shell out to grep over the whole source tree.
- * That walk costs a little under five seconds on a Windows checkout,
- * which is vitest's default per-test budget, so they were passing by a
- * margin that a busy machine could erase — and a timeout reads like a
- * broken rule rather than a slow one. The budget is stated instead of
- * being left to chance.
+ * The two checks below read the whole source tree. On a slow disk that
+ * can approach vitest's default five-second budget per test, and a
+ * timeout reads like a broken rule rather than a slow one, so the
+ * budget is stated instead of being left to chance.
  */
 const TREE_WALK_MS = 20_000;
 
 describe('no component writes a colour down', () => {
   it('has no hex literal anywhere in src, outside the two files that may', () => {
-    const offenders = sourceFiles('#[0-9a-fA-F]{3,8}')
+    const offenders = sourceFiles(/#[0-9a-fA-F]{3,8}/)
       .filter((f) => f !== VENDOR_SHEET && f !== EMAIL_LAYOUT)
       .map((f) => `${f}: ${[...new Set(read(f).match(HEX) ?? [])].join(', ')}`);
     expect(offenders).toEqual([]);
@@ -122,7 +129,7 @@ describe('the brand is declared once', () => {
       [...brandBlock.matchAll(/(--nt-[a-z0-9-]+):/g)].map((m) => m[1]),
     );
     const missing = new Set<string>();
-    for (const file of sourceFiles('--nt-')) {
+    for (const file of sourceFiles(/--nt-/)) {
       for (const match of read(file).matchAll(/var\((--nt-[a-z0-9-]+)/g)) {
         if (!declared.has(match[1]!)) missing.add(`${file}: ${match[1]}`);
       }

@@ -45,6 +45,7 @@ export const AccountGrants: CollectionConfig = {
         { label: 'Editor', value: 'editor' },
         { label: 'Door', value: 'door' },
         { label: 'Viewer', value: 'viewer' },
+        { label: 'Developer', value: 'developer' },
       ],
     },
     {

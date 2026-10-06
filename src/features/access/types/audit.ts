@@ -41,6 +41,7 @@ export const AUDIT_ACTIONS = [
   'registration.cancelled',
   'registration.promoted',
   'registration.checkedIn',
+  'registration.rosterExported',
   'participant.blocked',
   'participant.deleted',
 
@@ -53,6 +54,11 @@ export const AUDIT_ACTIONS = [
 
   /* Reaching the audience */
   'communication.broadcast',
+
+  /* The system page */
+  'system.updatePublished',
+  'system.updateEdited',
+  'system.updateRemoved',
 
   /* Forgetting, on schedule */
   'privacy.retentionPurge',

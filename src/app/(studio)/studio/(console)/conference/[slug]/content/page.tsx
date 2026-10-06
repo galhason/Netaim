@@ -8,7 +8,6 @@ import {
   reviewLaunch,
 } from '@/features/events';
 import type { EventOpeningDraft } from '@/features/events/types/event-repository';
-import { listAgenda } from '@/features/program';
 import { getStudioLocale } from '@/features/studio';
 import { CONTENT_EDITOR_UI, normalizeVenueFactIcon } from '@/features/studio/constants/conference-sections';
 import { marketingRepository } from '@/infrastructure';
@@ -20,7 +19,7 @@ import ConferenceContentEditor, {
 /*
  * The draft, read in both languages, laid out as the editor holds it:
  * one flat map of localized words per language, one map of what is
- * written once (pictures, a number, a URL), and the three lists.
+ * written once (pictures and a URL), and the venue's facts.
  */
 const flat = (draft: EventOpeningDraft): Record<string, string> => ({
   title: draft.title ?? '',
@@ -30,10 +29,6 @@ const flat = (draft: EventOpeningDraft): Record<string, string> => ({
   storyEyebrow: draft.story.eyebrow ?? '',
   storyTitle: draft.story.title ?? '',
   storyParagraph: draft.story.paragraph ?? '',
-  quoteText: draft.quote.text ?? '',
-  quoteAttribution: draft.quote.attribution ?? '',
-  quoteRole: draft.quote.role ?? '',
-  quoteStatLabel: draft.quote.statLabel ?? '',
   venueName: draft.venue.name ?? '',
   venueAddress: draft.venue.address ?? '',
   venueMapLabel: draft.venue.mapLabel ?? '',
@@ -41,21 +36,16 @@ const flat = (draft: EventOpeningDraft): Record<string, string> => ({
   venueAccessibility: draft.venue.accessibility ?? '',
   venueEmergency: draft.venue.emergency ?? '',
   closingLine: draft.closing.line ?? '',
-  previewTitle: draft.preview.title ?? '',
-  previewLede: draft.preview.lede ?? '',
 });
 
 const shared = (draft: EventOpeningDraft): Record<string, string> => ({
-  quoteStatValue: draft.quote.statValue ?? '',
   venueMapUrl: draft.venue.mapUrl ?? '',
   heroImageId: draft.heroImageId ?? '',
   posterId: draft.posterId ?? '',
   heroVideoId: draft.heroVideoId ?? '',
   storyImageId: draft.story.imageId ?? '',
-  quoteImageId: draft.quote.imageId ?? '',
   venueImageId: draft.venue.imageId ?? '',
   closingImageId: draft.closing.imageId ?? '',
-  previewImageId: draft.preview.imageId ?? '',
 });
 
 const toValues = (he: EventOpeningDraft, en: EventOpeningDraft): EditorValues => {
@@ -67,21 +57,7 @@ const toValues = (he: EventOpeningDraft, en: EventOpeningDraft): EditorValues =>
       description: en.venue.facts?.[index]?.description ?? '',
     },
   }));
-  const moments = he.moments
-    .filter((moment) => moment.imageId)
-    .map((moment, index) => ({
-      imageId: moment.imageId!,
-      he: moment.caption ?? '',
-      en: en.moments[index]?.caption ?? '',
-    }));
-  const count = Math.max(he.programDays.length, en.programDays.length);
-  const programDays = Array.from({ length: count }, (_, index) => ({
-    /* The picture is written once, not per language — read from the Hebrew pass. */
-    imageId: he.programDays[index]?.imageId ?? '',
-    he: { theme: he.programDays[index]?.theme ?? '', description: he.programDays[index]?.description ?? '' },
-    en: { theme: en.programDays[index]?.theme ?? '', description: en.programDays[index]?.description ?? '' },
-  }));
-  return { he: flat(he), en: flat(en), shared: shared(he), facts, moments, programDays };
+  return { he: flat(he), en: flat(en), shared: shared(he), facts };
 };
 
 interface ContentPageProps {
@@ -93,13 +69,12 @@ const ConferenceContentPage = async ({ params }: ContentPageProps) => {
   const slug = decodeURIComponent(raw);
   const locale = await getStudioLocale();
 
-  const [he, en, media, summary, review, agenda, published] = await Promise.all([
+  const [he, en, media, summary, review, published] = await Promise.all([
     getEventOpeningDraft(slug, 'he'),
     getEventOpeningDraft(slug, 'en'),
     listMedia().catch(() => []),
     findEvent(slug).catch(() => null),
     reviewLaunch(slug, locale).catch(() => null),
-    listAgenda(slug, 'he').catch(() => []),
     marketingRepository.findPublishedIdentity(slug, 'he').catch(() => null),
   ]);
   if (!he || !en || !summary) {
@@ -107,8 +82,6 @@ const ConferenceContentPage = async ({ params }: ContentPageProps) => {
   }
 
   const publishState: PublishState = summary.launched ? 'published' : published ? 'pending' : 'never';
-  const dayKeys = new Set(agenda.map((session) => (session.startsAt ? session.startsAt.slice(0, 10) : '')));
-  dayKeys.delete('');
 
   const siteLocale: Locale = locale;
 
@@ -143,7 +116,6 @@ const ConferenceContentPage = async ({ params }: ContentPageProps) => {
           ...(entry.density ? { density: entry.density } : {}),
           ...(entry.emphasis ? { emphasis: entry.emphasis } : {}),
         }))}
-        agendaDays={dayKeys.size}
       />
     </div>
   );

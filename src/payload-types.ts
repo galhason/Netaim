@@ -76,6 +76,7 @@ export interface Config {
     speakers: Speaker;
     sponsors: Sponsor;
     'gallery-items': GalleryItem;
+    'system-updates': SystemUpdate;
     participants: Participant;
     'account-grants': AccountGrant;
     registrations: Registration;
@@ -110,6 +111,7 @@ export interface Config {
     speakers: SpeakersSelect<false> | SpeakersSelect<true>;
     sponsors: SponsorsSelect<false> | SponsorsSelect<true>;
     'gallery-items': GalleryItemsSelect<false> | GalleryItemsSelect<true>;
+    'system-updates': SystemUpdatesSelect<false> | SystemUpdatesSelect<true>;
     participants: ParticipantsSelect<false> | ParticipantsSelect<true>;
     'account-grants': AccountGrantsSelect<false> | AccountGrantsSelect<true>;
     registrations: RegistrationsSelect<false> | RegistrationsSelect<true>;
@@ -593,13 +595,28 @@ export interface GalleryItem {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "system-updates".
+ */
+export interface SystemUpdate {
+  id: number;
+  version: string;
+  title: string;
+  details?: string | null;
+  kind: 'feature' | 'improvement' | 'fix' | 'security';
+  releasedAt: string;
+  publishedBy?: (number | null) | Participant;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "account-grants".
  */
 export interface AccountGrant {
   id: number;
   organization: number | Organization;
   account: number | Participant;
-  role: 'owner' | 'producer' | 'editor' | 'door' | 'viewer';
+  role: 'owner' | 'producer' | 'editor' | 'door' | 'viewer' | 'developer';
   /**
    * Scope the grant to one conference. Empty = platform-wide.
    */
@@ -632,6 +649,10 @@ export interface Registration {
   offerExpiresAt?: string | null;
   cancelledReason?: string | null;
   submittedAt?: string | null;
+  /**
+   * When the participant consented to photography and media use on the registration form. Empty: no consent given.
+   */
+  mediaConsentAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1008,6 +1029,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'gallery-items';
         value: number | GalleryItem;
+      } | null)
+    | ({
+        relationTo: 'system-updates';
+        value: number | SystemUpdate;
       } | null)
     | ({
         relationTo: 'participants';
@@ -1391,6 +1416,20 @@ export interface GalleryItemsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "system-updates_select".
+ */
+export interface SystemUpdatesSelect<T extends boolean = true> {
+  version?: T;
+  title?: T;
+  details?: T;
+  kind?: T;
+  releasedAt?: T;
+  publishedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "participants_select".
  */
 export interface ParticipantsSelect<T extends boolean = true> {
@@ -1460,6 +1499,7 @@ export interface RegistrationsSelect<T extends boolean = true> {
   offerExpiresAt?: T;
   cancelledReason?: T;
   submittedAt?: T;
+  mediaConsentAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -42,6 +42,17 @@ export {
   getEventLogistics,
   logisticsCsv,
 } from './services/studio-logistics';
+export {
+  activityRosterSheets,
+  getActivityRosters,
+  rosterSize,
+} from './services/studio-activity-roster';
+export type {
+  ActivityRoster,
+  ConferenceRosters,
+  RosterPerson,
+  RosterStatus,
+} from './types/activity-roster';
 export type {
   DietaryTally,
   EventLogistics,
@@ -60,6 +71,7 @@ export type {
 export { default as StudioShell } from './components/studio-shell';
 export { default as StudioSignIn } from './components/studio-signin';
 export { default as ConsoleShell } from './components/console/console-shell';
+export { default as WorkspaceTabs } from './components/console/workspace-tabs';
 export { default as ConsoleDenied } from './components/console/console-denied';
 export { default as ConsoleCanvas } from './components/console/console-canvas';
 export { default as CanvasSelectBridge } from './components/console/canvas-select-bridge';

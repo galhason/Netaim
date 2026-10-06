@@ -6,7 +6,9 @@ export {
   ROLE_CAPABILITIES,
   ROLE_LABELS,
   ROLE_DESCRIPTIONS,
+  grantableRoles,
   isRole,
+  mayRevokeRole,
 } from './role/roles';
 export type { Role } from './role/roles';
 export type { Grant } from './grant/grant';

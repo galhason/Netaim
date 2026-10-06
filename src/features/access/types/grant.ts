@@ -30,6 +30,7 @@ export interface GrantRepository {
   createGrant: (input: CreateGrantInput) => Promise<AccountGrantView | null>;
   revokeGrant: (grantId: string) => Promise<AccountGrantView | null>;
   grantById: (grantId: string) => Promise<AccountGrantView | null>;
-  ownerGrantCount: () => Promise<number>;
+  /* How many grants of this role exist — the last Owner and the last Developer are kept. */
+  grantCount: (role: Role) => Promise<number>;
   hasAnyGrant: () => Promise<boolean>;
 }

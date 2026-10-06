@@ -1,7 +1,7 @@
 import type { Capability } from '../capability/capabilities';
 
 /*
- * Three Netaim roles, on five stored values.
+ * Four Netaim roles, on six stored values.
  *
  * The role column is a Postgres enum with the five original values, and
  * an enum is not something to rewrite for a rename: the three roles the
@@ -14,17 +14,21 @@ import type { Capability } from '../capability/capabilities';
  *   editor    צוות Netaim   — the program (see, create, edit activities),
  *                             the gallery, and a look at logistics;
  *                             nothing else
+ *   developer מתכנת Netaim  — everything the Admin has, and the system
+ *                             page: the one role that writes what was
+ *                             released and in which version. Added as a
+ *                             sixth value of the enum, never a rename.
  *
  * — and `door` / `viewer` remain valid so that a grant written under the
  * old scheme keeps working (each is reduced to reading), but are no
  * longer offered when a role is given.
  */
-export const ROLES = ['owner', 'producer', 'editor', 'door', 'viewer'] as const;
+export const ROLES = ['owner', 'producer', 'editor', 'door', 'viewer', 'developer'] as const;
 
 export type Role = (typeof ROLES)[number];
 
 /** The roles a person may be given today. */
-export const ASSIGNABLE_ROLES = ['owner', 'producer', 'editor'] as const satisfies readonly Role[];
+export const ASSIGNABLE_ROLES = ['owner', 'producer', 'editor', 'developer'] as const satisfies readonly Role[];
 
 export const isRole = (value: string): value is Role =>
   (ROLES as readonly string[]).includes(value);
@@ -49,7 +53,11 @@ const EVERYTHING: readonly Capability[] = [
   'logistics:manage',
   'communications:manage',
   'gallery:manage',
+  'system:read',
 ];
+
+/* The Admin's whole Studio, and the pen for the system page. */
+const DEVELOPER: readonly Capability[] = [...EVERYTHING, 'system:manage'];
 
 const SUPERVISOR: readonly Capability[] = [
   'experiences:manage',
@@ -65,6 +73,7 @@ const SUPERVISOR: readonly Capability[] = [
   'logistics:manage',
   'communications:manage',
   'gallery:manage',
+  'system:read',
 ];
 
 const STAFF: readonly Capability[] = [
@@ -73,12 +82,14 @@ const STAFF: readonly Capability[] = [
   'activities:manage',
   'logistics:read',
   'gallery:manage',
+  'system:read',
 ];
 
 export const ROLE_CAPABILITIES: Record<Role, readonly Capability[]> = {
   owner: EVERYTHING,
   producer: SUPERVISOR,
   editor: STAFF,
+  developer: DEVELOPER,
   /* Legacy grants: reading only, until they are reissued as one of the three. */
   door: ['participants:read', 'activities:read', 'logistics:read', 'content:read'],
   viewer: ['content:read', 'activities:read'],
@@ -88,6 +99,7 @@ export const ROLE_LABELS: Record<Role, { he: string; en: string }> = {
   owner: { he: 'מנהל Netaim', en: 'Netaim Admin' },
   producer: { he: 'מפקח Netaim', en: 'Netaim Supervisor' },
   editor: { he: 'צוות Netaim', en: 'Netaim Staff' },
+  developer: { he: 'מתכנת Netaim', en: 'Netaim Developer' },
   door: { he: 'קבלה (תפקיד ישן)', en: 'Door (legacy)' },
   viewer: { he: 'צפייה (תפקיד ישן)', en: 'Viewer (legacy)' },
 };
@@ -106,6 +118,39 @@ export const ROLE_DESCRIPTIONS: Record<Role, { he: string; en: string }> = {
     he: 'התוכנית והגלריה: צפייה, יצירה ועריכה של פעילויות והרצאות (בלי מחיקה או ארכיון), ניהול הגלריה ואישור תמונות שנשלחו, וצפייה בלוגיסטיקה.',
     en: 'The program and the gallery: view, create and edit activities and talks (no deleting or archiving), manage the gallery and review submitted photos, and a view of logistics.',
   },
-  door: { he: 'תפקיד ישן — קריאה בלבד. מומלץ להחליף באחד משלושת התפקידים.', en: 'Legacy — read only. Reissue as one of the three roles.' },
-  viewer: { he: 'תפקיד ישן — קריאה בלבד. מומלץ להחליף באחד משלושת התפקידים.', en: 'Legacy — read only. Reissue as one of the three roles.' },
+  developer: {
+    he: 'כל ההרשאות של מנהל Netaim, ובנוסף עמוד "מערכת": רק מתכנת מפרסם בו עדכונים וגרסאות. את התפקיד נותן רק מתכנת אחר — או מנהל, כשעדיין אין אף מתכנת.',
+    en: 'Everything a Netaim Admin can do, and the System page: only a developer publishes updates and versions there. The role is given only by another developer — or by an Admin while there is none yet.',
+  },
+  door: { he: 'תפקיד ישן — קריאה בלבד. מומלץ להחליף באחד התפקידים הנוכחיים.', en: 'Legacy — read only. Reissue as one of the current roles.' },
+  viewer: { he: 'תפקיד ישן — קריאה בלבד. מומלץ להחליף באחד התפקידים הנוכחיים.', en: 'Legacy — read only. Reissue as one of the current roles.' },
 };
+
+/*
+ * Who may hand out which role.
+ *
+ * Giving roles is the Admin's (access:manage) — except the developer
+ * role, which carries the one capability an Admin does not hold. If an
+ * Admin could give it, an Admin could give it to themselves, and "only
+ * the developer writes the system page" would mean nothing. So it is
+ * given by a developer; the single exception is the first one, named by
+ * an Admin while the platform has no developer at all. The same holds
+ * for taking it away.
+ */
+const holdsRole = (grants: readonly { role: string }[], role: Role): boolean =>
+  grants.some((grant) => grant.role === role);
+
+export const grantableRoles = (
+  actorGrants: readonly { role: string }[],
+  actorMayManageAccess: boolean,
+  developerExists: boolean,
+): Role[] => {
+  if (!actorMayManageAccess) {
+    return [];
+  }
+  const developerAllowed = holdsRole(actorGrants, 'developer') || !developerExists;
+  return ASSIGNABLE_ROLES.filter((role) => role !== 'developer' || developerAllowed);
+};
+
+export const mayRevokeRole = (actorGrants: readonly { role: string }[], role: string): boolean =>
+  role !== 'developer' || holdsRole(actorGrants, 'developer');

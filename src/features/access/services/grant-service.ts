@@ -1,5 +1,5 @@
 import { accountGrantRepository } from '@/infrastructure';
-import { isRole, type Grant, type Role } from '@/permission-engine';
+import { grantableRoles, isRole, mayRevokeRole, type Grant, type Role } from '@/permission-engine';
 import type { AccountGrantView } from '../types/grant';
 
 /*
@@ -25,14 +25,14 @@ export const listAllGrants = (): Promise<AccountGrantView[]> =>
   accountGrantRepository.listGrants().catch(() => []);
 
 /*
- * Netaim's own people, by rank — the three roles a person is given today
- * (owner = מנהל, producer = מפקח, editor = צוות). Legacy door/viewer
+ * Netaim's own people, by rank — the four roles a person is given today
+ * (developer = מתכנת, owner = מנהל, producer = מפקח, editor = צוות). Legacy door/viewer
  * grants are reading access, not membership of the team, and count for
  * nothing here. Someone with several grants is shown at their highest.
  */
-export type StaffRole = 'owner' | 'producer' | 'editor';
+export type StaffRole = 'developer' | 'owner' | 'producer' | 'editor';
 
-const STAFF_RANK: Record<StaffRole, number> = { owner: 3, producer: 2, editor: 1 };
+const STAFF_RANK: Record<StaffRole, number> = { developer: 4, owner: 3, producer: 2, editor: 1 };
 
 const isStaffRole = (role: string): role is StaffRole => role in STAFF_RANK;
 
@@ -65,40 +65,73 @@ export const staffRolesByAccount = async (): Promise<Map<string, StaffRole>> => 
 
 export type GrantOutcome =
   | { ok: true; grant: AccountGrantView }
-  | { ok: false; reason: 'invalidRole' | 'failed' };
+  | { ok: false; reason: 'invalidRole' | 'forbidden' | 'failed' };
+
+/*
+ * Whether the platform has a developer yet. Read as "yes" when the
+ * store cannot answer, so a blink never opens the developer role to an
+ * Admin.
+ */
+const developerExists = async (): Promise<boolean> =>
+  (await accountGrantRepository.grantCount('developer').catch(() => 1)) > 0;
+
+/* The roles this person may hand out — see grantableRoles. */
+export const rolesGrantableBy = async (
+  actorGrants: readonly Grant[],
+  actorMayManageAccess: boolean,
+): Promise<Role[]> => grantableRoles(actorGrants, actorMayManageAccess, await developerExists());
 
 export const grantRole = async (
   accountId: string,
   role: string,
   eventSlug: string | null,
   grantedById: string | null,
+  actorGrants: readonly Grant[],
 ): Promise<GrantOutcome> => {
   if (!isRole(role)) {
     return { ok: false, reason: 'invalidRole' };
   }
+  /* The caller has already asked for access:manage; this asks which roles that opens. */
+  if (!(await rolesGrantableBy(actorGrants, true)).includes(role)) {
+    return { ok: false, reason: 'forbidden' };
+  }
+  /* The developer works on the platform, not on one conference: always platform-wide. */
+  const scope = role === 'developer' ? null : eventSlug;
   const grant = await accountGrantRepository
-    .createGrant({ accountId, role, eventSlug, grantedById })
+    .createGrant({ accountId, role, eventSlug: scope, grantedById })
     .catch(() => null);
   return grant ? { ok: true, grant } : { ok: false, reason: 'failed' };
 };
 
 export type RevokeOutcome =
   | { ok: true }
-  | { ok: false; reason: 'lastOwner' | 'failed' };
+  | { ok: false; reason: 'lastOwner' | 'lastDeveloper' | 'forbidden' | 'failed' };
 
-export const revokeGrant = async (grantId: string): Promise<RevokeOutcome> => {
+export const revokeGrant = async (
+  grantId: string,
+  actorGrants: readonly Grant[],
+): Promise<RevokeOutcome> => {
   const grant = await accountGrantRepository
     .grantById(grantId)
     .catch(() => null);
   if (!grant) {
     return { ok: false, reason: 'failed' };
   }
-  if (grant.role === 'owner') {
-    const owners = await accountGrantRepository
-      .ownerGrantCount()
+  if (!mayRevokeRole(actorGrants, grant.role)) {
+    return { ok: false, reason: 'forbidden' };
+  }
+  /*
+   * The last Owner and the last Developer stay: without the first the
+   * platform cannot be governed from inside, without the second the
+   * system page can no longer be written, and only a developer may
+   * name the next one.
+   */
+  if (grant.role === 'owner' || grant.role === 'developer') {
+    const holders = await accountGrantRepository
+      .grantCount(grant.role)
       .catch(() => 0);
-    if (owners <= 1) {
-      return { ok: false, reason: 'lastOwner' };
+    if (holders <= 1) {
+      return { ok: false, reason: grant.role === 'owner' ? 'lastOwner' : 'lastDeveloper' };
     }
   }
   const revoked = await accountGrantRepository

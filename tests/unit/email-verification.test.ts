@@ -611,14 +611,17 @@ describe('a door that can be entered is visibly leavable', () => {
 
   it('offers sign-out in the one conference bar whenever someone is signed in', () => {
     /*
-     * The signed-in branch is the one that starts at `{viewer ? (`; the
-     * slice ends at its `) : (`, searched FROM the opening so a stray
-     * earlier ternary cannot make it silently empty.
+     * The signed-in branch is the one that starts at `{viewer ? (` and
+     * ends where the signed-out doorway begins. Not at the first `) : (`
+     * after it: the chip's own picture-or-initial ternary sits inside the
+     * branch, and stopping there cut the sign-out button off the slice.
      */
     expect(nav.includes("from '@/features/account/actions/sign-out'")).toBe(true);
     const viewerBlock = nav.indexOf('{viewer ? (');
     expect(viewerBlock).toBeGreaterThan(-1);
-    const signedIn = nav.slice(viewerBlock, nav.indexOf(') : (', viewerBlock));
+    const signedOut = nav.indexOf('<ul className="nt-conf-nav__doorway">', viewerBlock);
+    expect(signedOut).toBeGreaterThan(viewerBlock);
+    const signedIn = nav.slice(viewerBlock, signedOut);
     expect(signedIn.includes('action={signOutAction}')).toBe(true);
     expect(signedIn.includes('name="locale"')).toBe(true);
     expect(signedIn.includes("{t('signOut')}"), 'the way out is named in words').toBe(true);

@@ -2,6 +2,7 @@
 
 import {
   useActionState,
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -12,7 +13,7 @@ import Link from 'next/link';
 import type { Locale } from '@/config/locales';
 import { isStrongPassword } from '@/features/registration/schemas/password';
 import { isLatinName } from '@/features/registration/schemas/latin-name';
-import { CountrySelect } from '@/features/registration/components';
+import { CountrySelect, MediaConsentDialog } from '@/features/registration/components';
 import {
   checkEmailAvailableAction,
   requestCodeAction,
@@ -70,6 +71,16 @@ export interface RegisterFormLabels {
   accessibilityHint: string;
   directoryQuestion: string;
   directoryHint: string;
+  /* Consent to being photographed — required, with its full wording behind "read more". */
+  mediaConsent: {
+    label: string;
+    readMore: string;
+    title: string;
+    paragraphs: readonly string[];
+    affirm: string;
+    close: string;
+    required: string;
+  };
   stepOneTitle: string;
   stepOneIntro: string;
   stepTwoTitle: string;
@@ -124,6 +135,7 @@ type Values = {
   dietary: string;
   accessibility: string;
   directory: boolean;
+  mediaConsent: boolean;
 };
 
 const EMPTY: Values = {
@@ -137,6 +149,7 @@ const EMPTY: Values = {
   dietary: '',
   accessibility: '',
   directory: false,
+  mediaConsent: false,
 };
 
 /*
@@ -159,6 +172,7 @@ const REFUSAL_FIELD: Record<string, { step: 1 | 2; field?: string }> = {
   firstNameScript: { step: 1, field: 'firstName' },
   lastNameScript: { step: 1, field: 'lastName' },
   country: { step: 2, field: 'country' },
+  mediaConsent: { step: 2, field: 'mediaConsent' },
   invalid: { step: 1 },
   conflict: { step: 2 },
   tooManyCodes: { step: 2 },
@@ -279,6 +293,10 @@ const RegisterForm = ({
   /* The address the server said already has an account, and the wait. */
   const [takenEmail, setTakenEmail] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
+  const [consentOpen, setConsentOpen] = useState(false);
+  const readMoreRef = useRef<HTMLButtonElement>(null);
+  /* Stable, so the open dialog does not re-run its focus handling on every keystroke behind it. */
+  const closeConsent = useCallback(() => setConsentOpen(false), []);
   const panelRef = useRef<HTMLDivElement>(null);
   const lastRefusal = useRef<number>(state.attempt ?? 0);
 
@@ -357,6 +375,7 @@ const RegisterForm = ({
     if (!values.role.trim()) errors.role = f.required;
     if (!values.country) errors.country = f.required;
     if (!values.dietary) errors.dietary = f.required;
+    if (!values.mediaConsent) errors.mediaConsent = labels.mediaConsent.required;
     return errors;
   };
 
@@ -636,6 +655,9 @@ const RegisterForm = ({
             {values.directory ? (
               <input type="hidden" name="directory" value="on" />
             ) : null}
+            {values.mediaConsent ? (
+              <input type="hidden" name="mediaConsent" value="on" />
+            ) : null}
           </>
         ) : (
           <>
@@ -775,6 +797,59 @@ const RegisterForm = ({
                 </span>
               </span>
             </label>
+
+            {/*
+              * Consent to being photographed, right after the networking
+              * question and required. The box and its sentence are one
+              * label; "read more" sits beside the sentence as its own
+              * button, outside the label, so pressing it opens the full
+              * wording and never ticks the box.
+              */}
+            <div
+              className={`rounded-[var(--x-r-field)] border bg-[var(--x-raise)] p-4 transition-colors has-[:checked]:border-[var(--x-primary)]/50 has-[:checked]:bg-[var(--x-primary-wash)] ${
+                fieldErrors.mediaConsent ? 'border-[var(--x-full)]' : 'border-[var(--x-line)]'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <input
+                  id="reg-mediaConsent"
+                  name="mediaConsent"
+                  type="checkbox"
+                  required
+                  checked={values.mediaConsent}
+                  onChange={set('mediaConsent')}
+                  aria-invalid={Boolean(fieldErrors.mediaConsent)}
+                  aria-describedby={describe('mediaConsent')}
+                  className="mt-0.5 size-5 flex-none cursor-pointer accent-[var(--x-primary)]"
+                />
+                <p className="text-sm leading-relaxed text-[var(--x-ink)]">
+                  <label htmlFor="reg-mediaConsent" className="cursor-pointer font-medium">
+                    {labels.mediaConsent.label} <span aria-hidden="true">*</span>
+                  </label>{' '}
+                  <button
+                    ref={readMoreRef}
+                    type="button"
+                    aria-haspopup="dialog"
+                    onClick={() => setConsentOpen(true)}
+                    className="rounded-sm text-[13px] font-medium text-[var(--x-primary)] underline underline-offset-4 hover:text-[var(--x-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]"
+                  >
+                    {labels.mediaConsent.readMore}
+                  </button>
+                </p>
+              </div>
+              <FieldError id="err-mediaConsent" text={fieldErrors.mediaConsent} />
+            </div>
+            {consentOpen ? (
+              <MediaConsentDialog
+                locale={locale}
+                onClose={closeConsent}
+                returnFocusTo={readMoreRef}
+                title={labels.mediaConsent.title}
+                paragraphs={labels.mediaConsent.paragraphs}
+                affirm={labels.mediaConsent.affirm}
+                closeLabel={labels.mediaConsent.close}
+              />
+            ) : null}
 
             {/* Step one's values travel along, unseen. */}
             <input type="hidden" name="firstName" value={values.firstName} />

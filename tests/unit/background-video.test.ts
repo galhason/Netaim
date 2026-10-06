@@ -147,7 +147,8 @@ describe('a file can be added from the field that needs it', () => {
   );
 
   it('uploads without leaving the page', () => {
-    expect(picker.includes("fetch('/studio/media/upload'")).toBe(true);
+    /* Under the base path the site may be served from, like every request the Studio makes. */
+    expect(picker.includes("fetch(withBasePath('/studio/media/upload')")).toBe(true);
   });
 
   it('uploads through a route handler, not a Server Action', () => {

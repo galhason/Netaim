@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { Locale } from '@/config/locales';
+import { withBasePath } from '@/config/site';
 import type { SessionType, WorkshopStatus } from '@/features/program';
 import { archiveActivityAction, removeActivityAction, restoreActivityAction } from './actions';
 
@@ -27,6 +28,8 @@ export interface ActivityPermissions {
   manage: boolean;
   archive: boolean;
   delete: boolean;
+  /* Downloading who signed up — names, phones, emails — as Excel. */
+  roster: boolean;
 }
 
 interface Props {
@@ -109,7 +112,22 @@ const T = (locale: Locale) => ({
   statFill: locale === 'he' ? 'תפוסה ממוצעת' : 'Average fill',
   statFull: locale === 'he' ? 'פעילויות מלאות' : 'Full activities',
   statWaiting: locale === 'he' ? 'ברשימת המתנה' : 'On waiting list',
+  exportAll: locale === 'he' ? 'ייצוא כל הנרשמים' : 'Export all registrants',
+  exportAllHint:
+    locale === 'he'
+      ? 'קובץ אקסל אחד: כל הנרשמים לכל הפעילויות, וגיליון נפרד לכל פעילות'
+      : 'One Excel file: everyone signed up for every activity, plus a sheet per activity',
+  exportOne: locale === 'he' ? 'אקסל' : 'Excel',
+  exportOneLabel: (title: string) =>
+    locale === 'he' ? `ייצוא הנרשמים לאקסל: ${title}` : `Export registrants to Excel: ${title}`,
 });
+
+/* A file to download, not a page — so a plain link, never a client navigation. */
+const Download = () => (
+  <svg viewBox="0 0 20 20" aria-hidden="true" className="size-3.5 flex-none" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10 3v10M5.5 8.5 10 13l4.5-4.5M4 16.5h12" />
+  </svg>
+);
 
 const timeRange = (start: string | null, end: string | null, tag: string) => {
   if (!start) return '—';
@@ -184,6 +202,16 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
           <p className="mt-1 text-sm text-[var(--c-text-soft)]">{t.sub}</p>
         </div>
         <div className="flex flex-none items-center gap-2">
+          {can.roster && rows.length > 0 ? (
+            <a
+              href={withBasePath('/studio/activity/roster')}
+              title={t.exportAllHint}
+              className="inline-flex items-center gap-2 rounded-lg border border-[var(--c-line-strong)] px-4 py-2 text-sm text-[var(--c-text-soft)] transition-colors hover:border-[var(--c-bronze)]/50 hover:text-[var(--c-bronze)]"
+            >
+              <Download />
+              {t.exportAll}
+            </a>
+          ) : null}
           {/*
             * Beside "new", not buried in a menu: a programme is usually
             * imported once, at the start, by somebody who has never seen
@@ -358,6 +386,17 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
                         >
                           {can.manage ? t.edit : t.view}
                         </Link>
+                        {can.roster ? (
+                          <a
+                            href={withBasePath(`/studio/activity/roster?session=${encodeURIComponent(r.id)}`)}
+                            aria-label={t.exportOneLabel(r.title)}
+                            title={t.exportOneLabel(r.title)}
+                            className="inline-flex items-center gap-1 rounded-md border border-[var(--c-line)] px-2.5 py-1 text-xs text-[var(--c-text-soft)] hover:border-[var(--c-bronze)]/50 hover:text-[var(--c-bronze)]"
+                          >
+                            <Download />
+                            {t.exportOne}
+                          </a>
+                        ) : null}
                         {can.archive ? (
                           <form action={archiveActivityAction}>
                             <input type="hidden" name="slug" value={slug ?? ''} />

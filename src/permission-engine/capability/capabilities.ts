@@ -41,6 +41,12 @@ export const CAPABILITIES = [
    * roles — the staff who keep the programme keep the gallery too.
    */
   'gallery:manage',
+  /*
+   * The system page: what was released, in which version. Every Netaim
+   * role reads it; only the developer writes it.
+   */
+  'system:read',
+  'system:manage',
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];

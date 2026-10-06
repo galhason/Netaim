@@ -174,14 +174,27 @@ describe('the composition root imports no feature barrel', () => {
  * The first magic link from the live server did exactly that. Every
  * absolute redirect goes through `siteOrigin`, which prefers the
  * deployed address.
+ *
+ * What is guarded is an address *built* from the request origin — a
+ * redirect or a URL made from it. Reading the origin to compare against
+ * (the session route's same-origin check accepts the deployed address
+ * or, in development, the local one) sends nobody anywhere.
  */
+const BUILT_FROM_REQUEST_ORIGIN = /(?:redirect|rewrite)\([^;]*nextUrl\.origin|new URL\([^;]*nextUrl\.origin/;
+
 describe('no redirect is built from the request origin', () => {
+  it('recognises an address built from the request origin, and not a comparison with it', () => {
+    expect(BUILT_FROM_REQUEST_ORIGIN.test("NextResponse.redirect(new URL('/me', request.nextUrl.origin))")).toBe(true);
+    expect(BUILT_FROM_REQUEST_ORIGIN.test('const to = new URL(path, request.nextUrl.origin);')).toBe(true);
+    expect(BUILT_FROM_REQUEST_ORIGIN.test('return origin === request.nextUrl.origin;')).toBe(false);
+  });
+
   it('uses the deployed address instead', () => {
     const offenders = walk(FRONTEND_DIR)
       .filter((file) => file.endsWith('route.ts'))
       .filter((file) => {
         const text = readFileSync(file, 'utf8');
-        return /nextUrl\.origin/.test(text) && !text.includes('siteOrigin');
+        return BUILT_FROM_REQUEST_ORIGIN.test(text) && !text.includes('siteOrigin');
       });
     expect(
       offenders,

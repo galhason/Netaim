@@ -161,7 +161,9 @@ describe('the navigation bar carries the conference, not the contact form', () =
      */
     const scenes = read('src/scenes/conference-scenes.tsx');
     expect(scenes).toContain('slug={content.slug ?? null}');
-    expect(scenes).toMatch(/viewer\s*\?\s*\{ name: viewer\.name/);
+    /* The viewer object is spread over lines now that it carries a picture and the Studio mark. */
+    expect(scenes).toMatch(/viewer\s*\?\s*\{\s*name: viewer\.name/);
+    expect(scenes).not.toMatch(/content\.viewer|viewer:\s*content\./);
   });
 });
 

@@ -4,6 +4,7 @@ export {
   grantRole,
   listAllGrants,
   revokeGrant,
+  rolesGrantableBy,
   staffRoleOf,
   staffRolesByAccount,
 } from './services/grant-service';

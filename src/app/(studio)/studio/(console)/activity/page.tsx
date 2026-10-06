@@ -29,6 +29,8 @@ const ActivityPage = async () => {
     manage: can(access.grants, 'activities:manage', slug ?? undefined),
     archive: can(access.grants, 'activities:archive', slug ?? undefined),
     delete: can(access.grants, 'activities:delete', slug ?? undefined),
+    /* Names, phones and emails — for the roles that may see participants. */
+    roster: can(access.grants, 'participants:read', slug ?? undefined),
   };
   const [activities, shelved] = slug
     ? await Promise.all([

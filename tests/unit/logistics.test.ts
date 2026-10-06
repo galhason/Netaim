@@ -139,10 +139,14 @@ describe('the logistics screen is gated and read-only', () => {
     'utf8',
   );
 
+  /*
+   * Its own capability since the Netaim roles: logistics:read, which the
+   * Admin, the Supervisor and Staff hold ("a look at logistics").
+   */
   it('asks for the capability itself rather than trusting the layout', () => {
-    expect(page.includes("requireCapability('registrations:manage')")).toBe(true);
+    expect(page.includes("requireCapability('logistics:read')")).toBe(true);
     expect(
-      route.includes("requireCapability('registrations:manage')"),
+      route.includes("requireCapability('logistics:read')"),
       'a download URL is shareable; it has to ask again',
     ).toBe(true);
   });

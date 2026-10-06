@@ -73,13 +73,14 @@ export const TONE_TEXT: Record<ReasonTone, string> = {
 export type StaffRole = NonNullable<FellowParticipant['staffRole']>;
 
 export const STAFF_TITLE: Record<StaffRole, Record<Locale, string>> = {
+  developer: { he: 'מתכנת נטעים', en: 'Netaim Developer' },
   owner: { he: 'מנהל נטעים', en: 'Netaim Admin' },
   producer: { he: 'מפקח נטעים', en: 'Netaim Supervisor' },
   editor: { he: 'צוות נטעים', en: 'Netaim Staff' },
 };
 
 export const STAFF_RING =
-  'bg-[linear-gradient(135deg,#f3cf5b,#b8860b_55%,#f7dd8c)]';
+  'bg-[linear-gradient(135deg,var(--nt-staff-gold-light),var(--nt-staff-gold)_55%,var(--nt-staff-gold-pale))]';
 
 export const StaffTitle = ({
   role,
@@ -91,7 +92,7 @@ export const StaffTitle = ({
   className?: string;
 }) => (
   <span
-    className={`inline-flex max-w-full items-center gap-1 truncate text-[11px] font-semibold leading-snug text-[#9a6b00] ${className}`}
+    className={`inline-flex max-w-full items-center gap-1 truncate text-[11px] font-semibold leading-snug text-[var(--nt-staff-gold-ink)] ${className}`}
   >
     <svg
       viewBox="0 0 12 12"

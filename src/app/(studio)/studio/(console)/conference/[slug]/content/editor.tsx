@@ -35,25 +35,12 @@ export interface FactRow {
   he: { label: string; description: string };
   en: { label: string; description: string };
 }
-export interface MomentRow {
-  imageId: string;
-  he: string;
-  en: string;
-}
-export interface DayRow {
-  /* The day's own picture in the preview section; '' means none. */
-  imageId: string;
-  he: { theme: string; description: string };
-  en: { theme: string; description: string };
-}
 
 export interface EditorValues {
   he: Record<string, string>;
   en: Record<string, string>;
   shared: Record<string, string>;
   facts: FactRow[];
-  moments: MomentRow[];
-  programDays: DayRow[];
 }
 
 export type PublishState = 'published' | 'pending' | 'never';
@@ -67,8 +54,6 @@ interface EditorProps {
   blockers: number;
   siteLinks: { hub: string; info: string };
   composition: { scene: string; hidden: boolean; variant?: string; density?: string; emphasis?: string }[];
-  /* The number of program days the agenda actually has, for the day themes. */
-  agendaDays: number;
 }
 
 type SectionStatus = 'idle' | 'dirty' | 'saving' | 'saved' | 'error';
@@ -96,7 +81,6 @@ const ConferenceContentEditor = ({
   blockers,
   siteLinks,
   composition: initialComposition,
-  agendaDays,
 }: EditorProps) => {
   const he = locale === 'he';
   const t = (entry: Record<Locale, string>) => entry[locale];
@@ -139,8 +123,6 @@ const ConferenceContentEditor = ({
         en: only(current.en, keys),
         shared: only(current.shared, sharedKeys),
         ...(entry.special === 'facts' ? { facts: current.facts } : {}),
-        ...(entry.special === 'moments' ? { moments: current.moments } : {}),
-        ...(entry.special === 'programDays' ? { programDays: current.programDays } : {}),
       };
     },
     [slug],
@@ -212,14 +194,6 @@ const ConferenceContentEditor = ({
     setValues((held) => ({ ...held, facts }));
     touch('venue');
   };
-  const setMoments = (moments: MomentRow[]) => {
-    setValues((held) => ({ ...held, moments }));
-    touch('moments');
-  };
-  const setDays = (programDays: DayRow[]) => {
-    setValues((held) => ({ ...held, programDays }));
-    touch('programDays');
-  };
 
   /* ---- publishing ------------------------------------------------ */
 
@@ -248,15 +222,6 @@ const ConferenceContentEditor = ({
 
   const completeness = (entry: ConferenceSection): { he: boolean; en: boolean } => {
     const keys = entry.fields.filter((field) => field.localized && field.onSite).map((field) => field.key);
-    if (entry.special === 'moments') {
-      return { he: values.moments.length > 0, en: values.moments.every((row) => row.en.trim() !== '' || row.he.trim() === '') };
-    }
-    if (entry.special === 'programDays') {
-      return {
-        he: values.programDays.some((row) => row.he.theme.trim() !== ''),
-        en: values.programDays.every((row) => row.en.theme.trim() !== '' || row.he.theme.trim() === ''),
-      };
-    }
     if (keys.length === 0) return { he: true, en: true };
     return {
       he: keys.every((key) => (values.he[key] ?? '').trim() !== ''),
@@ -455,25 +420,6 @@ const ConferenceContentEditor = ({
         {section.special === 'facts' ? (
           <FactsEditor uiLocale={locale} facts={values.facts} onChange={setFacts} />
         ) : null}
-        {section.special === 'moments' ? (
-          <MomentsEditor
-            uiLocale={locale}
-            media={media}
-            moments={values.moments}
-            onChange={setMoments}
-            onUploaded={(item) => setMedia((held) => [item, ...held])}
-          />
-        ) : null}
-        {section.special === 'programDays' ? (
-          <DaysEditor
-            uiLocale={locale}
-            days={values.programDays}
-            agendaDays={agendaDays}
-            media={media}
-            onChange={setDays}
-            onUploaded={(item) => setMedia((held) => [item, ...held])}
-          />
-        ) : null}
 
         {section.scene ? (
           <label className="mt-6 flex items-center gap-2 text-xs text-[var(--c-text-soft)]">
@@ -584,7 +530,6 @@ const MediaLibrary = ({
   uiLocale,
   media,
   kind,
-  multiple,
   onPick,
   onUploaded,
   onClose,
@@ -592,35 +537,21 @@ const MediaLibrary = ({
   uiLocale: Locale;
   media: MediaItem[];
   kind: 'image' | 'video';
-  multiple?: boolean;
-  onPick: (ids: string[]) => void;
+  onPick: (id: string) => void;
   onUploaded: (item: MediaItem) => void;
   onClose: () => void;
 }) => {
-  const [picked, setPicked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const items = media.filter((item) => (kind === 'video' ? isVideo(item) : !isVideo(item)));
-  const choose = (id: string) => {
-    if (!multiple) {
-      onPick([id]);
-      return;
-    }
-    setPicked((held) => (held.includes(id) ? held.filter((entry) => entry !== id) : [...held, id]));
-  };
-  const onFiles = async (files: FileList | null) => {
-    if (!files) return;
+  const onFile = async (file: File | undefined) => {
+    if (!file) return;
     setBusy(true);
-    const added: string[] = [];
-    for (const file of Array.from(files)) {
-      const item = await upload(file);
-      if (item) {
-        onUploaded(item);
-        added.push(item.id);
-      }
-    }
+    const item = await upload(file);
     setBusy(false);
-    if (!multiple && added[0]) onPick([added[0]]);
-    if (multiple) setPicked((held) => [...held, ...added]);
+    if (item) {
+      onUploaded(item);
+      onPick(item.id);
+    }
   };
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
@@ -635,9 +566,8 @@ const MediaLibrary = ({
             <input
               type="file"
               accept={kind === 'video' ? 'video/mp4,video/webm' : 'image/*'}
-              multiple={multiple}
               className="sr-only"
-              onChange={(event) => onFiles(event.target.files)}
+              onChange={(event) => onFile(event.target.files?.[0])}
             />
           </label>
           <button type="button" onClick={onClose} className={BTN}>
@@ -645,30 +575,18 @@ const MediaLibrary = ({
           </button>
         </div>
         <div className="grid grid-cols-3 gap-2 overflow-y-auto p-3 sm:grid-cols-4 md:grid-cols-5">
-          {items.map((item) => {
-            const on = picked.includes(item.id);
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => choose(item.id)}
-                title={item.alt || item.filename}
-                className={`aspect-square overflow-hidden rounded-md border-2 bg-black/30 transition-colors ${
-                  on ? 'border-[var(--c-bronze)]' : 'border-transparent hover:border-[var(--c-line-strong)]'
-                }`}
-              >
-                <Thumb item={item} />
-              </button>
-            );
-          })}
-        </div>
-        {multiple ? (
-          <div className="flex justify-end gap-2 border-t border-[var(--c-line)] px-4 py-3">
-            <button type="button" disabled={picked.length === 0} onClick={() => onPick(picked)} className={BTN_PRIMARY}>
-              {UI.addImages[uiLocale]} {picked.length ? `(${picked.length})` : ''}
+          {items.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onPick(item.id)}
+              title={item.alt || item.filename}
+              className="aspect-square overflow-hidden rounded-md border-2 border-transparent bg-black/30 transition-colors hover:border-[var(--c-line-strong)]"
+            >
+              <Thumb item={item} />
             </button>
-          </div>
-        ) : null}
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -726,8 +644,8 @@ const MediaField = ({
           uiLocale={uiLocale}
           media={media}
           kind={slot.kind}
-          onPick={(ids) => {
-            onChange(ids[0] ?? '');
+          onPick={(id) => {
+            onChange(id);
             setOpen(false);
           }}
           onUploaded={onUploaded}
@@ -802,187 +720,6 @@ const FactsEditor = ({
             </button>
           </div>
         ))}
-      </div>
-    </div>
-  );
-};
-
-const MomentsEditor = ({
-  uiLocale,
-  media,
-  moments,
-  onChange,
-  onUploaded,
-}: {
-  uiLocale: Locale;
-  media: MediaItem[];
-  moments: MomentRow[];
-  onChange: (moments: MomentRow[]) => void;
-  onUploaded: (item: MediaItem) => void;
-}) => {
-  const [open, setOpen] = useState(false);
-  const move = (from: number, to: number) => {
-    if (to < 0 || to >= moments.length) return;
-    const next = [...moments];
-    const [row] = next.splice(from, 1);
-    next.splice(to, 0, row!);
-    onChange(next);
-  };
-  return (
-    <div className="mt-2 rounded-lg border border-[var(--c-line)] p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-[var(--c-text)]">{moments.length}</h3>
-        <button type="button" onClick={() => setOpen(true)} className={BTN}>
-          + {UI.addImages[uiLocale]}
-        </button>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {moments.map((row, index) => {
-          const item = media.find((entry) => entry.id === row.imageId);
-          return (
-            <div key={`${row.imageId}-${index}`} className="rounded-md border border-[var(--c-line)] p-2">
-              <div className="aspect-[4/3] overflow-hidden rounded bg-black/30">{item ? <Thumb item={item} /> : null}</div>
-              <input
-                dir="rtl"
-                value={row.he}
-                placeholder={`${UI.caption[uiLocale]} · ${UI.he[uiLocale]}`}
-                onChange={(event) => onChange(moments.map((r, at) => (at === index ? { ...r, he: event.target.value } : r)))}
-                className={`${INPUT} mt-2`}
-              />
-              <input
-                dir="ltr"
-                value={row.en}
-                placeholder={`${UI.caption[uiLocale]} · ${UI.en[uiLocale]}`}
-                onChange={(event) => onChange(moments.map((r, at) => (at === index ? { ...r, en: event.target.value } : r)))}
-                className={`${INPUT} mt-2`}
-              />
-              <div className="mt-2 flex gap-1 text-xs">
-                <button type="button" onClick={() => move(index, index - 1)} className={BTN} aria-label="↑">↑</button>
-                <button type="button" onClick={() => move(index, index + 1)} className={BTN} aria-label="↓">↓</button>
-                <button type="button" onClick={() => onChange(moments.filter((_, at) => at !== index))} className={`${BTN} ms-auto`}>
-                  {UI.remove[uiLocale]}
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      {open ? (
-        <MediaLibrary
-          uiLocale={uiLocale}
-          media={media}
-          kind="image"
-          multiple
-          onPick={(ids) => {
-            onChange([...moments, ...ids.filter((id) => !moments.some((row) => row.imageId === id)).map((imageId) => ({ imageId, he: '', en: '' }))]);
-            setOpen(false);
-          }}
-          onUploaded={onUploaded}
-          onClose={() => setOpen(false)}
-        />
-      ) : null}
-    </div>
-  );
-};
-
-const EMPTY_DAY: DayRow = {
-  imageId: '',
-  he: { theme: '', description: '' },
-  en: { theme: '', description: '' },
-};
-
-const DaysEditor = ({
-  uiLocale,
-  days,
-  agendaDays,
-  media,
-  onChange,
-  onUploaded,
-}: {
-  uiLocale: Locale;
-  days: DayRow[];
-  agendaDays: number;
-  media: MediaItem[];
-  onChange: (days: DayRow[]) => void;
-  onUploaded: (item: MediaItem) => void;
-}) => {
-  const [picking, setPicking] = useState<number | null>(null);
-  const count = Math.max(days.length, agendaDays);
-  const rows: DayRow[] = Array.from({ length: count }, (_, index) => days[index] ?? EMPTY_DAY);
-  const update = (index: number, lang: 'he' | 'en', key: 'theme' | 'description', value: string) =>
-    onChange(rows.map((row, at) => (at === index ? { ...row, [lang]: { ...row[lang], [key]: value } } : row)));
-  const setImage = (index: number, imageId: string) =>
-    onChange(rows.map((row, at) => (at === index ? { ...row, imageId } : row)));
-  return (
-    <div className="mt-2 flex flex-col gap-3">
-      {rows.map((row, index) => {
-        const picture = media.find((item) => item.id === row.imageId);
-        return (
-        <div key={index} className="rounded-lg border border-[var(--c-line)] p-4">
-          <h3 className="mb-3 text-sm font-semibold text-[var(--c-text)]">
-            {UI.dayN[uiLocale]} {index + 1}
-          </h3>
-          <div className="grid gap-3 lg:grid-cols-2">
-            {(['he', 'en'] as const).map((lang) => (
-              <div key={lang} className="flex flex-col gap-2">
-                <input dir={lang === 'he' ? 'rtl' : 'ltr'} value={row[lang].theme} placeholder={`${UI.theme[uiLocale]} · ${UI[lang][uiLocale]}`} onChange={(event) => update(index, lang, 'theme', event.target.value)} className={INPUT} />
-                <input dir={lang === 'he' ? 'rtl' : 'ltr'} value={row[lang].description} placeholder={`${UI.dayDescription[uiLocale]} · ${UI[lang][uiLocale]}`} onChange={(event) => update(index, lang, 'description', event.target.value)} className={INPUT} />
-              </div>
-            ))}
-          </div>
-          {/*
-            * The day's picture. Written once, not per language — the
-            * same photograph in both. Left empty the site falls back to
-            * the cover of that day's first activity, which is what it
-            * did before this field existed.
-            */}
-          <div className="mt-3 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setPicking(index)}
-              className="h-16 w-24 flex-none overflow-hidden rounded-md border border-dashed border-[var(--c-line-strong)] bg-black/30 text-[11px] text-[var(--c-text-soft)] hover:border-[var(--c-bronze)]"
-            >
-              {picture ? <Thumb item={picture} /> : UI.chooseImage[uiLocale]}
-            </button>
-            <div className="flex flex-col gap-1 text-xs">
-              <span className="text-[11px] text-[var(--c-text-faint)]">{UI.dayImage[uiLocale]}</span>
-              <span className="flex gap-2">
-                <button type="button" onClick={() => setPicking(index)} className={BTN}>
-                  {picture ? UI.library[uiLocale] : UI.chooseImage[uiLocale]}
-                </button>
-                {picture ? (
-                  <button type="button" onClick={() => setImage(index, '')} className={BTN}>
-                    {UI.remove[uiLocale]}
-                  </button>
-                ) : null}
-              </span>
-            </div>
-          </div>
-        </div>
-        );
-      })}
-      {picking !== null ? (
-        <MediaLibrary
-          uiLocale={uiLocale}
-          media={media}
-          kind="image"
-          onPick={(ids) => {
-            if (ids[0]) setImage(picking, ids[0]);
-            setPicking(null);
-          }}
-          onUploaded={onUploaded}
-          onClose={() => setPicking(null)}
-        />
-      ) : null}
-      <div>
-        <button type="button" onClick={() => onChange([...rows, EMPTY_DAY])} className={BTN}>
-          + {UI.addRow[uiLocale]}
-        </button>
-        {rows.length > 0 ? (
-          <button type="button" onClick={() => onChange(rows.slice(0, -1))} className={`${BTN} ms-2`}>
-            {UI.removeRow[uiLocale]}
-          </button>
-        ) : null}
       </div>
     </div>
   );

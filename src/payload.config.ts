@@ -36,6 +36,7 @@ import {
   Speakers,
   Sponsors,
   GalleryItems,
+  SystemUpdates,
   Users,
 } from '@/cms';
 
@@ -114,6 +115,7 @@ export default buildConfig({
     Speakers,
     Sponsors,
     GalleryItems,
+    SystemUpdates,
     Participants,
     AccountGrants,
     Registrations,

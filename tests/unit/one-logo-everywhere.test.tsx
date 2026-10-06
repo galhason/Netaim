@@ -138,12 +138,15 @@ describe('an email carries it without depending on it', () => {
   /*
    * A relative path in an email is a broken image: the client has no
    * site to resolve it against. The channel is the only place that can
-   * know the deployment's origin, and this is the line that makes it.
+   * know the deployment's origin, and this is the line that makes it —
+   * the one deployed address (`SITE_ORIGIN`, read from
+   * NEXT_PUBLIC_SERVER_URL) and the base path the site is served under.
    */
   it('builds the mail URL from the deployment origin', () => {
     const channel = read('src/infrastructure/email/smtp-channel.ts');
-    expect(channel).toContain('NEXT_PUBLIC_SERVER_URL');
-    expect(channel).toContain('${origin}${path}');
+    expect(channel).toContain("import { SITE_ORIGIN, withBasePath } from '@/config/site';");
+    expect(channel).toContain('${origin}${withBasePath(path)}');
+    expect(read('src/config/site.ts')).toContain('process.env.NEXT_PUBLIC_SERVER_URL');
   });
 });
 

@@ -27,8 +27,6 @@ export interface SectionSaveInput {
   en: Record<string, string>;
   shared: Record<string, string>;
   facts?: { icon: string; he: { label: string; description: string }; en: { label: string; description: string } }[];
-  moments?: { imageId: string; he: string; en: string }[];
-  programDays?: { imageId?: string; he: { theme: string; description: string }; en: { theme: string; description: string } }[];
 }
 
 export type SectionSaveOutcome =
@@ -94,28 +92,6 @@ export const saveConferenceSectionAction = async (
             description: (locale === 'he' ? fact.he.description : fact.en.description).trim(),
           }));
       }
-      if (section.special === 'moments' && input.moments) {
-        write.moments = input.moments
-          .filter((moment) => moment.imageId)
-          .map((moment) => ({
-            imageId: moment.imageId,
-            caption: locale === 'he' ? moment.he : moment.en,
-          }));
-      }
-      if (section.special === 'programDays' && input.programDays) {
-        write.programDays = input.programDays.map((day) => ({
-          theme: locale === 'he' ? day.he.theme : day.en.theme,
-          description: locale === 'he' ? day.he.description : day.en.description,
-          /*
-           * A picture is not a translation, so both passes write the
-           * same one — otherwise the English save would clear what the
-           * Hebrew save had just set. '' is a real instruction: the
-           * day has no picture of its own and the site falls back.
-           */
-          imageId: day.imageId ? day.imageId : null,
-        }));
-      }
-
       if (Object.keys(write).length === 0) {
         continue;
       }

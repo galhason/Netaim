@@ -7,6 +7,7 @@ export { Scenes } from './collections/scenes';
 export { Speakers } from './collections/speakers';
 export { Sponsors } from './collections/sponsors';
 export { GalleryItems } from './collections/gallery-items';
+export { SystemUpdates } from './collections/system-updates';
 export { Participants } from './collections/participants';
 export { AccountGrants } from './collections/account-grants';
 export { Registrations } from './collections/registrations';

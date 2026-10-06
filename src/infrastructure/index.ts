@@ -42,6 +42,10 @@ import {
 } from './payload/payload-participant-admin';
 import type { EventLogisticsSource } from '@/features/studio/types/logistics';
 import { payloadEventLogistics } from './payload/payload-logistics';
+import type { ActivityRosterSource } from '@/features/studio/types/activity-roster';
+import { payloadActivityRosters } from './payload/payload-activity-roster';
+import type { SystemUpdateRepository } from '@/features/system/types/system-update';
+import { payloadSystemUpdateRepository } from './payload/payload-system';
 import { chooseContentSource } from './selection';
 import { payloadContentSource } from './payload/payload-content-source';
 import { payloadIdentityGateway } from './payload/payload-identity';
@@ -162,6 +166,8 @@ export const updateParticipantAdmin: ParticipantAdminWriter =
   payloadUpdateParticipantAdmin;
 export const deleteParticipantAdmin = payloadDeleteParticipantAccount;
 export const eventLogisticsSource: EventLogisticsSource = payloadEventLogistics;
+export const activityRosterSource: ActivityRosterSource = payloadActivityRosters;
+export const systemUpdateRepository: SystemUpdateRepository = payloadSystemUpdateRepository;
 export const searchParticipantAccounts: AccountSearchSource =
   payloadSearchAccounts;
 export { readExperienceDocument } from './documents/experience-documents';

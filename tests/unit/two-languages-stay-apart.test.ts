@@ -54,21 +54,30 @@ describe('the editor reads one language, not the visitor view', () => {
 });
 
 describe('the two language switches cannot be confused', () => {
-  for (const file of [
-    'src/app/(studio)/studio/(console)/homepage/page.tsx',
-    'src/app/(studio)/studio/(console)/experiences/[slug]/page.tsx',
-  ]) {
-    it(`${file.split('/').slice(-2).join('/')} names the content switch`, () => {
-      const page = read(file);
-      expect(page.includes('CONSOLE_UI.contentLanguage[locale].toUpperCase()')).toBe(
-        true,
-      );
-      expect(
-        page.includes('CONSOLE_UI.inheritedNote[locale]'),
-        'an editor must be told that an empty field inherits',
-      ).toBe(true);
-    });
-  }
+  it('homepage/page.tsx names the content switch', () => {
+    const page = read('src/app/(studio)/studio/(console)/homepage/page.tsx');
+    expect(page.includes('CONSOLE_UI.contentLanguage[locale].toUpperCase()')).toBe(true);
+    expect(
+      page.includes('CONSOLE_UI.inheritedNote[locale]'),
+      'an editor must be told that an empty field inherits',
+    ).toBe(true);
+  });
+
+  /*
+   * The conference is no longer edited one language at a time behind a
+   * switch: the old experience editor now forwards to the conference
+   * content editor, which lays Hebrew and English side by side — so
+   * there is no second switch to confuse — and says over the English
+   * column that an empty field shows the Hebrew on the site.
+   */
+  it('edits the conference in both languages side by side, saying what an empty English field does', () => {
+    const forward = read('src/app/(studio)/studio/(console)/experiences/[slug]/page.tsx');
+    expect(forward).toContain('redirect(`/studio/conference/${slug}/content`)');
+    const editor = read('src/app/(studio)/studio/(console)/conference/[slug]/content/editor.tsx');
+    expect(editor).toContain("(['he', 'en'] as const).map((lang) =>");
+    expect(editor).toContain("t(lang === 'he' ? UI.he : UI.en)");
+    expect(editor).toContain("lang === 'en' ? <span className=\"text-[11px] text-[var(--c-text-faint)]\">{t(UI.enFallback)}</span>");
+  });
 
   it('names the interface switch too', () => {
     const shell = read(

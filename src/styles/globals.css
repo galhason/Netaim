@@ -58,6 +58,15 @@
   --nt-on-forest-soft: #d5e4d9; /* 9.73 on forest */
   --nt-sand: #e2cf9e; /* forest on it 8.34; 6.74 on green-deeper */
 
+  /*
+   * The Netaim team's mark in the networking room: a gold ring around a
+   * staff member's picture and the gold line of their title under it.
+   */
+  --nt-staff-gold-light: #f3cf5b;
+  --nt-staff-gold: #b8860b;
+  --nt-staff-gold-pale: #f7dd8c;
+  --nt-staff-gold-ink: #9a6b00; /* 4.69 on white */
+
   /* --- washes: a brand colour at the strength of a background --- */
   --nt-navy-wash: #eef3fa;
   --nt-blue-wash: #e8f3fa;

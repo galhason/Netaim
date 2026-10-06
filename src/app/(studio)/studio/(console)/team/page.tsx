@@ -22,8 +22,8 @@ import { ROLE_CAPABILITIES, ROLE_LABELS, can, type Capability, type Role } from 
 const t = (he: string, en: string): Record<Locale, string> => ({ he, en });
 const UI = {
   sub: t(
-    'כל מי שמחזיק תפקיד בסטודיו — מנהל, מפקח או צוות — ומה כל אחד עשה לאחרונה. תפקידים ניתנים ומוסרים במסך "אנשים".',
-    'Everyone holding a Studio role — admin, supervisor or staff — and what each has done lately. Roles are given and taken on the Access screen.',
+    'כל מי שמחזיק תפקיד בסטודיו — מתכנת, מנהל, מפקח או צוות — ומה כל אחד עשה לאחרונה. תפקידים ניתנים ומוסרים במסך "אנשים".',
+    'Everyone holding a Studio role — developer, admin, supervisor or staff — and what each has done lately. Roles are given and taken on the Access screen.',
   ),
   roles: t('תפקידים', 'Roles'),
   scope: t('היקף', 'Scope'),
@@ -37,6 +37,7 @@ const UI = {
   fullLog: t('ליומן המלא', 'Open the full log'),
   empty: t('עדיין אין מחזיקי תפקיד.', 'No one holds a role yet.'),
   logDenied: t('יומן הפעולות פתוח למנהל Netaim בלבד.', 'The audit log is open to the Netaim Admin only.'),
+  developers: t('מתכנתים', 'Developers'),
   admins: t('מנהלים', 'Admins'),
   supervisors: t('מפקחים', 'Supervisors'),
   staff: t('צוות', 'Staff'),
@@ -54,6 +55,7 @@ const when = (iso: string | null | undefined, locale: Locale): string => {
 };
 
 const TIER: Record<Role, keyof typeof UI> = {
+  developer: 'developers',
   owner: 'admins',
   producer: 'supervisors',
   editor: 'staff',
@@ -100,7 +102,7 @@ const TeamPage = async () => {
     for (const capability of ROLE_CAPABILITIES[grant.role] ?? []) person.capabilities.add(capability);
     people.set(grant.accountId, person);
   }
-  const rank: Record<keyof typeof UI, number> = { admins: 0, supervisors: 1, staff: 2, legacy: 3 } as Record<keyof typeof UI, number>;
+  const rank: Record<keyof typeof UI, number> = { developers: 0, admins: 1, supervisors: 2, staff: 3, legacy: 4 } as Record<keyof typeof UI, number>;
   for (const person of people.values()) {
     person.tier = person.grants.map((g) => TIER[g.role]).sort((a, b) => (rank[a] ?? 9) - (rank[b] ?? 9))[0] ?? 'legacy';
   }
@@ -108,7 +110,7 @@ const TeamPage = async () => {
   for (const entry of recent.entries) {
     if (entry.actorEmail && !lastByEmail.has(entry.actorEmail)) lastByEmail.set(entry.actorEmail, entry);
   }
-  const tiers: (keyof typeof UI)[] = ['admins', 'supervisors', 'staff', 'legacy'];
+  const tiers: (keyof typeof UI)[] = ['developers', 'admins', 'supervisors', 'staff', 'legacy'];
 
   return (
     <ConsoleShell locale={locale} userName={access.creator.name} breadcrumb={<span className="font-medium text-[var(--c-text)]">{CONSOLE_UI.teams[locale]}</span>}>

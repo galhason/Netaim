@@ -10,6 +10,7 @@ const state = {
   me: null as { id: string; name: string; email: string } | null,
   photo: undefined as string | undefined,
   cleared: 0,
+  staff: null as string | null,
 };
 
 vi.mock('@/features/registration', () => ({
@@ -18,6 +19,15 @@ vi.mock('@/features/registration', () => ({
   clearSession: async () => {
     state.cleared += 1;
   },
+}));
+
+/*
+ * The route asks whether the guest is on the Netaim team, to offer the
+ * Studio. Mocked like its other neighbours: left real, it loaded the
+ * whole database layer on the first test and ran past the time limit.
+ */
+vi.mock('@/features/access', () => ({
+  staffRoleOf: async () => state.staff,
 }));
 
 vi.mock('@/features/events', () => ({
@@ -39,6 +49,7 @@ describe('who is at the door', () => {
     state.me = null;
     state.photo = undefined;
     state.cleared = 0;
+    state.staff = null;
   });
 
   it('says "nobody" to a stranger, and never caches it', async () => {
@@ -61,6 +72,16 @@ describe('who is at the door', () => {
     expect(JSON.stringify(body)).not.toContain('"p1"');
     expect(body.links.signOut).toMatch(/\/api\/session$/);
     expect(body.spotlight).toEqual({ banner: { id: 'n1', subject: 'הצהריים זזו', body: '12:30' }, popup: null });
+  });
+
+  it('offers the Studio to a member of the Netaim team, and to nobody else', async () => {
+    state.me = { id: 'p1', name: 'גל חסון', email: 'gal@example.org' };
+    const { GET } = await load();
+    const guest = await (await GET(request('GET', { 'sec-fetch-site': 'same-origin' }))).json();
+    expect(guest.links.studio).toBeUndefined();
+    state.staff = 'developer';
+    const member = await (await GET(request('GET', { 'sec-fetch-site': 'same-origin' }))).json();
+    expect(member.links.studio).toMatch(/\/studio$/);
   });
 
   it('speaks the language of the asking page', async () => {

@@ -59,6 +59,7 @@ export interface RegisterKeptValues {
   dietary: string;
   accessibility: string;
   directory: boolean;
+  mediaConsent: boolean;
 }
 
 export interface RegisterFormState {
@@ -89,6 +90,7 @@ const keptFrom = (formData: FormData): RegisterKeptValues => {
     dietary: text('dietary'),
     accessibility: text('accessibility'),
     directory: formData.get('directory') === 'on',
+    mediaConsent: formData.get('mediaConsent') === 'on',
   };
 };
 
@@ -149,6 +151,16 @@ export const requestCodeAction = async (
    */
   if (!isCountryCode(kept.country)) {
     return refuse('country');
+  }
+
+  /*
+   * Consent to being photographed is required to register, and it is
+   * the box itself that says so: the form refuses to send without it,
+   * and this is the same rule where it binds — a submission without
+   * the box ticked never reaches a code, let alone a registration.
+   */
+  if (!kept.mediaConsent) {
+    return refuse('mediaConsent');
   }
 
   const password = String(formData.get('password') ?? '');
@@ -298,6 +310,16 @@ export const confirmCodeAction = async (formData: FormData) => {
       redirect(`${base}?error=${checked.reason}`);
     }
     redirect(back(`error=${checked.reason}`));
+  }
+
+  /*
+   * A pending registration from before the consent was asked carries
+   * no answer to it. It is not registered on an assumption: the person
+   * fills the form again and answers the question. Asked outside the
+   * try below, whose catch would otherwise swallow the redirect.
+   */
+  if (checked.pending.details.mediaConsent !== true) {
+    redirect(`${base}?error=expired`);
   }
 
   let target = base;

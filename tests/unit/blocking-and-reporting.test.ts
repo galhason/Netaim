@@ -50,6 +50,11 @@ const NAMES: Record<string, string> = {
 };
 
 vi.mock('@/infrastructure', () => ({
+  /* Reporting is throttled; a counter that always has room keeps that out of these cases. */
+  rateLimitRepository: {
+    read: async () => null,
+    write: async () => undefined,
+  },
   blockRepository: {
     create: async (blockerId: string, blockedId: string) => {
       if (

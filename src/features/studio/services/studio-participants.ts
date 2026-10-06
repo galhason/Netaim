@@ -1,5 +1,6 @@
 import type { Locale } from '@/config/locales';
 import { listAllGrants, revokeGrant } from '@/features/access';
+import { mayRevokeRole, type Grant } from '@/permission-engine';
 import {
   cancelRegistration,
   registerForEvent,
@@ -90,13 +91,31 @@ export const moveParticipantRegistration = async (
 /*
  * Full deletion (approved decision §4): grants fall first — taking the
  * derived principal with them — then every trace of the person.
+ *
+ * Only when every one of those grants can fall at this hand. Deleting
+ * the account is otherwise a way round the grant rules: an Admin could
+ * not take the developer role from a developer, but could delete them;
+ * and the last Owner or last Developer would vanish with their account.
  */
-export const deleteParticipantAccount = async (id: string): Promise<void> => {
-  const grants = await listAllGrants();
-  for (const grant of grants) {
-    if (grant.accountId === id) {
-      await revokeGrant(grant.id).catch(() => undefined);
-    }
+export const deleteParticipantAccount = async (
+  id: string,
+  actorGrants: readonly Grant[],
+): Promise<boolean> => {
+  const all = await listAllGrants();
+  const held = all.filter((grant) => grant.accountId === id);
+  /* Asked of every grant before any falls, so a refusal leaves the person exactly as they were. */
+  const keeps = (role: string) => all.some((grant) => grant.role === role && grant.accountId !== id);
+  const refused = held.some(
+    (grant) =>
+      !mayRevokeRole(actorGrants, grant.role) ||
+      ((grant.role === 'owner' || grant.role === 'developer') && !keeps(grant.role)),
+  );
+  if (refused) {
+    return false;
+  }
+  for (const grant of held) {
+    await revokeGrant(grant.id, actorGrants).catch(() => null);
   }
   await deleteParticipantAdmin(id);
+  return true;
 };

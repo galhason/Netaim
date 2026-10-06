@@ -602,8 +602,9 @@ export const toggleParticipantBlockedAction = async (formData: FormData) => {
 
 /*
  * Access governance (Identity Build Brief WP6): granting and revoking
- * roles requires platform:manage; the last Owner is protected in the
- * grant service itself.
+ * roles requires access:manage; which roles that opens — the developer
+ * role is a developer's to give — and the last Owner and last Developer
+ * are decided in the grant service itself.
  */
 export const grantRoleAction = async (formData: FormData) => {
   const access = await requireCapability('access:manage');
@@ -616,8 +617,11 @@ export const grantRoleAction = async (formData: FormData) => {
   if (!accountId || !role || !(ASSIGNABLE_ROLES as readonly string[]).includes(role)) {
     return;
   }
-  await grantRole(accountId, role, eventSlug || null, access.creator.id);
-  await audit(access.creator, 'grant.granted', eventSlug || undefined, {
+  const outcome = await grantRole(accountId, role, eventSlug || null, access.creator.id, access.grants);
+  if (!outcome.ok) {
+    return;
+  }
+  await audit(access.creator, 'grant.granted', role === 'developer' ? undefined : eventSlug || undefined, {
     accountId,
     role,
   });
@@ -626,10 +630,11 @@ export const grantRoleAction = async (formData: FormData) => {
 };
 
 export const revokeGrantAction = async (formData: FormData) => {
-  const actor = await actorFor('access:manage');
-  if (!actor) {
+  const access = await requireCapability('access:manage');
+  if (!access) {
     return;
   }
+  const actor = access.creator;
   const grantId = String(formData.get('grantId') ?? '');
   if (!grantId) {
     return;
@@ -638,12 +643,12 @@ export const revokeGrantAction = async (formData: FormData) => {
     formData.get('from') === 'people'
       ? '/studio/people'
       : '/studio/participants';
-  const outcome = await revokeGrant(grantId);
+  const outcome = await revokeGrant(grantId, access.grants);
   if (outcome.ok) {
     await audit(actor, 'grant.revoked', undefined, { grantId });
   }
-  if (!outcome.ok && outcome.reason === 'lastOwner') {
-    redirect(`${home}?grants=lastOwner`);
+  if (!outcome.ok && outcome.reason !== 'failed') {
+    redirect(`${home}?grants=${outcome.reason}`);
   }
   revalidatePath('/studio/participants');
   revalidatePath('/studio/people');
@@ -712,15 +717,18 @@ export const moveParticipantRegistrationAction = async (
 };
 
 export const deleteParticipantAction = async (formData: FormData) => {
-  const actor = await actorFor('participants:delete');
-  if (!actor) {
+  const access = await requireCapability('participants:delete');
+  if (!access) {
     return;
   }
+  const actor = access.creator;
   const id = String(formData.get('id') ?? '');
   if (!id) {
     return;
   }
-  await deleteParticipantAccount(id);
+  if (!(await deleteParticipantAccount(id, access.grants))) {
+    redirect('/studio/participants?grants=protected');
+  }
   await audit(actor, 'participant.deleted', undefined, { participantId: id });
   revalidatePath('/studio/participants');
 };

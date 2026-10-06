@@ -23,6 +23,11 @@ export const registerFormSchema = z.object({
     .optional(),
   /* PRD §5.1 — the directory question, answered at registration. */
   directory: z.boolean(),
+  /*
+   * Consent to being photographed and to the use of the media — asked
+   * at registration and required by it, so only an explicit yes parses.
+   */
+  mediaConsent: z.literal(true),
 });
 
 export type RegisterFormValues = z.infer<typeof registerFormSchema>;
@@ -43,4 +48,5 @@ export const parseRegisterForm = (data: FormData) =>
     accessibility: optional(data.get('accessibility')),
     dietary: optional(data.get('dietary')),
     directory: data.get('directory') === 'on',
+    mediaConsent: data.get('mediaConsent') === 'on',
   });

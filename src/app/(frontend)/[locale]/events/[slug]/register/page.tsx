@@ -371,6 +371,15 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
                   : 'Optional. We use this only to make the conference work for you.',
                 directoryQuestion: m.public.directoryQuestion[lang],
                 directoryHint: m.public.directoryHint[lang],
+                mediaConsent: {
+                  label: m.public.mediaConsent[lang],
+                  readMore: m.public.mediaConsentReadMore[lang],
+                  title: m.public.mediaConsentTitle[lang],
+                  paragraphs: m.public.mediaConsentBody[lang],
+                  affirm: m.public.mediaConsentAffirm[lang],
+                  close: m.public.mediaConsentClose[lang],
+                  required: m.public.mediaConsentRequired[lang],
+                },
                 stepOneTitle: he ? 'פרטים אישיים' : 'Personal details',
                 stepOneIntro: he ? 'נשמח להכיר אותך קצת יותר.' : 'A little about you.',
                 stepTwoTitle: he ? 'הארגון והמוסד' : 'Your organisation',
@@ -428,6 +437,7 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
                   firstNameScript: LATIN_NAME_ERROR[lang],
                   lastNameScript: LATIN_NAME_ERROR[lang],
                   country: he ? 'יש לבחור מדינה מהרשימה' : 'Please choose a country from the list',
+                  mediaConsent: m.public.mediaConsentRequired[lang],
                 },
                 fieldErrors: {
                   required: he ? 'שדה חובה' : 'Required',

@@ -68,5 +68,25 @@ export const Registrations: CollectionConfig = {
       name: 'submittedAt',
       type: 'date',
     },
+    /*
+     * When the participant consented, on the registration form, to being
+     * photographed and to the use of photographs and video in which they
+     * appear. Empty means no consent was given with this registration.
+     * Written only from the person's own tick at registration — nobody
+     * sets or changes it from the admin or the API.
+     */
+    {
+      name: 'mediaConsentAt',
+      type: 'date',
+      access: {
+        create: () => false,
+        update: () => false,
+      },
+      admin: {
+        readOnly: true,
+        description: 'When the participant consented to photography and media use on the registration form. Empty: no consent given.',
+        date: { pickerAppearance: 'dayAndTime' },
+      },
+    },
   ],
 };

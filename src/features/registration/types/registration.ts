@@ -56,6 +56,12 @@ export interface RegisterInput {
   country?: string;
   /* the answer to the directory question, chosen on the form */
   directory?: boolean;
+  /*
+   * Consent to photography and media use, ticked on the form. Only the
+   * registration form gives it; a registration made any other way
+   * records none rather than assuming one.
+   */
+  mediaConsent?: boolean;
 }
 
 export interface RegisterPersisted {

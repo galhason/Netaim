@@ -85,6 +85,39 @@ export const REGISTRATION_MESSAGES = {
       he: 'מוצגים רק שם, תפקיד וארגון. פרטי הקשר נשארים סגורים עד שתאשרו התחברות, ואפשר לשנות את הבחירה בכל רגע מהפרופיל.',
       en: 'Only your name, role and organisation are shown. Contact details stay closed until you approve a connection, and you can change this choice at any time from your profile.',
     },
+    /*
+     * Consent to being photographed, asked at registration and required
+     * by it: the short sentence beside the box, and the full wording
+     * behind "read more". Nothing here may claim more than this text.
+     */
+    mediaConsent: {
+      he: 'אני מאשר/ת צילום ושימוש בתמונות ובסרטונים שבהם אני מופיע/ה.',
+      en: 'I consent to photography and to the use of photographs and video in which I appear.',
+    },
+    mediaConsentReadMore: { he: 'קרא עוד', en: 'Read more' },
+    mediaConsentTitle: {
+      he: 'הסכמה לצילום ולשימוש בתכנים',
+      en: 'Photography & Media Consent',
+    },
+    mediaConsentBody: {
+      he: [
+        'במהלך הכנס עשויים להתבצע צילום תמונות, וידאו והקלטות.',
+        'בהרשמה לכנס אני מאשר/ת כי ייתכן שאופיע בתיעוד המצולם, ומסכים/ה לשימוש בתמונות ובסרטונים שבהם אני מופיע/ה לצורכי תיעוד, פרסום וקידום פעילות נטעים, לרבות באתר האינטרנט, ברשתות החברתיות ובחומרים שיווקיים של נטעים.',
+      ],
+      en: [
+        'Photography, video and other recordings may take place during the conference.',
+        'By registering for the conference, I acknowledge that I may appear in photographs or video recordings and consent to the use of such content for documenting, promoting and communicating Netaim’s activities, including on the website, social media and Netaim’s promotional materials.',
+      ],
+    },
+    mediaConsentAffirm: {
+      he: 'אני מאשר/ת את האמור לעיל ומסכים/ה לצילום ולשימוש בתכנים שבהם אני מופיע/ה.',
+      en: 'I agree to the above and consent to being photographed and to the use of media in which I appear.',
+    },
+    mediaConsentClose: { he: 'סגירה', en: 'Close' },
+    mediaConsentRequired: {
+      he: 'יש לאשר צילום ושימוש בתמונות כדי להשלים את ההרשמה.',
+      en: 'Please consent to photography and media use to complete your registration.',
+    },
     dietary: { he: 'העדפות תזונה', en: 'Dietary requirements' },
     submit: { he: 'לשמור מקום', en: 'Save my place' },
     closed: {

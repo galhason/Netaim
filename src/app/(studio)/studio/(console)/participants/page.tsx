@@ -1,17 +1,18 @@
 import Link from 'next/link';
-import { listAllGrants } from '@/features/access';
+import { listAllGrants, rolesGrantableBy } from '@/features/access';
 import type { AccountGrantView } from '@/features/access';
 import { listEvents } from '@/features/events';
 import {
   CONSOLE_UI,
   ConsoleShell,
   getParticipantsAdmin,
+  getStudioAccess,
   getStudioCreator,
   getStudioLocale,
   requireCapability,
 } from '@/features/studio';
 import { countOpenReports } from '@/features/networking';
-import { ROLES, ROLE_LABELS } from '@/permission-engine';
+import { ROLE_LABELS, can, mayRevokeRole } from '@/permission-engine';
 import {
   cancelParticipantRegistrationAction,
   deleteParticipantAction,
@@ -44,17 +45,31 @@ const dangerButton =
 const selectField =
   'rounded-lg border border-[var(--c-line-strong)] bg-[rgba(7,19,36,0.6)] px-2 py-1 text-[11px] text-[var(--c-text)] focus:border-[var(--c-bronze)]/60 focus:outline-none';
 
+/* A refused grant change, said in the words of the rule that refused it. */
+const GRANT_NOTES = {
+  lastOwner: CONSOLE_UI.lastOwnerNote,
+  lastDeveloper: CONSOLE_UI.lastDeveloperNote,
+  forbidden: CONSOLE_UI.developerOnlyNote,
+  protected: CONSOLE_UI.protectedAccountNote,
+} as const;
+
+const grantNote = (state: string | undefined) =>
+  state && state in GRANT_NOTES ? GRANT_NOTES[state as keyof typeof GRANT_NOTES] : null;
+
 const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
   const { grants: grantsState, move: moveState } = await searchParams;
   const locale = await getStudioLocale();
   const creator = await getStudioCreator();
-  const [participants, allGrants, events, openReports] = await Promise.all([
+  const access = await getStudioAccess();
+  const actorGrants = access?.grants ?? [];
+  const [participants, allGrants, events, openReports, grantable] = await Promise.all([
     getParticipantsAdmin().catch(() => []),
     listAllGrants(),
     listEvents().catch(() => []),
     requireCapability('participants:manage')
-      .then((access) => (access ? countOpenReports() : 0))
+      .then((reader) => (reader ? countOpenReports() : 0))
       .catch(() => 0),
+    rolesGrantableBy(actorGrants, can(actorGrants, 'access:manage')),
   ]);
 
   const grantsByAccount = new Map<string, AccountGrantView[]>();
@@ -85,9 +100,9 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
           </p>
         </header>
 
-        {grantsState === 'lastOwner' ? (
+        {grantNote(grantsState) ? (
           <p className="rounded-xl border border-[var(--c-danger)]/40 bg-[var(--c-danger)]/10 px-4 py-3 text-sm text-[var(--c-danger-text)]">
-            {CONSOLE_UI.lastOwnerNote[locale]}
+            {grantNote(grantsState)?.[locale]}
           </p>
         ) : null}
         {moveState === 'failed' ? (
@@ -260,7 +275,8 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
                   <span className="text-[10px] tracking-[0.18em] text-[var(--c-text-faint)]">
                     {CONSOLE_UI.grantsLabel[locale].toUpperCase()}
                   </span>
-                  {held.map((grant) => (
+                  {held.map((grant) =>
+                    mayRevokeRole(actorGrants, grant.role) ? (
                     <form key={grant.id} action={revokeGrantAction}>
                       <input type="hidden" name="grantId" value={grant.id} />
                       <button
@@ -275,7 +291,16 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
                         <span aria-hidden="true">×</span>
                       </button>
                     </form>
-                  ))}
+                    ) : (
+                      <span key={grant.id} className={chip}>
+                        {ROLE_LABELS[grant.role][locale]}
+                        <span className="text-[9px] text-[var(--c-text-faint)]">
+                          {grant.eventTitle ?? CONSOLE_UI.platformWide[locale]}
+                        </span>
+                      </span>
+                    ),
+                  )}
+                  {grantable.length > 0 ? (
                   <form
                     action={grantRoleAction}
                     className="flex items-center gap-2"
@@ -288,10 +313,10 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
                     <select
                       name="role"
                       aria-label={CONSOLE_UI.grantRole[locale]}
-                      defaultValue="viewer"
+                      defaultValue="editor"
                       className={selectField}
                     >
-                      {ROLES.map((role) => (
+                      {grantable.map((role) => (
                         <option key={role} value={role}>
                           {ROLE_LABELS[role][locale]}
                         </option>
@@ -316,6 +341,7 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
                       {CONSOLE_UI.grantRole[locale]}
                     </button>
                   </form>
+                  ) : null}
                   <form action={deleteParticipantAction} className="ms-auto">
                     <input type="hidden" name="id" value={participant.id} />
                     <button

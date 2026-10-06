@@ -35,11 +35,18 @@ vi.mock('next/link', () => ({
   ),
 }));
 
+/*
+ * next/image as a plain <img>. Its own props (`fill`, `priority`) are not
+ * HTML attributes; passed through, React warns about each one and drops
+ * it, so they are left out here instead.
+ */
+const NEXT_IMAGE_ONLY = new Set(['alt', 'fill', 'priority']);
 vi.mock('next/image', () => ({
-  default: ({ alt, ...rest }: ImgHTMLAttributes<HTMLImageElement>) => (
+  default: (props: ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; priority?: boolean }) => {
+    const rest = Object.fromEntries(Object.entries(props).filter(([key]) => !NEXT_IMAGE_ONLY.has(key)));
     // eslint-disable-next-line @next/next/no-img-element
-    <img alt={alt ?? ''} {...rest} />
-  ),
+    return <img alt={props.alt ?? ''} {...rest} />;
+  },
 }));
 
 vi.mock('next/navigation', () => ({

@@ -187,6 +187,8 @@ export interface SheetData {
   rows: string[][];
   /* Column widths in characters, so the template opens readable. */
   widths?: number[];
+  /* Opens right to left — a Hebrew sheet reads from the right, like the page it came from. */
+  rightToLeft?: boolean;
 }
 
 const sheetXml = (sheet: SheetData): string => {
@@ -197,6 +199,10 @@ const sheetXml = (sheet: SheetData): string => {
             `<col min="${i + 1}" max="${i + 1}" width="${width}" customWidth="1"/>`,
         )
         .join('')}</cols>`
+    : '';
+
+  const view = sheet.rightToLeft
+    ? '<sheetViews><sheetView rightToLeft="1" workbookViewId="0"/></sheetViews>'
     : '';
 
   const rows = sheet.rows
@@ -214,7 +220,7 @@ const sheetXml = (sheet: SheetData): string => {
     })
     .join('');
 
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${cols}<sheetData>${rows}</sheetData></worksheet>`;
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${view}${cols}<sheetData>${rows}</sheetData></worksheet>`;
 };
 
 /*

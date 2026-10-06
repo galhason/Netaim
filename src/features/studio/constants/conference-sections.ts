@@ -4,12 +4,19 @@ import type { Locale } from '@/config/locales';
  * The conference, as an editor sees it: sections, not scenes.
  *
  * The public site is WordPress now, and WordPress reads these fields
- * through the marketing API — a title, a teaser, a story, a quote, the
- * venue, a closing line, and the pictures beside them. So the Studio no
+ * through the marketing API — a title, a teaser, a story, the venue, a
+ * closing line, and the pictures beside them. So the Studio no
  * longer frames the platform's own page to edit "a scene": it offers
  * each section as a short form, both languages side by side, and saves
  * as you type. What a section is called here is what it is called on
  * the WordPress page.
+ *
+ * Only what the page shows is offered. The quote, the "moments"
+ * gallery, and the heading, line, backdrop and day themes of "a taste
+ * of the conference" were sections here once; the WordPress page draws
+ * none of them — the taste section there is built from the programme
+ * alone, with its own words — so they are gone from the editor. What
+ * was written in them stays in the conference's record, untouched.
  *
  * Every `key` is a field of EventOpeningInput and, read back, a path in
  * EventOpeningDraft; the two mappings live in the editor's action and
@@ -37,7 +44,7 @@ export interface SectionMedia {
   onSite?: boolean;
 }
 
-export type SectionSpecial = 'facts' | 'moments' | 'programDays';
+export type SectionSpecial = 'facts';
 
 export interface ConferenceSection {
   id: string;
@@ -87,29 +94,6 @@ export const CONFERENCE_SECTIONS: ConferenceSection[] = [
     scene: 'story',
   },
   {
-    id: 'quote',
-    label: t('ציטוט', 'Quote'),
-    description: t('משפט אחד של מישהו שמאמין בכנס.', 'One sentence from someone who believes in it.'),
-    fields: [
-      { key: 'quoteText', kind: 'textarea', localized: true, rows: 3, label: t('הציטוט', 'The quote'), onSite: true },
-      { key: 'quoteAttribution', kind: 'text', localized: true, label: t('מי אמר', 'Who said it'), onSite: true },
-      { key: 'quoteRole', kind: 'text', localized: true, label: t('תפקיד', 'Role'), onSite: true },
-      { key: 'quoteStatValue', kind: 'text', localized: false, label: t('מספר (אופציונלי)', 'Number (optional)'), hint: t('למשל: 1,200', 'For example: 1,200') },
-      { key: 'quoteStatLabel', kind: 'text', localized: true, label: t('מה המספר אומר', 'What the number says') },
-    ],
-    media: [{ key: 'quoteImageId', kind: 'image', label: t('תמונה', 'Image') }],
-    scene: 'quote',
-  },
-  {
-    id: 'moments',
-    label: t('רגעים (גלריה)', 'Moments (gallery)'),
-    description: t('תמונות מכנסים קודמים, עם כיתוב קצר.', 'Pictures from past conferences, each with a short caption.'),
-    fields: [],
-    media: [],
-    special: 'moments',
-    scene: 'moments',
-  },
-  {
     id: 'venue',
     label: t('המקום', 'The venue'),
     description: t(
@@ -144,34 +128,6 @@ export const CONFERENCE_SECTIONS: ConferenceSection[] = [
     ],
     special: 'facts',
     scene: 'venue',
-  },
-  {
-    id: 'preview',
-    label: t('טעימה מהכנס', 'A taste of the conference'),
-    description: t(
-      'הסקשן באתר שמראה את ימי הכנס וכמה פעילויות מכל יום. כאן הכותרת, המשפט שמתחתיה והתמונה שברקע; הימים עצמם והפעילויות מגיעים מהתוכנית.',
-      'The section on the site that shows the conference days and a few activities from each. The heading, the line beneath it and the backdrop live here; the days and the activities come from the program.',
-    ),
-    fields: [
-      { key: 'previewTitle', kind: 'text', localized: true, label: t('כותרת הסקשן', 'Section heading'), hint: t('ריק = האתר מציג את הנוסח שלו.', 'Empty = the site shows its own wording.'), onSite: true },
-      { key: 'previewLede', kind: 'textarea', localized: true, rows: 2, label: t('המשפט שמתחת', 'The line beneath'), onSite: true },
-    ],
-    media: [
-      { key: 'previewImageId', kind: 'image', label: t('תמונת רקע לסקשן', 'Section backdrop'), hint: t('התמונה הרחבה מאחורי כל הסקשן. מומלץ לרוחב, 1600px לפחות.', 'The wide picture behind the whole band. Landscape, at least 1600px.'), onSite: true },
-    ],
-    scene: 'program',
-  },
-  {
-    id: 'programDays',
-    label: t('נושאי הימים', 'Day themes'),
-    description: t(
-      'כותרת, תיאור ותמונה לכל יום כנס — מה שמופיע על הטאב של היום בסקשן "טעימה מהכנס". בלי תמונה, האתר מציג את תמונת הפעילות הראשונה של אותו יום.',
-      'A theme, a line and a picture for each conference day — what the day\'s tab shows in the "a taste of the conference" section. Without a picture, the site shows the first activity of that day.',
-    ),
-    fields: [],
-    media: [],
-    special: 'programDays',
-    scene: 'program',
   },
   {
     id: 'closing',
@@ -255,17 +211,11 @@ export const CONTENT_EDITOR_UI = {
   library: t('הספרייה', 'Library'),
   close: t('סגירה', 'Close'),
   addRow: t('הוספה', 'Add'),
-  dayImage: t('תמונת היום', "The day's picture"),
   removeRow: t('הסרה', 'Remove'),
   factLabel: t('כותרת', 'Label'),
   factDescription: t('תיאור', 'Description'),
   factIcon: t('אייקון', 'Icon'),
   facts: t('טוב לדעת (עד 4 · שלוש הראשונות בדף הכנס)', 'Good to know (up to 4 · the first three on the conference page)'),
-  dayN: t('יום', 'Day'),
-  theme: t('נושא היום', 'Theme'),
-  dayDescription: t('שורת תיאור', 'Description'),
-  caption: t('כיתוב', 'Caption'),
-  addImages: t('הוספת תמונות', 'Add images'),
   visibleOnPlatform: t('מוצג גם בעמוד הפלטפורמה', 'Also shown on the platform page'),
   completeness: t('מלא', 'Complete'),
   missingHe: t('חסר בעברית', 'Missing in Hebrew'),
