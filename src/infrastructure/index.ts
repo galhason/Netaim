@@ -56,6 +56,8 @@ import { payloadMarketingRepository } from './payload/payload-marketing';
 import {
   payloadActiveConferenceSlug,
   payloadSetActiveConference,
+  payloadSetStaffOnlyConference,
+  payloadStaffOnlyConferenceSlug,
   payloadSiteLogos,
   payloadSiteLogoChoice,
   payloadSetSiteLogos,
@@ -212,6 +214,11 @@ export const activeConferenceSlug: () => Promise<string | null> =
   payloadActiveConferenceSlug;
 export const setActiveConference: (slug: string | null) => Promise<void> =
   payloadSetActiveConference;
+/* The conference open to the Netaim team only, and the Studio write that sets it. */
+export const staffOnlyConferenceSlug: () => Promise<string | null> =
+  payloadStaffOnlyConferenceSlug;
+export const setStaffOnlyConference: (slug: string | null) => Promise<void> =
+  payloadSetStaffOnlyConference;
 
 /* The logo the Studio holds for the site, and the Studio write that sets it. */
 export const siteLogos: () => Promise<SiteLogos> = payloadSiteLogos;

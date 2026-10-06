@@ -6,6 +6,8 @@ import { withBasePath } from '@/config/site';
 import {
   CONFERENCE_SECTIONS,
   CONTENT_EDITOR_UI as UI,
+  HIGHLIGHT_ICONS,
+  HIGHLIGHT_ICON_LABELS,
   VENUE_FACT_ICONS,
   VENUE_FACT_ICON_LABELS,
   type ConferenceSection,
@@ -36,11 +38,19 @@ export interface FactRow {
   en: { label: string; description: string };
 }
 
+export interface HighlightRow {
+  icon: string;
+  imageId: string;
+  he: { title: string; description: string };
+  en: { title: string; description: string };
+}
+
 export interface EditorValues {
   he: Record<string, string>;
   en: Record<string, string>;
   shared: Record<string, string>;
   facts: FactRow[];
+  highlights: HighlightRow[];
 }
 
 export type PublishState = 'published' | 'pending' | 'never';
@@ -123,6 +133,7 @@ const ConferenceContentEditor = ({
         en: only(current.en, keys),
         shared: only(current.shared, sharedKeys),
         ...(entry.special === 'facts' ? { facts: current.facts } : {}),
+        ...(entry.special === 'highlights' ? { highlights: current.highlights } : {}),
       };
     },
     [slug],
@@ -193,6 +204,10 @@ const ConferenceContentEditor = ({
   const setFacts = (facts: FactRow[]) => {
     setValues((held) => ({ ...held, facts }));
     touch('venue');
+  };
+  const setHighlights = (highlights: HighlightRow[]) => {
+    setValues((held) => ({ ...held, highlights }));
+    touch('highlights');
   };
 
   /* ---- publishing ------------------------------------------------ */
@@ -419,6 +434,16 @@ const ConferenceContentEditor = ({
 
         {section.special === 'facts' ? (
           <FactsEditor uiLocale={locale} facts={values.facts} onChange={setFacts} />
+        ) : null}
+
+        {section.special === 'highlights' ? (
+          <HighlightsEditor
+            uiLocale={locale}
+            cards={values.highlights}
+            media={media}
+            onChange={setHighlights}
+            onUploaded={(item) => setMedia((held) => [item, ...held])}
+          />
         ) : null}
 
         {section.scene ? (
@@ -718,6 +743,117 @@ const FactsEditor = ({
             <button type="button" onClick={() => onChange(rows.filter((_, at) => at !== index))} className={`${BTN} self-start`}>
               {UI.removeRow[uiLocale]}
             </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+
+const EMPTY_CARD: HighlightRow = {
+  icon: 'talks',
+  imageId: '',
+  he: { title: '', description: '' },
+  en: { title: '', description: '' },
+};
+
+/*
+ * The "what awaits you" cards: up to four, each an icon, a picture and
+ * its words in both languages. One row per card, the two languages
+ * side by side as everywhere else in the editor.
+ */
+const HighlightsEditor = ({
+  uiLocale,
+  cards,
+  media,
+  onChange,
+  onUploaded,
+}: {
+  uiLocale: Locale;
+  cards: HighlightRow[];
+  media: MediaItem[];
+  onChange: (cards: HighlightRow[]) => void;
+  onUploaded: (item: MediaItem) => void;
+}) => {
+  const update = (index: number, patch: (card: HighlightRow) => HighlightRow) =>
+    onChange(cards.map((card, at) => (at === index ? patch(card) : card)));
+  const move = (index: number, by: -1 | 1) => {
+    const target = index + by;
+    if (target < 0 || target >= cards.length) return;
+    const next = [...cards];
+    [next[index], next[target]] = [next[target]!, next[index]!];
+    onChange(next);
+  };
+  const imageSlot = (index: number): SectionMedia => ({
+    key: `highlight-${index}`,
+    kind: 'image',
+    label: UI.highlightImage,
+  });
+  return (
+    <div className="mt-5 rounded-lg border border-[var(--c-line)] p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-[var(--c-text)]">{UI.highlights[uiLocale]}</h3>
+        {cards.length < 4 ? (
+          <button type="button" onClick={() => onChange([...cards, EMPTY_CARD])} className={BTN}>
+            + {UI.addRow[uiLocale]}
+          </button>
+        ) : null}
+      </div>
+      <div className="flex flex-col gap-3">
+        {cards.map((card, index) => (
+          <div key={index} className="grid gap-3 rounded-md border border-[var(--c-line)] p-3 lg:grid-cols-[150px_1fr_1fr_200px]">
+            <div className="flex flex-col gap-2">
+              <label className="block">
+                <span className={LABEL}>{`${UI.highlightCard[uiLocale]} ${index + 1} · ${UI.factIcon[uiLocale]}`}</span>
+                <select value={card.icon} onChange={(event) => update(index, (c) => ({ ...c, icon: event.target.value }))} className={INPUT}>
+                  {HIGHLIGHT_ICONS.map((icon) => (
+                    <option key={icon} value={icon}>
+                      {HIGHLIGHT_ICON_LABELS[icon][uiLocale]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="flex flex-wrap gap-1">
+                <button type="button" onClick={() => move(index, -1)} disabled={index === 0} className={BTN} aria-label="↑">
+                  ↑
+                </button>
+                <button type="button" onClick={() => move(index, 1)} disabled={index === cards.length - 1} className={BTN} aria-label="↓">
+                  ↓
+                </button>
+                <button type="button" onClick={() => onChange(cards.filter((_, at) => at !== index))} className={BTN}>
+                  {UI.removeRow[uiLocale]}
+                </button>
+              </div>
+            </div>
+            {(['he', 'en'] as const).map((lang) => (
+              <div key={lang} className="flex flex-col gap-2">
+                <input
+                  dir={lang === 'he' ? 'rtl' : 'ltr'}
+                  value={card[lang].title}
+                  placeholder={`${UI.highlightTitle[uiLocale]} · ${UI[lang][uiLocale]}`}
+                  onChange={(event) => update(index, (c) => ({ ...c, [lang]: { ...c[lang], title: event.target.value } }))}
+                  className={INPUT}
+                />
+                <textarea
+                  dir={lang === 'he' ? 'rtl' : 'ltr'}
+                  rows={2}
+                  value={card[lang].description}
+                  placeholder={`${UI.highlightDescription[uiLocale]} · ${UI[lang][uiLocale]}`}
+                  onChange={(event) => update(index, (c) => ({ ...c, [lang]: { ...c[lang], description: event.target.value } }))}
+                  className={`${INPUT} resize-y`}
+                />
+              </div>
+            ))}
+            <MediaField
+              slot={imageSlot(index)}
+              uiLocale={uiLocale}
+              media={media}
+              value={card.imageId}
+              onChange={(id) => update(index, (c) => ({ ...c, imageId: id }))}
+              onUploaded={onUploaded}
+            />
           </div>
         ))}
       </div>

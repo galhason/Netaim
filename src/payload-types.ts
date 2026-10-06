@@ -356,6 +356,18 @@ export interface Event {
       line?: string | null;
       image?: (number | null) | Media;
     };
+    highlights?: {
+      title?: string | null;
+      items?:
+        | {
+            icon?: ('talks' | 'speakers' | 'partners' | 'venue' | 'workshops' | 'networking' | 'tours' | 'food') | null;
+            title?: string | null;
+            description?: string | null;
+            image?: (number | null) | Media;
+            id?: string | null;
+          }[]
+        | null;
+    };
   };
   atmosphere?: ('bronze' | 'innovation' | 'daylight' | 'morning' | 'nature' | 'stage') | null;
   phase:
@@ -1318,6 +1330,20 @@ export interface EventsSelect<T extends boolean = true> {
               line?: T;
               image?: T;
             };
+        highlights?:
+          | T
+          | {
+              title?: T;
+              items?:
+                | T
+                | {
+                    icon?: T;
+                    title?: T;
+                    description?: T;
+                    image?: T;
+                    id?: T;
+                  };
+            };
       };
   atmosphere?: T;
   phase?: T;
@@ -1904,6 +1930,10 @@ export interface Site {
    */
   activeConference?: (number | null) | Event;
   /**
+   * A published conference that only signed-in Netaim team members may see. Everyone else sees "the conference is being prepared". Empty: every published conference is open to all.
+   */
+  staffOnlyConference?: (number | null) | Event;
+  /**
    * The logo drawn on light backgrounds — the daylight pages and the footer.
    */
   logo?: (number | null) | Media;
@@ -1987,6 +2017,7 @@ export interface OpeningPageSelect<T extends boolean = true> {
  */
 export interface SiteSelect<T extends boolean = true> {
   activeConference?: T;
+  staffOnlyConference?: T;
   logo?: T;
   logoOnDark?: T;
   updatedAt?: T;

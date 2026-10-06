@@ -6,7 +6,8 @@ import { isSupportedLocale, type Locale } from '@/config/locales';
 import { ConferenceFooter } from '@/features/cinematic';
 import { ConferenceBar } from '@/features/conference';
 import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
-import { getActiveConferenceSlug, getSiteBrand } from '@/features/events';
+import { getSiteBrand } from '@/features/events';
+import { visibleSiteConference } from '@/features/conference/services/conference-door';
 
 interface SiteLayoutProps {
   children: ReactNode;
@@ -27,7 +28,7 @@ const SiteLayout = async ({ children, params }: SiteLayoutProps) => {
   }
   setRequestLocale(locale);
 
-  const slug = await getActiveConferenceSlug(locale as Locale).catch(
+  const slug = await visibleSiteConference(locale as Locale).catch(
     () => null,
   );
   /* Resolved per request, never cached: the bar says who is looking. */

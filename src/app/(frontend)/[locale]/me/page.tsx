@@ -27,12 +27,14 @@ import {
 import { myConnections, myUnreadByConnection } from '@/features/networking';
 import { listMyAnnouncements } from '@/features/notifications';
 import { listDirectoryParticipants } from '@/infrastructure';
-import { getActiveConferenceSlug, getSiteBrand } from '@/features/events';
+import { getSiteBrand } from '@/features/events';
 import { listAgenda, myActivities } from '@/features/program';
 import type { SessionSummary } from '@/features/program';
 import { formatDayLabel, formatTimeLabel } from '@/shared';
 import { joinConferenceAction, leaveConferenceAction } from './actions';
 import SignInScreen from './sign-in-screen';
+import { visibleSiteConference } from '@/features/conference/services/conference-door';
+import { readReturnPath, returnUrl } from '@/shared/utils/return-path';
 
 /*
  * The door into the Personal Lounge. One conference — the guest walks
@@ -51,6 +53,7 @@ interface AccountPageProps {
     detail?: string;
     view?: string;
     event?: string;
+    next?: string;
   }>;
 }
 
@@ -109,8 +112,17 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
     detail,
     view,
     event: eventParam,
+    next: nextParam,
   } = await searchParams;
+  const returnTo = readReturnPath(nextParam);
   const account = await getMyAccount(locale);
+  /*
+   * Someone sent here to sign in who already is goes straight back to
+   * the page that asked.
+   */
+  if (account && returnTo) {
+    redirect(returnUrl(returnTo));
+  }
   const siteLogo = await getSiteBrand();
   const barViewer = await conferenceBarViewer();
   const ui = ACCOUNT_UI;
@@ -122,7 +134,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
      * registration form. Resolved rather than hard-coded, so the link
      * follows whichever conference the Studio has named as live.
      */
-    const openSlug = await getActiveConferenceSlug(locale).catch(() => null);
+    const openSlug = await visibleSiteConference(locale).catch(() => null);
     const registerHref = openSlug
       ? `/${locale}/events/${openSlug}/register`
       : null;
@@ -147,6 +159,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
       totpError,
       link,
       detail,
+      next: returnTo ?? undefined,
     })) {
       if (value) carried.set(key, value);
     }
@@ -160,6 +173,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
         state={state}
         ticket={ticket}
         totpError={totpError}
+        next={returnTo}
         link={link}
         detail={detail}
         registerHref={registerHref}
@@ -203,7 +217,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
      * The conference is the site, so the directory is the site's own
      * conference — not a list of ones this account happens to hold.
      */
-    const directorySlug = await getActiveConferenceSlug(locale).catch(
+    const directorySlug = await visibleSiteConference(locale).catch(
       () => null,
     );
     const platformPeople =
@@ -252,7 +266,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
      */
     const activeSlug = content
       ? null
-      : await getActiveConferenceSlug(locale).catch(() => null);
+      : await visibleSiteConference(locale).catch(() => null);
     const mySchedule = activeSlug
       ? await myActivities(activeSlug, locale).catch(() => null)
       : null;

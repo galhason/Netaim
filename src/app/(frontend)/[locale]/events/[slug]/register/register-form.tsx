@@ -13,7 +13,8 @@ import Link from 'next/link';
 import type { Locale } from '@/config/locales';
 import { isStrongPassword } from '@/features/registration/schemas/password';
 import { isLatinName } from '@/features/registration/schemas/latin-name';
-import { CountrySelect, MediaConsentDialog } from '@/features/registration/components';
+import { CountrySelect, MediaConsentDialog, PhoneField } from '@/features/registration/components';
+import { readPhone } from '@/shared/utils/phone';
 import {
   checkEmailAvailableAction,
   requestCodeAction,
@@ -128,7 +129,9 @@ type Values = {
   firstName: string;
   lastName: string;
   email: string;
+  /* The number as typed, and the country whose calling code goes in front of it. */
   phone: string;
+  phoneCountry: string;
   organization: string;
   role: string;
   country: string;
@@ -143,6 +146,7 @@ const EMPTY: Values = {
   lastName: '',
   email: '',
   phone: '',
+  phoneCountry: 'IL',
   organization: '',
   role: '',
   country: '',
@@ -159,6 +163,7 @@ const EMPTY: Values = {
  */
 const REFUSAL_FIELD: Record<string, { step: 1 | 2; field?: string }> = {
   weakPassword: { step: 1, field: 'password' },
+  phone: { step: 1, field: 'phone' },
   /*
    * No `field`: a taken address is not a typo to correct in place, it
    * is a fork in the road. It gets the notice with both ways out.
@@ -357,9 +362,9 @@ const RegisterForm = ({
     if (!values.email.trim()) errors.email = f.required;
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim()))
       errors.email = f.email;
-    if (!values.phone.trim()) errors.phone = f.required;
-    else if (!/^[+\d][\d\s\-()]{6,}$/.test(values.phone.trim()))
-      errors.phone = f.phone;
+    /* The same reading the server makes: the country's code, the number written at home. */
+    const phone = readPhone(values.phoneCountry, values.phone);
+    if (!phone.ok) errors.phone = phone.reason === 'missing' ? f.required : f.phone;
     if (!password) errors.password = f.required;
     else if (!isStrongPassword(password)) errors.password = f.password;
     if (!passwordConfirm) errors.passwordConfirm = f.required;
@@ -565,20 +570,19 @@ const RegisterForm = ({
               <label htmlFor="reg-phone" className={labelCls}>
                 {labels.phone} <span aria-hidden="true">*</span>
               </label>
-              <input
+              <PhoneField
+                locale={locale}
                 id="reg-phone"
-                name="phone"
-                type="tel"
                 required
-                autoComplete="tel"
-                inputMode="tel"
-                dir="ltr"
-                placeholder="050-1234567"
-                value={values.phone}
-                onChange={set('phone')}
+                country={values.phoneCountry}
+                number={values.phone}
+                onChange={(next) => {
+                  setValues((current) => ({ ...current, phone: next.number, phoneCountry: next.country }));
+                  clearError('phone');
+                }}
                 aria-invalid={Boolean(fieldErrors.phone)}
                 aria-describedby={describe('phone')}
-                className={`${cls('phone')} text-start`}
+                className={cls('phone')}
               />
               <FieldError id="err-phone" text={fieldErrors.phone} />
             </div>
@@ -856,6 +860,7 @@ const RegisterForm = ({
             <input type="hidden" name="lastName" value={values.lastName} />
             <input type="hidden" name="email" value={values.email} />
             <input type="hidden" name="phone" value={values.phone} />
+            <input type="hidden" name="phoneCountry" value={values.phoneCountry} />
             <input type="hidden" name="password" value={password} />
             <input type="hidden" name="passwordConfirm" value={passwordConfirm} />
           </>

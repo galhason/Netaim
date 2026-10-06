@@ -19,6 +19,9 @@ export {
 export { default as ActivityCard } from './components/activity-card';
 export { default as ActivityDrawer } from './components/activity-drawer';
 export { default as ConferenceBar } from './components/conference-bar';
+export { default as ConferencePreparing } from './components/conference-preparing';
+export { default as TeamPreviewNote } from './components/team-preview-note';
+export { PREPARING_COPY } from './constants/preparing-copy';
 export type { ConferenceBarViewer, ConferenceBarProps } from './components/conference-bar';
 export { default as FollowButton } from './components/follow-button';
 export { default as SpeakerCard } from './components/speaker-card';

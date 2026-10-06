@@ -61,6 +61,57 @@ export const payloadSetActiveConference = async (
 };
 
 /*
+ * The conference open to the Netaim team only, by slug — whatever its
+ * publication state, because the door belongs to the conference and
+ * stays shut across a re-publish. Read with system access: every
+ * visitor's page asks whether its conference is open.
+ */
+export const payloadStaffOnlyConferenceSlug = async (): Promise<string | null> => {
+  const payload = await getSystemPayload();
+  const site = await payload.findGlobal({ slug: 'site', depth: 1 });
+  const closed = site?.staffOnlyConference;
+  return closed && typeof closed === 'object' ? closed.slug ?? null : null;
+};
+
+/*
+ * Close a conference to everyone but the team, or (null) open it again.
+ * Under the acting creator, with access control enforced, like the
+ * live-site pointer above.
+ */
+export const payloadSetStaffOnlyConference = async (
+  slug: string | null,
+): Promise<void> => {
+  const context = await actorContext();
+  if (!context) {
+    throw new Error('Sign-in required');
+  }
+  const { payload, user } = context;
+  let staffOnlyConference: number | null = null;
+  if (slug) {
+    const found = await payload.find({
+      collection: 'events',
+      overrideAccess: false,
+      user,
+      draft: true,
+      where: { slug: { equals: slug } },
+      limit: 1,
+      depth: 0,
+    });
+    const event = found.docs[0];
+    if (!event) {
+      throw new Error('Event not found');
+    }
+    staffOnlyConference = Number(event.id);
+  }
+  await payload.updateGlobal({
+    slug: 'site',
+    overrideAccess: false,
+    user,
+    data: { staffOnlyConference },
+  });
+};
+
+/*
  * The site's logo, as two URLs.
  *
  * Read with system access, like the pointer above: the logo is drawn in

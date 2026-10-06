@@ -310,6 +310,44 @@ export const Events: CollectionConfig = {
             { name: 'image', type: 'relationship', relationTo: 'media' },
           ],
         },
+        /*
+         * "What awaits you" — the heading and up to four cards (a small
+         * icon, a title, a line and a picture) the site shows beneath
+         * the story. Shaped like the venue facts: the rows are one list,
+         * their words per language.
+         */
+        {
+          name: 'highlights',
+          type: 'group',
+          fields: [
+            { name: 'title', type: 'text', localized: true },
+            {
+              name: 'items',
+              type: 'array',
+              maxRows: 4,
+              fields: [
+                {
+                  name: 'icon',
+                  type: 'select',
+                  defaultValue: 'talks',
+                  options: [
+                    { label: 'Talks', value: 'talks' },
+                    { label: 'Speakers', value: 'speakers' },
+                    { label: 'Partners', value: 'partners' },
+                    { label: 'Venue', value: 'venue' },
+                    { label: 'Workshops', value: 'workshops' },
+                    { label: 'Networking', value: 'networking' },
+                    { label: 'Tours', value: 'tours' },
+                    { label: 'Food', value: 'food' },
+                  ],
+                },
+                { name: 'title', type: 'text', localized: true },
+                { name: 'description', type: 'textarea', localized: true },
+                { name: 'image', type: 'relationship', relationTo: 'media' },
+              ],
+            },
+          ],
+        },
       ],
     },
     {

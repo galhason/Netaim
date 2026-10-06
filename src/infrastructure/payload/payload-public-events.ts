@@ -123,6 +123,15 @@ export const toOpeningContent = (event: Event): EventOpeningContent => {
       line: opening?.closing?.line ?? undefined,
       ...sceneMedia(opening?.closing?.image),
     },
+    highlights: {
+      title: opening?.highlights?.title ?? undefined,
+      items: (opening?.highlights?.items ?? []).map((item) => ({
+        icon: item.icon ?? undefined,
+        title: item.title ?? undefined,
+        description: item.description ?? undefined,
+        imageUrl: mediaUrl(item.image),
+      })),
+    },
   };
 };
 

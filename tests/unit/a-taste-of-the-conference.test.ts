@@ -68,6 +68,7 @@ const opening = (over: Partial<EventOpeningContent> = {}): EventOpeningContent =
   speakers: [],
   venue: { facts: [] },
   closing: {},
+  highlights: { items: [] },
   preview: {},
   programDays: [],
   ...over,
@@ -200,7 +201,7 @@ describe('the Studio offers only what the page shows', () => {
       '@/features/studio/constants/conference-sections'
     );
     const ids = CONFERENCE_SECTIONS.map((entry) => entry.id);
-    expect(ids).toEqual(['identity', 'story', 'venue', 'closing']);
+    expect(ids).toEqual(['identity', 'story', 'highlights', 'venue', 'closing']);
   });
 
   it('keeps what was written: the write path still knows every field', () => {

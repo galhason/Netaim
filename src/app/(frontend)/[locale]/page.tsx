@@ -7,7 +7,9 @@ import {
   getConferenceExperience,
 } from '@/features/cinematic';
 import { getActiveConferenceSlug, getSiteBrand } from '@/features/events';
+import { ConferencePreparing, TeamPreviewNote } from '@/features/conference';
 import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
+import { closedSitePage, conferenceDoor } from '@/features/conference/services/conference-door';
 import { currentParticipant, myAreaHref } from '@/features/registration';
 import '@/scenes';
 
@@ -35,6 +37,12 @@ const ConferenceLandingPage = async ({
   const slug = await getActiveConferenceSlug(locale as Locale).catch(
     () => null,
   );
+  /* A conference kept to the Netaim team shows everyone else that it is being prepared. */
+  const closed = slug ? await closedSitePage(slug, locale as Locale) : null;
+  if (closed) {
+    return <ConferencePreparing {...closed} />;
+  }
+  const teamPreview = slug ? (await conferenceDoor(slug)).staffOnly : false;
   const experience = slug
     ? await getConferenceExperience(slug, locale as Locale)
     : null;
@@ -83,6 +91,7 @@ const ConferenceLandingPage = async ({
             : null
         }
       />
+      {teamPreview && slug ? <TeamPreviewNote locale={locale as Locale} slug={slug} /> : null}
     </>
   );
 };

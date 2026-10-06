@@ -1,6 +1,7 @@
 export { default as CountryFlag } from './components/country-flag';
 export { default as CountrySelect } from './components/country-select';
 export { default as DietarySelect } from './components/dietary-select';
+export { default as PhoneField } from './components/phone-field';
 export {
   DIETARY_KEYS,
   DIETARY_LABELS,

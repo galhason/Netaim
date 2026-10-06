@@ -20,6 +20,8 @@ import {
 } from '@/features/registration';
 import { scheduleConflictFor } from '@/features/account';
 import { isCountryCode } from '@/shared/constants/countries';
+import { readPhone } from '@/shared/utils/phone';
+import { mayEnterConference } from '@/features/conference/services/conference-door';
 
 const localeOf = (value: string): Locale =>
   isSupportedLocale(value) ? value : FALLBACK_LOCALE;
@@ -53,6 +55,7 @@ export interface RegisterKeptValues {
   lastName: string;
   email: string;
   phone: string;
+  phoneCountry: string;
   organization: string;
   role: string;
   country: string;
@@ -84,6 +87,7 @@ const keptFrom = (formData: FormData): RegisterKeptValues => {
     lastName: text('lastName'),
     email: text('email'),
     phone: text('phone'),
+    phoneCountry: text('phoneCountry').toUpperCase() || 'IL',
     organization: text('organization'),
     role: text('role'),
     country: text('country').toUpperCase(),
@@ -101,7 +105,8 @@ export const requestCodeAction = async (
   const slug = String(formData.get('slug') ?? '');
   const locale = localeOf(String(formData.get('locale') ?? ''));
   const base = `/${locale}/events/${slug}/register`;
-  if (!slug) {
+  /* A conference kept to the Netaim team registers nobody else; the page says why. */
+  if (!slug || !(await mayEnterConference(slug))) {
     redirect(base);
   }
 
@@ -142,6 +147,18 @@ export const requestCodeAction = async (
   if (!isLatinName(kept.lastName)) {
     return refuse('lastNameScript');
   }
+
+  /*
+   * The number is kept in international form, the country's calling
+   * code in front of it — read here the same way the form read it, and
+   * written back into the submission so everything after this sees one
+   * spelling, +972501234567, whatever country the guest dials from.
+   */
+  const phone = readPhone(kept.phoneCountry, kept.phone);
+  if (!phone.ok) {
+    return refuse('phone');
+  }
+  formData.set('phone', phone.e164);
 
   /*
    * The country is asked on the second step and is not optional there.
@@ -252,7 +269,7 @@ export const resendCodeAction = async (formData: FormData) => {
   const base = `/${locale}/events/${slug}/register`;
   const from = String(formData.get('email') ?? '').trim();
   const to = String(formData.get('newEmail') ?? '').trim() || from;
-  if (!slug || !from) {
+  if (!slug || !from || !(await mayEnterConference(slug))) {
     redirect(base);
   }
 
@@ -295,7 +312,7 @@ export const confirmCodeAction = async (formData: FormData) => {
   const back = (extra: string) =>
     `${base}?verify=${encodeURIComponent(email)}&${extra}`;
 
-  if (!slug || !email) {
+  if (!slug || !email || !(await mayEnterConference(slug))) {
     redirect(base);
   }
 

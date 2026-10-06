@@ -2,6 +2,11 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { checkRateLimit } from '@/features/access';
 import { marketingRequestAuthorized, publicConference } from '@/features/marketing';
+import {
+  marketingAudience,
+  marketingCacheControl,
+  marketingMayShow,
+} from '@/features/conference/services/conference-door';
 import { newRequestId, withRequestId } from '@/shared/logging/request-context';
 import { siteOrigin } from '@/shared/utils/site-origin';
 
@@ -54,6 +59,11 @@ export const GET = async (
 
   const requestId = newRequestId();
   try {
+    /* A conference kept to the Netaim team is not found, except by the team. */
+    const audience = await marketingAudience(request.nextUrl.searchParams.get('audience'));
+    if (!(await marketingMayShow(slug, audience))) {
+      return NextResponse.json({ error: 'not found' }, { status: 404 });
+    }
     const conference = await withRequestId(requestId, () =>
       publicConference(slug, locale as Locale, siteOrigin(request)),
     );
@@ -61,7 +71,7 @@ export const GET = async (
       return NextResponse.json({ error: 'not found' }, { status: 404 });
     }
     return NextResponse.json(conference, {
-      headers: { 'Cache-Control': 'no-store', 'x-request-id': requestId },
+      headers: { 'Cache-Control': marketingCacheControl(audience), 'x-request-id': requestId },
     });
   } catch {
     return NextResponse.json(

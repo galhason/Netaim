@@ -1,13 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { SITE_ORIGIN, withBasePath } from '@/config/site';
 import { staffRoleOf } from '@/features/access';
-import { getActiveConferenceSlug } from '@/features/events';
 import { mySpotlight } from '@/features/notifications';
 import {
   clearSession,
   currentParticipant,
   getMyDetails,
 } from '@/features/registration';
+import { visibleSiteConference } from '@/features/conference/services/conference-door';
 
 /*
  * "Am I signed in?" — asked by the browser, for the WordPress site.
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
   const locale = asked === 'en' || asked === 'he' ? asked : preferred === 'en' ? 'en' : 'he';
   const [details, slug, staffRole] = await Promise.all([
     getMyDetails().catch(() => null),
-    getActiveConferenceSlug(locale).catch(() => null),
+    visibleSiteConference(locale).catch(() => null),
     /*
      * The Studio door is offered to the Netaim team only. This is a
      * convenience, not the lock: /studio checks the grants itself.

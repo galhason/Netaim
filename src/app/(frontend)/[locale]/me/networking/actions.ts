@@ -16,6 +16,7 @@ import {
   suggestAnotherTime,
   unblockParticipant,
 } from '@/features/networking';
+import { mayEnterConference } from '@/features/conference/services/conference-door';
 
 /*
  * These moved here from the conference's own networking page when that
@@ -148,7 +149,7 @@ export const proposeMeetingAction = async (formData: FormData) => {
   const guestId = String(formData.get('guestId') ?? '');
   const startsAt = toIso(formData.get('startsAt'));
   const endsAt = toIso(formData.get('endsAt'));
-  if (!slug || !guestId || !startsAt || !endsAt) {
+  if (!slug || !guestId || !startsAt || !endsAt || !(await mayEnterConference(slug))) {
     return;
   }
   const meeting = await proposeMeeting(

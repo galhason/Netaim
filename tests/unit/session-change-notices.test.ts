@@ -83,6 +83,6 @@ describe('every Studio path passes through the notice', () => {
     expect(links.includes("type.endsWith('.activity')")).toBe(true);
     expect(links.includes('/my-activities')).toBe(true);
     const inbox = read('src/app/(frontend)/[locale]/me/messages/page.tsx');
-    expect(inbox.includes('getActiveConferenceSlug(locale)'), 'the inbox reads the live conference like the bell does').toBe(true);
+    expect(inbox.includes('visibleSiteConference(locale)'), 'the inbox reads the live conference like the bell does').toBe(true);
   });
 });

@@ -12,6 +12,7 @@ export const AUDIT_ACTIONS = [
   'event.restored',
   'event.deleted',
   'event.activeConferenceChanged',
+  'event.audienceChanged',
 
   /* Published content */
   'content.composerSaved',

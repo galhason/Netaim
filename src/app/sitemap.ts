@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { SUPPORTED_LOCALES, type Locale } from '@/config/locales';
-import { listPortalEvents } from '@/features/events';
+import { getStaffOnlyConferenceSlug, listPortalEvents } from '@/features/events';
 
 /*
  * The public map of the site — and only the public part of it.
@@ -39,11 +39,19 @@ const sitemap = async (): Promise<MetadataRoute.Sitemap> => {
     return [];
   }
   const now = new Date();
+  /*
+   * A conference kept to the Netaim team is not offered to a crawler;
+   * if the door cannot be read, nothing is.
+   */
+  const closed = await getStaffOnlyConferenceSlug().catch(() => undefined);
+  if (closed === undefined) {
+    return [];
+  }
 
   const perLocale = await Promise.all(
     SUPPORTED_LOCALES.map(async (locale: Locale) => {
       const events = await listPortalEvents(locale).catch(() => []);
-      return events.flatMap((event) =>
+      return events.filter((event) => event.slug !== closed).flatMap((event) =>
         PUBLIC_CONFERENCE_PATHS.map((path) => ({
           url: `${base}/${locale}/events/${event.slug}${path}`,
           lastModified: now,

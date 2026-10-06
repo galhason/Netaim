@@ -167,10 +167,23 @@ export interface EventOpeningInput {
   venueNarrative?: string;
   venueAccessibility?: string;
   venueEmergency?: string;
-  venueFacts?: { label: string; icon: string; description?: string }[];
+  /*
+   * The facts and the highlight cards are one list each, their words
+   * per language. A row keeps its id across a save in the other
+   * language, or that save would make new rows and lose the first
+   * language's words.
+   */
+  venueFacts?: { id?: string; label: string; icon: string; description?: string }[];
   venueImageId?: string | null;
   closingLine?: string;
   closingImageId?: string | null;
+  /*
+   * "What awaits you": the heading, and the whole list of cards when
+   * present — each an icon, a title and a line for the locale being
+   * saved, and a picture.
+   */
+  highlightsTitle?: string;
+  highlights?: { id?: string; icon: string; title: string; description?: string; imageId?: string | null }[];
   /*
    * The "a taste of the conference" section: its heading, the line
    * beneath it and the picture behind the band. Words the WordPress
@@ -234,10 +247,14 @@ export interface EventOpeningDraft {
     narrative?: string;
     accessibility?: string;
     emergency?: string;
-    facts?: { label?: string; icon?: string; description?: string }[];
+    facts?: { id?: string; label?: string; icon?: string; description?: string }[];
     imageId?: string;
   };
   closing: { line?: string; imageId?: string };
+  highlights: {
+    title?: string;
+    items: { id?: string; icon?: string; title?: string; description?: string; imageId?: string }[];
+  };
   preview: { title?: string; lede?: string; imageId?: string };
   moments: { imageId?: string; caption?: string }[];
   speakers: {
@@ -312,6 +329,10 @@ export interface EventOpeningContent {
     facts: { label?: string; icon?: string; description?: string }[];
   };
   closing: { line?: string; imageUrl?: string; videoUrl?: string };
+  highlights: {
+    title?: string;
+    items: { icon?: string; title?: string; description?: string; imageUrl?: string }[];
+  };
   preview: { title?: string; lede?: string; imageUrl?: string };
   programDays: { theme?: string; description?: string; imageUrl?: string }[];
 }

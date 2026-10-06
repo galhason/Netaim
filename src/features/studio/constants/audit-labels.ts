@@ -17,6 +17,10 @@ const LABELS: Record<AuditAction, Record<Locale, string>> = {
     he: 'הכנס הפעיל באתר הוחלף',
     en: 'Live site changed',
   },
+  'event.audienceChanged': {
+    he: 'הוחלף מי רואה את הכנס',
+    en: 'Who sees the conference changed',
+  },
 
   'content.composerSaved': { he: 'תוכן נשמר בקומפוזר', en: 'Composer saved' },
   'content.openingSaved': { he: 'תוכן הפתיחה נשמר', en: 'Opening saved' },

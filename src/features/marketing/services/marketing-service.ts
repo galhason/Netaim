@@ -12,6 +12,8 @@ import { DEFAULT_VENUE_TIMEZONE, venueDayKey } from '@/shared';
 import { absoluteUrl } from '../utils/absolute-url';
 import type {
   PublicClosing,
+  PublicHighlight,
+  PublicHighlights,
   PublicConference,
   PublicImage,
   PublicQuote,
@@ -147,6 +149,35 @@ const previewOf = (
      * shift every row after them onto the wrong day.
      */
     ...(named.length > 0 ? { days } : {}),
+  };
+};
+
+/*
+ * The cards, each rebuilt field by field. A card without a title is not
+ * a card; with none, the section is absent rather than empty.
+ */
+const highlightsOf = (
+  opening: EventOpeningContent | null,
+  origin: string,
+): PublicHighlights | undefined => {
+  const highlights = opening?.highlights;
+  if (!highlights) {
+    return undefined;
+  }
+  const items: PublicHighlight[] = highlights.items
+    .filter((item) => Boolean(item.title))
+    .map((item) => ({
+      icon: item.icon ?? 'talks',
+      title: item.title ?? '',
+      ...(item.description ? { description: item.description } : {}),
+      ...(image(item.imageUrl, origin) ? { image: image(item.imageUrl, origin) } : {}),
+    }));
+  if (items.length === 0) {
+    return undefined;
+  }
+  return {
+    ...(highlights.title ? { title: highlights.title } : {}),
+    items,
   };
 };
 
@@ -302,6 +333,7 @@ const conferenceOf = (
   ...(quoteOf(opening, origin) ? { quote: quoteOf(opening, origin) } : {}),
   ...(opening?.closing?.line ? { closingLine: opening.closing.line } : {}),
   ...(closingOf(opening, origin) ? { closing: closingOf(opening, origin) } : {}),
+  ...(highlightsOf(opening, origin) ? { highlights: highlightsOf(opening, origin) } : {}),
   ...(venueOf(opening, origin) ? { venue: venueOf(opening, origin) } : {}),
   ...(previewOf(opening, origin) ? { preview: previewOf(opening, origin) } : {}),
   sessions,

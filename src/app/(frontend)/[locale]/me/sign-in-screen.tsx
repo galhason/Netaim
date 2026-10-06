@@ -36,6 +36,8 @@ interface SignInScreenProps {
   state?: string;
   ticket?: string;
   totpError?: string;
+  /* A checked return path: where signing in leads back to. */
+  next?: string | null;
   link?: string;
   detail?: string;
   /* Where an account is made: the live conference's form. Null when none is live. */
@@ -152,6 +154,7 @@ const SignInScreen = ({
   state,
   ticket,
   totpError,
+  next,
   link,
   detail,
   registerHref,
@@ -207,6 +210,7 @@ const SignInScreen = ({
           <form action={totpSignInAction} className="mx-auto flex max-w-md flex-col gap-5">
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="ticket" value={ticket} />
+            {next ? <input type="hidden" name="next" value={next} /> : null}
             <div>
               <label htmlFor="totp-code" className={onboardingCls.label}>
                 {ui.totpCodeLabel[locale]}
@@ -380,6 +384,7 @@ const SignInScreen = ({
 
         <form action={signInAction} className="flex flex-col gap-5">
           <input type="hidden" name="locale" value={locale} />
+          {next ? <input type="hidden" name="next" value={next} /> : null}
           <div>
             <label htmlFor="signin-email" className={onboardingCls.label}>
               {ui.emailLabel[locale]}

@@ -6,6 +6,7 @@ import { isSupportedLocale, type Locale } from '@/config/locales';
 import { ConferenceFooter } from '@/features/cinematic';
 import { ConferenceBar } from '@/features/conference';
 import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
+import { mayEnterConference } from '@/features/conference/services/conference-door';
 import { findPortalEvent, getSiteBrand } from '@/features/events';
 
 interface ExperienceLayoutProps {
@@ -31,6 +32,15 @@ const ExperienceLayout = async ({ children, params }: ExperienceLayoutProps) => 
   }
   setRequestLocale(locale);
   const lang = locale as Locale;
+
+  /*
+   * A conference kept to the team: no chrome for anyone else, since the
+   * bar names the conference and links into it. The page beneath
+   * answers with the "being prepared" page on its own.
+   */
+  if (!(await mayEnterConference(slug))) {
+    return children;
+  }
 
   /*
    * One existence check for the whole group, here rather than four times

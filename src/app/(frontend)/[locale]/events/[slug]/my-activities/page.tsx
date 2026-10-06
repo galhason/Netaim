@@ -6,6 +6,8 @@ import { myMeetings } from '@/features/networking';
 import { buildProgramModel } from '@/features/program';
 import { currentParticipant } from '@/features/registration';
 import { venueDayKey } from '@/shared';
+import { ConferencePreparing } from '@/features/conference';
+import { closedConferencePage } from '@/features/conference/services/conference-door';
 import AutoRefresh from './auto-refresh';
 import { toMeetingVMs } from './meetings';
 import MyScheduleDashboard from './my-schedule-dashboard';
@@ -34,6 +36,12 @@ const MySchedulePage = async ({ params, searchParams }: Props) => {
     notFound();
   }
   setRequestLocale(locale);
+
+  /* A conference kept to the Netaim team shows everyone else that it is being prepared. */
+  const closed = await closedConferencePage(slug, locale, '/my-activities');
+  if (closed) {
+    return <ConferencePreparing {...closed} />;
+  }
   const lang = locale as Locale;
   const { notice, activity } = await searchParams;
 

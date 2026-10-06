@@ -18,6 +18,18 @@ vi.mock('@/features/events', () => ({
   saveEventOpening: async (_slug: string, locale: string, input: Record<string, unknown>) => {
     writes.push({ locale, input });
   },
+  /*
+   * The draft as the store hands it back after the Hebrew pass: the
+   * rows it was given, each with the id the store gave it.
+   */
+  getEventOpeningDraft: async () => {
+    const he = writes.find((w) => w.locale === 'he')?.input ?? {};
+    const rows = (list: unknown) => (Array.isArray(list) ? list : []).map((_row, index) => ({ id: `row${index + 1}` }));
+    return {
+      venue: { facts: rows(he.venueFacts) },
+      highlights: { items: rows(he.highlights) },
+    };
+  },
   saveEventComposition: async () => undefined,
   launchExperience: async () => ({ ok: true, event: {} }),
 }));
@@ -71,9 +83,40 @@ describe('editing a conference section', () => {
     const he = writes.find((w) => w.locale === 'he')!.input;
     const en = writes.find((w) => w.locale === 'en')!.input;
     expect(he.venueFacts).toEqual([{ icon: 'parking', label: 'חניה', description: 'חינם' }]);
-    expect(en.venueFacts).toEqual([{ icon: 'parking', label: 'Parking', description: 'Free' }]);
+    /* The English pass names the row the Hebrew pass made, or it would be a new row without the Hebrew. */
+    expect(en.venueFacts).toEqual([{ id: 'row1', icon: 'parking', label: 'Parking', description: 'Free' }]);
     expect(he.venueMapUrl).toBe('https://maps.example/x');
     expect(en.venueMapUrl).toBeUndefined();
+  });
+
+  it('keeps the "what awaits you" cards one list, by the Hebrew title, each language’s words, the picture once, the rows named on the second pass', async () => {
+    const { saveConferenceSectionAction } = await load();
+    const outcome = await saveConferenceSectionAction({
+      slug: 'brkt',
+      section: 'highlights',
+      he: { highlightsTitle: 'מה מחכה לכם בכנס?', venueName: 'not this section' },
+      en: { highlightsTitle: '' },
+      shared: {},
+      highlights: [
+        { icon: 'talks', imageId: 'm7', he: { title: 'הרצאות', description: 'תכנים' }, en: { title: 'Talks', description: 'Content' } },
+        { icon: 'nonsense', imageId: '', he: { title: 'דוברים', description: '' }, en: { title: '', description: '' } },
+        { icon: 'venue', imageId: 'm9', he: { title: '  ', description: 'no title, no card' }, en: { title: 'Venue', description: '' } },
+      ],
+    });
+    expect(outcome.ok).toBe(true);
+    const he = writes.find((w) => w.locale === 'he')!.input;
+    const en = writes.find((w) => w.locale === 'en')!.input;
+    expect(he.highlightsTitle).toBe('מה מחכה לכם בכנס?');
+    expect(he.venueName, 'nothing outside the section is written').toBeUndefined();
+    expect(he.highlights).toEqual([
+      { icon: 'talks', title: 'הרצאות', description: 'תכנים', imageId: 'm7' },
+      { icon: 'talks', title: 'דוברים', description: '', imageId: null },
+    ]);
+    expect(en.highlightsTitle).toBe('');
+    expect(en.highlights).toEqual([
+      { id: 'row1', icon: 'talks', title: 'Talks', description: 'Content', imageId: 'm7' },
+      { id: 'row2', icon: 'talks', title: '', description: '', imageId: null },
+    ]);
   });
 
   it('writes a fact icon the database can hold: the newer names as they are, the Studio’s older twins mapped, nonsense to accessibility', async () => {

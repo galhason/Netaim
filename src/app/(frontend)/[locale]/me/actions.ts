@@ -4,11 +4,21 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { joinConference, leaveConference } from '@/features/account';
+import { mayEnterConference } from '@/features/conference/services/conference-door';
 import {
   completeTotpSignIn,
   requestAccountLink,
   signInWithPassword,
 } from '@/features/registration';
+import { readReturnPath, returnUrl } from '@/shared/utils/return-path';
+
+/*
+ * The page that sent someone here to sign in, carried through every
+ * step of the sign-in — a wrong password, the second factor — and
+ * returned to at the end. Read through the same narrow check each time.
+ */
+const withNext = (next: string | null): string =>
+  next ? `&next=${encodeURIComponent(next)}` : '';
 
 const readLocale = (formData: FormData): Locale => {
   const locale = String(formData.get('locale') ?? 'he');
@@ -22,23 +32,25 @@ const readLocale = (formData: FormData): Locale => {
  */
 export const signInAction = async (formData: FormData) => {
   const locale = readLocale(formData);
+  const next = readReturnPath(formData.get('next'));
+  const carry = withNext(next);
   const email = String(formData.get('email') ?? '')
     .trim()
     .toLowerCase();
   const password = String(formData.get('password') ?? '');
   if (!email || !password) {
-    redirect(`/${locale}/me?state=wrong`);
+    redirect(`/${locale}/me?state=wrong${carry}`);
   }
   const result = await signInWithPassword(email, password);
   if (!result.ok) {
     if (result.reason === 'totp') {
       redirect(
-        `/${locale}/me?state=totp&ticket=${encodeURIComponent(result.ticket)}`,
+        `/${locale}/me?state=totp&ticket=${encodeURIComponent(result.ticket)}${carry}`,
       );
     }
-    redirect(`/${locale}/me?state=${result.reason}`);
+    redirect(`/${locale}/me?state=${result.reason}${carry}`);
   }
-  redirect(`/${locale}/me`);
+  redirect(next ? returnUrl(next) : `/${locale}/me`);
 };
 
 /*
@@ -48,19 +60,21 @@ export const totpSignInAction = async (formData: FormData) => {
   const locale = readLocale(formData);
   const ticket = String(formData.get('ticket') ?? '');
   const code = String(formData.get('code') ?? '');
+  const next = readReturnPath(formData.get('next'));
+  const carry = withNext(next);
   const outcome = await completeTotpSignIn(ticket, code);
   if (outcome === 'ok') {
-    redirect(`/${locale}/me`);
+    redirect(next ? returnUrl(next) : `/${locale}/me`);
   }
   if (outcome === 'wrong') {
     redirect(
-      `/${locale}/me?state=totp&totpError=wrong&ticket=${encodeURIComponent(ticket)}`,
+      `/${locale}/me?state=totp&totpError=wrong&ticket=${encodeURIComponent(ticket)}${carry}`,
     );
   }
   if (outcome === 'locked') {
-    redirect(`/${locale}/me?state=locked`);
+    redirect(`/${locale}/me?state=locked${carry}`);
   }
-  redirect(`/${locale}/me?state=wrong`);
+  redirect(`/${locale}/me?state=wrong${carry}`);
 };
 
 /*
@@ -123,7 +137,8 @@ export const requestAccountLinkAction = async (formData: FormData) => {
 export const joinConferenceAction = async (formData: FormData) => {
   const locale = readLocale(formData);
   const slug = String(formData.get('slug') ?? '');
-  if (!slug) {
+  /* A conference kept to the Netaim team is joined by the team alone. */
+  if (!slug || !(await mayEnterConference(slug))) {
     return;
   }
 

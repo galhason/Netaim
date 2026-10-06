@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Locale } from '@/config/locales';
 import { phaseIsOffAir } from '@/event-engine';
-import { findEvent, getActiveConferenceSlug, reviewLaunch } from '@/features/events';
+import { findEvent, getActiveConferenceSlug, getStaffOnlyConferenceSlug, reviewLaunch } from '@/features/events';
 import { EVENT_TIMEZONE_OPTIONS } from '@/features/events/constants/timezones';
 import { getStudioLocale } from '@/features/studio';
 import { marketingRepository } from '@/infrastructure';
@@ -14,6 +14,7 @@ import {
   publishFromSettingsAction,
   restoreFromSettingsAction,
   saveConferenceScheduleAction,
+  setConferenceAudienceAction,
 } from './actions';
 
 const t = (he: string, en: string): Record<Locale, string> => ({ he, en });
@@ -37,6 +38,20 @@ const UI = {
   publishedNow: t('פורסם.', 'Published.'),
   publishBlocked: t('הפרסום נעצר בגלל חסמים.', 'Publishing stopped by blockers.'),
   publishRetired: t('כנס בארכיון לא מתפרסם — שחזרו אותו קודם.', 'An archived conference cannot be published — restore it first.'),
+  audience: t('מי רואה את הכנס', 'Who sees the conference'),
+  audienceSub: t(
+    'כנס שפתוח לצוות בלבד מוצג במלואו לחברי צוות נטעים מחוברים, כדי לבדוק שהכול תקין. כל השאר רואים "הכנס בהכנה" וכפתור התחברות. השינוי חל מיד ואינו מפרסם את הטיוטה; באתר וורדפרס הוא מופיע תוך עד 5 דקות.',
+    'A team-only conference is shown in full to signed-in Netaim team members, so they can check it. Everyone else sees "The conference is being prepared" and a sign-in button. The change is immediate and does not publish the draft; WordPress shows it within 5 minutes.',
+  ),
+  staffOnly: t('צוות בלבד', 'Team only'),
+  staffOnlyState: t('רק צוות נטעים מחובר רואה את הכנס.', 'Only signed-in Netaim team members see the conference.'),
+  everyoneState: t('הכנס פתוח לכולם.', 'The conference is open to everyone.'),
+  openToEveryone: t('פתיחה לכולם', 'Open to everyone'),
+  closeToStaff: t('פתיחה לצוות בלבד', 'Make it team only'),
+  publishForTeam: t('כדי שהצוות יוכל לבדוק את הדף, צריך גם לפרסם את הטיוטה (למעלה).', 'For the team to check the page, the draft also needs to be published (above).'),
+  audienceStaffNow: t('הכנס פתוח עכשיו לצוות בלבד.', 'The conference is now open to the team only.'),
+  audienceEveryoneNow: t('הכנס פתוח עכשיו לכולם.', 'The conference is now open to everyone.'),
+  audienceBusy: t('כנס אחר מפורסם ופתוח לצוות בלבד. פתחו אותו לכולם או הורידו אותו קודם.', 'Another published conference is team only. Open it to everyone or take it down first.'),
   active: t('הכנס הפעיל', 'Active conference'),
   activeSub: t('הכנס הפעיל הוא זה שוורדפרס מציגה ושאליו מובילים "התחברות" ו"הרשמה". פלטפורמה אחת — כנס פעיל אחד.', 'The active conference is the one WordPress shows and the one "Sign in" and "Register" lead to. One platform — one active conference.'),
   isActive: t('זה הכנס הפעיל.', 'This is the active conference.'),
@@ -73,9 +88,10 @@ const ConferenceSettingsPage = async ({ params, searchParams }: SettingsPageProp
   const slug = decodeURIComponent(raw);
   const { saved, publish } = await searchParams;
   const locale = await getStudioLocale();
-  const [summary, activeSlug, review, published] = await Promise.all([
+  const [summary, activeSlug, staffOnlySlug, review, published] = await Promise.all([
     findEvent(slug).catch(() => null),
     getActiveConferenceSlug(locale).catch(() => null),
+    getStaffOnlyConferenceSlug().catch(() => null),
     reviewLaunch(slug, locale).catch(() => null),
     marketingRepository.findPublishedIdentity(slug, 'he').catch(() => null),
   ]);
@@ -84,8 +100,15 @@ const ConferenceSettingsPage = async ({ params, searchParams }: SettingsPageProp
   }
   const offAir = phaseIsOffAir(summary.phase);
   const publishState = summary.launched ? 'live' : published ? 'pending' : 'never';
+  const staffOnly = staffOnlySlug === slug;
   const notice =
-    publish === 'live'
+    saved === 'audience-staff'
+      ? UI.audienceStaffNow[locale]
+      : saved === 'audience-everyone'
+        ? UI.audienceEveryoneNow[locale]
+        : saved === 'audience-busy'
+          ? UI.audienceBusy[locale]
+          : publish === 'live'
       ? UI.publishedNow[locale]
       : publish === 'blocked'
         ? UI.publishBlocked[locale]
@@ -162,6 +185,32 @@ const ConferenceSettingsPage = async ({ params, searchParams }: SettingsPageProp
             </button>
           </form>
         ) : null}
+      </section>
+
+      {/* audience */}
+      <section className={CARD}>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-base font-semibold text-[var(--c-text)]">{UI.audience[locale]}</h2>
+          {staffOnly ? (
+            <span className="rounded-full bg-[rgba(245,158,11,0.15)] px-2 py-0.5 text-[11px] font-medium tracking-[0.06em] text-[var(--c-bronze)]">
+              {UI.staffOnly[locale]}
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-1 text-xs text-[var(--c-text-soft)]">{UI.audienceSub[locale]}</p>
+        <p className="mt-3 text-sm text-[var(--c-text)]">
+          {staffOnly ? UI.staffOnlyState[locale] : UI.everyoneState[locale]}
+        </p>
+        {staffOnly && publishState === 'never' ? (
+          <p className="mt-1 text-xs text-[var(--c-text-soft)]">{UI.publishForTeam[locale]}</p>
+        ) : null}
+        <form action={setConferenceAudienceAction} className="mt-4">
+          <input type="hidden" name="slug" value={slug} />
+          <input type="hidden" name="audience" value={staffOnly ? 'everyone' : 'staff'} />
+          <button type="submit" className={staffOnly ? BTN_PRIMARY : BTN}>
+            {staffOnly ? UI.openToEveryone[locale] : UI.closeToStaff[locale]}
+          </button>
+        </form>
       </section>
 
       {/* active */}

@@ -1,4 +1,3 @@
-import { getActiveConferenceSlug } from '@/features/events';
 import { myConnections, myUnreadByConnection } from '@/features/networking';
 import {
   feedItemHref,
@@ -8,6 +7,7 @@ import {
 } from '@/features/notifications';
 import { currentParticipant } from '@/features/registration';
 import { isSupportedLocale, type Locale } from '@/config/locales';
+import { visibleSiteConference } from '@/features/conference/services/conference-door';
 
 /*
  * What the bell in the navigation asks, every half minute or so.
@@ -46,7 +46,7 @@ export const GET = async (
   if (!me) {
     return json({ signedOut: true }, 401);
   }
-  const slug = await getActiveConferenceSlug(locale).catch(() => null);
+  const slug = await visibleSiteConference(locale).catch(() => null);
   if (!slug) {
     return json({ items: [], requests: 0, unread: 0 });
   }

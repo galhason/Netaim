@@ -6,6 +6,7 @@ import { isSupportedLocale, type Locale } from '@/config/locales';
 import { ConferenceFooter } from '@/features/cinematic';
 import { ConferenceBar } from '@/features/conference';
 import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
+import { mayEnterConference } from '@/features/conference/services/conference-door';
 import { getSiteBrand } from '@/features/events';
 
 interface Props {
@@ -28,6 +29,11 @@ const MyScheduleLayout = async ({ children, params }: Props) => {
   }
   setRequestLocale(locale);
   const lang = locale as Locale;
+
+  /* A conference kept to the team: no chrome for anyone else (see the page). */
+  if (!(await mayEnterConference(slug))) {
+    return children;
+  }
 
   const [viewer, logo] = await Promise.all([conferenceBarViewer(), getSiteBrand()]);
 

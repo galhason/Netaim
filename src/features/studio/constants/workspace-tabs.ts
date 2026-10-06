@@ -33,6 +33,7 @@ export const WORKSPACE_TABS: WorkspaceTab[] = [
 
 export const WORKSPACE_UI = {
   live: { he: 'באוויר', en: 'Live' },
+  staffOnly: { he: 'צוות בלבד', en: 'Team only' },
   draft: { he: 'טיוטה', en: 'Draft' },
   changes: { he: 'שינויים לא פורסמו', en: 'Unpublished changes' },
   notActive: {

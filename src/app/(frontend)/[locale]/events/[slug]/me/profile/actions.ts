@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { FALLBACK_LOCALE, isSupportedLocale, type Locale } from '@/config/locales';
 import { updateMyDetails } from '@/features/registration';
 import { isCountryCode } from '@/shared/constants/countries';
+import { phoneToStore } from '@/shared/utils/phone';
 
 /*
  * The guest edits only themselves: the participant id comes from the
@@ -23,7 +24,8 @@ export const saveMyProfileAction = async (formData: FormData) => {
     : FALLBACK_LOCALE;
   const saved = await updateMyDetails({
     name: text(formData.get('name')),
-    phone: text(formData.get('phone')),
+    /* In international form when it reads; as typed when it does not — see phoneToStore. */
+    phone: phoneToStore(String(formData.get('phoneCountry') ?? ''), String(formData.get('phone') ?? '')),
     dietary: text(formData.get('dietary')),
     accessibility: text(formData.get('accessibility')),
     organization: text(formData.get('organization')),

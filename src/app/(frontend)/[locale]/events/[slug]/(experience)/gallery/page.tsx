@@ -6,6 +6,8 @@ import { findPortalEvent } from '@/features/events';
 import { GALLERY_COPY, composeGallery, publishedGallery } from '@/features/gallery';
 import { GalleryCta, GalleryExperience, GalleryHero } from '@/features/gallery/components';
 import { currentParticipant } from '@/features/registration';
+import { ConferencePreparing, PREPARING_COPY } from '@/features/conference';
+import { closedConferencePage, mayEnterConference } from '@/features/conference/services/conference-door';
 import { submitGalleryPhotoAction } from './actions';
 
 interface GalleryPageProps {
@@ -31,6 +33,10 @@ const galleryPath = (locale: Locale, slug: string) =>
 export const generateMetadata = async ({ params }: GalleryPageProps): Promise<Metadata> => {
   const { locale, slug } = await params;
   const lang = (isSupportedLocale(locale) ? locale : 'he') as Locale;
+  /* A conference kept to the team lends its name and pictures to nobody's preview card. */
+  if (!(await mayEnterConference(slug))) {
+    return { title: PREPARING_COPY.title[lang], robots: { index: false, follow: false } };
+  }
   const [event, entries] = await Promise.all([
     findPortalEvent(slug, lang).catch(() => null),
     publishedGallery(slug, lang).catch(() => []),
@@ -64,6 +70,12 @@ const GalleryPage = async ({ params }: GalleryPageProps) => {
   const { locale, slug } = await params;
   const lang = (isSupportedLocale(locale) ? locale : 'he') as Locale;
   setRequestLocale(lang);
+
+  /* A conference kept to the Netaim team shows everyone else that it is being prepared. */
+  const closed = await closedConferencePage(slug, lang, '/gallery');
+  if (closed) {
+    return <ConferencePreparing {...closed} />;
+  }
 
   const [entries, participant, event] = await Promise.all([
     publishedGallery(slug, lang).catch(() => []),

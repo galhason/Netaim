@@ -118,6 +118,23 @@ export interface PublicClosing {
   image?: PublicImage;
 }
 
+/*
+ * "What awaits you": the heading and up to four cards the site draws
+ * beneath the story. Present only once the Studio has written at least
+ * one card, so a site can keep its own block until then.
+ */
+export interface PublicHighlight {
+  icon: string;
+  title: string;
+  description?: string;
+  image?: PublicImage;
+}
+
+export interface PublicHighlights {
+  title?: string;
+  items: PublicHighlight[];
+}
+
 export interface PublicConference {
   slug: string;
   locale: Locale;
@@ -146,6 +163,7 @@ export interface PublicConference {
    */
   closingLine?: string;
   closing?: PublicClosing;
+  highlights?: PublicHighlights;
   venue?: PublicVenue;
   /*
    * The "a taste of the conference" band: its heading, the line under

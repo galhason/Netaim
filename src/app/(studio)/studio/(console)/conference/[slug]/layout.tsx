@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { findEvent, getActiveConferenceSlug } from '@/features/events';
+import { findEvent, getActiveConferenceSlug, getStaffOnlyConferenceSlug } from '@/features/events';
 import { ConsoleDenied, ConsoleShell, WorkspaceTabs, getStudioAccess, getStudioLocale } from '@/features/studio';
 import { capabilitiesOf, can } from '@/permission-engine';
 import { WORKSPACE_UI } from '@/features/studio/constants/workspace-tabs';
@@ -35,8 +35,9 @@ const ConferenceWorkspaceLayout = async ({ params, children }: WorkspaceLayoutPr
   }
   const creator = access.creator;
   const capabilities = capabilitiesOf(access.grants, slug);
-  const [activeSlug, published] = await Promise.all([
+  const [activeSlug, staffOnlySlug, published] = await Promise.all([
     getActiveConferenceSlug(locale).catch(() => null),
+    getStaffOnlyConferenceSlug().catch(() => null),
     marketingRepository.findPublishedIdentity(slug, locale).catch(() => null),
   ]);
   const isActive = activeSlug === slug;
@@ -80,6 +81,11 @@ const ConferenceWorkspaceLayout = async ({ params, children }: WorkspaceLayoutPr
             >
               {state === 'live' ? WORKSPACE_UI.live[locale] : state === 'changes' ? WORKSPACE_UI.changes[locale] : WORKSPACE_UI.draft[locale]}
             </span>
+            {staffOnlySlug === slug ? (
+              <span className="rounded-full bg-[rgba(245,158,11,0.15)] px-2 py-0.5 text-[11px] font-medium tracking-[0.06em] text-[var(--c-bronze)]">
+                {WORKSPACE_UI.staffOnly[locale]}
+              </span>
+            ) : null}
             {dates ? <span className="text-sm text-[var(--c-text-soft)]">{dates}</span> : null}
             {!isActive ? (
               <span className="basis-full text-xs text-[var(--c-text-faint)]">{WORKSPACE_UI.notActive[locale]}</span>

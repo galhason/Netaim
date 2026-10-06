@@ -4,6 +4,8 @@ import {
   activeConferenceSlug,
   setActiveConference as setActiveConferenceRepo,
   setSiteLogos,
+  setStaffOnlyConference as setStaffOnlyConferenceRepo,
+  staffOnlyConferenceSlug,
   siteLogoChoice,
   siteLogos,
 } from '@/infrastructure';
@@ -65,6 +67,32 @@ export const setActiveConference = async (
   slug: string | null,
 ): Promise<void> => {
   await setActiveConferenceRepo(slug);
+  publishedActiveConference();
+};
+
+/*
+ * The conference open to the Netaim team only.
+ *
+ * A published conference whose pages a signed-in team member sees as
+ * they will be, and everyone else sees as "being prepared". Asked by
+ * every page of every conference, so it is cached beside the live-site
+ * pointer and cleared with it; the door itself — who is looking — is
+ * decided per request, never in here.
+ */
+const resolveStaffOnlyConferenceSlug = (): Promise<string | null> =>
+  staffOnlyConferenceSlug();
+
+export const getStaffOnlyConferenceSlug = (): Promise<string | null> =>
+  cachedContent(
+    resolveStaffOnlyConferenceSlug,
+    ['staff-only-conference'],
+    [cacheTags.activeConference],
+  )();
+
+export const setStaffOnlyConference = async (
+  slug: string | null,
+): Promise<void> => {
+  await setStaffOnlyConferenceRepo(slug);
   publishedActiveConference();
 };
 

@@ -3,6 +3,8 @@ import { isSupportedLocale, type Locale } from '@/config/locales';
 import { findPortalEvent } from '@/features/events';
 import { buildProgramModel } from '@/features/program';
 import { requireParticipant } from '@/features/registration';
+import { ConferencePreparing } from '@/features/conference';
+import { closedConferencePage } from '@/features/conference/services/conference-door';
 import ProgramExperience from './program-experience';
 
 interface ProgramPageProps {
@@ -19,6 +21,12 @@ const ProgramPage = async ({ params, searchParams }: ProgramPageProps) => {
   const { locale, slug } = await params;
   const lang = (isSupportedLocale(locale) ? locale : 'he') as Locale;
   setRequestLocale(lang);
+
+  /* A conference kept to the Netaim team shows everyone else that it is being prepared. */
+  const closed = await closedConferencePage(slug, lang, '/agenda');
+  if (closed) {
+    return <ConferencePreparing {...closed} />;
+  }
   /* The programme is the conference itself — it is read by people who joined it. */
   await requireParticipant(lang);
   const { notice, activity } = await searchParams;

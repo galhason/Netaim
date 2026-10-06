@@ -9,7 +9,7 @@ import {
 } from '@/features/events';
 import type { EventOpeningDraft } from '@/features/events/types/event-repository';
 import { getStudioLocale } from '@/features/studio';
-import { CONTENT_EDITOR_UI, normalizeVenueFactIcon } from '@/features/studio/constants/conference-sections';
+import { CONTENT_EDITOR_UI, normalizeHighlightIcon, normalizeVenueFactIcon } from '@/features/studio/constants/conference-sections';
 import { marketingRepository } from '@/infrastructure';
 import ConferenceContentEditor, {
   type EditorValues,
@@ -36,6 +36,7 @@ const flat = (draft: EventOpeningDraft): Record<string, string> => ({
   venueAccessibility: draft.venue.accessibility ?? '',
   venueEmergency: draft.venue.emergency ?? '',
   closingLine: draft.closing.line ?? '',
+  highlightsTitle: draft.highlights.title ?? '',
 });
 
 const shared = (draft: EventOpeningDraft): Record<string, string> => ({
@@ -57,7 +58,16 @@ const toValues = (he: EventOpeningDraft, en: EventOpeningDraft): EditorValues =>
       description: en.venue.facts?.[index]?.description ?? '',
     },
   }));
-  return { he: flat(he), en: flat(en), shared: shared(he), facts };
+  const highlights = he.highlights.items.map((card, index) => ({
+    icon: normalizeHighlightIcon(card.icon),
+    imageId: card.imageId ?? '',
+    he: { title: card.title ?? '', description: card.description ?? '' },
+    en: {
+      title: en.highlights.items[index]?.title ?? '',
+      description: en.highlights.items[index]?.description ?? '',
+    },
+  }));
+  return { he: flat(he), en: flat(en), shared: shared(he), facts, highlights };
 };
 
 interface ContentPageProps {

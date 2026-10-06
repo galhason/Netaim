@@ -44,7 +44,7 @@ export interface SectionMedia {
   onSite?: boolean;
 }
 
-export type SectionSpecial = 'facts';
+export type SectionSpecial = 'facts' | 'highlights';
 
 export interface ConferenceSection {
   id: string;
@@ -92,6 +92,25 @@ export const CONFERENCE_SECTIONS: ConferenceSection[] = [
     ],
     media: [{ key: 'storyImageId', kind: 'image', label: t('תמונה', 'Image'), onSite: true }],
     scene: 'story',
+  },
+  {
+    id: 'highlights',
+    label: t('מה מחכה לכם בכנס', 'What awaits you'),
+    description: t(
+      'הסקשן שאחרי הסיפור: כותרת ועד ארבעה כרטיסים — אייקון, כותרת, שורה ותמונה לכל אחד. כרטיס בלי כותרת לא מוצג; בלי כרטיסים בכלל, הסקשן לא מופיע באתר.',
+      'The section after the story: a heading and up to four cards — an icon, a title, a line and a picture each. A card without a title is not shown; with no cards at all, the section is left off the site.',
+    ),
+    fields: [
+      {
+        key: 'highlightsTitle',
+        kind: 'text',
+        localized: true,
+        label: t('כותרת הסקשן', 'Section heading'),
+        hint: t('ריק = "מה מחכה לכם בכנס?"', 'Empty = "What awaits you?"'),
+      },
+    ],
+    media: [],
+    special: 'highlights',
   },
   {
     id: 'venue',
@@ -165,6 +184,30 @@ export const VENUE_FACT_ICON_LABELS: Record<VenueFactIcon, Record<Locale, string
   family: t('משפחה', 'Family'),
 };
 
+/*
+ * The pictures a highlight card can carry — the CMS's own list, so what
+ * an editor picks is what the WordPress section draws.
+ */
+export const HIGHLIGHT_ICONS = ['talks', 'speakers', 'partners', 'venue', 'workshops', 'networking', 'tours', 'food'] as const;
+
+export type HighlightIcon = (typeof HIGHLIGHT_ICONS)[number];
+
+export const HIGHLIGHT_ICON_LABELS: Record<HighlightIcon, Record<Locale, string>> = {
+  talks: t('הרצאות', 'Talks'),
+  speakers: t('דוברים', 'Speakers'),
+  partners: t('שותפים', 'Partners'),
+  venue: t('המקום', 'Venue'),
+  workshops: t('סדנאות', 'Workshops'),
+  networking: t('נטוורקינג', 'Networking'),
+  tours: t('סיורים', 'Tours'),
+  food: t('אוכל', 'Food'),
+};
+
+export const normalizeHighlightIcon = (value: string | null | undefined): HighlightIcon =>
+  (HIGHLIGHT_ICONS as readonly string[]).includes((value ?? '').trim().toLowerCase())
+    ? ((value ?? '').trim().toLowerCase() as HighlightIcon)
+    : 'talks';
+
 const VENUE_FACT_ICON_ALIASES: Record<string, VenueFactIcon> = {
   nature: 'leaf',
   green: 'leaf',
@@ -216,6 +259,11 @@ export const CONTENT_EDITOR_UI = {
   factDescription: t('תיאור', 'Description'),
   factIcon: t('אייקון', 'Icon'),
   facts: t('טוב לדעת (עד 4 · שלוש הראשונות בדף הכנס)', 'Good to know (up to 4 · the first three on the conference page)'),
+  highlights: t('הכרטיסים (עד 4)', 'The cards (up to 4)'),
+  highlightTitle: t('כותרת', 'Title'),
+  highlightDescription: t('שורה', 'Line'),
+  highlightImage: t('תמונה', 'Picture'),
+  highlightCard: t('כרטיס', 'Card'),
   visibleOnPlatform: t('מוצג גם בעמוד הפלטפורמה', 'Also shown on the platform page'),
   completeness: t('מלא', 'Complete'),
   missingHe: t('חסר בעברית', 'Missing in Hebrew'),

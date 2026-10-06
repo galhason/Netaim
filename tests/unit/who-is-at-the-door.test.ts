@@ -32,6 +32,8 @@ vi.mock('@/features/access', () => ({
 
 vi.mock('@/features/events', () => ({
   getActiveConferenceSlug: async () => 'brkt',
+  getStaffOnlyConferenceSlug: async () => null,
+  getSiteBrand: async () => ({ onLight: '', onDark: '' }),
 }));
 vi.mock('@/features/notifications', () => ({
   mySpotlight: async (_slug: string, locale: string) => ({

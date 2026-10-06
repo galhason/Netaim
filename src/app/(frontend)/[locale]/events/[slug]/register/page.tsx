@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { brandFor } from '@/config/brand';
-import { ConferenceBar } from '@/features/conference';
+import { ConferenceBar, ConferencePreparing } from '@/features/conference';
 import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
 import { getSiteBrand } from '@/features/events';
 import {
@@ -22,6 +22,7 @@ import {
   PUBLIC_STATE_LABELS,
   REGISTRATION_MESSAGES,
 } from '@/features/registration';
+import { closedConferencePage } from '@/features/conference/services/conference-door';
 import RegisterForm from './register-form';
 import VerifyForm from './verify-form';
 import StepProgress from './ui/step-progress';
@@ -128,6 +129,12 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
     notFound();
   }
   setRequestLocale(locale);
+
+  /* A conference kept to the Netaim team shows everyone else that it is being prepared. */
+  const closed = await closedConferencePage(slug, locale, '/register');
+  if (closed) {
+    return <ConferencePreparing {...closed} />;
+  }
   const lang = locale as Locale;
   const he = lang === 'he';
 
@@ -437,6 +444,9 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
                   firstNameScript: LATIN_NAME_ERROR[lang],
                   lastNameScript: LATIN_NAME_ERROR[lang],
                   country: he ? 'יש לבחור מדינה מהרשימה' : 'Please choose a country from the list',
+                  phone: he
+                    ? 'מספר טלפון לא תקין. בחרו את קידומת המדינה ורשמו את המספר כפי שמחייגים אליו בארץ.'
+                    : 'That phone number is not valid. Choose the country code and write the number as it is dialled at home.',
                   mediaConsent: m.public.mediaConsentRequired[lang],
                 },
                 fieldErrors: {
@@ -445,7 +455,9 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
                   emailTaken: he
                     ? 'הכתובת הזו כבר רשומה'
                     : 'This address is already registered',
-                  phone: he ? 'מספר טלפון לא תקין' : 'That phone number is not valid',
+                  phone: he
+                    ? 'מספר טלפון לא תקין — בדקו את קידומת המדינה ואת המספר'
+                    : 'That phone number is not valid — check the country code and the number',
                   password: he
                     ? `הסיסמה לא עומדת בדרישות. ${PASSWORD_POLICY_TEXT.he}`
                     : `Password does not meet the policy. ${PASSWORD_POLICY_TEXT.en}`,

@@ -5,6 +5,8 @@ import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale } from '@/config/locales';
 import { LOUNGE_UI, getAttendeeExperience } from '@/features/attendee';
 import { listSpeakersPublic } from '@/features/events';
+import { ConferencePreparing } from '@/features/conference';
+import { closedConferencePage } from '@/features/conference/services/conference-door';
 
 /*
  * The speakers wall inside the Lounge: the same faces that light the
@@ -20,6 +22,12 @@ const SpeakersPage = async ({ params }: SpeakersPageProps) => {
     notFound();
   }
   setRequestLocale(locale);
+
+  /* A conference kept to the Netaim team shows everyone else that it is being prepared. */
+  const closed = await closedConferencePage(slug, locale, '/me/speakers');
+  if (closed) {
+    return <ConferencePreparing {...closed} />;
+  }
 
   const content = await getAttendeeExperience(slug, locale);
   if (!content) {

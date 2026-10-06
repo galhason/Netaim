@@ -2,6 +2,12 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { checkRateLimit } from '@/features/access';
 import { marketingRequestAuthorized, publicConferences } from '@/features/marketing';
+import { getStaffOnlyConferenceSlug } from '@/features/events';
+import {
+  doorViewer,
+  marketingAudience,
+  marketingCacheControl,
+} from '@/features/conference/services/conference-door';
 import { newRequestId, withRequestId } from '@/shared/logging/request-context';
 import { siteOrigin } from '@/shared/utils/site-origin';
 
@@ -54,13 +60,41 @@ export const GET = async (request: NextRequest): Promise<NextResponse> => {
 
   const requestId = newRequestId();
   try {
-    const conferences = await withRequestId(requestId, () =>
-      publicConferences(locale as Locale, siteOrigin(request)),
-    );
+    const [listed, closed, audience] = await Promise.all([
+      withRequestId(requestId, () =>
+        publicConferences(locale as Locale, siteOrigin(request)),
+      ),
+      getStaffOnlyConferenceSlug(),
+      marketingAudience(request.nextUrl.searchParams.get('audience')),
+    ]);
+    /*
+     * A conference kept to the Netaim team is left out for the public,
+     * and the answer says one is being prepared — never which — so the
+     * site can say so instead of "no conference".
+     */
+    const hidden = audience === 'public' && closed !== null;
+    const conferences = hidden
+      ? listed.filter((conference) => conference.slug !== closed)
+      : listed;
+    const preparing = hidden && conferences.length < listed.length;
+    /*
+     * Asked for the team by a session that is not the team's: say whether
+     * it is a signed-in guest, so the page can tell them the conference is
+     * for the team for now rather than offer a sign-in already done.
+     */
+    const asked = request.nextUrl.searchParams.get('audience') === 'team';
+    const viewer = preparing && asked ? await doorViewer() : null;
     return NextResponse.json(
-      { conferences },
       {
-        headers: { 'Cache-Control': 'no-store', 'x-request-id': requestId },
+        conferences,
+        ...(preparing ? { preparing: true } : {}),
+        ...(viewer === 'member' ? { viewer } : {}),
+      },
+      {
+        headers: {
+          'Cache-Control': marketingCacheControl(audience),
+          'x-request-id': requestId,
+        },
       },
     );
   } catch {

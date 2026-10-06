@@ -1,6 +1,6 @@
 import type { Locale } from '@/config/locales';
-import { getActiveConferenceSlug } from '@/features/events';
 import ConferenceSpotlight from './conference-spotlight';
+import { visibleSiteConference } from '@/features/conference/services/conference-door';
 
 /*
  * PRD §4.1: the ticker banner sits at the top of every page of the
@@ -10,7 +10,7 @@ import ConferenceSpotlight from './conference-spotlight';
  * layout, so no page can forget it.
  */
 const SiteSpotlight = async ({ locale }: { locale: Locale }) => {
-  const slug = await getActiveConferenceSlug(locale).catch(() => null);
+  const slug = await visibleSiteConference(locale).catch(() => null);
   if (!slug) {
     return null;
   }

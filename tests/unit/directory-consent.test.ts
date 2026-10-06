@@ -192,7 +192,7 @@ describe('the people directory shows the room, and only the room', () => {
       true,
     );
     expect(
-      text.includes('getActiveConferenceSlug('),
+      text.includes('visibleSiteConference('),
       'the fallback conference is the platform\u2019s own, not one the visitor named',
     ).toBe(true);
   });

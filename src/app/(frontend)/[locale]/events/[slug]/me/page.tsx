@@ -3,10 +3,11 @@ import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { LoungeView, getAttendeeExperience } from '@/features/attendee';
-import { ConferenceBar } from '@/features/conference';
+import { ConferenceBar, ConferencePreparing } from '@/features/conference';
 import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
 import { getSiteBrand } from '@/features/events';
 import { myConnections } from '@/features/networking';
+import { closedConferencePage } from '@/features/conference/services/conference-door';
 
 /*
  * The Personal Lounge: after registration the guest does not enter an
@@ -25,6 +26,17 @@ const AttendeePage = async ({ params }: AttendeePageProps) => {
   }
 
   setRequestLocale(locale);
+
+
+  /* A conference kept to the Netaim team shows everyone else that it is being prepared. */
+
+  const closed = await closedConferencePage(slug, locale, '/me');
+
+  if (closed) {
+
+    return <ConferencePreparing {...closed} />;
+
+  }
 
   const content = await getAttendeeExperience(slug, locale);
 

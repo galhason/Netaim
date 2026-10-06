@@ -3,7 +3,9 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale } from '@/config/locales';
 import { LOUNGE_UI } from '@/features/attendee';
-import { CountrySelect, DietarySelect, getMyDetails } from '@/features/registration';
+import { CountrySelect, DietarySelect, PhoneField, getMyDetails } from '@/features/registration';
+import { ConferencePreparing } from '@/features/conference';
+import { closedConferencePage } from '@/features/conference/services/conference-door';
 import { saveMyProfileAction } from './actions';
 
 /*
@@ -28,6 +30,17 @@ const ProfilePage = async ({ params, searchParams }: ProfilePageProps) => {
   }
 
   setRequestLocale(locale);
+
+
+  /* A conference kept to the Netaim team shows everyone else that it is being prepared. */
+
+  const closed = await closedConferencePage(slug, locale, '/me/profile');
+
+  if (closed) {
+
+    return <ConferencePreparing {...closed} />;
+
+  }
 
   const details = await getMyDetails();
 
@@ -80,15 +93,18 @@ const ProfilePage = async ({ params, searchParams }: ProfilePageProps) => {
               <span className={LABEL_CLASS}>{LOUNGE_UI.fieldName[locale]}</span>
               <input name="name" defaultValue={details.name} className={FIELD_CLASS} />
             </label>
-            <label>
-              <span className={LABEL_CLASS}>{LOUNGE_UI.fieldPhone[locale]}</span>
-              <input
-                type="tel"
-                name="phone"
+            <div>
+              <label htmlFor="profile-phone" className={LABEL_CLASS}>
+                {LOUNGE_UI.fieldPhone[locale]}
+              </label>
+              <PhoneField
+                locale={locale}
+                id="profile-phone"
                 defaultValue={details.phone}
+                defaultCountry={details.country || 'IL'}
                 className={FIELD_CLASS}
               />
-            </label>
+            </div>
             <label>
               <span className={LABEL_CLASS}>
                 {LOUNGE_UI.fieldOrganization[locale]}

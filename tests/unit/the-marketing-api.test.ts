@@ -573,6 +573,35 @@ describe('the opening content that crosses', () => {
     ).not.toContain('composition');
   });
 
+  it('carries "what awaits you" as cards with a title, and leaves the section out until one is written', async () => {
+    reset();
+    const bare = {
+      composition: [], story: {}, quote: {}, venue: { facts: [] }, closing: {}, moments: [], speakers: [], programDays: [], preview: {},
+    };
+    state.opening = {
+      ...bare,
+      highlights: {
+        title: 'What awaits you?',
+        items: [
+          { icon: 'talks', title: 'Talks', description: 'Practical content', imageUrl: '/api/media/file/t.jpg' },
+          { icon: 'speakers', title: '', description: 'A card without a title is not a card' },
+          { title: 'Venue' },
+        ],
+      },
+    } as unknown as EventOpeningContent;
+    const conference = await load();
+    expect(conference?.highlights).toEqual({
+      title: 'What awaits you?',
+      items: [
+        { icon: 'talks', title: 'Talks', description: 'Practical content', image: { url: `${ORIGIN}/api/media/file/t.jpg` } },
+        { icon: 'talks', title: 'Venue' },
+      ],
+    });
+
+    state.opening = { ...bare, highlights: { title: 'Soon', items: [] } } as unknown as EventOpeningContent;
+    expect((await load())?.highlights).toBeUndefined();
+  });
+
   it('omits what the conference has not written', async () => {
     reset();
     state.opening = null;

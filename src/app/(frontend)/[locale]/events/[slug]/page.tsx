@@ -10,6 +10,8 @@ import { getSiteBrand } from '@/features/events';
 import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
 import { currentParticipant, myAreaHref } from '@/features/registration';
 import '@/scenes';
+import { ConferencePreparing } from '@/features/conference';
+import { closedConferencePage } from '@/features/conference/services/conference-door';
 
 interface EventPageProps {
   params: Promise<{ locale: string; slug: string }>;
@@ -23,6 +25,17 @@ const EventPage = async ({ params }: EventPageProps) => {
   }
 
   setRequestLocale(locale);
+
+
+  /* A conference kept to the Netaim team shows everyone else that it is being prepared. */
+
+  const closed = await closedConferencePage(slug, locale, '');
+
+  if (closed) {
+
+    return <ConferencePreparing {...closed} />;
+
+  }
 
   const experience = await getConferenceExperience(slug, locale);
 

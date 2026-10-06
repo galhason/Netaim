@@ -90,6 +90,7 @@ const toOpeningDraft = (event: Event): EventOpeningDraft => ({
     accessibility: event.opening?.venue?.accessibilityInfo ?? undefined,
     emergency: event.opening?.venue?.emergencyInfo ?? undefined,
     facts: (event.opening?.venue?.facts ?? []).map((fact) => ({
+      id: fact.id ?? undefined,
       label: fact.label ?? undefined,
       icon: fact.icon ?? undefined,
       description: fact.description ?? undefined,
@@ -99,6 +100,16 @@ const toOpeningDraft = (event: Event): EventOpeningDraft => ({
   closing: {
     line: event.opening?.closing?.line ?? undefined,
     imageId: mediaId(event.opening?.closing?.image),
+  },
+  highlights: {
+    title: event.opening?.highlights?.title ?? undefined,
+    items: (event.opening?.highlights?.items ?? []).map((item) => ({
+      id: item.id ?? undefined,
+      icon: item.icon ?? undefined,
+      title: item.title ?? undefined,
+      description: item.description ?? undefined,
+      imageId: mediaId(item.image),
+    })),
   },
   preview: {
     title: event.opening?.preview?.title ?? undefined,
@@ -116,6 +127,10 @@ const toOpeningDraft = (event: Event): EventOpeningDraft => ({
     imageId: mediaId(row.image),
   })),
 });
+
+/* The pictures a highlight card may carry: the CMS select, as the database holds it. */
+const HIGHLIGHT_ICONS = ['talks', 'speakers', 'partners', 'venue', 'workshops', 'networking', 'tours', 'food'] as const;
+type HighlightIcon = (typeof HIGHLIGHT_ICONS)[number];
 
 const openingText = (value: string | undefined): string | null | undefined => {
   if (value === undefined) {
@@ -581,6 +596,7 @@ export const payloadEventRepository: EventRepository = {
             ...(input.venueFacts !== undefined
               ? {
                   facts: input.venueFacts.map((fact) => ({
+                    ...(fact.id ? { id: fact.id } : {}),
                     label: fact.label,
                     description: openingText(fact.description) ?? null,
                     icon: ([
@@ -613,6 +629,22 @@ export const payloadEventRepository: EventRepository = {
           closing: {
             line: openingText(input.closingLine),
             image: toMediaRelation(input.closingImageId),
+          },
+          highlights: {
+            title: openingText(input.highlightsTitle),
+            ...(input.highlights !== undefined
+              ? {
+                  items: input.highlights.map((item) => ({
+                    ...(item.id ? { id: item.id } : {}),
+                    icon: (HIGHLIGHT_ICONS.includes(item.icon as HighlightIcon)
+                      ? item.icon
+                      : 'talks') as HighlightIcon,
+                    title: openingText(item.title) ?? null,
+                    description: openingText(item.description) ?? null,
+                    image: toMediaRelation(item.imageId),
+                  })),
+                }
+              : {}),
           },
           preview: {
             title: openingText(input.previewTitle),

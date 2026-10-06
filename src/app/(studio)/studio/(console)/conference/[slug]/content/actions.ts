@@ -4,12 +4,13 @@ import { revalidatePath } from 'next/cache';
 import type { Locale } from '@/config/locales';
 import { audit } from '@/features/access';
 import {
+  getEventOpeningDraft,
   launchExperience,
   saveEventComposition,
   saveEventOpening,
 } from '@/features/events';
 import type { EventOpeningInput } from '@/features/events/types/event-repository';
-import { CONFERENCE_SECTIONS, normalizeVenueFactIcon } from '@/features/studio/constants/conference-sections';
+import { CONFERENCE_SECTIONS, normalizeHighlightIcon, normalizeVenueFactIcon } from '@/features/studio/constants/conference-sections';
 import { actorFor } from '@/features/studio/services/studio-auth';
 import { publishedEvent } from '@/shared/cache/publish';
 
@@ -27,6 +28,12 @@ export interface SectionSaveInput {
   en: Record<string, string>;
   shared: Record<string, string>;
   facts?: { icon: string; he: { label: string; description: string }; en: { label: string; description: string } }[];
+  highlights?: {
+    icon: string;
+    imageId: string;
+    he: { title: string; description: string };
+    en: { title: string; description: string };
+  }[];
 }
 
 export type SectionSaveOutcome =
@@ -66,6 +73,14 @@ export const saveConferenceSectionAction = async (
   ]);
 
   try {
+    /*
+     * A list's rows are written twice, once per language, and the
+     * second pass must name the rows the first one made: a row without
+     * its id is a new row, and the Hebrew words of the old one go with
+     * it. So after the Hebrew pass the ids are read back and carried
+     * into the English one, in order.
+     */
+    let rowIds: { facts: string[]; highlights: string[] } = { facts: [], highlights: [] };
     for (const locale of LOCALES) {
       const perLocale = pick(localizedKeys, locale === 'he' ? input.he : input.en);
       const once = locale === 'he' ? pick(sharedKeys, input.shared) : {};
@@ -86,16 +101,36 @@ export const saveConferenceSectionAction = async (
          */
         write.venueFacts = input.facts
           .filter((fact) => fact.he.label.trim() !== '')
-          .map((fact) => ({
+          .map((fact, index) => ({
+            ...(rowIds.facts[index] ? { id: rowIds.facts[index] } : {}),
             icon: normalizeVenueFactIcon(fact.icon),
             label: (locale === 'he' ? fact.he.label : fact.en.label).trim(),
             description: (locale === 'he' ? fact.he.description : fact.en.description).trim(),
+          }));
+      }
+      if (section.special === 'highlights' && input.highlights) {
+        /* Same shape as the facts: one list, a row exists by its Hebrew title. */
+        write.highlights = input.highlights
+          .filter((card) => card.he.title.trim() !== '')
+          .map((card, index) => ({
+            ...(rowIds.highlights[index] ? { id: rowIds.highlights[index] } : {}),
+            icon: normalizeHighlightIcon(card.icon),
+            title: (locale === 'he' ? card.he.title : card.en.title).trim(),
+            description: (locale === 'he' ? card.he.description : card.en.description).trim(),
+            imageId: card.imageId || null,
           }));
       }
       if (Object.keys(write).length === 0) {
         continue;
       }
       await saveEventOpening(slug, locale, write);
+      if (locale === 'he' && (write.venueFacts || write.highlights)) {
+        const saved = await getEventOpeningDraft(slug, 'he');
+        rowIds = {
+          facts: (saved?.venue.facts ?? []).map((fact) => fact.id ?? ''),
+          highlights: (saved?.highlights.items ?? []).map((card) => card.id ?? ''),
+        };
+      }
     }
   } catch {
     return { ok: false, reason: 'failed' };

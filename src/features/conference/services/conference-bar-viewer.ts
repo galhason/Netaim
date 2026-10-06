@@ -1,8 +1,8 @@
 import { staffRoleOf } from '@/features/access';
-import { getActiveConferenceSlug } from '@/features/events';
 import { currentParticipant, getMyDetails } from '@/features/registration';
 import type { Locale } from '@/config/locales';
 import type { ConferenceBarViewer } from '../components/conference-bar';
+import { visibleSiteConference } from './conference-door';
 
 /*
  * What the conference bar needs to know about who is looking: a name
@@ -35,4 +35,4 @@ export const conferenceBarViewer = async (): Promise<ConferenceBarViewer | null>
 
 /* The conference a page without one in its address belongs to. */
 export const conferenceBarSlug = async (locale: Locale): Promise<string | null> =>
-  getActiveConferenceSlug(locale).catch(() => null);
+  visibleSiteConference(locale).catch(() => null);

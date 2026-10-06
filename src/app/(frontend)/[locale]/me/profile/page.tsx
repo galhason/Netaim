@@ -23,6 +23,7 @@ import {
   CountrySelect,
   DietarySelect,
   PASSWORD_POLICY_TEXT,
+  PhoneField,
   getMyDetails,
   myContactPreferences,
   myTotpStatus,
@@ -391,18 +392,18 @@ const AccountProfilePage = async ({
                     className={loungeField}
                   />
                 </label>
-                <label>
-                  <span className={loungeLabel}>
+                <div>
+                  <label htmlFor="profile-phone" className={loungeLabel}>
                     {LOUNGE_UI.fieldPhone[locale]}
-                  </span>
-                  <input
-                    type="tel"
-                    name="phone"
+                  </label>
+                  <PhoneField
+                    locale={locale}
+                    id="profile-phone"
                     defaultValue={details.phone}
-                    autoComplete="tel"
+                    defaultCountry={details.country || 'IL'}
                     className={loungeField}
                   />
-                </label>
+                </div>
                 <label>
                   <span className={loungeLabel}>
                     {LOUNGE_UI.fieldOrganization[locale]}

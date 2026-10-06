@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { isSupportedLocale } from '@/config/locales';
 import { isCountryCode } from '@/shared/constants/countries';
+import { phoneToStore } from '@/shared/utils/phone';
 import {
   beginTotpEnrollment,
   confirmTotpEnrollment,
@@ -59,7 +60,8 @@ export const saveAccountProfileAction = async (formData: FormData) => {
 
   await updateMyDetails({
     name: optional(formData.get('name')),
-    phone: optional(formData.get('phone')),
+    /* In international form when it reads; as typed when it does not — see phoneToStore. */
+    phone: phoneToStore(String(formData.get('phoneCountry') ?? ''), String(formData.get('phone') ?? '')),
     organization: optional(formData.get('organization')),
     role: optional(formData.get('role')),
     /*

@@ -4,16 +4,10 @@ import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { getSpeaker, activitiesForSpeaker } from '@/features/speakers';
 import { formatLongDate, formatTimeLabel } from '@/shared';
-import {
-  Avatar,
-  FollowButton,
-  GhostLink,
-  SectionHeader,
-  TypePill,
-  surface,
-} from '@/features/conference';
+import { Avatar, ConferencePreparing, FollowButton, GhostLink, SectionHeader, surface, TypePill } from '@/features/conference';
 import type { SessionType } from '@/features/program';
 import { requireParticipant } from '@/features/registration';
+import { closedConferencePage } from '@/features/conference/services/conference-door';
 
 interface SpeakerProfilePageProps {
   /*
@@ -42,6 +36,12 @@ const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
   const { locale, slug, id } = await params;
   const lang = (isSupportedLocale(locale) ? locale : 'he') as Locale;
   setRequestLocale(lang);
+
+  /* A conference kept to the Netaim team shows everyone else that it is being prepared. */
+  const closed = await closedConferencePage(slug, lang, `/speakers/${id}`);
+  if (closed) {
+    return <ConferencePreparing {...closed} />;
+  }
   await requireParticipant(lang);
   const he = lang === 'he';
 

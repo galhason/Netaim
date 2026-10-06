@@ -27,6 +27,7 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('@/features/access', () => ({ checkRateLimit: async () => ({ ok: true }) }));
 vi.mock('@/features/account', () => ({ scheduleConflictFor: async () => null }));
+vi.mock('@/features/conference/services/conference-door', () => ({ mayEnterConference: async () => true }));
 vi.mock('@/shared/cache/publish', () => ({ publishedDirectory: () => undefined }));
 vi.mock('@/features/registration', async () => {
   const { isLatinName } = await import('@/features/registration/schemas/latin-name');

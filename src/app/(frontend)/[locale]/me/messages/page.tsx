@@ -12,7 +12,6 @@ import { LOUNGE_UI } from '@/features/attendee';
 import { ConferenceBar } from '@/features/conference';
 import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
 import {
-  getActiveConferenceSlug,
   getEventExperience,
   getSiteBrand,
 } from '@/features/events';
@@ -35,6 +34,7 @@ import {
   respondConnectionAction,
   suggestMeetingTimeAction,
 } from '../networking/actions';
+import { visibleSiteConference } from '@/features/conference/services/conference-door';
 
 /*
  * The notifications centre (one account, one home): every joined
@@ -124,7 +124,7 @@ const MessagesPage = async ({ params, searchParams }: MessagesPageProps) => {
    * event-level registration still receives that workshop's notes, and
    * the bell already reads the live conference for the same reason.
    */
-  const activeSlug = await getActiveConferenceSlug(locale).catch(() => null);
+  const activeSlug = await visibleSiteConference(locale).catch(() => null);
   const siteLogo = await getSiteBrand();
   const barViewer = await conferenceBarViewer();
   const slugs = [

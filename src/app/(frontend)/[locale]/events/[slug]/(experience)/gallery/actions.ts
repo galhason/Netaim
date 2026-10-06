@@ -2,6 +2,7 @@
 
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { checkRateLimit } from '@/features/access';
+import { mayEnterConference } from '@/features/conference/services/conference-door';
 import { findPortalEvent } from '@/features/events';
 import {
   SUBMISSION_MAX_BYTES,
@@ -34,7 +35,11 @@ export const submitGalleryPhotoAction = async (
   if (!participant) {
     return { status: 'error', reason: 'signed-out' };
   }
-  const event = slug ? await findPortalEvent(slug, locale).catch(() => null) : null;
+  /* A conference kept to the Netaim team takes no photographs from anyone else. */
+  const event =
+    slug && (await mayEnterConference(slug))
+      ? await findPortalEvent(slug, locale).catch(() => null)
+      : null;
   if (!event) {
     return { status: 'error', reason: 'closed' };
   }

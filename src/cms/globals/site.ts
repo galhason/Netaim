@@ -29,6 +29,20 @@ export const Site: GlobalConfig = {
       },
     },
     /*
+     * A conference open to the Netaim team only. Kept here, outside the
+     * conference's own drafts, so closing or opening the door takes
+     * effect at once and never publishes a draft along with it.
+     */
+    {
+      name: 'staffOnlyConference',
+      type: 'relationship',
+      relationTo: 'events',
+      admin: {
+        description:
+          'A published conference that only signed-in Netaim team members may see. Everyone else sees "the conference is being prepared". Empty: every published conference is open to all.',
+      },
+    },
+    /*
      * The logo, in the two treatments the platform's two chromes need.
      * Left unset, the build's own artwork is drawn — so this is an
      * override, never a requirement, and clearing it restores the mark

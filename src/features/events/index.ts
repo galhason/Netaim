@@ -8,8 +8,10 @@ export {
   getActiveConferenceSlug,
   getSiteBrand,
   getSiteBrandChoice,
+  getStaffOnlyConferenceSlug,
   setActiveConference,
   setSiteBrand,
+  setStaffOnlyConference,
 } from './services/site-service';
 export type { SiteBrand } from './services/site-service';
 export {

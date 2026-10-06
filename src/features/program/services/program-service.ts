@@ -11,7 +11,9 @@ import { emitRegistration } from '@/foundation/event-bus';
 import {
   sessionRegistrationRepository,
   sessionRepository,
+  staffOnlyConferenceSlug,
 } from '@/infrastructure';
+import { staffRoleOf } from '@/features/access';
 import { currentParticipant } from '@/features/registration';
 import type {
   CreateSessionInput,
@@ -243,6 +245,19 @@ export const selectWorkshop = async (
   }
   /* A shelved activity takes no one; a stale link must not register. */
   if (situation.session.archivedAt) {
+    throw new Error('Session not found');
+  }
+  /*
+   * A conference the Studio keeps to the Netaim team takes nobody else's
+   * registration. Asked of the activity's own conference, never of the
+   * conference a form names, and here at the write so every door that
+   * registers is covered.
+   */
+  if (
+    situation.session.eventSlug &&
+    (await staffOnlyConferenceSlug()) === situation.session.eventSlug &&
+    !(await staffRoleOf(participant.id))
+  ) {
     throw new Error('Session not found');
   }
   /*

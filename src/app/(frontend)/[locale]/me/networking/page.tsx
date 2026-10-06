@@ -13,7 +13,6 @@ import { staffRolesByAccount } from '@/features/access';
 import { LOUNGE_UI } from '@/features/attendee';
 import {
   findPortalEvent,
-  getActiveConferenceSlug,
   getSiteBrand,
 } from '@/features/events';
 import {
@@ -44,6 +43,7 @@ import MeetingsSection from './ui/meetings';
 import BlockedSection from './ui/blocked';
 import MobileNav from './ui/mobile-nav';
 import { card, personLine, type ReasonTone } from './ui/shared';
+import { visibleSiteConference } from '@/features/conference/services/conference-door';
 
 /*
  * The conference community — a small social network built around the
@@ -118,7 +118,7 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
    */
   const directorySlug =
     chosenConf?.slug ??
-    (await getActiveConferenceSlug(locale as Locale).catch(() => null));
+    (await visibleSiteConference(locale as Locale).catch(() => null));
   const siteLogo = await getSiteBrand();
   /*
    * Where to look for this guest's connections: the site's conference,

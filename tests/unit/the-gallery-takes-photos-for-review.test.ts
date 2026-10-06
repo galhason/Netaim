@@ -45,6 +45,7 @@ vi.mock('@/infrastructure/payload/payload-context', () => ({
 
 vi.mock('@/features/registration', () => ({ currentParticipant: async () => gate.participant }));
 vi.mock('@/features/events', () => ({ findPortalEvent: async () => (gate.published ? { slug: 'summit', title: 'Summit' } : null) }));
+vi.mock('@/features/conference/services/conference-door', () => ({ mayEnterConference: async () => true }));
 vi.mock('@/features/access', () => ({
   checkRateLimit: async () => (gate.allowed ? { allowed: true } : { allowed: false, retryAfterSeconds: 60 }),
 }));

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
-import { ConferenceBar } from '@/features/conference';
+import { ConferenceBar, ConferencePreparing } from '@/features/conference';
 import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
 import { getSiteBrand } from '@/features/events';
 import {
@@ -23,6 +23,7 @@ import {
   myWorkshops,
   type SessionSituation,
 } from '@/features/program';
+import { closedConferencePage } from '@/features/conference/services/conference-door';
 import { leaveWorkshopAction, selectWorkshopAction } from './actions';
 
 interface WorkshopsPageProps {
@@ -97,6 +98,12 @@ const WorkshopsPage = async ({ params, searchParams }: WorkshopsPageProps) => {
     notFound();
   }
   setRequestLocale(locale);
+
+  /* A conference kept to the Netaim team shows everyone else that it is being prepared. */
+  const closed = await closedConferencePage(slug, locale, '/workshops');
+  if (closed) {
+    return <ConferencePreparing {...closed} />;
+  }
   const { error } = await searchParams;
 
   const participant = await currentParticipant().catch(() => null);

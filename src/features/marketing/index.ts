@@ -17,6 +17,8 @@ export type {
   PublicSponsor,
   PublicVenue,
   PublicClosing,
+  PublicHighlight,
+  PublicHighlights,
   PublicPreview,
   PublicPreviewDay,
   PublicGallery,

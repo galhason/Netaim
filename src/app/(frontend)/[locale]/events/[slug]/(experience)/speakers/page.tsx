@@ -4,11 +4,12 @@ import {
   listConferenceSpeakers,
   activitiesForSpeaker,
 } from '@/features/speakers';
-import { EmptyState } from '@/features/conference';
+import { ConferencePreparing, EmptyState } from '@/features/conference';
 import { requireParticipant } from '@/features/registration';
 import SpeakersDirectory, {
   type DirectorySpeaker,
 } from './speakers-directory';
+import { closedConferencePage } from '@/features/conference/services/conference-door';
 
 interface SpeakersPageProps {
   params: Promise<{ locale: string; slug: string }>;
@@ -24,6 +25,12 @@ const SpeakersPage = async ({ params }: SpeakersPageProps) => {
   const { locale, slug } = await params;
   const lang = (isSupportedLocale(locale) ? locale : 'he') as Locale;
   setRequestLocale(lang);
+
+  /* A conference kept to the Netaim team shows everyone else that it is being prepared. */
+  const closed = await closedConferencePage(slug, lang, '/speakers');
+  if (closed) {
+    return <ConferencePreparing {...closed} />;
+  }
   await requireParticipant(lang);
   const he = lang === 'he';
 
