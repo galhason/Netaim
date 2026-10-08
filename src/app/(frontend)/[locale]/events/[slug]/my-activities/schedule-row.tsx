@@ -257,13 +257,16 @@ const ScheduleRow = ({
               {t(locale, 'viewActivity')}
               <IconArrow className="size-4 rtl:rotate-180" />
             </button>
-            {held && !past ? (
+            {held && !past && activity.canCancel ? (
               <form action={leaveAction}>
                 <input type="hidden" name="slug" value={slug} />
                 <input type="hidden" name="locale" value={locale} />
                 <input type="hidden" name="sessionId" value={activity.id} />
                 <RemoveButton locale={locale} />
               </form>
+            ) : null}
+            {held && !past && !activity.canCancel ? (
+              <span className="text-[12px] text-[var(--x-faint)]">{t(locale, 'cannotCancel')}</span>
             ) : null}
           </div>
         </div>

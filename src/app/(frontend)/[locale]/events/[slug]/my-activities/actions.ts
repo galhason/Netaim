@@ -11,6 +11,18 @@ const backTo = (locale: Locale, slug: string): string =>
   `/${locale}/events/${slug}/my-activities`;
 
 /*
+ * The engine refuses with a sentence; the page is told with a word.
+ * Anything it did not foresee reads as "full", as it always did.
+ */
+const reasonOf = (thrown: unknown): string => {
+  const message = thrown instanceof Error ? thrown.message : '';
+  if (message === 'conflict') return 'conflict';
+  if (message === 'Registration not open yet') return 'notYet';
+  if (message === 'Registration closed') return 'closed';
+  return 'full';
+};
+
+/*
  * Joining an activity straight from the personal day — the same engine the
  * Program calls, so a seat taken here and a seat taken there are the same
  * seat. The service owns the outcome (a place, or the waiting list) and
@@ -27,11 +39,7 @@ export const registerActivityAction = async (formData: FormData) => {
     try {
       await selectWorkshop(sessionId, locale);
     } catch (thrown) {
-      const reason =
-        thrown instanceof Error && thrown.message === 'conflict'
-          ? 'conflict'
-          : 'full';
-      target = `${base}?notice=${reason}`;
+      target = `${base}?notice=${reasonOf(thrown)}`;
     }
   }
   redirect(target);
@@ -46,8 +54,15 @@ export const leaveActivityAction = async (formData: FormData) => {
   const slug = String(formData.get('slug') ?? '');
   const locale = localeOf(String(formData.get('locale') ?? ''));
   const sessionId = String(formData.get('sessionId') ?? '');
+  let target = backTo(locale, slug);
   if (sessionId) {
-    await leaveWorkshop(sessionId, locale).catch(() => null);
+    try {
+      await leaveWorkshop(sessionId, locale);
+    } catch (thrown) {
+      if (thrown instanceof Error && thrown.message === 'Cancellation not allowed') {
+        target = `${target}?notice=noCancel`;
+      }
+    }
   }
-  redirect(backTo(locale, slug));
+  redirect(target);
 };

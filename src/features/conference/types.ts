@@ -20,6 +20,8 @@ export type RegistrationState =
   | 'waitlist'
   | 'full'
   | 'conflict'
+  | 'opensLater'
+  | 'closed'
   | 'completed'
   | 'cancelled';
 
@@ -61,6 +63,14 @@ export interface ActivityVM {
   capacity: CapacityVM;
   status: AvailabilityStatus;
   registration: RegistrationState;
+  /*
+   * Whether a held place may be given back now — the activity's own
+   * cancellation rule, read against the clock. A waiting-list place may
+   * always be given up, so this is true whenever nothing was promised.
+   */
+  canCancel: boolean;
+  /* A line beside the button when registration is not open now. */
+  registrationNote?: string;
   image?: string;
   featured?: boolean;
 }

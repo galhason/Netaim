@@ -12,6 +12,8 @@ export const NOTIFICATION_TYPE_LABELS: Record<string, Record<Locale, string>> = 
   },
   'registration.cancelled': { he: 'הרשמה בוטלה', en: 'Registration cancelled' },
   'participant.signin': { he: 'קישור כניסה', en: 'Sign-in link' },
+  'activity.changed': { he: 'מייל: שינוי בפעילות', en: 'Email: activity changed' },
+  'activity.cancelled': { he: 'מייל: ביטול פעילות', en: 'Email: activity cancelled' },
   announcement: { he: 'הודעה מההפקה', en: 'Announcement' },
   'announcement.banner': { he: 'באנר עליון', en: 'Ticker banner' },
   'announcement.popup': { he: 'הודעה מתפרצת', en: 'Pop-up' },

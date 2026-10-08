@@ -97,6 +97,8 @@ const RegistrationPanel = ({
             sessionId={activity.id}
             registerAction={registerAction}
             leaveAction={leaveAction}
+            canLeave={activity.canCancel}
+            note={activity.registrationNote}
             block
           />
         </div>
@@ -468,6 +470,8 @@ const ActivityDrawer = ({
                   sessionId={activity.id}
                   registerAction={registerAction}
                   leaveAction={leaveAction}
+                  canLeave={activity.canCancel}
+                  note={activity.registrationNote}
                   block
                 />
               </div>

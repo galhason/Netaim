@@ -31,6 +31,7 @@ const activity = (over: Partial<ActivityVM>): ActivityVM => ({
   capacity: { confirmed: 0, waiting: 0, limit: null, available: null, state: 'unlimited' },
   status: 'available',
   registration: 'registered',
+  canCancel: true,
   ...over,
 });
 

@@ -20,6 +20,7 @@ import * as migration_20261005_090000_registration_media_consent from './2026100
 import * as migration_20261006_090000_developer_role_and_system_updates from './20261006_090000_developer_role_and_system_updates';
 import * as migration_20261007_090000_staff_only_conference from './20261007_090000_staff_only_conference';
 import * as migration_20261007_120000_conference_highlights from './20261007_120000_conference_highlights';
+import * as migration_20261007_150000_schedule_emails from './20261007_150000_schedule_emails';
 
 export const migrations = [
   {
@@ -131,5 +132,10 @@ export const migrations = [
     up: migration_20261007_120000_conference_highlights.up,
     down: migration_20261007_120000_conference_highlights.down,
     name: '20261007_120000_conference_highlights',
+  },
+  {
+    up: migration_20261007_150000_schedule_emails.up,
+    down: migration_20261007_150000_schedule_emails.down,
+    name: '20261007_150000_schedule_emails',
   },
 ];

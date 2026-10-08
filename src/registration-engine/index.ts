@@ -16,6 +16,12 @@ export {
   decideOutcome,
 } from './registration/mode';
 export type { RegistrationMode, RegistrationOutcome } from './registration/mode';
+export { registrationWindow, cancellationAllowed } from './registration/window';
+export type {
+  RegistrationWindowInput,
+  RegistrationWindowState,
+  CancellationRuleInput,
+} from './registration/window';
 export { computeCapacity } from './capacity/capacity';
 export type {
   CapacityCounts,

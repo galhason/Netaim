@@ -110,6 +110,14 @@ export const Participants: CollectionConfig = {
          * changing it in the profile applies everywhere at once.
          */
         { name: 'directory', type: 'checkbox', defaultValue: false },
+        /*
+         * An email, besides the in-app notice, when an activity this
+         * person holds a place in changes its hour or room, or is
+         * cancelled. On by default — a seat is a promise, and news about
+         * it should reach the person wherever they are — and switched
+         * off from the profile by anyone who prefers the bell alone.
+         */
+        { name: 'scheduleEmails', type: 'checkbox', defaultValue: true },
       ],
     },
     {

@@ -1,4 +1,7 @@
-import { broadcastAnnouncement } from '@/features/notifications';
+import {
+  broadcastAnnouncement,
+  emailSessionRegistrants,
+} from '@/features/notifications';
 import { formatLongDate, formatTimeLabel } from '@/shared';
 import type { SessionSummary } from '../types/session';
 
@@ -122,10 +125,20 @@ export const cancelVersions = (titles: {
   },
 ];
 
+/* The mail's button lands on the reader's own schedule. */
+const myActivitiesPath = (eventSlug: string) => (locale: 'he' | 'en') =>
+  `/${locale}/events/${eventSlug}/my-activities`;
+
 /*
  * Told, never blocked: the edit stands whether or not the note goes
  * out. A failure here is logged by the outbox, not surfaced to the
  * organiser as a failed save.
+ *
+ * Two channels, one wording. The pop-up (which also lands in the bell
+ * and the inbox) reaches the person on the platform; the email reaches
+ * the one who is not — unless they switched those off in their
+ * profile. The in-app note is written first, so the record exists even
+ * if the mail server is slow.
  */
 export const announceSessionChange = async (
   eventSlug: string,
@@ -138,24 +151,43 @@ export const announceSessionChange = async (
   if (!delta.time && !delta.place) {
     return false;
   }
-  return broadcastAnnouncement({
+  const versions = changeVersions(titles, after, delta);
+  const told = await broadcastAnnouncement({
     eventSlug,
     kind: 'popup',
     topic: 'activity',
     targetSessionId: sessionId,
-    versions: changeVersions(titles, after, delta),
+    versions,
   }).catch(() => false);
+  await emailSessionRegistrants({
+    eventSlug,
+    sessionId,
+    type: 'activity.changed',
+    versions,
+    ctaPath: myActivitiesPath(eventSlug),
+  }).catch(() => 0);
+  return told;
 };
 
 export const announceSessionCancelled = async (
   eventSlug: string,
   sessionId: string,
   titles: { he: string; en: string },
-): Promise<boolean> =>
-  broadcastAnnouncement({
+): Promise<boolean> => {
+  const versions = cancelVersions(titles);
+  const told = await broadcastAnnouncement({
     eventSlug,
     kind: 'popup',
     topic: 'activity',
     targetSessionId: sessionId,
-    versions: cancelVersions(titles),
+    versions,
   }).catch(() => false);
+  await emailSessionRegistrants({
+    eventSlug,
+    sessionId,
+    type: 'activity.cancelled',
+    versions,
+    ctaPath: myActivitiesPath(eventSlug),
+  }).catch(() => 0);
+  return told;
+};

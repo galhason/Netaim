@@ -15,6 +15,7 @@ import type {
   ScheduleItemVM,
   SpeakerVM,
 } from '@/features/conference';
+import { cancellationAllowed, registrationWindow } from '@/registration-engine';
 import type { SessionType } from '../types/session';
 import {
   listConferenceActivities,
@@ -41,6 +42,27 @@ export const TYPE_LABELS: Record<SessionType, Record<Locale, string>> = {
 const FILTER_ORDER: SessionType[] = ['keynote', 'talk', 'workshop', 'tour'];
 
 const HOUR_MS = 3600000;
+
+/*
+ * The line under a button that cannot be pressed yet: when registration
+ * opens, or that it has closed — in the guest's language, on the venue
+ * clock, so "opens on 12 October at 09:00" means the venue's morning.
+ */
+const windowNote = (
+  state: 'notYet' | 'closed',
+  opensAt: string | undefined,
+  locale: Locale,
+  timeZone: string,
+): string => {
+  if (state === 'closed') {
+    return locale === 'he' ? 'ההרשמה לפעילות זו נסגרה.' : 'Registration for this activity has closed.';
+  }
+  const day = formatLongDate(opensAt, locale, timeZone);
+  const clock = formatTimeLabel(opensAt, locale, timeZone);
+  const when = day && clock ? `${day} ${clock}` : day || clock;
+  if (!when) return locale === 'he' ? 'ההרשמה טרם נפתחה.' : 'Registration has not opened yet.';
+  return locale === 'he' ? `ההרשמה נפתחת ב-${when}.` : `Registration opens on ${when}.`;
+};
 
 /*
  * The day an activity belongs to, in the conference's own calendar.
@@ -172,11 +194,16 @@ export const buildProgramModel = async (
         : startMs + HOUR_MS;
       const st = myStatus.get(session.id);
       const past = endMs < now;
+      const gate = registrationWindow(session, now);
       let registration: RegistrationState;
+      let registrationNote: string | undefined;
       if (st === 'confirmed' || st === 'waitlisted' || st === 'pending') {
         registration = 'registered';
       } else if (past) {
         registration = 'completed';
+      } else if (gate !== 'open') {
+        registration = gate === 'notYet' ? 'opensLater' : 'closed';
+        registrationNote = windowNote(gate, session.registrationOpensAt, locale, timeZone);
       } else if (status === 'full') {
         registration = session.waitlistEnabled ? 'waitlist' : 'full';
       } else if (
@@ -215,6 +242,9 @@ export const buildProgramModel = async (
         },
         status,
         registration,
+        /* A waiting-list place may always be given up; a seat, by the rule. */
+        canCancel: st !== 'confirmed' || cancellationAllowed(session, now),
+        registrationNote,
         image: session.image,
         featured: session.featured,
       };

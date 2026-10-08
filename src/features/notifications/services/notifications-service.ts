@@ -1,5 +1,7 @@
 import {
   notificationOutbox,
+  participantSessionRepository,
+  sendNotification,
   sessionRegistrationRepository,
 } from '@/infrastructure';
 import { currentParticipant } from '@/features/registration';
@@ -200,6 +202,102 @@ export const notifyParticipant = async (input: {
   );
   return true;
 };
+
+/*
+ * The same news, by email, to the people holding a place in one
+ * activity — each in their own language, and only those who have not
+ * switched these mails off in their profile (`contactPrefs.scheduleEmails`).
+ *
+ * The in-app announcement is the record and always goes out; this is
+ * the copy that reaches a person who is not looking at the platform
+ * when their 14:00 becomes 16:00. It is written to the outbox under its
+ * own type, which no reader surface lists — the bell already shows the
+ * announcement, and showing the mail beside it would say the same
+ * thing twice.
+ *
+ * Delivered in bounded batches: the SMTP pool holds three connections,
+ * and a hall of six hundred released at once would queue in memory and
+ * time the organiser's request out. The organiser's save never waits
+ * on a mail server — a failure is recorded as `failed` and retried by
+ * the dispatcher, and the edit stands either way.
+ */
+const MAIL_BATCH = 10;
+
+export const emailSessionRegistrants = async (input: {
+  eventSlug: string;
+  sessionId: string;
+  type: string;
+  versions: BroadcastVersion[];
+  /* Where the button in the mail lands, by language. */
+  ctaPath: (locale: 'he' | 'en') => string;
+}): Promise<number> => {
+  const versions = new Map(
+    input.versions
+      .map((version) => ({
+        locale: version.locale === 'en' ? ('en' as const) : ('he' as const),
+        subject: version.subject.trim().slice(0, MAX_SUBJECT),
+        body: version.body.trim().slice(0, MAX_BODY),
+      }))
+      .filter((version) => version.subject !== '' && version.body !== '')
+      .map((version) => [version.locale, version] as const),
+  );
+  if (!input.eventSlug || !input.sessionId || versions.size === 0) {
+    return 0;
+  }
+  const ids = await sessionRegistrationRepository
+    .participantsBySession(input.sessionId)
+    .catch(() => [] as string[]);
+  if (ids.length === 0) {
+    return 0;
+  }
+  const preferences = await participantSessionRepository
+    .noticePreferencesByIds(ids)
+    .catch(() => []);
+  const base = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, '') ?? '';
+  const messages = preferences.flatMap((person) => {
+    if (!person.scheduleEmails) {
+      return [];
+    }
+    const version = versions.get(person.locale) ?? versions.get('he') ?? versions.get('en');
+    if (!version) {
+      return [];
+    }
+    return [
+      {
+        participantId: person.id,
+        eventSlug: input.eventSlug,
+        type: input.type,
+        locale: version.locale,
+        subject: version.subject,
+        body: `${version.body}\n\n${MAIL_FOOTER[version.locale]}`,
+        ...(base
+          ? {
+              cta: {
+                label: version.locale === 'he' ? 'לפעילויות שלי' : 'My activities',
+                href: `${base}${input.ctaPath(version.locale)}`,
+              },
+            }
+          : {}),
+      },
+    ];
+  });
+  let sent = 0;
+  for (let index = 0; index < messages.length; index += MAIL_BATCH) {
+    const outcomes = await Promise.all(
+      messages
+        .slice(index, index + MAIL_BATCH)
+        .map((message) => sendNotification(message).catch(() => 'failed' as const)),
+    );
+    sent += outcomes.filter((status) => status === 'sent').length;
+  }
+  return sent;
+};
+
+/* How to stop these mails — said in every one of them. */
+const MAIL_FOOTER = {
+  he: 'קיבלתם את המייל הזה כי אתם רשומים לפעילות הזו. אפשר לבטל מיילים על שינויים בפעילויות דרך האזור האישי, בעמוד הפרופיל, תחת "פרטיות ויצירת קשר".',
+  en: 'You received this email because you are registered for this activity. You can turn off emails about activity changes in your personal area, on the profile page, under "Privacy & contact".',
+} as const;
 
 /*
  * The conference's live spotlight: the latest banner for the ticker,

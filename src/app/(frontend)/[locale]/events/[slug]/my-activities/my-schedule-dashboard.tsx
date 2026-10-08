@@ -289,6 +289,9 @@ const MyScheduleDashboard = ({
     const out: NoticeVM[] = [];
     if (notice === 'conflict') out.push({ id: 'conflict', text: t(locale, 'noticeConflict') });
     if (notice === 'full') out.push({ id: 'full', text: t(locale, 'noticeFull') });
+    if (notice === 'notYet') out.push({ id: 'notYet', text: t(locale, 'noticeNotYet') });
+    if (notice === 'closed') out.push({ id: 'closed', text: t(locale, 'noticeClosed') });
+    if (notice === 'noCancel') out.push({ id: 'noCancel', text: t(locale, 'noticeNoCancel') });
     if (current && current.kind === 'activity') {
       out.push({
         id: `live-${current.id}`,

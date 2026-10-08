@@ -325,6 +325,9 @@ const AccountProfilePage = async ({
               {contact?.prefs.meetings !== false ? (
                 <input type="hidden" name="meetings" value="on" />
               ) : null}
+              {contact?.prefs.scheduleEmails !== false ? (
+                <input type="hidden" name="scheduleEmails" value="on" />
+              ) : null}
               {contact?.prefs.directory === true ? null : (
                 <input type="hidden" name="directory" value="on" />
               )}
@@ -343,6 +346,76 @@ const AccountProfilePage = async ({
                   : he
                     ? 'להציג אותי בספרייה'
                     : 'Show me in the directory'}
+              </button>
+            </form>
+          </div>
+        ) : null}
+
+        {/*
+          * The same one-click card for the email about a changed
+          * activity: a seat is a promise, and news about it reaches the
+          * person by mail unless they say otherwise here. Same shape as
+          * the directory card — the other preferences ride along hidden.
+          */}
+        {!editing ? (
+          <div className="lounge-rise mt-5 flex flex-wrap items-center gap-x-6 gap-y-4 rounded-3xl bg-white px-7 py-5 shadow-[0_14px_44px_rgba(23,32,51,0.08)] [animation-delay:50ms]">
+            <div className="min-w-0 flex-1 basis-60">
+              <h2 className="flex items-center gap-2 font-display text-base font-semibold">
+                <span
+                  aria-hidden="true"
+                  className={`size-2 rounded-full ${
+                    contact?.prefs.scheduleEmails !== false
+                      ? 'bg-[var(--l-live)]'
+                      : 'bg-[var(--l-soft)]/50'
+                  }`}
+                />
+                {he ? 'מייל על שינויים בפעילויות' : 'Email about activity changes'}
+              </h2>
+              <p className="mt-0.5 text-xs text-[var(--l-soft)]">
+                {contact?.prefs.scheduleEmails !== false
+                  ? he
+                    ? 'כשפעילות שנרשמתם אליה משנה שעה או מיקום, או מבוטלת — תקבלו גם מייל, נוסף על ההתראה כאן.'
+                    : 'When an activity you registered for changes time or location, or is cancelled, you also get an email, besides the notice here.'
+                  : he
+                    ? 'תקבלו התראה כאן באזור האישי בלבד, בלי מייל.'
+                    : 'You are told here in your personal area only, with no email.'}
+              </p>
+            </div>
+            <form action={saveContactPrefsAction} className="ms-auto flex-none">
+              <input type="hidden" name="locale" value={locale} />
+              {contact?.prefs.whatsapp !== false ? (
+                <input type="hidden" name="whatsapp" value="on" />
+              ) : null}
+              {contact?.prefs.phone !== false ? (
+                <input type="hidden" name="phonePref" value="on" />
+              ) : null}
+              {contact?.prefs.email !== false ? (
+                <input type="hidden" name="emailPref" value="on" />
+              ) : null}
+              {contact?.prefs.meetings !== false ? (
+                <input type="hidden" name="meetings" value="on" />
+              ) : null}
+              {contact?.prefs.directory === true ? (
+                <input type="hidden" name="directory" value="on" />
+              ) : null}
+              {contact?.prefs.scheduleEmails !== false ? null : (
+                <input type="hidden" name="scheduleEmails" value="on" />
+              )}
+              <button
+                type="submit"
+                className={
+                  contact?.prefs.scheduleEmails !== false
+                    ? 'inline-flex min-h-11 items-center rounded-full border border-[var(--l-line,rgba(23,32,51,0.14))] px-5 text-sm font-medium text-[var(--l-soft)] transition-colors hover:border-[var(--l-bronze)] hover:text-[var(--l-ink,var(--nt-ink))]'
+                    : 'inline-flex min-h-11 items-center rounded-full bg-[var(--l-bronze)] px-5 text-sm font-medium text-white transition-colors hover:opacity-90'
+                }
+              >
+                {contact?.prefs.scheduleEmails !== false
+                  ? he
+                    ? 'להפסיק את המיילים'
+                    : 'Stop these emails'
+                  : he
+                    ? 'לקבל מייל על שינויים'
+                    : 'Email me about changes'}
               </button>
             </form>
           </div>
@@ -621,6 +694,24 @@ const AccountProfilePage = async ({
                     className="size-4 accent-[var(--l-bronze)]"
                   />
                   {he ? 'קבלת הצעות לפגישות' : 'Receive meeting requests'}
+                </label>
+                <label className="flex items-start gap-3 text-sm">
+                  <input
+                    type="checkbox"
+                    name="scheduleEmails"
+                    defaultChecked={contact?.prefs.scheduleEmails !== false}
+                    className="mt-0.5 size-4 accent-[var(--l-bronze)]"
+                  />
+                  <span>
+                    {he
+                      ? 'לקבל מייל כשפעילות שנרשמתי אליה משנה שעה או מיקום, או מבוטלת'
+                      : 'Email me when an activity I registered for changes time or location, or is cancelled'}
+                    <span className="mt-0.5 block text-xs text-[var(--l-soft)]">
+                      {he
+                        ? 'ההתראה באזור האישי נשלחת תמיד; כאן בוחרים אם לקבל גם מייל.'
+                        : 'The notice in your personal area is always sent; this decides whether an email goes out too.'}
+                    </span>
+                  </span>
                 </label>
                 <div>
                   <button type="submit" className={loungePrimary}>

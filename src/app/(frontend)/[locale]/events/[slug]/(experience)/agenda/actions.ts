@@ -8,6 +8,18 @@ const localeOf = (value: string): Locale =>
   isSupportedLocale(value) ? value : FALLBACK_LOCALE;
 
 /*
+ * The engine refuses with a sentence; the page is told with a word.
+ * Anything it did not foresee reads as "full", as it always did.
+ */
+const reasonOf = (thrown: unknown): string => {
+  const message = thrown instanceof Error ? thrown.message : '';
+  if (message === 'conflict') return 'conflict';
+  if (message === 'Registration not open yet') return 'notYet';
+  if (message === 'Registration closed') return 'closed';
+  return 'full';
+};
+
+/*
  * Registering from the agenda. The registration engine owns the outcome
  * (a place, or the waiting list) and every side effect; here we only
  * route the participant back, surfacing a conflict or a full activity as
@@ -33,10 +45,7 @@ export const registerActivityAction = async (formData: FormData) => {
     try {
       await selectWorkshop(sessionId, locale);
     } catch (thrown) {
-      const reason =
-        thrown instanceof Error && thrown.message === 'conflict'
-          ? 'conflict'
-          : 'full';
+      const reason = reasonOf(thrown);
       target = `${base}?notice=${reason}`;
     }
   }
@@ -47,8 +56,17 @@ export const leaveActivityAction = async (formData: FormData) => {
   const locale = localeOf(String(formData.get('locale') ?? ''));
   const sessionId = String(formData.get('sessionId') ?? '');
   const slug = String(formData.get('slug') ?? '');
+  const base = `/${locale}/events/${slug}/agenda`;
+  let target = base;
   if (sessionId) {
-    await leaveWorkshop(sessionId, locale).catch(() => null);
+    try {
+      await leaveWorkshop(sessionId, locale);
+    } catch (thrown) {
+      /* A seat the activity no longer lets go of; anything else stays quiet, as before. */
+      if (thrown instanceof Error && thrown.message === 'Cancellation not allowed') {
+        target = `${base}?notice=noCancel`;
+      }
+    }
   }
-  redirect(`/${locale}/events/${slug}/agenda`);
+  redirect(target);
 };

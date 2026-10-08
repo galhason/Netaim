@@ -40,6 +40,12 @@ export interface ParticipantDetailsView extends ParticipantDetailsInput {
  * connections they approved. Private by default — phone and email start
  * OFF; Netaim Messages is always available and never stored.
  */
+export interface NoticePreference {
+  id: string;
+  locale: Locale;
+  scheduleEmails: boolean;
+}
+
 export interface ContactPreferences {
   whatsapp: boolean;
   phone: boolean;
@@ -47,6 +53,8 @@ export interface ContactPreferences {
   meetings: boolean;
   /* Listed among the participants of conferences this person attends. */
   directory: boolean;
+  /* Mailed when an activity they hold a place in moves or is cancelled. */
+  scheduleEmails: boolean;
 }
 
 export interface ContactProfile {
@@ -107,6 +115,14 @@ export interface ParticipantSessionRepository {
    */
   localePreference: (id: string) => Promise<Locale | null>;
   setLocalePreference: (id: string, locale: Locale) => Promise<void>;
+  /*
+   * How a set of people want to hear about their activities, read in
+   * one query: the language each chose and whether they take email
+   * about a schedule change. For the notice that goes to a whole
+   * activity's registrants, where one read per person would be
+   * hundreds. Blocked and missing accounts are left out.
+   */
+  noticePreferencesByIds: (ids: string[]) => Promise<NoticePreference[]>;
   updateParticipantDetails: (
     id: string,
     input: ParticipantDetailsInput,

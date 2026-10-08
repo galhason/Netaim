@@ -232,6 +232,8 @@ const REG_LABEL: Record<RegistrationState, { he: string; en: string }> = {
   waitlist: { he: 'הצטרפות לרשימת המתנה', en: 'Join waiting list' },
   full: { he: 'מלא', en: 'Full' },
   conflict: { he: 'התנגשות בזמנים', en: 'Time conflict' },
+  opensLater: { he: 'ההרשמה טרם נפתחה', en: 'Registration not open yet' },
+  closed: { he: 'ההרשמה נסגרה', en: 'Registration closed' },
   completed: { he: 'הסתיים', en: 'Completed' },
   cancelled: { he: 'בוטל', en: 'Cancelled' },
 };
@@ -243,6 +245,14 @@ interface RegProps {
   sessionId: string;
   registerAction?: (formData: FormData) => void | Promise<void>;
   leaveAction?: (formData: FormData) => void | Promise<void>;
+  /*
+   * Whether the registered guest may give the place back here. False
+   * when the activity forbids cancelling, or its deadline has passed:
+   * the button then only states the registration.
+   */
+  canLeave?: boolean;
+  /* A short explanation carried as the control's title, e.g. when it opens. */
+  note?: string;
   size?: 'sm' | 'md';
   block?: boolean;
 }
@@ -269,6 +279,8 @@ export const RegistrationButton = ({
   sessionId,
   registerAction,
   leaveAction,
+  canLeave = true,
+  note,
   size = 'md',
   block = false,
 }: RegProps) => {
@@ -296,6 +308,17 @@ export const RegistrationButton = ({
       </form>
     );
   }
+  if (state === 'registered' && (!canLeave || !leaveAction)) {
+    return (
+      <span
+        className={`${DONE_BTN} ${pad} ${width}`}
+        title={note ?? (locale === 'he' ? 'לא ניתן לבטל את ההרשמה' : 'This registration cannot be cancelled')}
+      >
+        <IconCheck className="size-4" />
+        {label}
+      </span>
+    );
+  }
   if (state === 'registered' && leaveAction) {
     return (
       <form action={leaveAction} className={block ? 'w-full' : ''}>
@@ -314,7 +337,7 @@ export const RegistrationButton = ({
     );
   }
   return (
-    <button type="button" disabled className={`${MUTED_BTN} ${pad} ${width}`}>
+    <button type="button" disabled title={note} className={`${MUTED_BTN} ${pad} ${width}`}>
       {label}
     </button>
   );

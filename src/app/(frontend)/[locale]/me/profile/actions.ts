@@ -122,6 +122,7 @@ export const saveContactPrefsAction = async (formData: FormData) => {
     email: formData.get('emailPref') === 'on',
     meetings: formData.get('meetings') === 'on',
     directory: formData.get('directory') === 'on',
+    scheduleEmails: formData.get('scheduleEmails') === 'on',
   });
 
   /*

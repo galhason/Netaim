@@ -269,6 +269,8 @@ const ActivityCard = ({
               sessionId={activity.id}
               registerAction={registerAction}
               leaveAction={leaveAction}
+              canLeave={activity.canCancel}
+              note={activity.registrationNote}
               size="sm"
             />
           </div>

@@ -97,6 +97,22 @@ export const COPY = {
     he: 'הפעילות התמלאה. נסו פעילות אחרת או הצטרפו לרשימת ההמתנה.',
     en: 'That activity just filled up. Try another or join the waiting list.',
   },
+  noticeNotYet: {
+    he: 'ההרשמה לפעילות הזו עדיין לא נפתחה.',
+    en: 'Registration for this activity has not opened yet.',
+  },
+  noticeClosed: {
+    he: 'ההרשמה לפעילות הזו נסגרה.',
+    en: 'Registration for this activity has closed.',
+  },
+  noticeNoCancel: {
+    he: 'לא ניתן עוד לבטל את ההרשמה לפעילות הזו.',
+    en: 'This registration can no longer be cancelled.',
+  },
+  cannotCancel: {
+    he: 'לא ניתן לבטל',
+    en: 'Cannot cancel',
+  },
 
   /* Empty states. */
   emptyTitle: { he: 'הלוז שלכם עדיין ריק', en: 'Your schedule is still empty' },

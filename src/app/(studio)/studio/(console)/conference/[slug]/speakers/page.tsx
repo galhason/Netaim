@@ -4,7 +4,7 @@ import { wordpressHref } from '@/config/wordpress';
 import { findEvent, listMedia } from '@/features/events';
 import { listConferenceSpeakers, listSpeakerCandidates } from '@/features/speakers';
 import type { ResolvedSpeaker } from '@/features/speakers';
-import { CMediaPicker, getStudioLocale } from '@/features/studio';
+import { AccountCombobox, CMediaPicker, getStudioLocale } from '@/features/studio';
 import { addSpeakerAction, removeSpeakerAction, updateSpeakerAction } from './actions';
 
 const t = (he: string, en: string): Record<Locale, string> => ({ he, en });
@@ -15,7 +15,6 @@ const UI = {
   viewOnSite: t('צפייה באתר', 'View on site'),
   add: t('הוספת דובר/ת', 'Add a speaker'),
   fromAccount: t('חשבון קיים בפלטפורמה (אופציונלי)', 'Existing platform account (optional)'),
-  noAccount: t('— ללא חשבון, דובר/ת חיצוני/ת —', '— no account, external speaker —'),
   name: t('שם', 'Name'),
   jobTitle: t('תפקיד', 'Job title'),
   company: t('ארגון', 'Organisation'),
@@ -168,19 +167,22 @@ const ConferenceSpeakersPage = async ({ params, searchParams }: SpeakersPageProp
       <form action={addSpeakerAction} className={`${CARD} border-dashed`}>
         <input type="hidden" name="slug" value={slug} />
         <h3 className="mb-3 text-sm font-semibold text-[var(--c-text)]">{UI.add[locale]}</h3>
-        <label className="mb-3 block">
-          <span className={LABEL}>{UI.fromAccount[locale]}</span>
-          <select name="accountId" defaultValue="" className={INPUT}>
-            <option value="">{UI.noAccount[locale]}</option>
-            {candidates.map((candidate) => (
-              <option key={candidate.accountId} value={candidate.accountId}>
-                {candidate.name}
-                {candidate.company ? ` · ${candidate.company}` : ''}
-                {candidate.email ? ` · ${candidate.email}` : ''}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="mb-3 max-w-xl">
+          <AccountCombobox
+            name="accountId"
+            label={UI.fromAccount[locale]}
+            locale={locale}
+            className={INPUT}
+            options={candidates.map((candidate) => ({
+              accountId: candidate.accountId,
+              name: candidate.name,
+              ...(candidate.company ? { company: candidate.company } : {}),
+              ...(candidate.jobTitle ? { jobTitle: candidate.jobTitle } : {}),
+              ...(candidate.email ? { email: candidate.email } : {}),
+              ...(candidate.photoUrl ? { photoUrl: candidate.photoUrl } : {}),
+            }))}
+          />
+        </div>
         <div className="grid gap-3 lg:grid-cols-[1fr_1fr_220px]">
           <Words locale={locale} lang="he" values={{}} />
           <Words locale={locale} lang="en" values={{}} />

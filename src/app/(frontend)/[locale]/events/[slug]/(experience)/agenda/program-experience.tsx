@@ -62,6 +62,18 @@ const COPY = {
     he: 'הפעילות התמלאה. נסו פעילות אחרת או הצטרפו לרשימת המתנה.',
     en: 'That activity just filled up. Try another or join the waiting list.',
   },
+  notYet: {
+    he: 'ההרשמה לפעילות הזו עדיין לא נפתחה.',
+    en: 'Registration for this activity has not opened yet.',
+  },
+  closed: {
+    he: 'ההרשמה לפעילות הזו נסגרה.',
+    en: 'Registration for this activity has closed.',
+  },
+  noCancel: {
+    he: 'לא ניתן עוד לבטל את ההרשמה לפעילות הזו.',
+    en: 'This registration can no longer be cancelled.',
+  },
   live: { he: 'עכשיו', en: 'Now' },
 };
 
@@ -173,7 +185,13 @@ const ProgramExperience = ({
       ? COPY.conflict[locale]
       : notice === 'full'
         ? COPY.full[locale]
-        : null;
+        : notice === 'notYet'
+          ? COPY.notYet[locale]
+          : notice === 'closed'
+            ? COPY.closed[locale]
+            : notice === 'noCancel'
+              ? COPY.noCancel[locale]
+              : null;
 
   return (
     /*

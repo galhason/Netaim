@@ -60,6 +60,14 @@ const COPY = {
     he: 'לא ניתן להירשם לשתי פעילויות המתקיימות באותו חלון זמן.',
     en: 'You cannot register for two activities in the same time window.',
   },
+  notYet: {
+    he: 'ההרשמה לפעילות הזו עדיין לא נפתחה.',
+    en: 'Registration for this activity has not opened yet.',
+  },
+  closed: {
+    he: 'ההרשמה לפעילות הזו נסגרה.',
+    en: 'Registration for this activity has closed.',
+  },
   backToLounge: { he: 'לאזור האישי', en: 'My space' },
   myActivities: { he: 'הפעילויות שלי', en: 'My activities' },
 } as const;
@@ -177,7 +185,13 @@ const WorkshopsPage = async ({ params, searchParams }: WorkshopsPageProps) => {
       {error ? (
         <div className="mt-5">
           <LoungeNote tone="accent">
-            {error === 'conflict' ? COPY.conflict[locale] : COPY.error[locale]}
+            {error === 'conflict'
+              ? COPY.conflict[locale]
+              : error === 'notYet'
+                ? COPY.notYet[locale]
+                : error === 'closed'
+                  ? COPY.closed[locale]
+                  : COPY.error[locale]}
           </LoungeNote>
         </div>
       ) : null}

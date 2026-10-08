@@ -76,6 +76,8 @@ export { default as ConsoleDenied } from './components/console/console-denied';
 export { default as ConsoleCanvas } from './components/console/console-canvas';
 export { default as CanvasSelectBridge } from './components/console/canvas-select-bridge';
 export { default as WhenField } from './components/console/when-field';
+export { default as AccountCombobox } from './components/console/account-combobox';
+export type { AccountOption } from './components/console/account-combobox';
 export {
   CTextField,
   CTextAreaField,

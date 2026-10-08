@@ -1,5 +1,6 @@
 export {
   broadcastAnnouncement,
+  emailSessionRegistrants,
   isAnnouncement,
   listMyAnnouncements,
   listMyFeed,

@@ -1,9 +1,11 @@
 import type { Locale } from '@/config/locales';
 import {
   applyTransition,
+  cancellationAllowed,
   computeCapacity,
   decideOutcome,
   promotable,
+  registrationWindow,
   type CapacityView,
   type RegistrationStatus,
 } from '@/registration-engine';
@@ -153,6 +155,18 @@ export const updateSession = async (
     if (titles && titles.eventSlug) {
       await announceSessionChange(titles.eventSlug, sessionId, titles, before, after);
     }
+    /*
+     * More room, or a waiting list switched on: the people in line
+     * were promised the next free seat, and these are free seats. The
+     * same promotion a cancellation runs — first in line first.
+     */
+    const roomier =
+      (after.capacity === null && before.capacity !== null) ||
+      (after.capacity !== null && before.capacity !== null && after.capacity > before.capacity) ||
+      (after.waitlistEnabled && !before.waitlistEnabled);
+    if (roomier) {
+      await promoteWaitlist(after, after.eventSlug ?? titles?.eventSlug).catch(() => undefined);
+    }
   }
   return after;
 };
@@ -288,6 +302,15 @@ export const selectWorkshop = async (
       throw new Error('conflict');
     }
   }
+  /*
+   * The window the Studio wrote, held on the server: the button is a
+   * courtesy, this is the rule. A link kept from before the window
+   * opened, or pressed after it closed, registers no one.
+   */
+  const gate = registrationWindow(situation.session, Date.now());
+  if (gate !== 'open') {
+    throw new Error(gate === 'notYet' ? 'Registration not open yet' : 'Registration closed');
+  }
   const outcome = decideOutcome('open', situation.capacity);
   if (outcome === 'waitlisted' && !situation.session.waitlistEnabled) {
     throw new Error('Workshop is full');
@@ -315,7 +338,7 @@ const nowIso = (): string => new Date().toISOString();
  * one failing never blocks the rest, nor the cancellation that triggered
  * it.
  */
-const promoteWaitlist = async (
+export const promoteWaitlist = async (
   session: SessionSummary,
   slug: string | undefined,
 ): Promise<void> => {
@@ -390,12 +413,21 @@ export const leaveWorkshop = async (
     return existing;
   }
   const freedSeat = existing.status === 'confirmed';
+  const session = await sessionRepository.getById(sessionId, locale);
+  /*
+   * A confirmed seat is given back only while the activity allows it:
+   * "no cancellation", or a deadline that has passed, keeps the seat
+   * with the person who took it. A waiting-list place is always free
+   * to leave — nothing was promised.
+   */
+  if (freedSeat && session && !cancellationAllowed(session, Date.now())) {
+    throw new Error('Cancellation not allowed');
+  }
   const cancelled = await sessionRegistrationRepository.setStatus(
     existing.id,
     result.status,
   );
 
-  const session = await sessionRepository.getById(sessionId, locale);
   const slug = session?.eventSlug;
   if (slug) {
     await emitRegistration({

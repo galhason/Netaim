@@ -1,7 +1,10 @@
 import { relationshipId } from '@/auth';
 import { BRAND_LATIN } from '@/config/brand';
-import { isSupportedLocale } from '@/config/locales';
-import type { ParticipantSessionRepository } from '@/features/registration/types/identity';
+import { FALLBACK_LOCALE, isSupportedLocale } from '@/config/locales';
+import type {
+  NoticePreference,
+  ParticipantSessionRepository,
+} from '@/features/registration/types/identity';
 import type { ParticipantSummary } from '@/features/registration/types/registration';
 import { getSystemPayload } from './payload-context';
 
@@ -16,6 +19,9 @@ interface SessionRow {
   id: number | string;
   participant: number | string | ParticipantRow;
 }
+
+/* How many accounts one preferences query names; a 600-seat hall is three. */
+const PREFERENCE_CHUNK = 200;
 
 const toParticipant = (row: ParticipantRow): ParticipantSummary => ({
   id: String(row.id),
@@ -518,6 +524,42 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
         ?.preferredLocale;
       return stored && isSupportedLocale(stored) ? stored : null;
     },
+    noticePreferencesByIds: async (ids) => {
+      const wanted = [...new Set(ids.filter((id) => id && id !== 'null'))];
+      if (wanted.length === 0) {
+        return [];
+      }
+      const payload = await getSystemPayload();
+      const out: NoticePreference[] = [];
+      for (let index = 0; index < wanted.length; index += PREFERENCE_CHUNK) {
+        const result = await payload.find({
+          collection: 'participants',
+          where: { id: { in: wanted.slice(index, index + PREFERENCE_CHUNK) } },
+          depth: 0,
+          pagination: false,
+          overrideAccess: true,
+        });
+        for (const doc of result.docs as unknown as {
+          id: number | string;
+          blocked?: boolean | null;
+          preferredLocale?: string | null;
+          contactPrefs?: { scheduleEmails?: boolean | null } | null;
+        }[]) {
+          if (doc.blocked === true) {
+            continue;
+          }
+          out.push({
+            id: String(doc.id),
+            locale:
+              doc.preferredLocale && isSupportedLocale(doc.preferredLocale)
+                ? doc.preferredLocale
+                : FALLBACK_LOCALE,
+            scheduleEmails: doc.contactPrefs?.scheduleEmails !== false,
+          });
+        }
+      }
+      return out;
+    },
     setLocalePreference: async (id, locale) => {
       const payload = await getSystemPayload();
       await payload.update({
@@ -568,6 +610,7 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
           phone?: boolean | null;
           email?: boolean | null;
           meetings?: boolean | null;
+          scheduleEmails?: boolean | null;
         } | null;
       };
       return {
@@ -581,6 +624,7 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
           email: row.contactPrefs?.email !== false,
           meetings: row.contactPrefs?.meetings !== false,
           directory: row.contactPrefs?.directory === true,
+          scheduleEmails: row.contactPrefs?.scheduleEmails !== false,
         },
       };
     },

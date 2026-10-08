@@ -491,6 +491,7 @@ export interface Participant {
     email?: boolean | null;
     meetings?: boolean | null;
     directory?: boolean | null;
+    scheduleEmails?: boolean | null;
   };
   accessibilityNeeds?: string | null;
   dietary?: string | null;
@@ -1475,6 +1476,7 @@ export interface ParticipantsSelect<T extends boolean = true> {
         email?: T;
         meetings?: T;
         directory?: T;
+        scheduleEmails?: T;
       };
   accessibilityNeeds?: T;
   dietary?: T;
