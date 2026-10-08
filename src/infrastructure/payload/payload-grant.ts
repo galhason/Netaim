@@ -6,7 +6,7 @@ import type {
   GrantRepository,
 } from '@/features/access/types/grant';
 import { isRole, type Role } from '@/permission-engine';
-import { getSystemPayload } from './payload-context';
+import { getSystemPayload, principalEmail } from './payload-context';
 
 /*
  * Grants persistence plus the derived technical principal (Identity
@@ -114,7 +114,7 @@ const syncPrincipal = async (
 
   const existing = await payload.find({
     collection: 'users',
-    where: { email: { equals: account.email } },
+    where: { email: { equals: principalEmail(account.email) } },
     limit: 1,
     depth: 0,
     overrideAccess: true,
@@ -163,7 +163,7 @@ const syncPrincipal = async (
   await payload.create({
     collection: 'users',
     data: {
-      email: account.email,
+      email: principalEmail(account.email),
       name: account.name ?? account.email,
       password: `${randomBytes(24).toString('hex')}!Aa`,
       grants,

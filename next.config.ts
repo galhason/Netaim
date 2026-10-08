@@ -14,13 +14,31 @@ const isProduction = process.env.NODE_ENV === 'production';
  * rehearsal (http://localhost/netaim, Apache in front) it is /netaim,
  * and Next prefixes its own links, chunks and metadata routes with it.
  */
-const basePath = (() => {
+const siteUrl = (() => {
   try {
-    return new URL(process.env.NEXT_PUBLIC_SERVER_URL ?? '').pathname.replace(/\/+$/, '');
+    return new URL(process.env.NEXT_PUBLIC_SERVER_URL ?? '');
   } catch {
-    return '';
+    return null;
   }
 })();
+
+const basePath = siteUrl ? siteUrl.pathname.replace(/\/+$/, '') : '';
+
+/*
+ * The browser-facing hosts a Server Action may be posted from. The
+ * public site's own host comes off NEXT_PUBLIC_SERVER_URL, so moving
+ * the site to a new domain is an env change and a rebuild, not a code
+ * edit; the earlier addresses stay named so a window where both serve
+ * still takes every form. This list once held only the staging domain,
+ * and every form posted from the new public domain was refused.
+ */
+const actionOrigins = [
+  ...new Set(
+    [siteUrl?.host ?? '', 'netaimolami.org', 'www.netaimolami.org', 'netaim26.org', 'netaimtest.info'].filter(
+      Boolean,
+    ),
+  ),
+];
 
 /*
  * Media may be served from an S3-compatible bucket when one is
@@ -111,7 +129,7 @@ const nextConfig: NextConfig = {
      */
     serverActions: {
       bodySizeLimit: '200mb',
-      allowedOrigins: ['netaimtest.info'],
+      allowedOrigins: actionOrigins,
     },
   },
   images: {

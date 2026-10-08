@@ -40,6 +40,9 @@ export const getSystemPayload = (): Promise<Payload> => getPayload({ config });
  * The lookup cannot go through the repository: the repository resolves
  * its Payload client from this module.
  */
+/* The spelling under which the users collection keeps an address. */
+export const principalEmail = (email: string): string => email.trim().toLowerCase();
+
 const principalFromAccountSession = async (
   payload: Payload,
 ): Promise<User | null> => {
@@ -84,9 +87,17 @@ const principalFromAccountSession = async (
   if (!account?.email || account.blocked === true) {
     return null;
   }
+  /*
+   * The principal's address is the account's, lowercased: the users
+   * collection stores every email in lower case, while an account keeps
+   * the spelling the person typed. Compared as typed, an Owner whose
+   * address carried a capital letter was handed a Studio with no
+   * conferences in it — every read refused "Sign-in required" and the
+   * pages showed empty lists instead.
+   */
   const principals = await payload.find({
     collection: 'users',
-    where: { email: { equals: account.email } },
+    where: { email: { equals: principalEmail(account.email) } },
     limit: 1,
     depth: 0,
     overrideAccess: true,

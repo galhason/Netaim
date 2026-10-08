@@ -726,7 +726,17 @@ export const deleteParticipantAction = async (formData: FormData) => {
   if (!id) {
     return;
   }
-  if (!(await deleteParticipantAccount(id, access.grants))) {
+  /*
+   * A deletion that cannot finish is told as a word on the page, never
+   * as a crashed one: the account is left exactly as it was.
+   */
+  let deleted = false;
+  try {
+    deleted = await deleteParticipantAccount(id, access.grants);
+  } catch {
+    redirect('/studio/participants?delete=failed');
+  }
+  if (!deleted) {
     redirect('/studio/participants?grants=protected');
   }
   await audit(actor, 'participant.deleted', undefined, { participantId: id });

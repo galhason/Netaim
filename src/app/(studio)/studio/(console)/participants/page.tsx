@@ -30,7 +30,7 @@ import {
  * checked actions; the panel itself decides nothing.
  */
 interface ParticipantsPageProps {
-  searchParams: Promise<{ grants?: string; move?: string }>;
+  searchParams: Promise<{ grants?: string; move?: string; delete?: string }>;
 }
 
 const chip =
@@ -57,7 +57,7 @@ const grantNote = (state: string | undefined) =>
   state && state in GRANT_NOTES ? GRANT_NOTES[state as keyof typeof GRANT_NOTES] : null;
 
 const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
-  const { grants: grantsState, move: moveState } = await searchParams;
+  const { grants: grantsState, move: moveState, delete: deleteState } = await searchParams;
   const locale = await getStudioLocale();
   const creator = await getStudioCreator();
   const access = await getStudioAccess();
@@ -108,6 +108,11 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
         {moveState === 'failed' ? (
           <p className="rounded-xl border border-[var(--c-danger)]/40 bg-[var(--c-danger)]/10 px-4 py-3 text-sm text-[var(--c-danger-text)]">
             {CONSOLE_UI.moveFailedNote[locale]}
+          </p>
+        ) : null}
+        {deleteState === 'failed' ? (
+          <p className="rounded-xl border border-[var(--c-danger)]/40 bg-[var(--c-danger)]/10 px-4 py-3 text-sm text-[var(--c-danger-text)]">
+            {CONSOLE_UI.deleteFailedNote[locale]}
           </p>
         ) : null}
 

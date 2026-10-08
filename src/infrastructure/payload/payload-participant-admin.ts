@@ -1,3 +1,4 @@
+import type { Where } from 'payload';
 import type {
   AccountSearchView,
   ParticipantAdminView,
@@ -134,49 +135,75 @@ export const payloadUpdateParticipantAdmin = async (
 /*
  * Full account deletion (approved decision: the panel can delete people
  * and their data rather than keep them needlessly). Every trace goes:
- * registrations, workshop places, sessions, networking, then the
- * account row itself. Grants are revoked by the caller first so the
- * derived principal falls with them. Auxiliary collections fail soft —
- * a missing engine never strands the deletion.
+ * sign-ins, registrations, workshop places, the networking room, then
+ * the account row itself. Grants are revoked by the caller first so the
+ * derived principal falls with them.
+ *
+ * The order is the database's, not ours. Every table that names a
+ * person does so with a column that may not be empty, so the row has to
+ * go before the person does — and a chat message names its connection
+ * the same way, so messages go before connections. This used to sweep
+ * four of the nine tables and swallow every failure, and the last
+ * statement then fell over the five it had skipped: a person who had
+ * ever signed in with a password, met someone, blocked someone or sent
+ * a message could not be deleted, and the panel showed a server error
+ * instead of a word. A report survives on purpose: it keeps the names
+ * it copied, and its relationships are allowed to empty.
  */
+type Sweepable =
+  | 'account-sessions'
+  | 'participant-sessions'
+  | 'registrations'
+  | 'session-registrations'
+  | 'networking-chat-messages'
+  | 'networking-meetings'
+  | 'networking-blocks'
+  | 'networking-connections';
+
 export const payloadDeleteParticipantAccount = async (
   id: string,
 ): Promise<void> => {
   const { payload, user } = await requireActor();
   const participantId = Number(id);
 
-  const sweep = async (
-    collection:
-      | 'registrations'
-      | 'session-registrations'
-      | 'participant-sessions',
-  ) => {
-    await payload
-      .delete({
-        collection,
-        where: { participant: { equals: participantId } },
-        overrideAccess: false,
-        user,
-      })
-      .catch(() => undefined);
-  };
-
-  await sweep('registrations');
-  await sweep('session-registrations');
-  await sweep('participant-sessions');
-  await payload
-    .delete({
-      collection: 'networking-connections',
-      where: {
-        or: [
-          { requester: { equals: participantId } },
-          { addressee: { equals: participantId } },
-        ],
-      },
+  const sweep = async (collection: Sweepable, where: Where) => {
+    const result = await payload.delete({
+      collection,
+      where,
       overrideAccess: false,
       user,
-    })
-    .catch(() => undefined);
+    });
+    /* A bulk delete reports per-row failures instead of throwing; one left behind strands the account. */
+    if (result.errors.length > 0) {
+      throw new Error(`Could not clear ${collection} for participant ${id}`);
+    }
+  };
+  const theirs = (field: string): Where => ({ [field]: { equals: participantId } });
+  const either = (a: string, b: string): Where => ({
+    or: [theirs(a), theirs(b)],
+  });
+
+  await sweep('account-sessions', theirs('participant'));
+  await sweep('participant-sessions', theirs('participant'));
+  await sweep('registrations', theirs('participant'));
+  await sweep('session-registrations', theirs('participant'));
+
+  const connections = await payload.find({
+    collection: 'networking-connections',
+    where: either('requester', 'addressee'),
+    depth: 0,
+    pagination: false,
+    overrideAccess: false,
+    user,
+  });
+  const connectionIds = connections.docs.map((doc) => doc.id);
+  if (connectionIds.length > 0) {
+    await sweep('networking-chat-messages', { connection: { in: connectionIds } });
+  }
+  await sweep('networking-chat-messages', theirs('sender'));
+  await sweep('networking-meetings', either('host', 'guest'));
+  await sweep('networking-blocks', either('blocker', 'blocked'));
+  await sweep('networking-connections', either('requester', 'addressee'));
 
   await payload.delete({
     collection: 'participants',

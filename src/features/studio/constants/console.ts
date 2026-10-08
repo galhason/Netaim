@@ -264,6 +264,10 @@ export const CONSOLE_UI = {
     he: 'ההעברה נכשלה — ההרשמה המקורית בוטלה אך ההרשמה החדשה לא נקלטה.',
     en: 'The move failed — the original registration was cancelled but the new one was not accepted.',
   },
+  deleteFailedNote: {
+    he: 'המחיקה לא הושלמה — החשבון נשאר כפי שהיה. נסו שוב, ואם זה חוזר, בדקו את יומן השרת.',
+    en: 'The deletion could not be completed — the account was left as it was. Try again, and if it repeats, check the server log.',
+  },
   cancelRegistration: { he: 'ביטול הרשמה', en: 'Cancel registration' },
   moveTo: { he: 'העברה אל…', en: 'Move to…' },
   moveConfirm: { he: 'העברה', en: 'Move' },

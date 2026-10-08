@@ -936,10 +936,10 @@ export interface NetworkingReport {
   id: number;
   organization: number | Organization;
   event?: (number | null) | Event;
-  reporter: number | Participant;
+  reporter?: (number | null) | Participant;
   reporterName?: string | null;
   reporterEmail?: string | null;
-  reported: number | Participant;
+  reported?: (number | null) | Participant;
   reportedName?: string | null;
   reportedEmail?: string | null;
   reason: 'harassment' | 'spam' | 'impersonation' | 'inappropriate' | 'other';

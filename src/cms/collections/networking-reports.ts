@@ -54,7 +54,7 @@ export const NetworkingReports: CollectionConfig = {
       name: 'reporter',
       type: 'relationship',
       relationTo: 'participants',
-      required: true,
+      /* Empties when the account is deleted; the copied name stays. */
       index: true,
     },
     { name: 'reporterName', type: 'text' },
@@ -63,7 +63,6 @@ export const NetworkingReports: CollectionConfig = {
       name: 'reported',
       type: 'relationship',
       relationTo: 'participants',
-      required: true,
       index: true,
     },
     { name: 'reportedName', type: 'text' },
