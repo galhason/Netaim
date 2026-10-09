@@ -25,6 +25,7 @@ import {
 import { Modal, useToast } from '../ui/feedback';
 import { useFavorites } from '../ui/favorites';
 import SpeakerCard from './speaker-card';
+import ReadMore from '../ui/read-more';
 import { withBasePath } from '@/config/site';
 
 interface Props {
@@ -232,6 +233,14 @@ const ActivityDrawer = ({
   const reduce = useReducedMotion();
   const toast = useToast();
   const he = locale === 'he';
+  /* Who it is for, the field, the language — only the lines that were written. */
+  const facets = activity
+    ? [
+        { label: he ? 'קהל יעד' : 'Audience', values: activity.audiences },
+        { label: he ? 'תחום' : 'Field', values: activity.topics },
+        { label: he ? 'שפה' : 'Language', values: activity.language ? [activity.language] : [] },
+      ].filter((facet) => facet.values.length > 0)
+    : [];
   const favorites = useFavorites();
   const fav = activity ? favorites.has(activity.id) : false;
   const [shareOpen, setShareOpen] = useState(false);
@@ -388,23 +397,39 @@ const ActivityDrawer = ({
                   leaveAction={leaveAction}
                 />
 
-                {activity.description || activity.language ? (
+                {facets.length > 0 ? (
+                  <dl className="flex flex-col gap-2">
+                    {facets.map((facet) => (
+                      <div key={facet.label} className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--x-faint)]">
+                          {facet.label}
+                        </dt>
+                        <dd className="m-0 flex flex-wrap gap-1.5">
+                          {facet.values.map((value) => (
+                            <span
+                              key={value}
+                              className="inline-flex items-center rounded-[var(--x-r-pill)] bg-[var(--x-raise)] px-2.5 py-0.5 text-xs text-[var(--x-soft)]"
+                            >
+                              {value}
+                            </span>
+                          ))}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : null}
+
+                {activity.description ? (
                   <div>
                     <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--x-faint)]">
-                      {he ? 'על הפעילות' : 'About'}
+                      {he ? 'תקציר ורציונל' : 'Abstract & rationale'}
                     </h3>
-                    {activity.description ? (
-                      <p className="text-[15px] leading-relaxed text-[var(--x-soft)]">
-                        {activity.description}
-                      </p>
-                    ) : null}
-                    {activity.language ? (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <span className="inline-flex items-center gap-1.5 rounded-[var(--x-r-pill)] bg-[var(--x-raise)] px-3 py-1 text-xs text-[var(--x-soft)]">
-                          {he ? 'שפה' : 'Language'}: {activity.language}
-                        </span>
-                      </div>
-                    ) : null}
+                    <ReadMore
+                      text={activity.description}
+                      locale={locale}
+                      lines={5}
+                      className="text-[15px] leading-relaxed text-[var(--x-soft)]"
+                    />
                   </div>
                 ) : null}
 

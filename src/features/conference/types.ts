@@ -55,7 +55,11 @@ export interface ActivityVM {
   time?: string;
   endTime?: string;
   duration?: string;
+  /* The language line, composed for the reader: "אנגלית · תרגום סימולטני". */
   language?: string;
+  /* Who it is for and what field it belongs to — labels in the reader's language. */
+  audiences: string[];
+  topics: string[];
   dayKey: string;
   startMs: number;
   endMs?: number;

@@ -178,6 +178,8 @@ export const payloadRegistrationRepository: RegistrationRepository = {
       orgName: participant.organization,
       roleTitle: participant.role,
       country: participant.country,
+      /* The site language they registered in becomes the language they are written to in. */
+      ...(participant.locale ? { preferredLocale: participant.locale } : {}),
     };
 
     const priorRow = existing.docs[0] as

@@ -3,7 +3,7 @@ import {
   cacheTags,
   cachedContent,
 } from '@/shared/cache/content-cache';
-import { FALLBACK_LOCALE } from '@/config/locales';
+import { FALLBACK_LOCALE, isSupportedLocale } from '@/config/locales';
 import type { ContentSource } from '@/features/events';
 import type {
   HomepageCompositionWriter,
@@ -396,11 +396,11 @@ subscribeRegistration(
      * here at the composition root so the engine keeps knowing nothing
      * about where words are stored.
      */
-    async (eventSlug) =>
+    async (eventSlug, locale) =>
       (
         await payloadRegistrationSettingsRepository.getByEvent(
           eventSlug,
-          FALLBACK_LOCALE,
+          isSupportedLocale(locale) ? locale : FALLBACK_LOCALE,
         )
       )?.emailTemplates,
     /*
@@ -409,6 +409,9 @@ subscribeRegistration(
      * delivery, never written into the outbox record.
      */
     recipientForParticipant,
+    /* The language the person chose — on the account, beside the address. */
+    (participantId) =>
+      payloadParticipantSessionRepository.localePreference(participantId),
   ),
 );
 

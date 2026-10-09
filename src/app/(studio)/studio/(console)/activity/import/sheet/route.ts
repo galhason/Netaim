@@ -6,7 +6,13 @@ import {
   readImport,
   updateSession,
 } from '@/features/program';
+import {
+  createExternalSpeaker,
+  listConferenceSpeakers,
+  updateSpeaker,
+} from '@/features/speakers';
 import { authorized, getStudioLocale } from '@/features/studio';
+import type { ImportSpeaker } from '@/features/program';
 
 /*
  * The spreadsheet door: hand out the template, read a filled one back,
@@ -94,6 +100,8 @@ export const POST = async (request: Request): Promise<Response> => {
         to: row.raw.endTime ?? '',
         place: row.raw.floor ?? '',
         capacity: row.raw.capacity ?? '',
+        speakers: row.speakers.map((speaker) => speaker.name).join(', '),
+        facets: [row.raw.audiences, row.raw.topics, row.raw.language].filter(Boolean).join(' · '),
         problems: row.problems.map((problem) => problem.message[locale]),
       })),
     });
@@ -109,11 +117,65 @@ export const POST = async (request: Request): Promise<Response> => {
    * the notices to registered guests all hang off a creation, and a
    * bulk write behind its back would skip every one of them.
    */
+  /*
+   * The presenters, by name. A speaker the conference already lists
+   * under this name — in either language — is linked, so a sheet
+   * uploaded twice, or two activities by one person, never doubles the
+   * roster. One not yet listed is created from the row, in Hebrew first
+   * and English after, and remembered for the rows that follow.
+   */
+  const roster = new Map<string, string>();
+  const remember = (name: string | undefined, id: string) => {
+    if (name) roster.set(name.trim().toLowerCase(), id);
+  };
+  for (const speaker of await listConferenceSpeakers(slug, 'he').catch(() => [])) {
+    remember(speaker.name, speaker.id);
+  }
+  for (const speaker of await listConferenceSpeakers(slug, 'en', { fallback: false }).catch(() => [])) {
+    remember(speaker.name, speaker.id);
+  }
+  const speakerIdFor = async (speaker: ImportSpeaker): Promise<string | null> => {
+    const known = roster.get(speaker.name.toLowerCase()) ?? (speaker.nameEn ? roster.get(speaker.nameEn.toLowerCase()) : undefined);
+    if (known) {
+      return known;
+    }
+    const made = await createExternalSpeaker(
+      slug,
+      {
+        name: speaker.name,
+        ...(speaker.jobTitle ? { jobTitle: speaker.jobTitle } : {}),
+        ...(speaker.company ? { company: speaker.company } : {}),
+        ...(speaker.bio ? { bio: speaker.bio } : {}),
+      },
+      'he',
+    ).catch(() => null);
+    if (!made) {
+      return null;
+    }
+    const english = {
+      ...(speaker.nameEn ? { name: speaker.nameEn } : {}),
+      ...(speaker.jobTitleEn ? { jobTitle: speaker.jobTitleEn } : {}),
+      ...(speaker.companyEn ? { company: speaker.companyEn } : {}),
+      ...(speaker.bioEn ? { bio: speaker.bioEn } : {}),
+    };
+    if (Object.keys(english).length > 0) {
+      await updateSpeaker(made.id, english, 'en').catch(() => null);
+    }
+    remember(speaker.name, made.id);
+    remember(speaker.nameEn, made.id);
+    return made.id;
+  };
+
   let created = 0;
   const failed: number[] = [];
   for (const row of reading.ready) {
     if (!row.input) {
       continue;
+    }
+    const speakerIds: string[] = [];
+    for (const speaker of row.speakers) {
+      const id = await speakerIdFor(speaker);
+      if (id) speakerIds.push(id);
     }
     /*
      * Hebrew is the activity; English is what was translated of it.
@@ -121,7 +183,7 @@ export const POST = async (request: Request): Promise<Response> => {
      * rather than becoming an empty English string — empty is what lets
      * the English page fall back to the Hebrew.
      */
-    const saved = await createSession(slug, 'he', row.input).catch(() => null);
+    const saved = await createSession(slug, 'he', { ...row.input, speakerIds }).catch(() => null);
     if (!saved) {
       failed.push(row.line);
       continue;

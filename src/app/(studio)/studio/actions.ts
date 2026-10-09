@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { isSupportedLocale, type Locale } from '@/config/locales';
+import { parseLanguageText } from '@/shared/constants/activity-facets';
 import { audit, type AuditAction } from '@/features/access';
 import {
   archiveEvent,
@@ -191,7 +192,7 @@ export const addSessionAction = async (formData: FormData) => {
     waitlistEnabled: formData.get('waitlistEnabled') === 'on',
     featured: formData.get('featured') === 'on',
     track: optionalText(formData.get('track')),
-    language: optionalText(formData.get('language')),
+    ...parseLanguageText(optionalText(formData.get('language'))),
   });
   await audit(actor, 'content.sessionCreated', slug);
   publishedEvent(slug);
@@ -230,7 +231,7 @@ export const updateSessionAction = async (formData: FormData) => {
     waitlistEnabled: formData.get('waitlistEnabled') === 'on',
     featured: formData.get('featured') === 'on',
     track: optionalText(formData.get('track')),
-    language: optionalText(formData.get('language')),
+    ...parseLanguageText(optionalText(formData.get('language'))),
   });
   await audit(actor, 'content.sessionUpdated', slug, { sessionId });
   publishedEvent(slug);

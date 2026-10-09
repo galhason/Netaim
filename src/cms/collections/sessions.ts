@@ -1,4 +1,12 @@
 import type { CollectionConfig } from 'payload';
+import {
+  ACTIVITY_LANGUAGES,
+  ACTIVITY_LANGUAGE_LABELS,
+  AUDIENCES,
+  AUDIENCE_LABELS,
+  TOPICS,
+  TOPIC_LABELS,
+} from '@/shared/constants/activity-facets';
 import { publicContentAccess } from '../access-presets';
 
 /*
@@ -106,10 +114,36 @@ export const Sessions: CollectionConfig = {
         description: 'Thumbnail shown on the Featured Sessions cards',
       },
     },
+    /*
+     * Who the activity is for, what field it belongs to, and the
+     * language it is held in — the three facets the production's own
+     * programme sheet names for every activity. Closed lists, chosen in
+     * the Studio, read in either language (src/shared/constants/activity-facets).
+     * The old free-text `language` was folded into these by migration.
+     */
     {
-      name: 'language',
-      type: 'text',
+      name: 'audiences',
+      type: 'select',
+      hasMany: true,
+      options: AUDIENCES.map((value) => ({ label: AUDIENCE_LABELS[value].en, value })),
     },
+    {
+      name: 'topics',
+      type: 'select',
+      hasMany: true,
+      options: TOPICS.map((value) => ({ label: TOPIC_LABELS[value].en, value })),
+    },
+    {
+      name: 'languages',
+      type: 'select',
+      hasMany: true,
+      options: ACTIVITY_LANGUAGES.map((value) => ({
+        label: ACTIVITY_LANGUAGE_LABELS[value].en,
+        value,
+      })),
+    },
+    { name: 'translated', type: 'checkbox', defaultValue: false },
+    { name: 'languageNote', type: 'text', localized: true },
     {
       name: 'equipment',
       type: 'text',

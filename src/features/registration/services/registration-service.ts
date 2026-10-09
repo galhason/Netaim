@@ -60,7 +60,7 @@ export const registerForEvent = async (
 
   const persisted = await registrationRepository.register(
     slug,
-    input,
+    { ...input, locale },
     OUTCOME_STATUS[outcome],
     waitlistPosition,
   );

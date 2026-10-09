@@ -16,6 +16,7 @@ import type {
   SpeakerVM,
 } from '@/features/conference';
 import { cancellationAllowed, registrationWindow } from '@/registration-engine';
+import { audienceLabels, languageLine, topicLabels } from '@/shared/constants/activity-facets';
 import type { SessionType } from '../types/session';
 import {
   listConferenceActivities,
@@ -228,7 +229,9 @@ export const buildProgramModel = async (
           ? formatTimeLabel(session.endsAt, locale, timeZone) || undefined
           : undefined,
         duration: durationLabel(session.startsAt, session.endsAt, locale),
-        language: session.language,
+        language: languageLine(session, locale) || undefined,
+        audiences: audienceLabels(session.audiences, locale),
+        topics: topicLabels(session.topics, locale),
         dayKey: dayKeyOf(session.startsAt, timeZone),
         startMs,
         endMs,

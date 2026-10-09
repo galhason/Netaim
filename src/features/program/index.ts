@@ -36,6 +36,7 @@ export type {
   ImportProblem,
   ImportReading,
   ImportRow,
+  ImportSpeaker,
 } from './services/activity-import';
 export { readCsv, readFirstSheet, readGrid, writeWorkbook } from './services/sheet-codec';
 export type { SheetData } from './services/sheet-codec';

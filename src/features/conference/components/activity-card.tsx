@@ -207,18 +207,18 @@ const ActivityCard = ({
         </div>
 
         {/* The practical details, only where there is room for them. */}
-        {rich && (activity.floor || activity.language) ? (
+        {rich && (activity.floor || activity.language || activity.audiences.length > 0) ? (
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-            {activity.floor ? (
-              <span className="rounded-[var(--x-r-pill)] bg-[var(--x-raise)] px-2.5 py-1 text-[11px] font-medium text-[var(--x-soft)] ring-1 ring-inset ring-[var(--x-line)]">
-                {activity.floor}
-              </span>
-            ) : null}
-            {activity.language ? (
-              <span className="rounded-[var(--x-r-pill)] bg-[var(--x-raise)] px-2.5 py-1 text-[11px] font-medium text-[var(--x-soft)] ring-1 ring-inset ring-[var(--x-line)]">
-                {activity.language}
-              </span>
-            ) : null}
+            {[activity.floor, activity.language, ...activity.audiences]
+              .filter((value): value is string => Boolean(value))
+              .map((value) => (
+                <span
+                  key={value}
+                  className="rounded-[var(--x-r-pill)] bg-[var(--x-raise)] px-2.5 py-1 text-[11px] font-medium text-[var(--x-soft)] ring-1 ring-inset ring-[var(--x-line)]"
+                >
+                  {value}
+                </span>
+              ))}
           </div>
         ) : null}
 

@@ -29,6 +29,8 @@ interface PreviewRow {
   to: string;
   place: string;
   capacity: string;
+  speakers: string;
+  facets: string;
   problems: string[];
 }
 
@@ -65,6 +67,8 @@ const COPY = {
     colWhen: 'מתי',
     colPlace: 'מיקום',
     colSeats: 'מקומות',
+    colSpeakers: 'מעביר/ת',
+    colFacets: 'קהל · תחום · שפה',
     colVerdict: 'מצב',
     good: 'תקין',
     doneTitle: 'הייבוא הסתיים',
@@ -103,6 +107,8 @@ const COPY = {
     colWhen: 'When',
     colPlace: 'Place',
     colSeats: 'Seats',
+    colSpeakers: 'Presenter',
+    colFacets: 'Audience · field · language',
     colVerdict: 'State',
     good: 'ready',
     doneTitle: 'Import finished',
@@ -302,7 +308,7 @@ const ImportPanel = ({ locale, columnLabels }: Props) => {
               </p>
 
               <div className="mt-3 max-h-[46vh] overflow-auto rounded-lg border border-[var(--c-line)]">
-                <table className="w-full min-w-[680px] border-collapse text-sm">
+                <table className="w-full min-w-[920px] border-collapse text-sm">
                   <thead className="sticky top-0 bg-[var(--c-panel)]">
                     <tr className="border-b border-[var(--c-line)] text-[10px] tracking-[0.16em] text-[var(--c-text-faint)]">
                       <th className="px-3 py-2 text-start">{t.line}</th>
@@ -311,6 +317,8 @@ const ImportPanel = ({ locale, columnLabels }: Props) => {
                       <th className="px-3 py-2 text-start">{t.colWhen}</th>
                       <th className="px-3 py-2 text-start">{t.colPlace}</th>
                       <th className="px-3 py-2 text-start">{t.colSeats}</th>
+                      <th className="px-3 py-2 text-start">{t.colSpeakers}</th>
+                      <th className="px-3 py-2 text-start">{t.colFacets}</th>
                       <th className="px-3 py-2 text-start">{t.colVerdict}</th>
                     </tr>
                   </thead>
@@ -337,6 +345,12 @@ const ImportPanel = ({ locale, columnLabels }: Props) => {
                         </td>
                         <td className="px-3 py-2 tabular-nums text-[var(--c-text-soft)]">
                           {row.capacity || '—'}
+                        </td>
+                        <td className="px-3 py-2 text-[var(--c-text-soft)]">
+                          {row.speakers || '—'}
+                        </td>
+                        <td className="max-w-[16rem] px-3 py-2 text-xs text-[var(--c-text-soft)]">
+                          {row.facets || '—'}
                         </td>
                         <td className="px-3 py-2">
                           {row.problems.length === 0 ? (

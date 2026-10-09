@@ -22,6 +22,7 @@ import * as migration_20261007_090000_staff_only_conference from './20261007_090
 import * as migration_20261007_120000_conference_highlights from './20261007_120000_conference_highlights';
 import * as migration_20261007_150000_schedule_emails from './20261007_150000_schedule_emails';
 import * as migration_20261008_090000_reports_survive_deletion from './20261008_090000_reports_survive_deletion';
+import * as migration_20261009_090000_activity_facets from './20261009_090000_activity_facets';
 
 export const migrations = [
   {
@@ -143,5 +144,10 @@ export const migrations = [
     up: migration_20261008_090000_reports_survive_deletion.up,
     down: migration_20261008_090000_reports_survive_deletion.down,
     name: '20261008_090000_reports_survive_deletion',
+  },
+  {
+    up: migration_20261009_090000_activity_facets.up,
+    down: migration_20261009_090000_activity_facets.down,
+    name: '20261009_090000_activity_facets',
   },
 ];

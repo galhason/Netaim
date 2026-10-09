@@ -32,6 +32,8 @@ const activity = (over: Partial<ActivityVM>): ActivityVM => ({
   status: 'available',
   registration: 'registered',
   canCancel: true,
+  audiences: [],
+  topics: [],
   ...over,
 });
 

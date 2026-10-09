@@ -162,3 +162,53 @@ describe('a file a person actually sends', () => {
     expect(reading.rows[0]?.line).toBe(4);
   });
 });
+
+/*
+ * The programme sheet's own columns: who an activity is for, its field
+ * and language, and the presenter with their organisation and bio — in
+ * both languages, several presenters on one row.
+ */
+describe('the presenter and the three facets', () => {
+  const header = ['כותרת', 'סוג', 'קהל יעד', 'תחום', 'שפה', 'הערה על השפה', 'מעביר/ת הפעילות', 'מעביר/ת הפעילות באנגלית', 'ארגון', 'ארגון באנגלית', 'אודות המרצה', 'אודות המרצה באנגלית'];
+
+  it('reads the words of the sheet into the closed lists', () => {
+    const reading = readImport([
+      header,
+      ['סדנה א', 'סדנה', 'מחנכים / אנשי צוות, נוער (12-18)', 'חינוך בלתי-פורמלי, קהילתי', 'אנגלית (מתורגם)', '', 'דניאל חיימוביץ', 'Danielle Chaimovitz', 'נטעים קהילור', 'Netaim Kehilor', 'ביו', 'Bio'],
+      ['סדנה ב', 'סדנה', 'Educators / Staff, Adults (30+)', 'Formal Education', 'עברית / אנגלית', 'אפשרות לדיון בצרפתית', '', '', '', '', '', ''],
+    ]);
+    expect(reading.ready).toHaveLength(2);
+    const [a, b] = reading.ready;
+    expect(a?.input).toMatchObject({ audiences: ['educators', 'youth'], topics: ['informal', 'community'], languages: ['en'], translated: true });
+    expect(a?.speakers).toEqual([{ name: 'דניאל חיימוביץ', nameEn: 'Danielle Chaimovitz', company: 'נטעים קהילור', companyEn: 'Netaim Kehilor', bio: 'ביו', bioEn: 'Bio' }]);
+    expect(b?.input).toMatchObject({ audiences: ['educators', 'adults'], topics: ['formal'], languages: ['he', 'en'], languageNote: 'אפשרות לדיון בצרפתית' });
+    expect(b?.input?.translated).toBeUndefined();
+    expect(b?.speakers).toEqual([]);
+  });
+
+  it('splits several presenters on ";" in step, and lets one organisation or bio serve them all', () => {
+    const reading = readImport([
+      header,
+      ['פאנל', 'הרצאה', '', '', '', '', 'דורון משה; מרים פרץ', 'Doron Moshe; Miriam Peretz', 'נטעים', 'Netaim', 'על שניהם', 'About both'],
+    ]);
+    expect(reading.ready[0]?.speakers).toEqual([
+      { name: 'דורון משה', nameEn: 'Doron Moshe', company: 'נטעים', companyEn: 'Netaim', bio: 'על שניהם', bioEn: 'About both' },
+      { name: 'מרים פרץ', nameEn: 'Miriam Peretz', company: 'נטעים', companyEn: 'Netaim', bio: 'על שניהם', bioEn: 'About both' },
+    ]);
+  });
+
+  it('refuses an audience or a field it does not know, naming the word', () => {
+    const reading = readImport([header, ['סדנה', 'סדנה', 'סטודנטים', 'אמנות', '', '', '', '', '', '', '', '']]);
+    expect(reading.ready).toHaveLength(0);
+    expect(reading.rows[0]?.problems.map((p) => p.message.he)).toEqual(['קהל יעד לא מוכר: "סטודנטים".', 'תחום לא מוכר: "אמנות".']);
+  });
+
+  it('still imports its own template, new columns included', () => {
+    const reading = readImport(readFirstSheet(importTemplate('he')));
+    expect(reading.missingColumns).toEqual([]);
+    expect(reading.ready).toHaveLength(4);
+    expect(reading.ready[1]?.speakers[0]?.name).toBe('דניאל חיימוביץ');
+    expect(reading.ready[2]?.speakers).toHaveLength(2);
+    expect(reading.ready[1]?.input?.translated).toBe(true);
+  });
+});

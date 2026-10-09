@@ -12,6 +12,14 @@ import type { ResolvedSpeaker, SpeakerCandidate } from '@/features/speakers';
  * a Server Component" — and names this file.
  */
 import { WhenField } from '@/features/studio/components';
+import {
+  ACTIVITY_LANGUAGES,
+  ACTIVITY_LANGUAGE_LABELS,
+  AUDIENCES,
+  AUDIENCE_LABELS,
+  TOPICS,
+  TOPIC_LABELS,
+} from '@/shared/constants/activity-facets';
 import { saveActivityAction } from './actions';
 import ActivityImagePicker, { type MediaOption } from './activity-image-picker';
 import SpeakerPicker from './speaker-picker';
@@ -37,7 +45,12 @@ export interface WizardInitial {
   endsAt?: string;
   floor?: string;
   track?: string;
-  language?: string;
+  audiences?: string[];
+  topics?: string[];
+  languages?: string[];
+  translated?: boolean;
+  languageNote?: string;
+  languageNoteEn?: string;
   capacity?: string;
   waitlistEnabled?: boolean;
   registrationOpensAt?: string;
@@ -203,8 +216,8 @@ const T = (locale: Locale) => ({
   fType: locale === 'he' ? 'סוג הפעילות' : 'Activity type',
   fSubtitle: locale === 'he' ? 'כותרת משנה' : 'Subtitle',
   fSubtitlePh: locale === 'he' ? 'משפט קצר שמלווה את הכותרת' : 'A short line beside the title',
-  fDesc: locale === 'he' ? 'תיאור' : 'Description',
-  fDescPh: locale === 'he' ? 'על מה הפעילות, למי היא מיועדת ומה ייקחו ממנה המשתתפים.' : 'What it covers, who it is for and what participants take away.',
+  fDesc: locale === 'he' ? 'תקציר ורציונל' : 'Abstract & rationale',
+  fDescPh: locale === 'he' ? 'על מה הפעילות, מה הרציונל שלה ומה ייקחו ממנה המשתתפים. בתוכנייה מוצגות השורות הראשונות עם "קרא עוד".' : 'What it covers, why, and what participants take away. The programme shows the first lines with "Read more".',
   fFeatured: locale === 'he' ? 'הצגה בפעילויות הנבחרות בעמוד הבית' : 'Feature on the landing page',
 
   fStarts: locale === 'he' ? 'תחילת הפעילות' : 'Starts at',
@@ -214,7 +227,15 @@ const T = (locale: Locale) => ({
   fTrack: locale === 'he' ? 'מסלול' : 'Track',
   fTrackPh: locale === 'he' ? 'לדוגמה: מדיניות, טכנולוגיה' : 'e.g. Policy, Technology',
   fLang: locale === 'he' ? 'שפת הפעילות' : 'Language',
-  fLangPh: locale === 'he' ? 'לדוגמה: עברית' : 'e.g. Hebrew',
+  fTranslated: locale === 'he' ? 'עם תרגום סימולטני' : 'Simultaneous translation available',
+  fLangNote: locale === 'he' ? 'הערה על השפה' : 'Language note',
+  fLangNotePh: locale === 'he' ? 'לדוגמה: אפשרות לדיון בצרפתית' : 'e.g. discussion possible in French',
+  fAudience: locale === 'he' ? 'קהל יעד' : 'Target audience',
+  fTopics: locale === 'he' ? 'תחום' : 'Field',
+  facetsHint:
+    locale === 'he'
+      ? 'אפשר לסמן כמה. מה שמסומן מופיע בתוכנייה בשתי השפות.'
+      : 'Tick as many as apply. What is ticked appears in the programme in both languages.',
 
   speakerLead:
     locale === 'he'
@@ -282,6 +303,46 @@ const Check = ({
     />
     {children}
   </label>
+);
+
+/*
+ * One closed list, ticked as many as apply. Every option is a real
+ * checkbox under one name, so the action reads the set with getAll and
+ * an empty set is a real answer — the form always submits the group.
+ */
+const FacetGroup = ({
+  name,
+  label,
+  options,
+  chosen,
+  labelClass,
+}: {
+  name: string;
+  label: string;
+  options: { value: string; label: string }[];
+  chosen: readonly string[];
+  labelClass: string;
+}) => (
+  <fieldset className="m-0 min-w-0 border-0 p-0">
+    <legend className={labelClass}>{label}</legend>
+    <div className="flex flex-wrap gap-2">
+      {options.map((option) => (
+        <label
+          key={option.value}
+          className="flex cursor-pointer items-center gap-2 rounded-lg border border-[var(--c-line)] bg-[rgba(255,255,255,0.02)] px-3 py-2 text-sm text-[var(--c-text)] has-[:checked]:border-[var(--c-bronze)] has-[:checked]:bg-[var(--c-bronze)]/12"
+        >
+          <input
+            type="checkbox"
+            name={name}
+            value={option.value}
+            defaultChecked={chosen.includes(option.value)}
+            className="size-4 accent-[var(--c-bronze)]"
+          />
+          {option.label}
+        </label>
+      ))}
+    </div>
+  </fieldset>
 );
 
 const ActivityWizard = ({
@@ -447,6 +508,45 @@ const ActivityWizard = ({
               fieldClass={field}
               labelClass={label}
             />
+            <FacetGroup
+              name="audiences"
+              label={t.fAudience}
+              options={AUDIENCES.map((value) => ({ value, label: AUDIENCE_LABELS[value][locale] }))}
+              chosen={initial?.audiences ?? []}
+              labelClass={label}
+            />
+            <FacetGroup
+              name="topics"
+              label={t.fTopics}
+              options={TOPICS.map((value) => ({ value, label: TOPIC_LABELS[value][locale] }))}
+              chosen={initial?.topics ?? []}
+              labelClass={label}
+            />
+            <div className="flex flex-col gap-3">
+              <FacetGroup
+                name="languages"
+                label={t.fLang}
+                options={ACTIVITY_LANGUAGES.map((value) => ({
+                  value,
+                  label: ACTIVITY_LANGUAGE_LABELS[value][locale],
+                }))}
+                chosen={initial?.languages ?? []}
+                labelClass={label}
+              />
+              <Check name="translated" defaultChecked={initial?.translated}>
+                {t.fTranslated}
+              </Check>
+              <Pair
+                name="languageNote"
+                label={t.fLangNote}
+                he={initial?.languageNote ?? ''}
+                en={initial?.languageNoteEn ?? ''}
+                placeholder={t.fLangNotePh}
+                fieldClass={field}
+                labelClass={label}
+              />
+              <p className="text-[11px] text-[var(--c-text-faint)]">{t.facetsHint}</p>
+            </div>
             <ActivityImagePicker
               locale={locale}
               slug={slug}
@@ -493,29 +593,15 @@ const ActivityWizard = ({
                 className={field}
               />
             </div>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Pair
-                name="track"
-                label={t.fTrack}
-                he={initial?.track ?? ''}
-                en={initial?.trackEn ?? ''}
-                placeholder={t.fTrackPh}
-                fieldClass={field}
-                labelClass={label}
-              />
-              <div>
-                <label className={label} htmlFor="w-lang">
-                  {t.fLang}
-                </label>
-                <input
-                  id="w-lang"
-                  name="language"
-                  defaultValue={initial?.language ?? ''}
-                  placeholder={t.fLangPh}
-                  className={field}
-                />
-              </div>
-            </div>
+            <Pair
+              name="track"
+              label={t.fTrack}
+              he={initial?.track ?? ''}
+              en={initial?.trackEn ?? ''}
+              placeholder={t.fTrackPh}
+              fieldClass={field}
+              labelClass={label}
+            />
           </section>
 
           {/* STEP 2 — Speakers */}

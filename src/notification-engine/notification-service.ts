@@ -19,6 +19,7 @@ import {
  */
 export type TemplateOverrideLookup = (
   eventSlug: string,
+  locale: string,
 ) => Promise<RegistrationTemplateOverrides | undefined>;
 
 /*
@@ -29,6 +30,16 @@ export type TemplateOverrideLookup = (
  * satisfy the contract.
  */
 export type RecipientLookup = (participantId: string) => Promise<Recipient>;
+
+/*
+ * The language one participant reads. Resolved at the seam like the
+ * address; absent, or failing, the platform's fallback language is used
+ * — the way every notice was sent before a person could choose.
+ */
+export type LocaleLookup = (participantId: string) => Promise<string | null>;
+
+const isLocale = (value: string | null | undefined): value is 'he' | 'en' =>
+  value === 'he' || value === 'en';
 
 /*
  * Send one message that was composed elsewhere — the magic link, an
@@ -66,19 +77,30 @@ export const createRegistrationNotifier =
     channel: ChannelAdapter,
     overridesFor?: TemplateOverrideLookup,
     recipientFor?: RecipientLookup,
+    localeFor?: LocaleLookup,
   ) =>
   async (event: RegistrationDomainEvent): Promise<void> => {
+    /*
+     * In the reader's own language. Every registration notice used to
+     * go out in the fallback language whatever the person had chosen —
+     * a guest who registered on the English site was confirmed in
+     * Hebrew.
+     */
+    const chosen = localeFor
+      ? await localeFor(event.participantId).catch(() => null)
+      : null;
+    const locale = isLocale(chosen) ? chosen : FALLBACK_LOCALE;
     /*
      * A conference that has written nothing, or a lookup that fails,
      * leaves the platform's wording in place. A guest is never sent an
      * empty email because a settings read timed out.
      */
     const overrides = overridesFor
-      ? await overridesFor(event.eventSlug).catch(() => undefined)
+      ? await overridesFor(event.eventSlug, locale).catch(() => undefined)
       : undefined;
     const rendered = renderRegistrationNotification(
       event.type,
-      FALLBACK_LOCALE,
+      locale,
       overrides,
     );
     /*
@@ -90,16 +112,15 @@ export const createRegistrationNotifier =
     const base = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, '');
     const cta = base
       ? {
-          label:
-            FALLBACK_LOCALE === 'he' ? 'לאזור האישי שלי' : 'Go to my space',
-          href: `${base}/${FALLBACK_LOCALE}/me`,
+          label: locale === 'he' ? 'לאזור האישי שלי' : 'Go to my space',
+          href: `${base}/${locale}/me`,
         }
       : undefined;
     const message = {
       participantId: event.participantId,
       eventSlug: event.eventSlug,
       type: event.type,
-      locale: FALLBACK_LOCALE,
+      locale,
       subject: rendered.subject,
       body: rendered.body,
       ...(cta ? { cta } : {}),

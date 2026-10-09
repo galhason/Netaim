@@ -66,7 +66,10 @@ describe('an email when the activity moves', () => {
     expect(state.sent[0]?.type).toBe('activity.changed');
     expect(state.sent[0]?.subject).toBe('שינוי בשעה: סדנת AI');
     expect(state.sent[1]?.subject).toBe('Time changed: AI workshop');
-    expect(state.sent[1]?.body).toContain('The activity you registered for now takes place on');
+    /* The mail says from what to what — the pop-up says only the new. */
+    expect(state.sent[1]?.body).toContain('• Time: 20 October 2026: from 12:00–13:00 to 14:00–15:00');
+    expect(state.sent[0]?.body).toContain('• השעה: 20 באוקטובר 2026: מ־12:00–13:00 ל־14:00–15:00');
+    expect(state.outbox[0]?.type).toBe('announcement.popup.activity');
   });
 
   it('says in every mail how to stop them, and leads to the reader’s schedule', async () => {
@@ -78,11 +81,22 @@ describe('an email when the activity moves', () => {
     expect(state.sent[1]?.cta?.href).toBe('https://netaim26.org/en/events/summit/my-activities');
   });
 
-  it('is sent for a cancellation too', async () => {
+  it('is sent for a cancellation too, naming the slot that is gone', async () => {
     const { announceSessionCancelled } = await notices();
-    await announceSessionCancelled('summit', 's1', titles);
+    await announceSessionCancelled('summit', 's1', titles, before);
     expect(state.sent.map((mail) => mail.type)).toEqual(['activity.cancelled', 'activity.cancelled']);
     expect(state.sent[0]?.subject).toBe('הפעילות בוטלה: סדנת AI');
+    expect(state.sent[0]?.body).toContain('לצערנו, הפעילות "סדנת AI" שנרשמתם אליה בוטלה.');
+    expect(state.sent[0]?.body).toContain('• מועד שתוכנן: 20 באוקטובר 2026, 12:00–13:00');
+    expect(state.sent[1]?.body).toContain('• Planned for: 20 October 2026, 12:00–13:00');
+  });
+
+  it('writes both moments out when the day itself moved, and the room when it did', async () => {
+    const { announceSessionChange } = await notices();
+    await announceSessionChange('summit', 's1', titles, before, { ...before, startsAt: '2026-10-21T09:00:00.000Z', endsAt: '2026-10-21T10:00:00.000Z', room: 'אולם ד' });
+    expect(state.sent[1]?.body).toContain('• Time: from 20 October 2026, 12:00–13:00 to 21 October 2026, 12:00–13:00');
+    expect(state.sent[1]?.body).toContain('• Location: from אולם א to אולם ד');
+    expect(state.sent[1]?.body).toContain('• When: 21 October 2026, 12:00–13:00');
   });
 
   it('is not sent when nothing worth a word changed', async () => {

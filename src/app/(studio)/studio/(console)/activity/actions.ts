@@ -25,6 +25,7 @@ import {
   type ResolvedSpeaker,
   type SpeakerSocialLink,
 } from '@/features/speakers';
+import { activityLanguagesOf, audiencesOf, topicsOf } from '@/shared/constants/activity-facets';
 
 /*
  * Shaping the program (create, edit, duplicate, illustrate) is one
@@ -101,7 +102,12 @@ export const saveActivityAction = async (formData: FormData) => {
       ? String(formData.get('imageId') ?? '').trim()
       : undefined,
     track: text(formData.get('track')),
-    language: text(formData.get('language')),
+    /* The three facets, as ticked; the form always submits them, so an empty set clears. */
+    audiences: audiencesOf(formData.getAll('audiences').map(String)),
+    topics: topicsOf(formData.getAll('topics').map(String)),
+    languages: activityLanguagesOf(formData.getAll('languages').map(String)),
+    translated: formData.get('translated') === 'on',
+    languageNote: text(formData.get('languageNote')),
   };
 
   /*
@@ -125,6 +131,9 @@ export const saveActivityAction = async (formData: FormData) => {
       ? { description: text(formData.get('description_en')) }
       : {}),
     ...(text(formData.get('track_en')) ? { track: text(formData.get('track_en')) } : {}),
+    ...(text(formData.get('languageNote_en'))
+      ? { languageNote: text(formData.get('languageNote_en')) }
+      : {}),
   };
 
   const id = sessionId
@@ -178,7 +187,11 @@ export const duplicateActivityAction = async (formData: FormData) => {
       featured: false,
       imageId: s.imageId,
       track: s.track,
-      language: s.language,
+      audiences: s.audiences,
+      topics: s.topics,
+      languages: s.languages,
+      translated: s.translated,
+      languageNote: s.languageNote,
     });
     const actor = await actorFor('activities:manage', slug);
     if (actor && copy) {

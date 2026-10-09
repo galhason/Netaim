@@ -1,4 +1,5 @@
 import type { Locale } from '@/config/locales';
+import { audienceLabels, languageLine, topicLabels } from '@/shared/constants/activity-facets';
 import type {
   MarketingRepository,
   PublicImage,
@@ -100,7 +101,11 @@ interface SessionRow {
   floor?: string | null;
   track?: string | null;
   subtitle?: string | null;
-  language?: string | null;
+  audiences?: string[] | null;
+  topics?: string[] | null;
+  languages?: string[] | null;
+  translated?: boolean | null;
+  languageNote?: string | null;
   featured?: boolean | null;
   speakers?: unknown;
   image?: unknown;
@@ -115,8 +120,15 @@ interface SessionRow {
  * `featured` is read because the selection rule needs it, and it is not
  * part of the public shape -- it is an editorial marking, not content.
  */
+const facetsOf = (row: SessionRow) => ({
+  languages: row.languages ?? undefined,
+  translated: row.translated === true,
+  languageNote: row.languageNote ?? undefined,
+});
+
 const toPublicSession = (
   row: SessionRow,
+  locale: Locale,
 ): PublicSession & { featured?: boolean } => ({
   id: String(row.id),
   title: row.title ?? '',
@@ -128,7 +140,17 @@ const toPublicSession = (
   ...(row.floor ? { floor: row.floor } : {}),
   ...(row.track ? { track: row.track } : {}),
   ...(row.subtitle ? { subtitle: row.subtitle } : {}),
-  ...(row.language ? { language: row.language } : {}),
+  /*
+   * The three facets leave as words in the page's language, never as
+   * codes: the site prints them, it does not translate them.
+   */
+  ...(languageLine(facetsOf(row), locale) ? { language: languageLine(facetsOf(row), locale) } : {}),
+  ...(audienceLabels(row.audiences ?? undefined, locale).length > 0
+    ? { audiences: audienceLabels(row.audiences ?? undefined, locale) }
+    : {}),
+  ...(topicLabels(row.topics ?? undefined, locale).length > 0
+    ? { topics: topicLabels(row.topics ?? undefined, locale) }
+    : {}),
   speakers: Array.isArray(row.speakers)
     ? row.speakers
         .filter((speaker) => speaker && typeof speaker === 'object')
@@ -195,7 +217,7 @@ export const payloadMarketingRepository: MarketingRepository = {
       pagination: false,
       overrideAccess: true,
     });
-    return (result.docs as unknown as SessionRow[]).map(toPublicSession);
+    return (result.docs as unknown as SessionRow[]).map((row) => toPublicSession(row, locale));
   },
 
   speakersOfEvent: async (eventId: string, locale: Locale) => {

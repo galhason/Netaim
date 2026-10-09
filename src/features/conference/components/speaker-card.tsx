@@ -3,6 +3,7 @@
 import type { Locale } from '@/config/locales';
 import type { SpeakerVM } from '../types';
 import { Avatar } from '../ui/kit';
+import ReadMore from '../ui/read-more';
 import { IconArrow, IconLink } from '../ui/icons';
 
 /*
@@ -35,9 +36,14 @@ const SpeakerCard = ({
         </div>
       </div>
       {speaker.bio ? (
-        <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-[var(--x-soft)]">
-          {speaker.bio}
-        </p>
+        <div className="mt-3">
+          <ReadMore
+            text={speaker.bio}
+            locale={locale}
+            lines={3}
+            className="text-sm leading-relaxed text-[var(--x-soft)]"
+          />
+        </div>
       ) : null}
       <div className="mt-3 flex items-center justify-between gap-3">
         {speaker.registered ? (

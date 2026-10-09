@@ -60,7 +60,11 @@ export interface PublicSession {
   floor?: string;
   track?: string;
   subtitle?: string;
+  /* The language line in the page's language: "English · Simultaneous translation". */
   language?: string;
+  /* Who it is for and what field it belongs to, as words in the page's language. */
+  audiences?: string[];
+  topics?: string[];
   speakers: PublicSpeaker[];
   image?: PublicImage;
   /*

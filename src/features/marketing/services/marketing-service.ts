@@ -272,6 +272,8 @@ const publicSession = (
   ...(session.track ? { track: session.track } : {}),
   ...(session.subtitle ? { subtitle: session.subtitle } : {}),
   ...(session.language ? { language: session.language } : {}),
+  ...(session.audiences?.length ? { audiences: session.audiences } : {}),
+  ...(session.topics?.length ? { topics: session.topics } : {}),
   speakers: (session.speakers ?? []).map((speaker) =>
     publicSpeaker(roster.get(speaker.id) ?? speaker, origin),
   ),

@@ -62,6 +62,12 @@ export interface RegisterInput {
    * records none rather than assuming one.
    */
   mediaConsent?: boolean;
+  /*
+   * The language the person registered in. Written onto the account as
+   * their preference, so every email that follows — the confirmation,
+   * a promotion from the waiting list, a moved activity — speaks it.
+   */
+  locale?: Locale;
 }
 
 export interface RegisterPersisted {

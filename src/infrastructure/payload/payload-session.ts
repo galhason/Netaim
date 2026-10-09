@@ -1,4 +1,5 @@
 import { relationshipId } from '@/auth';
+import { activityLanguagesOf, audiencesOf, topicsOf } from '@/shared/constants/activity-facets';
 import type { RegistrationStatus } from '@/registration-engine';
 import type {
   SessionCounts,
@@ -32,7 +33,11 @@ interface SessionRow {
   waitlistEnabled?: boolean | null;
   featured?: boolean | null;
   image?: unknown;
-  language?: string | null;
+  audiences?: string[] | null;
+  topics?: string[] | null;
+  languages?: string[] | null;
+  translated?: boolean | null;
+  languageNote?: string | null;
   subtitle?: string | null;
   floor?: string | null;
   registrationOpensAt?: string | null;
@@ -84,7 +89,11 @@ const toSession = (row: SessionRow): SessionSummary => ({
   endsAt: row.endsAt ?? undefined,
   capacity: row.capacity ?? null,
   waitlistEnabled: Boolean(row.waitlistEnabled),
-  language: row.language ?? undefined,
+  audiences: audiencesOf(row.audiences ?? undefined),
+  topics: topicsOf(row.topics ?? undefined),
+  languages: activityLanguagesOf(row.languages ?? undefined),
+  translated: row.translated === true,
+  languageNote: row.languageNote ?? undefined,
   featured: Boolean(row.featured),
   image: mediaUrl(row.image as never),
   imageId: mediaId(row.image as never),
@@ -250,7 +259,11 @@ export const payloadSessionRepository: SessionRepository = {
         featured: input.featured ?? false,
         image: input.imageId ? Number(input.imageId) : undefined,
         track: input.track,
-        language: input.language,
+        audiences: input.audiences,
+        topics: input.topics,
+        languages: input.languages,
+        translated: input.translated ?? false,
+        languageNote: input.languageNote,
         description: input.description,
         subtitle: input.subtitle,
         floor: input.floor,
@@ -303,8 +316,12 @@ export const payloadSessionRepository: SessionRepository = {
             ? { image: input.imageId ? Number(input.imageId) : null }
             : {}),
           ...(input.track !== undefined ? { track: input.track } : {}),
-          ...(input.language !== undefined
-            ? { language: input.language }
+          ...(input.audiences !== undefined ? { audiences: input.audiences } : {}),
+          ...(input.topics !== undefined ? { topics: input.topics } : {}),
+          ...(input.languages !== undefined ? { languages: input.languages } : {}),
+          ...(input.translated !== undefined ? { translated: input.translated } : {}),
+          ...(input.languageNote !== undefined
+            ? { languageNote: input.languageNote || null }
             : {}),
           ...(input.description !== undefined
             ? { description: input.description || null }

@@ -872,7 +872,11 @@ export interface Session {
    * Thumbnail shown on the Featured Sessions cards
    */
   image?: (number | null) | Media;
-  language?: string | null;
+  audiences?: ('educators' | 'adults' | 'youth' | 'children')[] | null;
+  topics?: ('informal' | 'formal' | 'community')[] | null;
+  languages?: ('he' | 'en' | 'ru' | 'es' | 'fr' | 'de')[] | null;
+  translated?: boolean | null;
+  languageNote?: string | null;
   equipment?: string | null;
   subtitle?: string | null;
   floor?: string | null;
@@ -1716,7 +1720,11 @@ export interface SessionsSelect<T extends boolean = true> {
   waitlistEnabled?: T;
   featured?: T;
   image?: T;
-  language?: T;
+  audiences?: T;
+  topics?: T;
+  languages?: T;
+  translated?: T;
+  languageNote?: T;
   equipment?: T;
   subtitle?: T;
   floor?: T;

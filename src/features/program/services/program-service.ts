@@ -99,7 +99,7 @@ export const listArchivedActivities = async (
 export const archiveSession = async (sessionId: string): Promise<boolean> => {
   const titles = await titlesOf(sessionId);
   if (titles && titles.eventSlug) {
-    await announceSessionCancelled(titles.eventSlug, sessionId, titles);
+    await announceSessionCancelled(titles.eventSlug, sessionId, titles, titles.planned);
   }
   return sessionRepository.setArchived(sessionId, true);
 };
@@ -120,7 +120,7 @@ export const createSession = (
  */
 const titlesOf = async (
   sessionId: string,
-): Promise<{ he: string; en: string; eventSlug: string } | null> => {
+): Promise<{ he: string; en: string; eventSlug: string; planned: Pick<SessionSummary, 'startsAt' | 'endsAt' | 'room' | 'floor'> } | null> => {
   const [he, en] = await Promise.all([
     sessionRepository.getById(sessionId, 'he').catch(() => null),
     sessionRepository.getById(sessionId, 'en').catch(() => null),
@@ -133,6 +133,7 @@ const titlesOf = async (
     he: he?.title || en?.title || '',
     en: en?.title || he?.title || '',
     eventSlug: any.eventSlug ?? '',
+    planned: { startsAt: any.startsAt, endsAt: any.endsAt, room: any.room, floor: any.floor },
   };
 };
 
@@ -179,7 +180,7 @@ export const updateSession = async (
 export const deleteSession = async (sessionId: string): Promise<boolean> => {
   const titles = await titlesOf(sessionId);
   if (titles && titles.eventSlug) {
-    await announceSessionCancelled(titles.eventSlug, sessionId, titles);
+    await announceSessionCancelled(titles.eventSlug, sessionId, titles, titles.planned);
   }
   return sessionRepository.remove(sessionId);
 };

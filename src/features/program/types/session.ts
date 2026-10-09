@@ -1,6 +1,21 @@
 import type { Locale } from '@/config/locales';
 import type { RegistrationStatus } from '@/registration-engine';
 import type { ResolvedSpeaker } from '@/features/speakers/types/speaker';
+import type { ActivityLanguage, Audience, Topic } from '@/shared/constants/activity-facets';
+
+/*
+ * The three facets the programme sheet names for every activity, and
+ * the language's two companions. All optional: an activity that says
+ * nothing about them prints nothing.
+ */
+export interface ActivityFacets {
+  audiences?: Audience[];
+  topics?: Topic[];
+  languages?: ActivityLanguage[];
+  translated?: boolean;
+  /* "Discussion possible in French" — localized, free. */
+  languageNote?: string;
+}
 
 export const SESSION_TYPES = ['talk', 'workshop', 'keynote', 'break', 'tour'] as const;
 
@@ -9,7 +24,7 @@ export type SessionType = (typeof SESSION_TYPES)[number];
 export const isSessionType = (value: string): value is SessionType =>
   (SESSION_TYPES as readonly string[]).includes(value);
 
-export interface CreateSessionInput {
+export interface CreateSessionInput extends ActivityFacets {
   title: string;
   subtitle?: string;
   description?: string;
@@ -25,7 +40,6 @@ export interface CreateSessionInput {
   allowCancellation?: boolean;
   cancellationDeadline?: string;
   track?: string;
-  language?: string;
   featured?: boolean;
   imageId?: string;
 }
@@ -35,9 +49,10 @@ export interface SessionTranslation {
   subtitle?: string;
   description?: string;
   track?: string;
+  languageNote?: string;
 }
 
-export interface SessionSummary {
+export interface SessionSummary extends ActivityFacets {
   id: string;
   eventSlug?: string;
   title: string;
@@ -57,7 +72,6 @@ export interface SessionSummary {
   registrationClosesAt?: string;
   allowCancellation?: boolean;
   cancellationDeadline?: string;
-  language?: string;
   featured?: boolean;
   image?: string;
   imageId?: string;

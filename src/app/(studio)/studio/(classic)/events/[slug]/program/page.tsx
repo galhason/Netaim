@@ -1,3 +1,4 @@
+import { languageLine } from '@/shared/constants/activity-facets';
 import { getStudioLocale } from '@/features/studio';
 import { listAgenda, SESSION_TYPES, type SessionSummary } from '@/features/program';
 import type { Locale } from '@/config/locales';
@@ -187,7 +188,7 @@ const ProgramPage = async ({ params }: ProgramPageProps) => {
                       <input
                         type="text"
                         name="language"
-                        defaultValue={session.language ?? ''}
+                        defaultValue={languageLine(session, locale)}
                         className={fieldClass}
                       />
                     </label>
