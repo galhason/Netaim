@@ -109,7 +109,7 @@ const NavIcon = ({ path }: { path: string }) => (
 );
 
 const SESSION_TYPE_LABEL: Record<string, { he: string; en: string }> = {
-  workshop: { he: 'סדנה', en: 'Workshop' },
+  workshop: { he: 'סדנה', en: 'Seminar' },
   keynote: { he: 'הרצאת פתיחה', en: 'Keynote' },
   panel: { he: 'פאנל', en: 'Panel' },
   talk: { he: 'הרצאה', en: 'Talk' },
@@ -922,7 +922,7 @@ const LoungeView = ({
                 <NavIcon path="M12 4l1.8 4.4L18 10l-4.2 1.6L12 16l-1.8-4.4L6 10l4.2-1.6z" />
                 {locale === 'he'
                   ? 'סדנאות ואירועים מומלצים עבורך'
-                  : 'Workshops & events picked for you'}
+                  : 'Seminars & events picked for you'}
               </h2>
               <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
                 {suggestions.map((moment) => (

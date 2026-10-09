@@ -58,7 +58,7 @@ const VIEW_PROFILE: Record<Locale, string> = {
   en: 'View profile',
 };
 
-const DERIVED_BADGES = ['Panelist', 'Guest Speaker', 'Workshop'];
+const DERIVED_BADGES = ['Panelist', 'Guest Speaker', 'Seminar'];
 
 /*
  * Every portrait is cropped identically — a fixed 4:5 frame with the
@@ -96,7 +96,7 @@ const BadgeIcon = ({ badge }: { badge: string }) => {
       </svg>
     );
   }
-  if (/workshop/i.test(badge)) {
+  if (/workshop|seminar|סדנה/i.test(badge)) {
     return (
       <svg
         {...common}

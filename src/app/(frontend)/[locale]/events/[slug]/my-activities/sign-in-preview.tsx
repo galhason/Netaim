@@ -52,9 +52,9 @@ const PREVIEW: {
   },
   {
     time: '11:15',
-    type: { he: 'סדנה', en: 'Workshop' },
+    type: { he: 'סדנה', en: 'Seminar' },
     title: { he: 'כלים ליצירת חיבורים חדשים', en: 'Tools for new connections' },
-    place: { he: 'חדר סדנאות 3', en: 'Workshop room 3' },
+    place: { he: 'חדר סדנאות 3', en: 'Seminar room 3' },
     icon: (cls) => <IconBulb className={cls} />,
     tone: 'bg-[var(--x-warn-wash)] text-[var(--x-warn)]',
   },

@@ -43,7 +43,7 @@ interface Props {
 
 const TYPE_LABELS: Record<SessionType, Record<Locale, string>> = {
   talk: { he: 'הרצאה', en: 'Lecture' },
-  workshop: { he: 'סדנה', en: 'Workshop' },
+  workshop: { he: 'סדנה', en: 'Seminar' },
   keynote: { he: 'מליאה', en: 'Keynote' },
   tour: { he: 'סיור', en: 'Tour' },
   break: { he: 'הפסקה', en: 'Break' },

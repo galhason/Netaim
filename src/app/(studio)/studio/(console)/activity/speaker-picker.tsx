@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import type { Locale } from '@/config/locales';
 import type { ResolvedSpeaker, SpeakerCandidate } from '@/features/speakers';
-import { createSpeakerAction } from './actions';
+import { createSpeakerAction, speakerWordsAction, updateSpeakerAction, type SpeakerWords } from './actions';
 
 interface Props {
   slug: string;
@@ -33,6 +33,15 @@ const T = (locale: Locale) => ({
   create: locale === 'he' ? 'הוספה' : 'Add',
   cancel: locale === 'he' ? 'ביטול' : 'Cancel',
   remove: locale === 'he' ? 'הסרה' : 'Remove',
+  edit: locale === 'he' ? 'עריכה' : 'Edit',
+  save: locale === 'he' ? 'שמירה' : 'Save',
+  editLead:
+    locale === 'he'
+      ? 'הפרטים כפי שיוצגו בתוכנייה, בשתי השפות. שורה באנגלית שנשארת ריקה מציגה את העברית.'
+      : 'The details as the programme shows them, in both languages. An empty English row shows the Hebrew.',
+  editFull: locale === 'he' ? 'עריכה מלאה (כולל תמונה)' : 'Full edit (with photo)',
+  editingErr: locale === 'he' ? 'השמירה נכשלה. נסו שוב.' : 'Could not save. Try again.',
+  loadingErr: locale === 'he' ? 'לא ניתן היה לטעון את הפרטים.' : 'Could not load the details.',
   empty: locale === 'he' ? 'לא נבחרו דוברים עדיין.' : 'No speakers selected yet.',
   addingErr:
     locale === 'he' ? 'לא ניתן היה להוסיף. נסו שוב.' : 'Could not add. Try again.',
@@ -105,6 +114,159 @@ const Badge = ({
 const field =
   'w-full rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.5)] px-3 py-2 text-sm text-[var(--c-text)] placeholder:text-[var(--c-text-faint)] outline-none focus:border-[var(--c-bronze)]';
 
+const EMPTY_WORDS: SpeakerWords = { name: '', jobTitle: '', company: '', bio: '' };
+
+const LangTag = ({ children }: { children: string }) => (
+  <span className="grid w-9 flex-none place-items-center rounded-md bg-[rgba(255,255,255,0.06)] text-[10px] font-semibold text-[var(--c-text-faint)]">
+    {children}
+  </span>
+);
+
+/*
+ * One field, both languages, stacked — the wizard's own Pair, in
+ * miniature: a tag on the side says which language the row is.
+ */
+const WordPair = ({
+  label,
+  he,
+  en,
+  onHe,
+  onEn,
+  rows,
+  placeholder,
+}: {
+  label: string;
+  he: string;
+  en: string;
+  onHe: (value: string) => void;
+  onEn: (value: string) => void;
+  rows?: number;
+  placeholder?: string;
+}) => {
+  const control = (value: string, onChange: (value: string) => void, dir: 'rtl' | 'ltr') =>
+    rows ? (
+      <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} dir={dir} placeholder={placeholder} className={`${field} resize-y`} />
+    ) : (
+      <input value={value} onChange={(e) => onChange(e.target.value)} dir={dir} placeholder={placeholder} className={field} />
+    );
+  return (
+    <div>
+      <span className="mb-1 block text-[11px] font-medium text-[var(--c-text-soft)]">{label}</span>
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-stretch gap-1.5">
+          <LangTag>עב</LangTag>
+          {control(he, onHe, 'rtl')}
+        </div>
+        <div className="flex items-stretch gap-1.5">
+          <LangTag>EN</LangTag>
+          {control(en, onEn, 'ltr')}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/*
+ * The speaker's details, rewritten in place — the same words the roster
+ * page edits, without leaving the activity. The chip redraws from what
+ * the server saved, so the list never shows words that were not kept.
+ */
+const SpeakerEditor = ({
+  slug,
+  locale,
+  speaker,
+  onSaved,
+  onClose,
+}: {
+  slug: string;
+  locale: Locale;
+  speaker: ResolvedSpeaker;
+  onSaved: (speaker: ResolvedSpeaker) => void;
+  onClose: () => void;
+}) => {
+  const t = T(locale);
+  const [he, setHe] = useState<SpeakerWords>(EMPTY_WORDS);
+  const [en, setEn] = useState<SpeakerWords>(EMPTY_WORDS);
+  const [link, setLink] = useState('');
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState('');
+  const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    let alive = true;
+    speakerWordsAction({ slug, id: speaker.id }).then((words) => {
+      if (!alive) return;
+      if (!words) {
+        setError(t.loadingErr);
+        return;
+      }
+      setHe(words.he);
+      setEn(words.en);
+      setLink(words.link);
+      setLoaded(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [slug, speaker.id, t.loadingErr]);
+
+  const patch = (set: (value: SpeakerWords) => void, current: SpeakerWords, key: keyof SpeakerWords) =>
+    (value: string) => set({ ...current, [key]: value });
+
+  const save = () => {
+    setError('');
+    startTransition(async () => {
+      const saved = await updateSpeakerAction({ slug, id: speaker.id, contentLocale: locale, he, en, link });
+      if (!saved) {
+        setError(t.editingErr);
+        return;
+      }
+      onSaved(saved);
+    });
+  };
+
+  const rosterHref = `/studio/conference/${encodeURIComponent(slug)}/speakers#speaker-${speaker.id}`;
+
+  return (
+    <div className="mt-2 flex flex-col gap-2.5 rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.35)] p-3">
+      <p className="text-xs text-[var(--c-text-soft)]">{t.editLead}</p>
+      <WordPair label={t.fName} he={he.name} en={en.name} onHe={patch(setHe, he, 'name')} onEn={patch(setEn, en, 'name')} placeholder={speaker.name} />
+      <div className="grid gap-2.5 sm:grid-cols-2">
+        <WordPair label={t.fJob} he={he.jobTitle} en={en.jobTitle} onHe={patch(setHe, he, 'jobTitle')} onEn={patch(setEn, en, 'jobTitle')} placeholder={speaker.jobTitle} />
+        <WordPair label={t.fCompany} he={he.company} en={en.company} onHe={patch(setHe, he, 'company')} onEn={patch(setEn, en, 'company')} placeholder={speaker.company} />
+      </div>
+      <WordPair label={t.fBio} he={he.bio} en={en.bio} onHe={patch(setHe, he, 'bio')} onEn={patch(setEn, en, 'bio')} rows={3} />
+      <input value={link} onChange={(e) => setLink(e.target.value)} placeholder={t.fLink} dir="ltr" className={field} />
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          disabled={pending || !loaded}
+          onClick={save}
+          className="rounded-lg bg-[var(--c-bronze)] px-4 py-1.5 text-sm font-medium text-[var(--c-on-accent)] disabled:opacity-40"
+        >
+          {t.save}
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg px-3 py-1.5 text-sm text-[var(--c-text-soft)] hover:text-[var(--c-text)]"
+        >
+          {t.cancel}
+        </button>
+        <a
+          href={rosterHref}
+          target="_blank"
+          rel="noreferrer"
+          className="ms-auto text-xs text-[var(--c-text-faint)] underline-offset-2 hover:text-[var(--c-text)] hover:underline"
+        >
+          {t.editFull}
+        </a>
+      </div>
+      {error ? <p className="text-xs text-rose-300">{error}</p> : null}
+    </div>
+  );
+};
+
 const SpeakerPicker = ({
   slug,
   locale,
@@ -119,6 +281,7 @@ const SpeakerPicker = ({
   const [query, setQuery] = useState('');
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState('');
+  const [editing, setEditing] = useState<string | null>(null);
 
   // external form
   const [name, setName] = useState('');
@@ -200,6 +363,11 @@ const SpeakerPicker = ({
   const remove = (id: string) =>
     setSelected((prev) => prev.filter((s) => s.id !== id));
 
+  const replace = (speaker: ResolvedSpeaker) => {
+    setSelected((prev) => prev.map((s) => (s.id === speaker.id ? speaker : s)));
+    setEditing(null);
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-[var(--c-text-soft)]">{t.lead}</p>
@@ -219,30 +387,49 @@ const SpeakerPicker = ({
           {selected.map((s) => (
             <li
               key={s.id}
-              className="flex items-center gap-3 rounded-xl border border-[var(--c-line)] bg-[rgba(255,255,255,0.02)] px-3 py-2"
+              className="rounded-xl border border-[var(--c-line)] bg-[rgba(255,255,255,0.02)] px-3 py-2"
             >
-              <Avatar url={s.photoUrl} name={s.name} />
-              <span className="min-w-0 flex-1">
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="truncate font-medium text-[var(--c-text)]">
-                    {s.name}
+              <div className="flex items-center gap-3">
+                <Avatar url={s.photoUrl} name={s.name} />
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="truncate font-medium text-[var(--c-text)]">
+                      {s.name}
+                    </span>
+                    <Badge registered={s.isRegistered} locale={locale} />
                   </span>
-                  <Badge registered={s.isRegistered} locale={locale} />
+                  {subtitle(s) ? (
+                    <span className="block truncate text-xs text-[var(--c-text-soft)]">
+                      {subtitle(s)}
+                    </span>
+                  ) : null}
                 </span>
-                {subtitle(s) ? (
-                  <span className="block truncate text-xs text-[var(--c-text-soft)]">
-                    {subtitle(s)}
-                  </span>
-                ) : null}
-              </span>
-              <button
-                type="button"
-                onClick={() => remove(s.id)}
-                aria-label={t.remove}
-                className="flex-none rounded-md px-2 py-1 text-xs text-[var(--c-text-faint)] hover:text-rose-300"
-              >
-                ✕
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setEditing(editing === s.id ? null : s.id)}
+                  aria-expanded={editing === s.id}
+                  className="flex-none rounded-md px-2 py-1 text-xs text-[var(--c-text-soft)] hover:text-[var(--c-text)]"
+                >
+                  {t.edit}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove(s.id)}
+                  aria-label={t.remove}
+                  className="flex-none rounded-md px-2 py-1 text-xs text-[var(--c-text-faint)] hover:text-rose-300"
+                >
+                  ✕
+                </button>
+              </div>
+              {editing === s.id ? (
+                <SpeakerEditor
+                  slug={slug}
+                  locale={locale}
+                  speaker={s}
+                  onSaved={replace}
+                  onClose={() => setEditing(null)}
+                />
+              ) : null}
             </li>
           ))}
         </ul>

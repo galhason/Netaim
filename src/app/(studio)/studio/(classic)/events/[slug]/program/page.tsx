@@ -17,7 +17,7 @@ const COPY = {
   heading: { he: 'התוכנית', en: 'Program' },
   intro: {
     he: 'סדר היום של האירוע — סדנאות, הרצאות והפסקות.',
-    en: 'The event’s agenda — workshops, talks and breaks.',
+    en: 'The event’s agenda — seminars, talks and breaks.',
   },
   empty: {
     he: 'עדיין אין תוכנית. הוסיפו את הסדנה או ההרצאה הראשונה.',
@@ -41,7 +41,7 @@ const COPY = {
 const TYPE_LABEL: Record<SessionSummary['sessionType'], Record<Locale, string>> =
   {
     talk: { he: 'הרצאה', en: 'Talk' },
-    workshop: { he: 'סדנה', en: 'Workshop' },
+    workshop: { he: 'סדנה', en: 'Seminar' },
     keynote: { he: 'מליאה', en: 'Keynote' },
     tour: { he: 'סיור', en: 'Tour' },
     break: { he: 'הפסקה', en: 'Break' },

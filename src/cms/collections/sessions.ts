@@ -56,7 +56,7 @@ export const Sessions: CollectionConfig = {
       defaultValue: 'talk',
       options: [
         { label: 'Talk', value: 'talk' },
-        { label: 'Workshop', value: 'workshop' },
+        { label: 'Seminar', value: 'workshop' },
         { label: 'Keynote', value: 'keynote' },
         { label: 'Break', value: 'break' },
         { label: 'Tour', value: 'tour' },

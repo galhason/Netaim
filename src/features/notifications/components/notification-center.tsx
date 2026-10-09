@@ -88,7 +88,7 @@ const COPY = {
   emptyAll: { he: 'אין כרגע התראות', en: 'No notifications right now' },
   emptyAllSub: { he: 'כשמשהו יקרה — הוא יופיע כאן.', en: 'When something happens, it lands here.' },
   emptyConference: { he: 'אין כרגע התראות מהכנסים', en: 'No conference notifications right now' },
-  emptyConferenceSub: { he: 'שינויים בהרצאות, בסדנאות ובהרשמה שלכם יופיעו כאן.', en: 'Changes to your lectures, workshops and registration will appear here.' },
+  emptyConferenceSub: { he: 'שינויים בהרצאות, בסדנאות ובהרשמה שלכם יופיעו כאן.', en: 'Changes to your lectures, seminars and registration will appear here.' },
   emptyNetworking: { he: 'אין כרגע התראות מ-Networking', en: 'No Networking notifications right now' },
   emptyNetworkingSub: { he: 'בקשות התחברות, אישורים ופגישות יופיעו כאן.', en: 'Connection requests, acceptances and meetings will appear here.' },
   emptySystem: { he: 'אין כרגע התראות מערכת', en: 'No system notifications right now' },

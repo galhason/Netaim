@@ -22,6 +22,9 @@ import { addMedia } from '@/features/events';
 import {
   createExternalSpeaker,
   createLinkedSpeaker,
+  getSpeaker,
+  listConferenceSpeakers,
+  updateSpeaker,
   type ResolvedSpeaker,
   type SpeakerSocialLink,
 } from '@/features/speakers';
@@ -296,6 +299,89 @@ export const createSpeakerAction = async (input: {
     },
     locale,
   );
+};
+
+/*
+ * A speaker's own words, in both languages, as written — read without
+ * Payload filling an empty English field from the Hebrew, so the form
+ * shows which words are actually translated. For a linked speaker these
+ * are the overrides alone; the account's words stay the placeholder.
+ */
+export interface SpeakerWords {
+  name: string;
+  jobTitle: string;
+  company: string;
+  bio: string;
+}
+
+const wordsOf = (speaker: ResolvedSpeaker | undefined): SpeakerWords => ({
+  name: speaker?.own.name ?? '',
+  jobTitle: speaker?.own.jobTitle ?? '',
+  company: speaker?.own.company ?? '',
+  bio: speaker?.own.bio ?? '',
+});
+
+export const speakerWordsAction = async (input: {
+  slug: string;
+  id: string;
+}): Promise<{ he: SpeakerWords; en: SpeakerWords; link: string } | null> => {
+  const { slug, id } = input;
+  if (!slug || !id || !(await authorized(slug))) {
+    return null;
+  }
+  const [he, en] = await Promise.all([
+    listConferenceSpeakers(slug, 'he', { fallback: false }),
+    listConferenceSpeakers(slug, 'en', { fallback: false }),
+  ]);
+  const own = he.find((speaker) => speaker.id === id);
+  if (!own) {
+    return null;
+  }
+  return {
+    he: wordsOf(own),
+    en: wordsOf(en.find((speaker) => speaker.id === id)),
+    link: own.socialLinks[0]?.url ?? '',
+  };
+};
+
+/*
+ * The same speaker, rewritten from the activity wizard: two writes, one
+ * per language, the link riding the Hebrew one — the shape the roster
+ * page saves. An empty English field is written empty, so the site
+ * falls back to the Hebrew. Comes back resolved in the wizard's
+ * language so the chip can redraw without a reload.
+ */
+export const updateSpeakerAction = async (input: {
+  slug: string;
+  id: string;
+  contentLocale: Locale;
+  he: SpeakerWords;
+  en: SpeakerWords;
+  link: string;
+}): Promise<ResolvedSpeaker | null> => {
+  const { slug, id } = input;
+  if (!slug || !id || !(await authorized(slug))) {
+    return null;
+  }
+  const trimmed = (words: SpeakerWords): SpeakerWords => ({
+    name: words.name.trim(),
+    jobTitle: words.jobTitle.trim(),
+    company: words.company.trim(),
+    bio: words.bio.trim(),
+  });
+  const he = trimmed(input.he);
+  const link = input.link.trim();
+  const saved = await updateSpeaker(id, { ...he, socialLinks: link ? [{ url: link }] : [] }, 'he');
+  if (!saved) {
+    return null;
+  }
+  await updateSpeaker(id, trimmed(input.en), 'en');
+  const actor = await actorFor('activities:manage', slug);
+  if (actor) {
+    await audit(actor, 'content.speakerSaved', slug, { speaker: id, name: saved.name, created: false }, saved.name);
+  }
+  publishedEvent(slug);
+  return getSpeaker(id, input.contentLocale);
 };
 
 /*

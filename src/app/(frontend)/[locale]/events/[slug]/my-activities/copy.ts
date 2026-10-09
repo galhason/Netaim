@@ -16,7 +16,7 @@ export const COPY = {
   title: { he: 'הלוז שלי', en: 'My Schedule' },
   sub: {
     he: 'כל ההרצאות, הסדנאות והפעילויות שבחרתם במקום אחד.',
-    en: 'All the talks, workshops and activities you’ve selected, in one place.',
+    en: 'All the talks, seminars and activities you’ve selected, in one place.',
   },
   backToMe: { he: 'לאזור האישי', en: 'Personal area' },
   addActivity: { he: 'הוספת פעילות', en: 'Add activity' },
@@ -74,7 +74,7 @@ export const COPY = {
   inspireTitle: { he: 'צריך עוד השראה?', en: 'Need more inspiration?' },
   inspireBody: {
     he: 'גלו הרצאות, סדנאות ואירועים נוספים בתוכנייה.',
-    en: 'Discover more talks, workshops and events in the program.',
+    en: 'Discover more talks, seminars and events in the program.',
   },
   suggested: { he: 'מתאים למה שבחרתם', en: 'Close to what you chose' },
   addToCalendar: { he: 'הוסיפו את הפעילות הבאה ליומן', en: 'Add the next activity to your calendar' },
@@ -118,7 +118,7 @@ export const COPY = {
   emptyTitle: { he: 'הלוז שלכם עדיין ריק', en: 'Your schedule is still empty' },
   emptyHint: {
     he: 'גלו הרצאות, סדנאות ואירועים בתוכנייה והוסיפו אותם ללוז שלכם.',
-    en: 'Explore talks, workshops and events in the program and add them to your schedule.',
+    en: 'Explore talks, seminars and events in the program and add them to your schedule.',
   },
   emptyDayTitle: { he: 'עדיין אין לכם פעילויות ביום הזה', en: 'No activities saved for this day' },
   emptyDayHint: {
@@ -139,7 +139,7 @@ export const COPY = {
   signInTitle: { he: 'הלוז האישי שלך מחכה לך', en: 'Your personal schedule is waiting for you' },
   signInBody: {
     he: 'כל ההרצאות, הסדנאות והפעילויות שבחרת — במקום אחד.',
-    en: 'All the talks, workshops and activities you choose — in one place.',
+    en: 'All the talks, seminars and activities you choose — in one place.',
   },
   signInCta: { he: 'כניסה לכנס', en: 'Enter the conference' },
   signInAlready: { he: 'כבר רשומים? התחברות', en: 'Already registered? Sign in' },

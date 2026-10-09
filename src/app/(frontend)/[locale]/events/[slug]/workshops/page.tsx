@@ -32,12 +32,12 @@ interface WorkshopsPageProps {
 }
 
 const COPY = {
-  heading: { he: 'סדנאות וסיורים', en: 'Workshops & tours' },
+  heading: { he: 'סדנאות וסיורים', en: 'Seminars & tours' },
   intro: {
     he: 'בחרו את הפעילויות שלכם. הזמינות מתעדכנת בזמן אמת.',
     en: 'Choose your activities. Availability updates in real time.',
   },
-  workshopsTitle: { he: 'סדנאות מקצועיות', en: 'Professional workshops' },
+  workshopsTitle: { he: 'סדנאות מקצועיות', en: 'Professional seminars' },
   toursTitle: { he: 'סיורי שטח וקהילה', en: 'Field & community tours' },
   empty: {
     he: 'עדיין אין פעילויות פתוחות לבחירה.',
@@ -50,7 +50,7 @@ const COPY = {
   full: { he: 'מלאה', en: 'Full' },
   signIn: {
     he: 'כדי לבחור סדנאות, היכנסו לאזור האישי דרך הקישור שקיבלתם.',
-    en: 'To choose workshops, sign in to your personal area via the link you received.',
+    en: 'To choose seminars, sign in to your personal area via the link you received.',
   },
   error: {
     he: 'הפעילות התמלאה. נסו פעילות אחרת.',

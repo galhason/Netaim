@@ -91,8 +91,8 @@ export const COLUMN_LABELS: Record<ImportColumn, Record<Locale, string>> = {
 const COLUMN_HELP: Record<ImportColumn, Record<Locale, string>> = {
   title: { he: 'חובה. שם הפעילות כפי שיופיע בלוח.', en: 'Required. The name as it appears in the programme.' },
   sessionType: {
-    he: 'חובה. אחד מהערכים: הרצאה, סדנה, מליאה, סיור, הפסקה (או talk / workshop / keynote / tour / break).',
-    en: 'Required. One of: talk, workshop, keynote, tour, break.',
+    he: 'חובה. אחד מהערכים: הרצאה, סדנה, מליאה, סיור, הפסקה (או talk / seminar / keynote / tour / break).',
+    en: 'Required. One of: talk, seminar, keynote, tour, break.',
   },
   date: { he: 'תאריך הפעילות, בצורה 2026-10-12.', en: 'The day, as 2026-10-12.' },
   startTime: { he: 'שעה בצורה 09:00.', en: 'A time, as 09:00.' },
@@ -137,7 +137,7 @@ const COLUMN_HELP: Record<ImportColumn, Record<Locale, string>> = {
   speakerOrgEn: { he: 'לא חובה.', en: 'Optional.' },
   speakerBio: { he: 'לא חובה. אודות המרצה. לכמה דוברים — מופרד ב-;;.', en: 'Optional. About the presenter. For several — separated by ;;.' },
   speakerBioEn: { he: 'לא חובה.', en: 'Optional.' },
-  capacity: { he: 'לא חובה. מספר מקומות — רק לסדנאות וסיורים.', en: 'Optional. Seats — workshops and tours only.' },
+  capacity: { he: 'לא חובה. מספר מקומות — רק לסדנאות וסיורים.', en: 'Optional. Seats — seminars and tours only.' },
   waitlist: { he: 'כן / לא. ברירת מחדל: לא.', en: 'yes / no. Default: no.' },
   featured: { he: 'כן / לא. ברירת מחדל: לא.', en: 'yes / no. Default: no.' },
 };
@@ -188,6 +188,8 @@ const TYPE_WORDS: Record<string, SessionType> = {
   סדנה: 'workshop',
   סדנא: 'workshop',
   workshop: 'workshop',
+  seminar: 'workshop',
+  seminars: 'workshop',
   מליאה: 'keynote',
   keynote: 'keynote',
   plenary: 'keynote',
@@ -596,8 +598,8 @@ export const importTemplate = (locale: Locale): Buffer => {
     }),
     row({
       title: '"לו הייתי רוטשילד" — חוויות יהודיות בלי תקציב עתק', titleEn: '"If I Were a Rothschild" — Jewish experiences on a budget',
-      sessionType: he ? 'סדנה' : 'workshop', date: '2026-10-12', startTime: '09:45', endTime: '10:30',
-      description: 'תקציר ורציונל של הסדנה.', descriptionEn: 'The abstract and rationale of the workshop.',
+      sessionType: he ? 'סדנה' : 'seminar', date: '2026-10-12', startTime: '09:45', endTime: '10:30',
+      description: 'תקציר ורציונל של הסדנה.', descriptionEn: 'The abstract and rationale of the seminar.',
       floor: 'חדר פראג 1', floorEn: 'Prague 1', language: he ? 'אנגלית (מתורגם)' : 'English (translated)',
       audiences: he ? 'מחנכים / אנשי צוות, נוער (12-18)' : 'Educators / Staff, Youth (12-18)',
       topics: he ? 'חינוך בלתי-פורמלי, קהילתי' : 'Informal Education, Community',

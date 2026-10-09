@@ -142,7 +142,7 @@ export const REGISTRATION_MESSAGES = {
     heading: { he: 'נרשמת בהצלחה', en: 'You are registered' },
     text: {
       he: 'מקומך שמור. באזור האישי מחכים לכם הלו״ז, הסדנאות והאנשים — ונעדכן אתכם בכל שינוי.',
-      en: 'Your place is saved. Your schedule, the workshops and the people are waiting in your space — and we will tell you about any change.',
+      en: 'Your place is saved. Your schedule, the seminars and the people are waiting in your space — and we will tell you about any change.',
     },
   },
   pending: {
@@ -160,5 +160,5 @@ export const REGISTRATION_MESSAGES = {
     },
   },
   toPersonalArea: { he: 'לאזור האישי', en: 'To my personal area' },
-  toWorkshops: { he: 'לבחירת הסדנאות', en: 'Choose your workshops' },
+  toWorkshops: { he: 'לבחירת הסדנאות', en: 'Choose your seminars' },
 } as const;

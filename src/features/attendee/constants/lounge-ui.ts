@@ -45,10 +45,10 @@ export const LOUNGE_UI = {
   },
   continueJourney: { he: 'המשך להכנת הכנס שלך', en: 'Continue preparing your conference' },
   nextActionTitle: { he: 'הפעולה הבאה שלך', en: 'Your next step' },
-  actionChooseWorkshops: { he: 'בחר סדנאות', en: 'Choose workshops' },
+  actionChooseWorkshops: { he: 'בחר סדנאות', en: 'Choose seminars' },
   actionChooseWorkshopsSub: {
     he: 'ההרשמה לסדנאות בעיצומה — אל תחמיץ את המקומות הטובים.',
-    en: 'Workshop registration is open — the good seats go first.',
+    en: 'Seminar registration is open — the good seats go first.',
   },
   actionNetworking: { he: 'הנטוורקינג פתוח', en: 'Networking is open' },
   actionNetworkingSub: {
