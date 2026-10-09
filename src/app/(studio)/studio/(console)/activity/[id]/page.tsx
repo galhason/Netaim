@@ -68,6 +68,7 @@ const EditActivityPage = async ({ params }: EditActivityPageProps) => {
     startsAt: toDateTimeInputValue(s.startsAt),
     endsAt: toDateTimeInputValue(s.endsAt),
     floor: s.floor,
+    floorEn: en?.floor,
     track: s.track,
     audiences: s.audiences,
     topics: s.topics,

@@ -16,7 +16,7 @@ import type {
   SpeakerVM,
 } from '@/features/conference';
 import { cancellationAllowed, registrationWindow } from '@/registration-engine';
-import { audienceLabels, languageLine, topicLabels } from '@/shared/constants/activity-facets';
+import { audienceLabels, languageLine, placeOf, topicLabels } from '@/shared/constants/activity-facets';
 import type { SessionType } from '../types/session';
 import {
   listConferenceActivities,
@@ -224,6 +224,7 @@ export const buildProgramModel = async (
         description: session.description,
         room: session.room,
         floor: session.floor,
+        place: placeOf(session) || undefined,
         time: formatTimeLabel(session.startsAt, locale, timeZone) || undefined,
         endTime: session.endsAt
           ? formatTimeLabel(session.endsAt, locale, timeZone) || undefined
@@ -284,7 +285,7 @@ export const buildProgramModel = async (
     id: item.session.id,
     time: formatTimeLabel(item.session.startsAt, locale, timeZone) || '',
     title: item.session.title,
-    room: item.session.room,
+    room: placeOf(item.session) || undefined,
     dayKey: dayKeyOf(item.session.startsAt, timeZone),
   }));
 
@@ -347,7 +348,7 @@ export const buildProgramModel = async (
             id: next.id,
             title: next.title,
             time: next.time ?? '',
-            room: next.room,
+            room: next.place,
             dayKey: next.dayKey,
           },
         }

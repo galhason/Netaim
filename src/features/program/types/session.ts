@@ -49,6 +49,7 @@ export interface SessionTranslation {
   subtitle?: string;
   description?: string;
   track?: string;
+  floor?: string;
   languageNote?: string;
 }
 

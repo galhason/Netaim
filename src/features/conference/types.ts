@@ -52,6 +52,8 @@ export interface ActivityVM {
   description?: string;
   room?: string;
   floor?: string;
+  /* Where it is held, composed for the reader: "חדר פראג · קומה 2". */
+  place?: string;
   time?: string;
   endTime?: string;
   duration?: string;

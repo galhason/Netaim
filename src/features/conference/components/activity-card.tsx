@@ -112,10 +112,10 @@ const ActivityCard = ({
             </span>
           ) : null}
         </span>
-        {activity.room ? (
+        {activity.place ? (
           <span className="flex items-center gap-1.5 text-xs text-[var(--x-soft)]">
             <IconPin className="size-4" />
-            {activity.room}
+            {activity.place}
           </span>
         ) : null}
       </div>
@@ -198,18 +198,18 @@ const ActivityCard = ({
               <span className="tabular-nums">{timeRange(activity)}</span>
             </span>
           ) : null}
-          {activity.room ? (
+          {activity.place ? (
             <span className="inline-flex items-center gap-1.5">
               <IconPin className="size-3.5 text-[var(--x-faint)]" />
-              {activity.room}
+              {activity.place}
             </span>
           ) : null}
         </div>
 
         {/* The practical details, only where there is room for them. */}
-        {rich && (activity.floor || activity.language || activity.audiences.length > 0) ? (
+        {rich && (activity.language || activity.audiences.length > 0) ? (
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-            {[activity.floor, activity.language, ...activity.audiences]
+            {[activity.language, ...activity.audiences]
               .filter((value): value is string => Boolean(value))
               .map((value) => (
                 <span

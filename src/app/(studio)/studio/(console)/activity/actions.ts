@@ -131,6 +131,7 @@ export const saveActivityAction = async (formData: FormData) => {
       ? { description: text(formData.get('description_en')) }
       : {}),
     ...(text(formData.get('track_en')) ? { track: text(formData.get('track_en')) } : {}),
+    ...(text(formData.get('floor_en')) ? { floor: text(formData.get('floor_en')) } : {}),
     ...(text(formData.get('languageNote_en'))
       ? { languageNote: text(formData.get('languageNote_en')) }
       : {}),

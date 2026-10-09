@@ -204,7 +204,7 @@ const ScheduleRow = ({
               {activity.time}
               {activity.endTime ? `–${activity.endTime}` : ''}
             </span>
-            {activity.room ? ` · ${activity.room}` : ''}
+            {activity.place ? ` · ${activity.place}` : ''}
           </span>
         </span>
       </div>
@@ -212,7 +212,7 @@ const ScheduleRow = ({
   }
 
   const speakers = activity.speakers.map((s) => s.name).join(', ');
-  const place = [activity.room, activity.floor].filter(Boolean).join(' · ');
+  const place = activity.place ?? '';
   const held = activity.registration === 'registered';
 
   return (

@@ -295,7 +295,7 @@ const MyScheduleDashboard = ({
     if (current && current.kind === 'activity') {
       out.push({
         id: `live-${current.id}`,
-        text: `${t(locale, 'live')}: ${titleOf(current)}${current.activity.room ? ` · ${current.activity.room}` : ''}`,
+        text: `${t(locale, 'live')}: ${titleOf(current)}${current.activity.place ? ` · ${current.activity.place}` : ''}`,
         activityId: current.id,
         actionLabel: t(locale, 'viewActivity'),
       });

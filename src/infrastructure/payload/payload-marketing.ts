@@ -1,5 +1,5 @@
 import type { Locale } from '@/config/locales';
-import { audienceLabels, languageLine, topicLabels } from '@/shared/constants/activity-facets';
+import { audienceLabels, languageLine, placeOf, topicLabels } from '@/shared/constants/activity-facets';
 import type {
   MarketingRepository,
   PublicImage,
@@ -126,6 +126,8 @@ const facetsOf = (row: SessionRow) => ({
   languageNote: row.languageNote ?? undefined,
 });
 
+const whereOf = (row: SessionRow) => ({ room: nameOf(row.room), floor: row.floor ?? undefined });
+
 const toPublicSession = (
   row: SessionRow,
   locale: Locale,
@@ -138,6 +140,7 @@ const toPublicSession = (
   ...(row.endsAt ? { endsAt: row.endsAt } : {}),
   ...(nameOf(row.room) ? { room: nameOf(row.room) } : {}),
   ...(row.floor ? { floor: row.floor } : {}),
+  ...(placeOf(whereOf(row)) ? { place: placeOf(whereOf(row)) } : {}),
   ...(row.track ? { track: row.track } : {}),
   ...(row.subtitle ? { subtitle: row.subtitle } : {}),
   /*

@@ -124,7 +124,7 @@ const ProgramExperience = ({
         return (
           a.title.toLowerCase().includes(q) ||
           (a.description ?? '').toLowerCase().includes(q) ||
-          (a.room ?? '').toLowerCase().includes(q) ||
+          (a.place ?? '').toLowerCase().includes(q) ||
           a.typeLabel.toLowerCase().includes(q) ||
           a.speakers.some((s) => s.name.toLowerCase().includes(q))
         );

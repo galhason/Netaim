@@ -377,10 +377,10 @@ const ActivityDrawer = ({
                         {activity.duration ? ` · ${activity.duration}` : ''}
                       </span>
                     ) : null}
-                    {activity.room ? (
+                    {activity.place ? (
                       <span className="inline-flex items-center gap-1.5 text-sm">
                         <IconPin className="size-4 text-white/60" />
-                        {activity.room}
+                        {activity.place}
                       </span>
                     ) : null}
                   </div>
@@ -475,7 +475,7 @@ const ActivityDrawer = ({
                             </span>
                             <span className="mt-0.5 block truncate text-xs text-[var(--x-faint)]">
                               {r.time}
-                              {r.room ? ` · ${r.room}` : ''}
+                              {r.place ? ` · ${r.place}` : ''}
                             </span>
                           </span>
                           <IconArrow className="hidden size-4 flex-none text-[var(--x-faint)] rtl:-scale-x-100 sm:block" />

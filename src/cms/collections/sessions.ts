@@ -150,7 +150,8 @@ export const Sessions: CollectionConfig = {
       localized: true,
     },
     { name: 'subtitle', type: 'text', localized: true },
-    { name: 'floor', type: 'text' },
+    /* Where it is held, in words — "חדר פראג", "Floor 2" — beside the optional room record. */
+    { name: 'floor', type: 'text', localized: true },
     { name: 'registrationOpensAt', type: 'date' },
     { name: 'registrationClosesAt', type: 'date' },
     { name: 'allowCancellation', type: 'checkbox', defaultValue: true },

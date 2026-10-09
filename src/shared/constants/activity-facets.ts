@@ -69,6 +69,14 @@ export const languageLine = (
   return parts.join(' · ');
 };
 
+/*
+ * Where the activity is held, as one line: the room record's name, the
+ * free-text place the Studio writes ("חדר פראג", "Floor 2"), or both
+ * joined — whichever the activity has. Empty when it has neither.
+ */
+export const placeOf = (input: { room?: string; floor?: string }): string =>
+  [input.room, input.floor].map((part) => part?.trim()).filter(Boolean).join(' · ');
+
 export const audienceLabels = (values: readonly string[] | undefined, locale: Locale): string[] =>
   audiencesOf(values).map((value) => AUDIENCE_LABELS[value][locale]);
 

@@ -188,12 +188,16 @@ export const payloadSessionRepository: SessionRepository = {
       subtitle?: string | null;
       description?: string | null;
       track?: string | null;
+      floor?: string | null;
+      languageNote?: string | null;
     };
     return {
       ...(row.title ? { title: row.title } : {}),
       ...(row.subtitle ? { subtitle: row.subtitle } : {}),
       ...(row.description ? { description: row.description } : {}),
       ...(row.track ? { track: row.track } : {}),
+      ...(row.floor ? { floor: row.floor } : {}),
+      ...(row.languageNote ? { languageNote: row.languageNote } : {}),
     };
   },
 

@@ -269,6 +269,7 @@ const publicSession = (
   ...(session.endsAt ? { endsAt: session.endsAt } : {}),
   ...(session.room ? { room: session.room } : {}),
   ...(session.floor ? { floor: session.floor } : {}),
+  ...(session.place ? { place: session.place } : {}),
   ...(session.track ? { track: session.track } : {}),
   ...(session.subtitle ? { subtitle: session.subtitle } : {}),
   ...(session.language ? { language: session.language } : {}),

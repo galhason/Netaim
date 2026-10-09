@@ -44,6 +44,7 @@ export interface WizardInitial {
   startsAt?: string;
   endsAt?: string;
   floor?: string;
+  floorEn?: string;
   track?: string;
   audiences?: string[];
   topics?: string[];
@@ -222,8 +223,8 @@ const T = (locale: Locale) => ({
 
   fStarts: locale === 'he' ? 'תחילת הפעילות' : 'Starts at',
   fEnds: locale === 'he' ? 'סיום הפעילות' : 'Ends at',
-  fFloor: locale === 'he' ? 'קומה / אזור' : 'Floor / area',
-  fFloorPh: locale === 'he' ? 'לדוגמה: קומה 2, אולם הכחול' : 'e.g. Floor 2, Blue Hall',
+  fFloor: locale === 'he' ? 'מיקום' : 'Location',
+  fFloorPh: locale === 'he' ? 'לדוגמה: חדר פראג, קומה 2' : 'e.g. Prague room, floor 2',
   fTrack: locale === 'he' ? 'מסלול' : 'Track',
   fTrackPh: locale === 'he' ? 'לדוגמה: מדיניות, טכנולוגיה' : 'e.g. Policy, Technology',
   fLang: locale === 'he' ? 'שפת הפעילות' : 'Language',
@@ -581,18 +582,16 @@ const ActivityWizard = ({
                 follows="startsAt"
               />
             </div>
-            <div>
-              <label className={label} htmlFor="w-floor">
-                {t.fFloor}
-              </label>
-              <input
-                id="w-floor"
-                name="floor"
-                defaultValue={initial?.floor ?? ''}
-                placeholder={t.fFloorPh}
-                className={field}
-              />
-            </div>
+            {/* Where it is held, in both languages — the programme prints it beside the hour. */}
+            <Pair
+              name="floor"
+              label={t.fFloor}
+              he={initial?.floor ?? ''}
+              en={initial?.floorEn ?? ''}
+              placeholder={t.fFloorPh}
+              fieldClass={field}
+              labelClass={label}
+            />
             <Pair
               name="track"
               label={t.fTrack}

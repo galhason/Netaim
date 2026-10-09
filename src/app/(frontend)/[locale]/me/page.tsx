@@ -35,6 +35,7 @@ import { joinConferenceAction, leaveConferenceAction } from './actions';
 import SignInScreen from './sign-in-screen';
 import { visibleSiteConference } from '@/features/conference/services/conference-door';
 import { readReturnPath, returnUrl } from '@/shared/utils/return-path';
+import { placeOf } from '@/shared/constants/activity-facets';
 
 /*
  * The door into the Personal Lounge. One conference — the guest walks
@@ -296,7 +297,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
       endTime: formatTimeLabel(a.session.endsAt, locale),
       title: a.session.title,
       description: a.session.description,
-      room: a.session.room,
+      room: placeOf(a.session) || undefined,
       saved: true,
       kind: (a.session.sessionType === 'break' ? 'break' : 'session') as
         | 'break'
@@ -336,7 +337,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
           : undefined,
         dayLabel: formatDayLabel(session.startsAt, locale),
         timeLabel: formatTimeLabel(session.startsAt, locale),
-        room: session.room,
+        room: placeOf(session) || undefined,
         sessionType: session.sessionType,
         waiting,
         imageUrl: session.image,

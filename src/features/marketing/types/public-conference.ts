@@ -58,6 +58,8 @@ export interface PublicSession {
   endsAt?: string;
   room?: string;
   floor?: string;
+  /* Where it is held, composed: the room and the place joined — what the page prints. */
+  place?: string;
   track?: string;
   subtitle?: string;
   /* The language line in the page's language: "English · Simultaneous translation". */
