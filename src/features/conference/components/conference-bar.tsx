@@ -100,7 +100,7 @@ const ConferenceBar = ({ locale, slug, viewer, brandLogo, brand }: ConferenceBar
      * programme as the approved design places it.
      */
     ...(conf ? [{ key: 'gallery', href: `${conf}/gallery`, label: t('gallery') }] : []),
-    { key: 'info', href: wordpressHref('conferenceInfo', locale), label: t('info') },
+    /* No "Info": the WordPress info page was retired (it sends its visitors to the conference page). */
     { key: 'networking', href: `/${locale}/me/networking`, label: t('networking') },
   ];
   const area: { key: string; href: string; label: string }[] = [

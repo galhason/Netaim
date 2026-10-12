@@ -189,14 +189,15 @@ describe('registering for an activity, in either language', () => {
     await registerActivityAction(submit('he'));
     expect(selected.sessionId).toBe('session-7');
     expect(selected.locale).toBe('he');
-    expect(sent).toEqual(['/he/events/ntaym-2026/agenda']);
+    /* …to the day of the activity pressed, not the first day of the conference. */
+    expect(sent).toEqual(['/he/events/ntaym-2026/agenda?focus=session-7']);
   });
 
   it('registers and comes back to the English agenda', async () => {
     reset();
     await registerActivityAction(submit('en'));
     expect(selected.locale).toBe('en');
-    expect(sent).toEqual(['/en/events/ntaym-2026/agenda']);
+    expect(sent).toEqual(['/en/events/ntaym-2026/agenda?focus=session-7']);
   });
 
   it('carries the activity the button belongs to, and no other', async () => {
@@ -209,14 +210,14 @@ describe('registering for an activity, in either language', () => {
     reset();
     outcome.mode = 'conflict';
     await registerActivityAction(submit('he'));
-    expect(sent).toEqual(['/he/events/ntaym-2026/agenda?notice=conflict']);
+    expect(sent).toEqual(['/he/events/ntaym-2026/agenda?notice=conflict&focus=session-7']);
   });
 
   it('says a full room softly, without leaving the language', async () => {
     reset();
     outcome.mode = 'full';
     await registerActivityAction(submit('en'));
-    expect(sent).toEqual(['/en/events/ntaym-2026/agenda?notice=full']);
+    expect(sent).toEqual(['/en/events/ntaym-2026/agenda?notice=full&focus=session-7']);
   });
 
   /* A form with no activity on it asks the engine nothing. */
@@ -234,13 +235,13 @@ describe('registering for an activity, in either language', () => {
   it('falls back to Hebrew for a language it does not speak', async () => {
     reset();
     await registerActivityAction(submit('fr'));
-    expect(sent).toEqual(['/he/events/ntaym-2026/agenda']);
+    expect(sent).toEqual(['/he/events/ntaym-2026/agenda?focus=session-7']);
   });
 
-  it('returns to the same agenda when a place is given up', async () => {
+  it('returns to the same agenda, on the same day, when a place is given up', async () => {
     reset();
     await leaveActivityAction(submit('en'));
-    expect(sent).toEqual(['/en/events/ntaym-2026/agenda']);
+    expect(sent).toEqual(['/en/events/ntaym-2026/agenda?focus=session-7']);
   });
 });
 

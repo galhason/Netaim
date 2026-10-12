@@ -177,6 +177,8 @@ const MyScheduleDashboard = ({
         dateNum: fmt({ day: 'numeric', month: 'numeric' }),
         month: fmt({ month: 'long' }),
         full: fmt({ weekday: 'long', day: 'numeric', month: 'long' }),
+        weekdayLong: fmt({ weekday: 'long' }),
+        dateLong: fmt({ day: 'numeric', month: 'long' }),
       });
     });
     return list

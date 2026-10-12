@@ -1,18 +1,18 @@
 'use client';
 
-import Link from 'next/link';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Locale } from '@/config/locales';
 import {
-  ActivityCard,
   ActivityDrawer,
+  isDense,
   DayTabs,
   EmptyState,
   FilterChips,
-  InsightsCard,
-  MyScheduleWidget,
+  MyPlanCard,
   SearchBar,
+  TimeBlock,
   ToastProvider,
+  timeBlocksOf,
   type ActivityFilterVM,
   type ActivityVM,
   type DayVM,
@@ -32,19 +32,28 @@ interface Props {
   insights: ProgramInsights;
   notice: string | null;
   initialActivityId?: string | null;
+  /* The activity a press was made on: its day opens, the drawer does not. */
+  focusActivityId?: string | null;
 }
 
 const COPY = {
-  eyebrow: { he: 'התוכנית', en: 'The program' },
+  heading: { he: 'התוכנייה', en: 'The Programme' },
   sub: {
-    he: 'כל ההרצאות, הסדנאות, המליאות והסיורים. בנו את הלוח האישי שלכם.',
-    en: 'Every lecture, workshop, keynote and tour. Build your personal schedule.',
+    he: 'הרצאות, סדנאות, מפגשים ופעילויות לאורך ימי הכנס. בנו את הלוח האישי שלכם.',
+    en: 'Talks, seminars, meetings and activities across the conference days. Build your personal schedule.',
   },
+  expandAll: { he: 'פתיחת כל השעות', en: 'Open every hour' },
+  collapseAll: { he: 'קיפול כל השעות', en: 'Fold every hour' },
+  myPlan: { he: 'הלוח שלי', en: 'My schedule' },
+  oneActivity: { he: 'פעילות', en: 'activity' },
+  activities: { he: 'פעילויות', en: 'activities' },
+  nextAt: { he: 'הבאה ב־', en: 'next at' },
+  open: { he: 'פתיחה', en: 'Open' },
+  close: { he: 'סגירה', en: 'Close' },
   search: {
     he: 'חיפוש פעילות, דובר או נושא…',
     en: 'Search activities, speakers or topics…',
   },
-  mySchedule: { he: 'הלוח שלי', en: 'My schedule' },
   emptyTitle: { he: 'אין פעילויות תואמות', en: 'No matching activities' },
   emptyHint: {
     he: 'נסו לשנות את היום, המסננים או מונח החיפוש.',
@@ -77,17 +86,30 @@ const COPY = {
   live: { he: 'עכשיו', en: 'Now' },
 };
 
-const LiveMarker = ({ he }: { he: boolean }) => (
-  <li className="relative grid grid-cols-[46px_18px_1fr] items-center gap-2 sm:grid-cols-[54px_18px_1fr] sm:gap-3">
-    <span className="text-end text-[11px] font-bold uppercase tracking-wide text-[var(--x-live)]">
-      {he ? 'עכשיו' : 'Now'}
-    </span>
-    <span className="relative flex justify-center">
-      <span className="x-live-dot size-3 rounded-full bg-[var(--x-live)] ring-4 ring-[var(--x-bg)]" />
-    </span>
-    <span className="h-px w-full bg-[color-mix(in_srgb,var(--x-live)_55%,transparent)]" />
-  </li>
-);
+/*
+ * Which hours the reader opened or folded, remembered for the visit —
+ * a reader who opened the afternoon to look finds it open when they
+ * come back from the drawer. Per conference; never sent anywhere.
+ */
+const CHOICES_KEY = (slug: string) => `nt-programme-hours:${slug}`;
+
+const readChoices = (slug: string): Map<string, boolean> => {
+  try {
+    const raw = window.sessionStorage.getItem(CHOICES_KEY(slug));
+    return new Map(raw ? (JSON.parse(raw) as [string, boolean][]) : []);
+  } catch {
+    return new Map();
+  }
+};
+
+const writeChoices = (slug: string, choices: Map<string, boolean>) => {
+  try {
+    window.sessionStorage.setItem(CHOICES_KEY(slug), JSON.stringify([...choices]));
+  } catch {
+    /* A private window, or storage refused: the choice simply lasts the page. */
+  }
+};
+
 
 const ProgramExperience = ({
   locale,
@@ -100,13 +122,16 @@ const ProgramExperience = ({
   insights,
   notice,
   initialActivityId,
+  focusActivityId,
 }: Props) => {
-  const he = locale === 'he';
   const deepLinked = initialActivityId
     ? activities.find((a) => a.id === initialActivityId)
     : undefined;
+  const focusedOn = focusActivityId
+    ? activities.find((a) => a.id === focusActivityId)
+    : undefined;
   const [activeDay, setActiveDay] = useState(
-    deepLinked?.dayKey ?? days[0]?.key ?? '',
+    deepLinked?.dayKey ?? focusedOn?.dayKey ?? days[0]?.key ?? '',
   );
   const [filter, setFilter] = useState<string>('all');
   const [query, setQuery] = useState('');
@@ -130,6 +155,33 @@ const ProgramExperience = ({
         );
       });
   }, [activities, activeDay, filter, query]);
+
+  const blocks = useMemo(() => timeBlocksOf(dayActivities), [dayActivities]);
+
+  /* The sidebar's facts: today's held places, the next one, and whether any two collide. */
+  const daySchedule = useMemo(() => {
+    const today = schedule.filter((item) => item.dayKey === activeDay);
+    return today.length > 0 ? today : schedule;
+  }, [schedule, activeDay]);
+  const nextActivity = useMemo(
+    () => (insights.next ? activities.find((a) => a.id === insights.next!.id) : undefined),
+    [activities, insights.next],
+  );
+  const conflicts = useMemo(() => {
+    const held = activities
+      .filter((a) => a.registration === 'registered')
+      .sort((a, b) => a.startMs - b.startMs);
+    let count = 0;
+    for (let i = 0; i < held.length; i += 1) {
+      for (let j = i + 1; j < held.length; j += 1) {
+        const a = held[i]!;
+        const b = held[j]!;
+        if (b.startMs >= (a.endMs ?? a.startMs)) break;
+        count += 1;
+      }
+    }
+    return count;
+  }, [activities]);
 
   const selected = useMemo(
     () => activities.find((a) => a.id === selectedId) ?? null,
@@ -156,22 +208,63 @@ const ProgramExperience = ({
       .slice(0, 3);
   }, [activities, selected]);
 
-  /* The live marker — future-ready: glides to the current time when the
-   * day being browsed is under way. Ticks each minute; still under
-   * reduced motion (only the dot's pulse is animated, guarded in CSS). */
+  /*
+   * Which hours stand open. A sparse hour is always open (its header
+   * is not a control). Of the dense hours, the day's first that has
+   * not yet ended starts open and the rest start folded — the approved
+   * design — so a busy day reads as a short list of hours with the
+   * next choice already in view. The clock, ticking each minute, also
+   * says which hour is under way (marked "now") and which have passed.
+   * A reader's own fold or unfold wins over the default and is kept for
+   * the visit; choosing another day starts that day from its default.
+   */
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNowMs(Date.now()), 60000);
     return () => clearInterval(t);
   }, []);
-  const liveBefore = useMemo(() => {
-    if (dayActivities.length === 0) return -2;
-    const first = dayActivities[0]!.startMs;
-    const last = Math.max(...dayActivities.map((a) => a.endMs ?? a.startMs));
-    if (nowMs < first - 1800000 || nowMs > last + 1800000) return -2;
-    const idx = dayActivities.findIndex((a) => a.startMs > nowMs);
-    return idx; // -1 → after all starts (still live), else before idx
-  }, [dayActivities, nowMs]);
+  const stateOf = useCallback(
+    (block: { startMs: number; endMs: number }): 'past' | 'live' | 'upcoming' =>
+      nowMs >= block.endMs ? 'past' : nowMs >= block.startMs ? 'live' : 'upcoming',
+    [nowMs],
+  );
+
+  const firstDenseKey = useMemo(() => {
+    const dense = blocks.filter(isDense);
+    const ahead = dense.find((b) => stateOf(b) !== 'past');
+    return (ahead ?? dense[0])?.key;
+  }, [blocks, stateOf]);
+
+  const [chosen, setChosen] = useState<Map<string, boolean>>(() => new Map());
+  useEffect(() => {
+    const kept = readChoices(slug);
+    if (kept.size > 0) setChosen(kept);
+  }, [slug]);
+  const isOpen = (block: { key: string }): boolean => {
+    const own = chosen.get(block.key);
+    if (own !== undefined) return own;
+    return block.key === firstDenseKey;
+  };
+  const remember = (next: Map<string, boolean>) => {
+    writeChoices(slug, next);
+    return next;
+  };
+  const toggle = (key: string) => {
+    setChosen((prev) => {
+      const block = blocks.find((b) => b.key === key);
+      const next = new Map(prev);
+      next.set(key, !(block ? isOpen(block) : true));
+      return remember(next);
+    });
+  };
+  const setAll = (open: boolean) =>
+    setChosen((prev) => {
+      const next = new Map(prev);
+      blocks.filter(isDense).forEach((b) => next.set(b.key, open));
+      return remember(next);
+    });
+  const anyFolded = blocks.some((b) => isDense(b) && !isOpen(b));
+  const anyDense = blocks.some(isDense);
 
   const jump = (dayKey: string, id: string) => {
     setActiveDay(dayKey);
@@ -200,127 +293,131 @@ const ProgramExperience = ({
       * reaches everything inside, the drawer included, because the drawer
       * renders in place rather than through a portal.
       */
-    <main id="main-content" className="experience experience--programme min-h-dvh bg-[var(--x-bg)]">
+    <main id="main-content" className="experience experience--programme min-h-dvh bg-[var(--x-bg)] pb-20">
       <ToastProvider
         initial={noticeText ? { message: noticeText, tone: 'warn' } : undefined}
       >
-      {/* Compact hero — navigation, not marketing */}
-      <header className="relative overflow-hidden border-b border-[var(--x-line)]">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-[radial-gradient(120%_120%_at_50%_-20%,var(--x-primary-wash)_0%,var(--nt-raise)_55%,var(--x-bg)_100%)]"
-        />
-        <div className="relative mx-auto max-w-6xl px-6 pb-7 pt-10 text-center md:px-10 md:pt-12">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--x-primary)]">
-            {COPY.eyebrow[locale]}
-          </p>
-          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-tight text-[var(--x-primary)] md:text-5xl">
-            {title}
-          </h1>
-          {/*
-            * The short orange rule under a Netaim heading — on the
-            * organisation's programme page and under every day heading
-            * there. Decoration only: orange cannot carry text on white.
-            */}
-          <span
-            aria-hidden="true"
-            className="mx-auto mt-4 block h-[3px] w-12 rounded-full bg-[var(--nt-orange)]"
-          />
-          <p className="mx-auto mt-3 max-w-xl text-[15px] text-[var(--x-soft)] md:text-base">
-            {COPY.sub[locale]}
-          </p>
-          <div className="mx-auto mt-6 flex max-w-2xl flex-col items-stretch gap-3 sm:flex-row">
-            <div className="flex-1">
-              <SearchBar
-                value={query}
-                onChange={setQuery}
-                placeholder={COPY.search[locale]}
-              />
-            </div>
-            <Link
-              href={`/${locale}/events/${slug}/my-activities`}
-              className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-[var(--x-r-pill)] border border-[var(--x-line)] bg-[var(--x-surface)] px-6 text-sm font-semibold text-[var(--x-primary)] shadow-[var(--x-shadow)] transition-colors hover:bg-[var(--x-primary-wash)] hover:text-[var(--x-primary-strong)]"
-            >
-              {COPY.mySchedule[locale]}
-            </Link>
+      {/*
+        * The head, as the approved design draws it: the conference's
+        * name over "the programme" at the start of the row, the days at
+        * its end. Under it, one row of tools: search and the kinds.
+        */}
+      <header className="px-5 pt-8 md:px-8 md:pt-10">
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-sm font-semibold tracking-wide text-[var(--nt-orange)]">
+              {title}
+            </p>
+            <h1 className="mt-1.5 font-display text-4xl font-extrabold tracking-tight text-[var(--x-primary)] md:text-5xl">
+              {COPY.heading[locale]}
+            </h1>
+            <p className="mt-3 max-w-xl text-[15px] text-[var(--x-soft)] md:text-base">
+              {COPY.sub[locale]}
+            </p>
           </div>
+          {days.length > 1 ? (
+            <div className="md:pt-2">
+              <DayTabs days={days} active={activeDay} onSelect={setActiveDay} />
+            </div>
+          ) : null}
         </div>
       </header>
 
-      <div className="mx-auto max-w-6xl px-6 py-8 md:px-10 md:py-10">
+      <div className="px-5 py-6 md:px-8 md:py-7">
         {days.length === 0 ? (
           <EmptyState title={COPY.soon[locale]} />
         ) : (
           <>
-            {/* Day + filter controls */}
-            <div className="flex flex-col gap-4">
-              {days.length > 1 ? (
-                <DayTabs
-                  days={days}
-                  active={activeDay}
-                  onSelect={setActiveDay}
-                  dayWord={he ? 'יום' : 'Day'}
+            {/* The toolbar: search and the kinds, one row. */}
+            <div className="flex flex-col gap-3 rounded-[var(--x-r-card)] border border-[var(--x-line)] bg-[var(--x-surface)] p-3 shadow-[var(--x-shadow)] md:flex-row md:items-center md:gap-4 md:p-3.5">
+              <div className="md:w-[380px] md:flex-none">
+                <SearchBar
+                  value={query}
+                  onChange={setQuery}
+                  placeholder={COPY.search[locale]}
                 />
-              ) : null}
+              </div>
               <FilterChips filters={filters} active={filter} onSelect={setFilter} />
             </div>
 
-            <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_336px]">
-              {/* Timeline */}
+            {/*
+              * On a phone the sidebar would push the whole day below
+              * the fold, so there it is one line — how many places, the
+              * next one — that opens into the same card.
+              */}
+            <details className="group mt-6 rounded-[var(--x-r-card)] border border-[var(--x-line)] bg-[var(--x-surface)] shadow-[var(--x-shadow)] lg:hidden">
+              <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 text-sm [&::-webkit-details-marker]:hidden">
+                <span className="font-display font-bold text-[var(--x-primary)]">{COPY.myPlan[locale]}</span>
+                <span className="text-[var(--x-soft)]">
+                  {insights.registeredCount} {insights.registeredCount === 1 ? COPY.oneActivity[locale] : COPY.activities[locale]}
+                  {nextActivity?.time ? ` · ${COPY.nextAt[locale]} ${nextActivity.time}` : ''}
+                </span>
+                <span className="ms-auto text-xs font-semibold text-[var(--x-primary)] group-open:hidden">{COPY.open[locale]}</span>
+                <span className="ms-auto hidden text-xs font-semibold text-[var(--x-primary)] group-open:inline">{COPY.close[locale]}</span>
+              </summary>
+              <div className="border-t border-[var(--x-line)]">
+                <MyPlanCard
+                  items={daySchedule}
+                  insights={insights}
+                  next={nextActivity}
+                  conflicts={conflicts}
+                  locale={locale}
+                  slug={slug}
+                  onJump={jump}
+                />
+              </div>
+            </details>
+
+            <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_316px]">
+              {/* The day, hour by hour */}
               <div>
-                {dayActivities.length === 0 ? (
+                {blocks.length === 0 ? (
                   <EmptyState
                     title={COPY.emptyTitle[locale]}
                     hint={COPY.emptyHint[locale]}
                   />
                 ) : (
-                  <ol className="relative flex flex-col gap-4">
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute bottom-3 top-3 start-[54px] w-px bg-[var(--x-line-strong)] sm:start-[62px]"
-                    />
-                    {dayActivities.map((activity, i) => (
-                      <Fragment key={activity.id}>
-                        {i === liveBefore ? <LiveMarker he={he} /> : null}
-                      <li
-                        className="relative grid grid-cols-[46px_18px_1fr] items-start gap-2 sm:grid-cols-[54px_18px_1fr] sm:gap-3"
-                      >
-                        <span className="pt-4 text-end text-sm font-semibold tabular-nums text-[var(--x-ink)]">
-                          {activity.time}
-                        </span>
-                        <span className="relative flex justify-center pt-[22px]">
-                          <span
-                            className={`size-2.5 rounded-full ring-4 ring-[var(--x-bg)] ${
-                              activity.registration === 'registered'
-                                ? 'bg-[var(--x-ok)]'
-                                : 'bg-[var(--x-primary)]'
-                            }`}
-                          />
-                        </span>
-                        <ActivityCard
-                          activity={activity}
+                  <>
+                    {anyDense ? (
+                      <div className="mb-3 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setAll(anyFolded)}
+                          className="text-xs font-semibold text-[var(--x-primary)] underline-offset-4 hover:underline"
+                        >
+                          {anyFolded ? COPY.expandAll[locale] : COPY.collapseAll[locale]}
+                        </button>
+                      </div>
+                    ) : null}
+                    <div className="flex flex-col gap-3">
+                      {blocks.map((block) => (
+                        <TimeBlock
+                          key={block.key}
+                          block={block}
                           locale={locale}
                           slug={slug}
+                          open={isOpen(block)}
+                          onToggle={toggle}
                           onOpen={setSelectedId}
                           registerAction={registerActivityAction}
                           leaveAction={leaveActivityAction}
-                          index={i}
+                          state={stateOf(block)}
                         />
-                      </li>
-                      </Fragment>
-                    ))}
-                    {liveBefore === -1 ? <LiveMarker he={he} /> : null}
-                  </ol>
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
 
               {/* Sidebar */}
-              <aside className="flex flex-col gap-5 lg:sticky lg:top-24 lg:self-start">
-                <InsightsCard insights={insights} locale={locale} />
-                <MyScheduleWidget
-                  items={schedule}
+              <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
+                <MyPlanCard
+                  items={daySchedule}
                   insights={insights}
+                  next={nextActivity}
+                  conflicts={conflicts}
                   locale={locale}
+                  slug={slug}
                   onJump={jump}
                 />
               </aside>

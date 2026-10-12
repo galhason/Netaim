@@ -1,6 +1,8 @@
 import type { Locale } from '@/config/locales';
 import {
   DEFAULT_VENUE_TIMEZONE,
+  formatActivityDate,
+  formatDayLabel,
   formatLongDate,
   formatTimeLabel,
   venueDayKey,
@@ -234,6 +236,8 @@ export const buildProgramModel = async (
         audiences: audienceLabels(session.audiences, locale),
         topics: topicLabels(session.topics, locale),
         dayKey: dayKeyOf(session.startsAt, timeZone),
+        dateLabel: formatActivityDate(session.startsAt, locale, timeZone),
+        dateShort: formatDayLabel(session.startsAt, locale, timeZone),
         startMs,
         endMs,
         speakers: toSpeakerVM(session.speakers),
@@ -268,6 +272,8 @@ export const buildProgramModel = async (
       dateNum: fmt({ day: 'numeric', month: 'numeric' }),
       month: fmt({ month: 'long' }),
       full: formatLongDate(`${key}T00:00:00`, locale, timeZone),
+      weekdayLong: fmt({ weekday: 'long' }),
+      dateLong: fmt({ day: 'numeric', month: 'long' }),
     };
   });
 
@@ -287,6 +293,7 @@ export const buildProgramModel = async (
     title: item.session.title,
     room: placeOf(item.session) || undefined,
     dayKey: dayKeyOf(item.session.startsAt, timeZone),
+    dateShort: formatDayLabel(item.session.startsAt, locale, timeZone),
   }));
 
   /* Today at the venue, so "today's activities" means the venue's today. */

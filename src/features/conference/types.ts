@@ -63,6 +63,10 @@ export interface ActivityVM {
   audiences: string[];
   topics: string[];
   dayKey: string;
+  /* The day, as the card names it beside the hour: "יום שבת, 14 בנובמבר". */
+  dateLabel: string;
+  /* The same day, short, where there is little room: "שבת 14.11". */
+  dateShort: string;
   startMs: number;
   endMs?: number;
   speakers: SpeakerVM[];
@@ -88,6 +92,31 @@ export interface DayVM {
   dateNum: string;
   month: string;
   full: string;
+  /* "יום שבת" · "Saturday" — the day as a tab names it. */
+  weekdayLong: string;
+  /* "14 בנובמבר" · "14 November" — the date under it. */
+  dateLong: string;
+}
+
+/*
+ * One hour of the programme: every activity that starts at the same
+ * moment on the same day, side by side — the reader chooses one. The
+ * block is what the programme page draws; it owns nothing, it groups.
+ */
+export interface TimeBlockVM {
+  key: string;
+  dayKey: string;
+  time: string;
+  endTime?: string;
+  startMs: number;
+  endMs: number;
+  activities: ActivityVM[];
+  /* How many places the reader holds in this hour (registered, not waiting). */
+  registeredCount: number;
+  /* The kinds of activity in the hour, in the programme's own order. */
+  kinds: SessionType[];
+  /* A block that is only a break — drawn as a band, not as a choice. */
+  isBreak: boolean;
 }
 
 export interface ScheduleItemVM {
@@ -96,6 +125,7 @@ export interface ScheduleItemVM {
   title: string;
   room?: string;
   dayKey: string;
+  dateShort: string;
 }
 
 export interface ActivityFilterVM {

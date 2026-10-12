@@ -72,6 +72,30 @@ export const formatTimeLabel = (
 };
 
 /*
+ * The day an activity falls on, as a card names it beside the hour:
+ * "יום שבת, 14 בנובמבר" · "Saturday, 14 November" — in venue time.
+ */
+export const formatActivityDate = (
+  iso: string | undefined,
+  locale: Locale,
+  timeZone: string = DEFAULT_VENUE_TIMEZONE,
+): string => {
+  if (!iso) {
+    return '';
+  }
+  const parsed = Date.parse(iso);
+  if (Number.isNaN(parsed)) {
+    return '';
+  }
+  return new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : 'en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    timeZone,
+  }).format(new Date(parsed));
+};
+
+/*
  * A short day label for timeline tabs — "יום ה׳ · 22.7" — in venue time.
  */
 export const formatDayLabel = (

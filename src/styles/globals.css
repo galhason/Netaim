@@ -149,6 +149,33 @@
    */
   --nt-ink-soft-hc: #3b4452;
   --nt-ink-faint-hc: #4a5462;
+
+  /*
+   * The programme's ground, as the approved design paints it: warm
+   * off-white under white cards, sage under an open hour and a chosen
+   * state, green-grey hairlines, ink with a little green in it. Soft
+   * text 4.95 on white and 4.5 on the ground; ink 12.99.
+   */
+  --nt-programme-bg: #f5f5ef;
+  --nt-programme-raise: #f4f6f1;
+  --nt-sage: #e7f0e7;
+  --nt-programme-line: #e1e7e0;
+  --nt-programme-line-strong: #cdd7cc;
+  --nt-programme-ink: #23352c;
+  --nt-programme-ink-soft: #687369;
+  --nt-programme-ink-faint: #8d978f;
+
+  /*
+   * The kinds of activity, each in its own colour: the design's purple,
+   * orange, blue, green and pink, each deepened just enough to carry
+   * white text at AA (4.5 and above), which the lighter shades cannot.
+   */
+  --nt-kind-talk: #7158d1; /* 5.23 white-on */
+  --nt-kind-workshop: #bf5806; /* 4.55 */
+  --nt-kind-keynote: #2a74c7; /* 4.75 */
+  --nt-kind-tour: #2f7d22; /* 5.15 */
+  --nt-kind-panel: #cf3268; /* 4.87 */
+  --nt-kind-break: #5f6b62; /* 5.58 */
 }
 
 /*
@@ -843,7 +870,6 @@ main [id] {
 .experience--programme {
   --x-primary: var(--nt-green-deep);
   --x-primary-strong: var(--nt-green-deeper);
-  --x-primary-wash: var(--nt-green-wash);
   --x-ring: var(--nt-green-ring);
   --x-tour: var(--nt-amber-ink);
   --x-tour-wash: var(--nt-orange-wash);
@@ -852,6 +878,30 @@ main [id] {
   /* The programme's buttons are pills, and bold. */
   --x-r-button: var(--x-r-pill);
   --x-button-weight: 700;
+
+  /* The programme's own ground — the values are on the brand block. */
+  --x-bg: var(--nt-programme-bg);
+  --x-raise: var(--nt-programme-raise);
+  --x-primary-wash: var(--nt-sage);
+  --x-line: var(--nt-programme-line);
+  --x-line-strong: var(--nt-programme-line-strong);
+  --x-ink: var(--nt-programme-ink);
+  --x-soft: var(--nt-programme-ink-soft);
+  --x-faint: var(--nt-programme-ink-faint);
+
+  /*
+   * The kinds, each in its own colour — a pill a reader tells apart at
+   * a glance, the same in Hebrew and English because it is bound to
+   * the kind, not to the word. Set here alone: outside the programme
+   * the pills keep the platform's quieter washes.
+   */
+  --x-kind-ink: var(--nt-surface);
+  --x-kind-talk: var(--nt-kind-talk);
+  --x-kind-workshop: var(--nt-kind-workshop);
+  --x-kind-keynote: var(--nt-kind-keynote);
+  --x-kind-tour: var(--nt-kind-tour);
+  --x-kind-panel: var(--nt-kind-panel);
+  --x-kind-break: var(--nt-kind-break);
 }
 
 /*

@@ -34,6 +34,8 @@ const activity = (over: Partial<ActivityVM>): ActivityVM => ({
   canCancel: true,
   audiences: [],
   topics: [],
+  dateLabel: '',
+  dateShort: '',
   ...over,
 });
 

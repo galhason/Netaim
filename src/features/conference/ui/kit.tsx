@@ -110,14 +110,22 @@ export const AvatarGroup = ({
 };
 
 /* ---------- Type pill ---------- */
-const TYPE_TONE: Record<SessionType, string> = {
-  keynote: 'bg-[var(--x-primary-wash)] text-[var(--x-primary-strong)]',
-  talk: 'bg-[var(--x-mute-wash)] text-[var(--x-mute)]',
-  workshop: 'bg-[var(--x-ok-wash)] text-[var(--x-ok)]',
-  panel: 'bg-[var(--x-wait-wash)] text-[var(--x-wait)]',
-  tour: 'bg-[var(--x-tour-wash)] text-[var(--x-tour)]',
-  break: 'bg-[var(--x-mute-wash)] text-[var(--x-soft)]',
-} as unknown as Record<SessionType, string>;
+/*
+ * One colour per kind, by the kind's own name — never by its label, so
+ * a seminar is the same orange in Hebrew and in English. Where a scope
+ * paints the kinds (the programme sets `--x-kind-*`), the pill is that
+ * colour with white on it; anywhere else the variable is unset and the
+ * fallback is the platform's quiet wash, as before. The tile's cover
+ * placeholder reads the same variables, so the two always agree.
+ */
+const TYPE_TONE: Record<string, string> = {
+  keynote: 'bg-[var(--x-kind-keynote,var(--x-primary-wash))] text-[var(--x-kind-ink,var(--x-primary-strong))]',
+  talk: 'bg-[var(--x-kind-talk,var(--x-mute-wash))] text-[var(--x-kind-ink,var(--x-mute))]',
+  workshop: 'bg-[var(--x-kind-workshop,var(--x-ok-wash))] text-[var(--x-kind-ink,var(--x-ok))]',
+  panel: 'bg-[var(--x-kind-panel,var(--x-wait-wash))] text-[var(--x-kind-ink,var(--x-wait))]',
+  tour: 'bg-[var(--x-kind-tour,var(--x-tour-wash))] text-[var(--x-kind-ink,var(--x-tour))]',
+  break: 'bg-[var(--x-kind-break,var(--x-mute-wash))] text-[var(--x-kind-ink,var(--x-soft))]',
+};
 
 export const TypePill = ({
   type,
@@ -127,7 +135,7 @@ export const TypePill = ({
   label: string;
 }) => (
   <span
-    className={`inline-flex items-center rounded-[var(--x-r-pill)] px-2.5 py-1 text-xs font-semibold ${
+    className={`inline-flex items-center rounded-[var(--x-r-pill)] px-2.5 py-1 text-xs font-bold ${
       TYPE_TONE[type] ?? TYPE_TONE.talk
     }`}
   >
@@ -415,16 +423,19 @@ export const SearchBar = ({
 );
 
 /* ---------- Day tabs ---------- */
+/*
+ * One tab per conference day, named as a person says it — "יום שבת",
+ * "14 בנובמבר" — rather than "day 2": a visitor planning a trip reads
+ * dates, not ordinals.
+ */
 export const DayTabs = ({
   days,
   active,
   onSelect,
-  dayWord,
 }: {
   days: DayVM[];
   active: string;
   onSelect: (key: string) => void;
-  dayWord: string;
 }) => {
   const reduce = useReducedMotion();
   return (
@@ -453,14 +464,14 @@ export const DayTabs = ({
               />
             ) : null}
             <span className="relative block text-sm font-semibold">
-              {dayWord} {day.index}
+              {day.weekdayLong}
             </span>
             <span
               className={`relative block text-xs ${
                 on ? 'text-[var(--x-primary-ink)]/75' : 'text-[var(--x-faint)]'
               }`}
             >
-              {day.weekday} {day.dateNum}
+              {day.dateLong}
             </span>
           </button>
         );

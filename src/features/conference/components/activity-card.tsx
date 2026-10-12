@@ -11,7 +11,7 @@ import {
   TypePill,
   surface,
 } from '../ui/kit';
-import { IconClock, IconPin, IconShare, IconStar, IconStarFilled } from '../ui/icons';
+import { IconCalendar, IconClock, IconPin, IconShare, IconStar, IconStarFilled } from '../ui/icons';
 import { useToast } from '../ui/feedback';
 import { useFavorites } from '../ui/favorites';
 import { withBasePath } from '@/config/site';
@@ -192,6 +192,12 @@ const ActivityCard = ({
 
         {/* Meta: time · duration · room */}
         <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--x-soft)]">
+          {activity.dateLabel ? (
+            <span className="inline-flex items-center gap-1.5">
+              <IconCalendar className="size-3.5 text-[var(--x-faint)]" />
+              {activity.dateLabel}
+            </span>
+          ) : null}
           {timeRange(activity) ? (
             <span className="inline-flex items-center gap-1.5">
               <IconClock className="size-3.5 text-[var(--x-faint)]" />

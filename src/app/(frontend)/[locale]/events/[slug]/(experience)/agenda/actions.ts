@@ -34,6 +34,14 @@ const reasonOf = (thrown: unknown): string => {
  * The public programme is WordPress's and keeps that address; this is
  * the participant's own agenda and now has one of its own.
  */
+/*
+ * The way back lands on the day the press was made on: `focus` names
+ * the activity, and the page opens that activity's day — a reader who
+ * registered on Saturday is not sent back to Thursday to look for it.
+ */
+const focused = (target: string, sessionId: string): string =>
+  sessionId ? `${target}${target.includes('?') ? '&' : '?'}focus=${encodeURIComponent(sessionId)}` : target;
+
 export const registerActivityAction = async (formData: FormData) => {
   const locale = localeOf(String(formData.get('locale') ?? ''));
   const slug = String(formData.get('slug') ?? '');
@@ -49,7 +57,7 @@ export const registerActivityAction = async (formData: FormData) => {
       target = `${base}?notice=${reason}`;
     }
   }
-  redirect(target);
+  redirect(focused(target, sessionId));
 };
 
 export const leaveActivityAction = async (formData: FormData) => {
@@ -68,5 +76,5 @@ export const leaveActivityAction = async (formData: FormData) => {
       }
     }
   }
-  redirect(target);
+  redirect(focused(target, sessionId));
 };

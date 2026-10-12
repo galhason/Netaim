@@ -9,7 +9,7 @@ import ProgramExperience from './program-experience';
 
 interface ProgramPageProps {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ notice?: string; activity?: string }>;
+  searchParams: Promise<{ notice?: string; activity?: string; focus?: string }>;
 }
 
 /*
@@ -29,7 +29,7 @@ const ProgramPage = async ({ params, searchParams }: ProgramPageProps) => {
   }
   /* The programme is the conference itself — it is read by people who joined it. */
   await requireParticipant(lang);
-  const { notice, activity } = await searchParams;
+  const { notice, activity, focus } = await searchParams;
 
   /*
    * The event first, because the programme is rendered on the
@@ -50,6 +50,7 @@ const ProgramPage = async ({ params, searchParams }: ProgramPageProps) => {
       insights={model.insights}
       notice={notice ?? null}
       initialActivityId={activity ?? null}
+      focusActivityId={focus ?? null}
     />
   );
 };

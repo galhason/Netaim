@@ -24,6 +24,7 @@ export type { MintedSession } from './security/session-token';
  */
 export {
   DEFAULT_VENUE_TIMEZONE,
+  formatActivityDate,
   formatDayLabel,
   formatLongDate,
   formatTimeLabel,

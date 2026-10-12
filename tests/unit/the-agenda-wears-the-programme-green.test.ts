@@ -52,7 +52,8 @@ describe('the agenda wears it', () => {
   it('draws its actions, its chosen day and its halo in the programme green', () => {
     expect(value(scope, '--x-primary')).toBe('var(--nt-green-deep)');
     expect(value(scope, '--x-primary-strong')).toBe('var(--nt-green-deeper)');
-    expect(value(scope, '--x-primary-wash')).toBe('var(--nt-green-wash)');
+    /* Sage under an open hour and a chosen state — the approved design's wash. */
+    expect(value(scope, '--x-primary-wash')).toBe('var(--nt-sage)');
     expect(value(scope, '--x-ring')).toBe('var(--nt-green-ring)');
     /* The chosen filter chip is the one thing drawn in --x-nav. */
     expect(value(scope, '--x-nav')).toBe('var(--nt-green-deep)');
@@ -82,9 +83,9 @@ describe('the agenda wears it', () => {
   it('lets the header follow the scope rather than naming navy', () => {
     const page = read(`${AGENDA}/program-experience.tsx`);
     expect(page).not.toContain('--nt-navy-wash');
-    expect(page).toContain('var(--x-primary-wash)_0%');
+    /* The heading in the scope's green, the conference's name in the orange above it. */
     expect(page).toContain('text-[var(--x-primary)] md:text-5xl');
-    expect(page).toContain('bg-[var(--nt-orange)]');
+    expect(page).toContain('text-[var(--nt-orange)]');
   });
 });
 
@@ -117,6 +118,7 @@ describe('nothing outside the agenda changes', () => {
     expect(buttons).not.toContain('rounded-[var(--x-r-field)]');
     expect(buttons).not.toContain(' font-medium ');
     expect(buttons.match(/rounded-\[var\(--x-r-button\)\]/g)).toHaveLength(3);
-    expect(kit).toContain("tour: 'bg-[var(--x-tour-wash)] text-[var(--x-tour)]'");
+    /* The pill reads the kind's colour where a scope paints one, and the platform's wash where none does. */
+    expect(kit).toContain("tour: 'bg-[var(--x-kind-tour,var(--x-tour-wash))] text-[var(--x-kind-ink,var(--x-tour))]'");
   });
 });
