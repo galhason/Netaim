@@ -117,6 +117,7 @@ const SESSION_TYPE_LABEL: Record<string, Record<Locale, string>> = {
   keynote: { he: 'מליאה', en: 'Keynote' },
   tour: { he: 'סיור', en: 'Tour' },
   break: { he: 'הפסקה', en: 'Break' },
+  gathering: { he: 'מפגש', en: 'Gathering' },
 };
 
 /*

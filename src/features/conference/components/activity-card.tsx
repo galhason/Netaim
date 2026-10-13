@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from 'motion/react';
 import type { Locale } from '@/config/locales';
+import { isPlainSession } from '@/features/program/types/session';
 import type { ActivityVM } from '../types';
 import {
   AvailabilityBadge,
@@ -12,6 +13,7 @@ import {
   surface,
 } from '../ui/kit';
 import { IconCalendar, IconClock, IconPin, IconShare, IconStar, IconStarFilled } from '../ui/icons';
+import { BandIcon } from './activity-band';
 import { useToast } from '../ui/feedback';
 import { useFavorites } from '../ui/favorites';
 import { withBasePath } from '@/config/site';
@@ -94,16 +96,22 @@ const ActivityCard = ({
     }
   };
 
-  if (activity.type === 'break') {
+  /* A break or a gathering: a quiet line with nothing to press. */
+  if (isPlainSession(activity.type)) {
+    const gathering = activity.type === 'gathering';
     return (
       <div
-        className={`${surface} flex items-center gap-3 border border-[var(--x-line)] bg-[var(--x-raise)] px-5 py-3`}
+        className={`${surface} flex items-center gap-3 border px-5 py-3 ${
+          gathering
+            ? 'border-[var(--x-primary)]/30 bg-[var(--x-primary-wash)]/40'
+            : 'border-[var(--x-line)] bg-[var(--x-raise)]'
+        }`}
       >
         <span className="grid size-8 flex-none place-items-center rounded-full bg-[var(--x-primary-wash)] text-[var(--x-primary)]">
-          <IconClock className="size-4" />
+          <BandIcon type={activity.type} className="size-4" />
         </span>
         <span className="flex-1">
-          <span className="block text-sm font-medium text-[var(--x-ink)]">
+          <span className={`block text-[var(--x-ink)] ${gathering ? 'font-display text-base font-bold' : 'text-sm font-medium'}`}>
             {activity.title}
           </span>
           {activity.description ? (

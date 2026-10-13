@@ -48,7 +48,7 @@ describe('the programme by the hour', () => {
     expect(first.registeredCount).toBe(1);
     /* The kinds, in the programme's own order: talks before seminars. */
     expect(first.kinds).toEqual(['talk', 'workshop']);
-    expect(first.isBreak).toBe(false);
+    expect(first.isPlain).toBe(false);
   });
 
   it('keeps a break as a band of its own, and separates days that share a clock time', () => {
@@ -58,8 +58,22 @@ describe('the programme by the hour', () => {
     ]);
     expect(blocks).toHaveLength(2);
     expect(blocks[0]!.dayKey).toBe('2026-11-12');
-    expect(blocks[1]!.isBreak).toBe(true);
+    expect(blocks[1]!.isPlain).toBe(true);
     expect(timeBlocksOf([])).toEqual([]);
+  });
+
+  it('keeps a gathering as a band of its own, above the choices that begin with it', () => {
+    /* The opening and three talks at 09:00: a band, then the hour's choices — never a fourth tile. */
+    const blocks = timeBlocksOf([
+      activity({ id: 'a', type: 'talk', typeLabel: 'הרצאה' }),
+      activity({ id: 'open', type: 'gathering', typeLabel: 'מפגש' }),
+      activity({ id: 'b', type: 'talk', typeLabel: 'הרצאה' }),
+    ]);
+    expect(blocks.map((b) => [b.isPlain, b.activities.map((a) => a.id)])).toEqual([
+      [true, ['open']],
+      [false, ['a', 'b']],
+    ]);
+    expect(blocks[0]!.kinds).toEqual(['gathering']);
   });
 });
 

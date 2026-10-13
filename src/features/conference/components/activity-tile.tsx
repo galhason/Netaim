@@ -11,6 +11,7 @@ import {
   IconCheck,
   IconCoffee,
   IconCompass,
+  IconGathering,
   IconMic,
   IconPin,
   IconShare,
@@ -51,6 +52,7 @@ const KIND_ICON: Record<string, typeof IconMic> = {
   workshop: IconBulb,
   tour: IconCompass,
   break: IconCoffee,
+  gathering: IconGathering,
   panel: IconUsers,
 };
 
@@ -63,6 +65,7 @@ const KIND_COVER: Record<string, string> = {
   panel: 'bg-[color-mix(in_srgb,var(--x-kind-panel,var(--x-primary))_12%,var(--x-surface))] text-[var(--x-kind-panel,var(--x-primary))]',
   tour: 'bg-[color-mix(in_srgb,var(--x-kind-tour,var(--x-primary))_12%,var(--x-surface))] text-[var(--x-kind-tour,var(--x-primary))]',
   break: 'bg-[color-mix(in_srgb,var(--x-kind-break,var(--x-primary))_12%,var(--x-surface))] text-[var(--x-kind-break,var(--x-primary))]',
+  gathering: 'bg-[color-mix(in_srgb,var(--x-kind-gathering,var(--x-primary))_12%,var(--x-surface))] text-[var(--x-kind-gathering,var(--x-primary))]',
 };
 
 const Cover = ({ activity }: { activity: ActivityVM }) => {

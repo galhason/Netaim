@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale } from '@/config/locales';
+import { PasswordField } from '@/features/registration/components';
 import {
   ACCOUNT_UI,
   LanguageSwitchForm,
@@ -754,8 +755,8 @@ const AccountProfilePage = async ({
                   <span className={loungeLabel}>
                     {he ? 'סיסמה חדשה' : 'New password'}
                   </span>
-                  <input
-                    type="password"
+                  <PasswordField
+                    locale={locale}
                     name="password"
                     required
                     autoComplete="new-password"

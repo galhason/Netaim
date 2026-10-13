@@ -126,6 +126,15 @@ export const IconCoffee = (p: SVGProps<SVGSVGElement>) => (
     <path d="M4.5 9.5h11v5a4.5 4.5 0 0 1-4.5 4.5H9a4.5 4.5 0 0 1-4.5-4.5v-5ZM15.5 11h1.5a2.5 2.5 0 0 1 0 5h-1.5M8 6.5V4.5M11 6.5V4.5" />
   </svg>
 );
+/* A gathering: three together, the middle one forward — everyone, not a panel. */
+export const IconGathering = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="7.5" r="2.75" />
+    <path d="M7.5 20v-1.25a4.5 4.5 0 0 1 9 0V20" />
+    <path d="M5.5 10.25a2.25 2.25 0 1 0 0-4.5M18.5 10.25a2.25 2.25 0 1 1 0-4.5" />
+    <path d="M2.5 17.5v-.75a3.25 3.25 0 0 1 3.25-3.25M21.5 17.5v-.75a3.25 3.25 0 0 0-3.25-3.25" />
+  </svg>
+);
 export const IconCompass = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}>
     <circle cx="12" cy="12" r="8.5" />

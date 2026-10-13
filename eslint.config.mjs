@@ -28,7 +28,15 @@ const config = [
     rules: { 'no-console': 'off' },
   },
   {
-    ignores: ['.next/', 'node_modules/', 'src/payload-types.ts', 'src/migrations/'],
+    ignores: [
+      '.next/',
+      'node_modules/',
+      'src/payload-types.ts',
+      'src/migrations/',
+      /* Deliverables kept beside the code, not of it: the WordPress upload packages and scratch. */
+      'Claude outputs/',
+      '_to_delete/',
+    ],
   },
 ];
 

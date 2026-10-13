@@ -1,4 +1,5 @@
 import type { ActivityVM } from '@/features/conference';
+import { isPlainSession } from '@/features/program/types/session';
 import { DEFAULT_VENUE_TIMEZONE } from '@/shared';
 import type { MeetingVM } from './meetings';
 
@@ -73,7 +74,7 @@ export interface Conflict {
 
 export const findConflicts = (items: TimelineItem[]): Conflict[] => {
   const real = items.filter(
-    (item) => !(item.kind === 'activity' && item.activity.type === 'break'),
+    (item) => !(item.kind === 'activity' && isPlainSession(item.activity.type)),
   );
   const out: Conflict[] = [];
   for (let i = 0; i < real.length; i += 1) {

@@ -176,6 +176,7 @@
   --nt-kind-tour: #2f7d22; /* 5.15 */
   --nt-kind-panel: #cf3268; /* 4.87 */
   --nt-kind-break: #5f6b62; /* 5.58 */
+  --nt-kind-gathering: #1d7a84; /* 5.04 */
 }
 
 /*
@@ -902,6 +903,7 @@ main [id] {
   --x-kind-tour: var(--nt-kind-tour);
   --x-kind-panel: var(--nt-kind-panel);
   --x-kind-break: var(--nt-kind-break);
+  --x-kind-gathering: var(--nt-kind-gathering);
 }
 
 /*

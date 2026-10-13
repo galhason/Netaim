@@ -24,6 +24,7 @@ import type {
   SessionSummary,
   SessionTranslation,
 } from '../types/session';
+import { isPlainSession } from '../types/session';
 import {
   workshopStatus,
   type WorkshopStatus,
@@ -260,6 +261,14 @@ export const selectWorkshop = async (
   }
   /* A shelved activity takes no one; a stale link must not register. */
   if (situation.session.archivedAt) {
+    throw new Error('Session not found');
+  }
+  /*
+   * A break or a gathering has no seats: the whole conference is
+   * there. No screen offers a button for it, and no request that
+   * forges one gets through.
+   */
+  if (isPlainSession(situation.session.sessionType)) {
     throw new Error('Session not found');
   }
   /*

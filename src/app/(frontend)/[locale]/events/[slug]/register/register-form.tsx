@@ -13,7 +13,7 @@ import Link from 'next/link';
 import type { Locale } from '@/config/locales';
 import { isStrongPassword } from '@/features/registration/schemas/password';
 import { isLatinName } from '@/features/registration/schemas/latin-name';
-import { CountrySelect, MediaConsentDialog, PhoneField } from '@/features/registration/components';
+import { CountrySelect, MediaConsentDialog, PasswordField, PhoneField } from '@/features/registration/components';
 import { readPhone } from '@/shared/utils/phone';
 import {
   checkEmailAvailableAction,
@@ -598,10 +598,10 @@ const RegisterForm = ({
                 <label htmlFor="reg-password" className={labelCls}>
                   {labels.password} <span aria-hidden="true">*</span>
                 </label>
-                <input
+                <PasswordField
+                  locale={locale}
                   id="reg-password"
                   name="password"
-                  type="password"
                   required
                   minLength={8}
                   autoComplete="new-password"
@@ -620,10 +620,10 @@ const RegisterForm = ({
                 <label htmlFor="reg-passwordConfirm" className={labelCls}>
                   {labels.passwordConfirm} <span aria-hidden="true">*</span>
                 </label>
-                <input
+                <PasswordField
+                  locale={locale}
                   id="reg-passwordConfirm"
                   name="passwordConfirm"
-                  type="password"
                   required
                   minLength={8}
                   autoComplete="new-password"

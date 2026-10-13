@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import type { Locale } from '@/config/locales';
+import { PasswordField } from '@/features/registration/components';
 import { ACCOUNT_UI } from '@/features/account';
 import {
   ArrowOn,
@@ -414,9 +415,9 @@ const SignInScreen = ({
                 {ui.forgotPassword[locale]}
               </Link>
             </div>
-            <input
+            <PasswordField
+              locale={locale}
               id="signin-password"
-              type="password"
               name="password"
               required
               autoComplete="current-password"

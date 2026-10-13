@@ -67,9 +67,11 @@ export {
   IconBulb,
   IconCoffee,
   IconCompass,
+  IconGathering,
   IconWarn,
   IconBell,
   IconChevronDown,
 } from './ui/icons';
+export { BandIcon } from './components/activity-band';
 export { useFavorites } from './ui/favorites';
 export type { FavoritesApi } from './ui/favorites';

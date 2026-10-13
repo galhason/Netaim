@@ -125,6 +125,7 @@ const TYPE_TONE: Record<string, string> = {
   panel: 'bg-[var(--x-kind-panel,var(--x-wait-wash))] text-[var(--x-kind-ink,var(--x-wait))]',
   tour: 'bg-[var(--x-kind-tour,var(--x-tour-wash))] text-[var(--x-kind-ink,var(--x-tour))]',
   break: 'bg-[var(--x-kind-break,var(--x-mute-wash))] text-[var(--x-kind-ink,var(--x-soft))]',
+  gathering: 'bg-[var(--x-kind-gathering,var(--x-primary-wash))] text-[var(--x-kind-ink,var(--x-primary-strong))]',
 };
 
 export const TypePill = ({

@@ -115,8 +115,8 @@ export interface TimeBlockVM {
   registeredCount: number;
   /* The kinds of activity in the hour, in the programme's own order. */
   kinds: SessionType[];
-  /* A block that is only a break — drawn as a band, not as a choice. */
-  isBreak: boolean;
+  /* A band — a break, a gathering — drawn across the hour, not as a choice. */
+  isPlain: boolean;
 }
 
 export interface ScheduleItemVM {

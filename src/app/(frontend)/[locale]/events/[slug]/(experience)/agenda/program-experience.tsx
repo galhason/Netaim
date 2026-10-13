@@ -19,6 +19,7 @@ import {
   type ProgramInsights,
   type ScheduleItemVM,
 } from '@/features/conference';
+import { isPlainSession } from '@/features/program/types/session';
 import { registerActivityAction, leaveActivityAction } from './actions';
 
 interface Props {
@@ -196,7 +197,7 @@ const ProgramExperience = ({
       .filter(
         (a) =>
           a.id !== selected.id &&
-          a.type !== 'break' &&
+          !isPlainSession(a.type) &&
           (a.type === selected.type ||
             a.speakers.some((s) => speakerIds.has(s.id))),
       )

@@ -15,6 +15,7 @@ import {
   type DayVM,
   type MyRegistrationsVM,
 } from '@/features/conference';
+import { isPlainSession } from '@/features/program/types/session';
 import { registerActivityAction, leaveActivityAction } from './actions';
 import { PageLeaves } from './botanical';
 import { t } from './copy';
@@ -239,7 +240,7 @@ const MyScheduleDashboard = ({
       .filter(
         (a) =>
           a.id !== selected.id &&
-          a.type !== 'break' &&
+          !isPlainSession(a.type) &&
           (a.type === selected.type || a.speakers.some((s) => speakerIds.has(s.id))),
       )
       .sort((a, b) => Math.abs(a.startMs - selected.startMs) - Math.abs(b.startMs - selected.startMs))
@@ -276,7 +277,7 @@ const MyScheduleDashboard = ({
       .filter(
         (a) =>
           !heldIds.has(a.id) &&
-          a.type !== 'break' &&
+          !isPlainSession(a.type) &&
           a.status !== 'full' &&
           a.registration === 'available' &&
           a.startMs > now &&

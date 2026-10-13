@@ -12,3 +12,4 @@ export { default as CountrySelect } from './country-select';
 export { default as DietarySelect } from './dietary-select';
 export { default as MediaConsentDialog } from './media-consent-dialog';
 export { default as PhoneField } from './phone-field';
+export { PasswordField } from './password-field';

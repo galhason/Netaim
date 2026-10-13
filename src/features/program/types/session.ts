@@ -17,12 +17,26 @@ export interface ActivityFacets {
   languageNote?: string;
 }
 
-export const SESSION_TYPES = ['talk', 'workshop', 'keynote', 'break', 'tour'] as const;
+export const SESSION_TYPES = ['talk', 'workshop', 'keynote', 'break', 'tour', 'gathering'] as const;
 
 export type SessionType = (typeof SESSION_TYPES)[number];
 
 export const isSessionType = (value: string): value is SessionType =>
   (SESSION_TYPES as readonly string[]).includes(value);
+
+/*
+ * The kinds that are simply on the schedule: a break, and a gathering
+ * the whole conference attends — the opening, a welcome, a closing
+ * word. Nobody registers for them and they hold no seats, so every
+ * screen draws them as a band across the hour rather than as a choice,
+ * and no door that registers accepts them. The two differ in one thing
+ * only: a break is not what a conference leads with, a gathering is —
+ * so the front page may show a gathering and never a break.
+ */
+export const PLAIN_SESSION_TYPES = ['break', 'gathering'] as const satisfies readonly SessionType[];
+
+export const isPlainSession = (type: string | null | undefined): boolean =>
+  (PLAIN_SESSION_TYPES as readonly string[]).includes(type ?? '');
 
 export interface CreateSessionInput extends ActivityFacets {
   title: string;

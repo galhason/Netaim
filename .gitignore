@@ -25,3 +25,7 @@ next-env.d.ts
 
 # Runtime logs (see LOG_DIR and src/shared/logging/file-transport.ts)
 /logs/
+
+# Deliverables beside the code: the WordPress upload packages.
+/Claude outputs/
+/qq

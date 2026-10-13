@@ -853,7 +853,7 @@ export interface Session {
   event: number | Event;
   title: string;
   description?: string | null;
-  sessionType: 'talk' | 'workshop' | 'keynote' | 'break' | 'tour';
+  sessionType: 'talk' | 'workshop' | 'keynote' | 'break' | 'tour' | 'gathering';
   /**
    * One or more speakers leading this activity
    */

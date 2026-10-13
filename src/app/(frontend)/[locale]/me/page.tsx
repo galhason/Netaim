@@ -28,7 +28,7 @@ import { myConnections, myUnreadByConnection } from '@/features/networking';
 import { listMyAnnouncements } from '@/features/notifications';
 import { listDirectoryParticipants } from '@/infrastructure';
 import { getSiteBrand } from '@/features/events';
-import { listAgenda, myActivities } from '@/features/program';
+import { isPlainSession, listAgenda, myActivities } from '@/features/program';
 import type { SessionSummary } from '@/features/program';
 import { formatDayLabel, formatTimeLabel } from '@/shared';
 import { joinConferenceAction, leaveConferenceAction } from './actions';
@@ -299,7 +299,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
       description: a.session.description,
       room: placeOf(a.session) || undefined,
       saved: true,
-      kind: (a.session.sessionType === 'break' ? 'break' : 'session') as
+      kind: (isPlainSession(a.session.sessionType) ? 'break' : 'session') as
         | 'break'
         | 'session',
       dayLabel: formatDayLabel(a.session.startsAt, locale),

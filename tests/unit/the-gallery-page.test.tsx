@@ -209,10 +209,12 @@ describe('the ways to the gallery', () => {
 
   it('leaves the rest of the bar as it was', () => {
     const he = bar('he', '/he');
-    for (const dest of ['hub', 'speakers', 'program', 'info', 'networking', 'enter', 'register']) {
+    for (const dest of ['hub', 'speakers', 'program', 'networking', 'enter', 'register']) {
       expect(he, dest).toContain(`data-nt-dest="${dest}"`);
     }
     expect(he).toContain('href="/he/events/ntaym-2026/agenda"');
+    /* The info page was retired; the bar no longer offers it. */
+    expect(he).not.toContain('data-nt-dest="info"');
   });
 
   it('offers no gallery link when no conference is open', () => {

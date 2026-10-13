@@ -23,6 +23,8 @@ import * as migration_20261007_120000_conference_highlights from './20261007_120
 import * as migration_20261007_150000_schedule_emails from './20261007_150000_schedule_emails';
 import * as migration_20261008_090000_reports_survive_deletion from './20261008_090000_reports_survive_deletion';
 import * as migration_20261009_090000_activity_facets from './20261009_090000_activity_facets';
+import * as migration_20261009_120000_place_in_both_languages from './20261009_120000_place_in_both_languages';
+import * as migration_20261012_090000_a_gathering_on_the_schedule from './20261012_090000_a_gathering_on_the_schedule';
 
 export const migrations = [
   {
@@ -149,5 +151,15 @@ export const migrations = [
     up: migration_20261009_090000_activity_facets.up,
     down: migration_20261009_090000_activity_facets.down,
     name: '20261009_090000_activity_facets',
+  },
+  {
+    up: migration_20261009_120000_place_in_both_languages.up,
+    down: migration_20261009_120000_place_in_both_languages.down,
+    name: '20261009_120000_place_in_both_languages',
+  },
+  {
+    up: migration_20261012_090000_a_gathering_on_the_schedule.up,
+    down: migration_20261012_090000_a_gathering_on_the_schedule.down,
+    name: '20261012_090000_a_gathering_on_the_schedule',
   },
 ];

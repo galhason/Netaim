@@ -91,8 +91,8 @@ export const COLUMN_LABELS: Record<ImportColumn, Record<Locale, string>> = {
 const COLUMN_HELP: Record<ImportColumn, Record<Locale, string>> = {
   title: { he: 'חובה. שם הפעילות כפי שיופיע בלוח.', en: 'Required. The name as it appears in the programme.' },
   sessionType: {
-    he: 'חובה. אחד מהערכים: הרצאה, סדנה, מליאה, סיור, הפסקה (או talk / seminar / keynote / tour / break).',
-    en: 'Required. One of: talk, seminar, keynote, tour, break.',
+    he: 'חובה. אחד מהערכים: הרצאה, סדנה, מליאה, סיור, מפגש, הפסקה (או talk / seminar / keynote / tour / gathering / break). מפגש — פתיחה, קבלת פנים, סיום: מופיע בלוח בלי הרשמה.',
+    en: 'Required. One of: talk, seminar, keynote, tour, gathering, break. A gathering — opening, welcome, closing — is on the schedule with no registration.',
   },
   date: { he: 'תאריך הפעילות, בצורה 2026-10-12.', en: 'The day, as 2026-10-12.' },
   startTime: { he: 'שעה בצורה 09:00.', en: 'A time, as 09:00.' },
@@ -197,6 +197,10 @@ const TYPE_WORDS: Record<string, SessionType> = {
   tour: 'tour',
   הפסקה: 'break',
   break: 'break',
+  מפגש: 'gathering',
+  התכנסות: 'gathering',
+  gathering: 'gathering',
+  ceremony: 'gathering',
 };
 
 const YES = new Set(['כן', 'yes', 'y', 'true', '1', 'v', 'x']);

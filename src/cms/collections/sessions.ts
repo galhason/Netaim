@@ -60,6 +60,7 @@ export const Sessions: CollectionConfig = {
         { label: 'Keynote', value: 'keynote' },
         { label: 'Break', value: 'break' },
         { label: 'Tour', value: 'tour' },
+        { label: 'Gathering', value: 'gathering' },
       ],
     },
     {

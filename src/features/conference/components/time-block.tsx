@@ -4,9 +4,10 @@ import type { Locale } from '@/config/locales';
 import type { SessionType } from '@/features/program';
 import type { TimeBlockVM } from '../types';
 import { surface } from '../ui/kit';
-import { IconChevronDown, IconClock, IconCoffee, IconPin, IconUsers } from '../ui/icons';
+import { IconChevronDown, IconClock, IconPin, IconUsers } from '../ui/icons';
 import ActivityCard from './activity-card';
 import ActivityTile from './activity-tile';
+import { BandIcon } from './activity-band';
 
 /*
  * From this many activities at once, an hour is "dense": it gets a
@@ -17,7 +18,7 @@ import ActivityTile from './activity-tile';
 export const DENSE_SLOT_THRESHOLD = 4;
 
 export const isDense = (block: TimeBlockVM): boolean =>
-  !block.isBreak && block.activities.length >= DENSE_SLOT_THRESHOLD;
+  !block.isPlain && block.activities.length >= DENSE_SLOT_THRESHOLD;
 
 interface Props {
   block: TimeBlockVM;
@@ -52,6 +53,7 @@ const PLURAL: Record<SessionType, Record<Locale, string>> = {
   workshop: { he: 'סדנאות', en: 'seminars' },
   tour: { he: 'סיורים', en: 'tours' },
   break: { he: 'הפסקות', en: 'breaks' },
+  gathering: { he: 'מפגשים', en: 'gatherings' },
 };
 
 /*
@@ -81,15 +83,25 @@ const TimeBlock = ({ block, locale, slug, open, onToggle, onOpen, registerAction
   const range = block.endTime ? `${block.time} – ${block.endTime}` : block.time;
   const panelId = `block-${block.key.replace(/[^a-z0-9]/gi, '-')}`;
 
-  if (block.isBreak) {
+  /*
+   * A band: a break, or a gathering the whole conference attends. One
+   * line across the hour — the time, the name, where — with nothing to
+   * press, because there is nothing to choose and no seat to take.
+   */
+  if (block.isPlain) {
     const first = block.activities[0]!;
+    const gathering = first.type === 'gathering';
     return (
       <section
-        className={`${surface} flex items-center gap-4 border border-[var(--x-line)] bg-[var(--x-raise)] px-5 py-4`}
+        className={`${surface} flex items-center gap-4 border px-5 py-4 ${
+          gathering
+            ? 'border-[var(--x-primary)]/30 bg-[var(--x-primary-wash)]/40'
+            : 'border-[var(--x-line)] bg-[var(--x-raise)]'
+        }`}
         aria-label={`${range} · ${first.title}`}
       >
         <span className="grid size-9 flex-none place-items-center rounded-full bg-[var(--x-primary-wash)] text-[var(--x-primary)]">
-          <IconCoffee className="size-4" />
+          <BandIcon type={first.type} className="size-4" />
         </span>
         <span className="text-start">
           <span className="block font-display text-base font-bold tabular-nums text-[var(--x-ink)]" dir="ltr">
@@ -98,7 +110,7 @@ const TimeBlock = ({ block, locale, slug, open, onToggle, onOpen, registerAction
           <span className="block text-[11px] text-[var(--x-soft)]">{first.dateShort}</span>
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium text-[var(--x-ink)]">
+          <span className={`block truncate text-[var(--x-ink)] ${gathering ? 'font-display text-base font-bold' : 'text-sm font-medium'}`}>
             {block.activities.map((a) => a.title).join(' · ')}
           </span>
           {first.description ? (

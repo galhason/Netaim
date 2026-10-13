@@ -7,6 +7,7 @@ import type {
 import type { FellowParticipant } from '@/infrastructure';
 import type { NotificationView } from '@/notification-engine';
 import type { RegistrationStatus } from '@/registration-engine';
+import { isPlainSession } from '@/features/program/types/session';
 import { formatDayLabel, formatLongDate, formatTimeLabel } from '@/shared';
 import type {
   AttendeeDayMoment,
@@ -77,7 +78,7 @@ const toMoments = (
       description: session.description,
       room: session.room,
       saved: mine.has(session.id) ? true : undefined,
-      kind: session.sessionType === 'break' ? 'break' : 'session',
+      kind: isPlainSession(session.sessionType) ? 'break' : 'session',
       dayLabel: formatDayLabel(session.startsAt, locale),
       speaker: session.speaker,
       sessionType: session.sessionType,

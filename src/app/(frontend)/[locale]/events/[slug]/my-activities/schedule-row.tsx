@@ -10,6 +10,7 @@ import {
   IconCalendar,
   IconCoffee,
   IconCompass,
+  IconGathering,
   IconMic,
   IconPin,
   IconUsers,
@@ -17,6 +18,7 @@ import {
   IconWarn,
 } from '@/features/conference';
 import type { SessionType } from '@/features/program';
+import { isPlainSession } from '@/features/program/types/session';
 import { t } from './copy';
 import type { TimelineItem } from './timeline';
 
@@ -51,6 +53,7 @@ const TYPE_ICON: Record<SessionType | 'networking', (cls: string) => ReactNode> 
   workshop: (cls) => <IconBulb className={cls} />,
   tour: (cls) => <IconCompass className={cls} />,
   break: (cls) => <IconCoffee className={cls} />,
+  gathering: (cls) => <IconGathering className={cls} />,
   networking: (cls) => <IconUsers className={cls} />,
 };
 
@@ -60,6 +63,7 @@ const TYPE_TONE: Record<SessionType | 'networking', string> = {
   workshop: 'bg-[var(--x-warn-wash)] text-[var(--x-warn)]',
   tour: 'bg-[var(--x-interactive-wash)] text-[var(--x-interactive)]',
   break: 'bg-[var(--x-mute-wash)] text-[var(--x-soft)]',
+  gathering: 'bg-[var(--x-primary-wash)] text-[var(--x-primary-strong)]',
   networking: 'bg-[var(--x-interactive-wash)] text-[var(--x-interactive)]',
 };
 
@@ -188,12 +192,12 @@ const ScheduleRow = ({
 
   const { activity } = item;
 
-  /* ---- a break: a quiet line, not a card ---- */
-  if (activity.type === 'break') {
+  /* ---- a break or a gathering: a quiet line, not a card ---- */
+  if (isPlainSession(activity.type)) {
     return (
       <div className="flex items-center gap-3 rounded-[var(--x-r-card)] border border-dashed border-[var(--x-line-strong)] bg-[var(--x-raise)] px-4 py-3">
-        <span className={`grid size-9 shrink-0 place-items-center rounded-[10px] ${TYPE_TONE.break}`}>
-          {TYPE_ICON.break('size-4')}
+        <span className={`grid size-9 shrink-0 place-items-center rounded-[10px] ${TYPE_TONE[activity.type]}`}>
+          {TYPE_ICON[activity.type]('size-4')}
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-[14px] font-medium text-[var(--x-ink)]">

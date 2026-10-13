@@ -171,6 +171,7 @@ const SESSION_TYPES: SessionType[] = [
   'workshop',
   'keynote',
   'tour',
+  'gathering',
   'break',
 ];
 
@@ -180,6 +181,7 @@ const TYPE_LABELS: Record<SessionType, Record<Locale, string>> = {
   keynote: { he: 'מליאה', en: 'Keynote' },
   tour: { he: 'סיור', en: 'Tour' },
   break: { he: 'הפסקה', en: 'Break' },
+  gathering: { he: 'מפגש', en: 'Gathering' },
 };
 
 /* Registration is meaningful only for types that fill seats. */
@@ -189,6 +191,7 @@ const REGISTRABLE: Record<SessionType, boolean> = {
   keynote: true,
   tour: true,
   break: false,
+  gathering: false,
 };
 
 const T = (locale: Locale) => ({
