@@ -30,7 +30,7 @@ const ProgramLoading = () => (
           />
         ))}
       </div>
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_336px]">
+      <div className="mt-8 grid gap-8 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_336px]">
         <TimelineSkeleton rows={4} />
         <SidebarSkeleton />
       </div>

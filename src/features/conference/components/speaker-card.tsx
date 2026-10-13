@@ -25,7 +25,7 @@ const SpeakerCard = ({
   return (
     <div className="rounded-[var(--x-r-field)] border border-[var(--x-line)] bg-[var(--x-raise)] p-4">
       <div className="flex items-start gap-3.5">
-        <Avatar name={speaker.name} url={speaker.photoUrl} size={52} ring={false} />
+        <Avatar name={speaker.name} url={speaker.photoUrl} size={64} ring={false} />
         <div className="min-w-0 flex-1">
           <p className="font-display text-[15px] font-bold text-[var(--x-ink)]">
             {speaker.name}

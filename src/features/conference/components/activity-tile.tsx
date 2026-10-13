@@ -192,15 +192,15 @@ const ActivityTile = ({ activity, locale, slug, onOpen, registerAction, leaveAct
               {activity.title}
             </h3>
           </span>
-          <span className="block size-[96px] flex-none overflow-hidden rounded-2xl bg-[var(--x-raise)]">
+          <span className="block size-[76px] flex-none overflow-hidden rounded-2xl bg-[var(--x-raise)]">
             <Cover activity={activity} />
           </span>
         </div>
 
-        {/* Who gives it. */}
+        {/* Who gives it — the face first, large enough to know. */}
         {lead ? (
-          <div className="mt-4 flex items-center gap-2.5">
-            <Avatar name={lead.name} url={lead.photoUrl} size={36} ring={false} />
+          <div className="mt-4 flex items-center gap-3">
+            <Avatar name={lead.name} url={lead.photoUrl} size={48} ring={false} />
             <span className="min-w-0 truncate text-sm font-semibold text-[var(--x-ink)]">
               {activity.speakers.map((s) => s.name).join(', ')}
             </span>

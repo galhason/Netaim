@@ -12,7 +12,7 @@ import {
   TypePill,
   surface,
 } from '../ui/kit';
-import { IconCalendar, IconClock, IconPin, IconShare, IconStar, IconStarFilled } from '../ui/icons';
+import { IconCalendar, IconClock, IconPin, IconShare, IconStar, IconStarFilled, IconUsers } from '../ui/icons';
 import { BandIcon } from './activity-band';
 import { useToast } from '../ui/feedback';
 import { useFavorites } from '../ui/favorites';
@@ -110,8 +110,8 @@ const ActivityCard = ({
         <span className="grid size-8 flex-none place-items-center rounded-full bg-[var(--x-primary-wash)] text-[var(--x-primary)]">
           <BandIcon type={activity.type} className="size-4" />
         </span>
-        <span className="flex-1">
-          <span className={`block text-[var(--x-ink)] ${gathering ? 'font-display text-base font-bold' : 'text-sm font-medium'}`}>
+        <span className="min-w-0 flex-1">
+          <span className={`break-words text-[var(--x-ink)] ${gathering ? 'font-display text-base font-bold' : 'text-sm font-medium'}`}>
             {activity.title}
           </span>
           {activity.description ? (
@@ -119,13 +119,23 @@ const ActivityCard = ({
               {activity.description}
             </span>
           ) : null}
+          {activity.speakers.length > 0 || activity.place ? (
+            <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[var(--x-soft)]">
+              {activity.speakers.length > 0 ? (
+                <span className="inline-flex min-w-0 items-center gap-1.5">
+                  <IconUsers className="size-3.5 flex-none text-[var(--x-faint)]" />
+                  <span className="truncate">{activity.speakers.map((s) => s.name).join(', ')}</span>
+                </span>
+              ) : null}
+              {activity.place ? (
+                <span className="inline-flex min-w-0 items-center gap-1.5">
+                  <IconPin className="size-3.5 flex-none text-[var(--x-faint)]" />
+                  <span className="truncate">{activity.place}</span>
+                </span>
+              ) : null}
+            </span>
+          ) : null}
         </span>
-        {activity.place ? (
-          <span className="flex items-center gap-1.5 text-xs text-[var(--x-soft)]">
-            <IconPin className="size-4" />
-            {activity.place}
-          </span>
-        ) : null}
       </div>
     );
   }

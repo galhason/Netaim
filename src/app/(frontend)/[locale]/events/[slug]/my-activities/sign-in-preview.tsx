@@ -142,7 +142,7 @@ const SignInPreview = ({ locale, enterHref, signInHref }: Props) => {
           {PREVIEW.map((row) => (
             <li
               key={row.time}
-              className="grid grid-cols-[44px_16px_1fr] items-center gap-2 sm:grid-cols-[52px_16px_1fr] sm:gap-3"
+              className="grid grid-cols-[44px_16px_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[52px_16px_minmax(0,1fr)] sm:gap-3"
             >
               <span className="text-end text-[13px] font-semibold tabular-nums text-[var(--x-soft)]">
                 {row.time}

@@ -299,29 +299,21 @@ const ProgramExperience = ({
         initial={noticeText ? { message: noticeText, tone: 'warn' } : undefined}
       >
       {/*
-        * The head, as the approved design draws it: the conference's
-        * name over "the programme" at the start of the row, the days at
-        * its end. Under it, one row of tools: search and the kinds.
+        * The head: the conference's name over "the programme". The days
+        * are not up here at the far end of the row — they sit in the
+        * toolbar, right above the hours they switch, where the hand
+        * already is.
         */}
       <header className="px-5 pt-8 md:px-8 md:pt-10">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-semibold tracking-wide text-[var(--nt-orange)]">
-              {title}
-            </p>
-            <h1 className="mt-1.5 font-display text-4xl font-extrabold tracking-tight text-[var(--x-primary)] md:text-5xl">
-              {COPY.heading[locale]}
-            </h1>
-            <p className="mt-3 max-w-xl text-[15px] text-[var(--x-soft)] md:text-base">
-              {COPY.sub[locale]}
-            </p>
-          </div>
-          {days.length > 1 ? (
-            <div className="md:pt-2">
-              <DayTabs days={days} active={activeDay} onSelect={setActiveDay} />
-            </div>
-          ) : null}
-        </div>
+        <p className="text-sm font-semibold tracking-wide text-[var(--nt-orange)]">
+          {title}
+        </p>
+        <h1 className="mt-1.5 font-display text-4xl font-extrabold tracking-tight text-[var(--x-primary)] md:text-5xl">
+          {COPY.heading[locale]}
+        </h1>
+        <p className="mt-3 max-w-xl text-[15px] text-[var(--x-soft)] md:text-base">
+          {COPY.sub[locale]}
+        </p>
       </header>
 
       <div className="px-5 py-6 md:px-8 md:py-7">
@@ -329,8 +321,13 @@ const ProgramExperience = ({
           <EmptyState title={COPY.soon[locale]} />
         ) : (
           <>
-            {/* The toolbar: search and the kinds, one row. */}
-            <div className="flex flex-col gap-3 rounded-[var(--x-r-card)] border border-[var(--x-line)] bg-[var(--x-surface)] p-3 shadow-[var(--x-shadow)] md:flex-row md:items-center md:gap-4 md:p-3.5">
+            {/* The toolbar: the days first, then search and the kinds — one row where it fits. */}
+            <div className="flex flex-col gap-3 rounded-[var(--x-r-card)] border border-[var(--x-line)] bg-[var(--x-surface)] p-3 shadow-[var(--x-shadow)] md:flex-row md:flex-wrap md:items-center md:gap-4 md:p-3.5">
+              {days.length > 1 ? (
+                <div className="flex items-center gap-4 md:border-e md:border-[var(--x-line)] md:pe-4">
+                  <DayTabs days={days} active={activeDay} onSelect={setActiveDay} />
+                </div>
+              ) : null}
               <div className="md:w-[380px] md:flex-none">
                 <SearchBar
                   value={query}
@@ -369,7 +366,7 @@ const ProgramExperience = ({
               </div>
             </details>
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_316px]">
+            <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_316px]">
               {/* The day, hour by hour */}
               <div>
                 {blocks.length === 0 ? (

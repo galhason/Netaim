@@ -64,6 +64,57 @@ const relName = (value: unknown): string | undefined => {
   return undefined;
 };
 
+/*
+ * A speaker who lends their picture from their account sits one hop
+ * deeper than the query reaches: session → speaker → account → photo
+ * is depth three, and the list is read at depth two so the event and
+ * its own pictures are not dragged along with every activity. So the
+ * one thing left as a bare id — the account's photo — is fetched here,
+ * once for the whole list, and put back where the identity rule looks
+ * for it. Without this a linked speaker showed initials beside a name
+ * whose owner had uploaded a photo.
+ */
+const accountPhotoIds = (rows: SessionRow[]): number[] => {
+  const ids = new Set<number>();
+  for (const row of rows) {
+    if (!Array.isArray(row.speakers)) continue;
+    for (const speaker of row.speakers as SpeakerRow[]) {
+      const account = speaker?.account;
+      if (!account || typeof account !== 'object') continue;
+      const photo = (account as { photo?: unknown }).photo;
+      if (typeof photo === 'number') ids.add(photo);
+    }
+  }
+  return [...ids];
+};
+
+const withAccountPhotos = async (
+  payload: Awaited<ReturnType<typeof getSystemPayload>>,
+  rows: SessionRow[],
+): Promise<SessionRow[]> => {
+  const ids = accountPhotoIds(rows);
+  if (ids.length === 0) return rows;
+  const media = await payload.find({
+    collection: 'media',
+    where: { id: { in: ids } },
+    depth: 0,
+    pagination: false,
+    overrideAccess: true,
+  });
+  const byId = new Map(media.docs.map((doc) => [Number(doc.id), doc]));
+  for (const row of rows) {
+    if (!Array.isArray(row.speakers)) continue;
+    for (const speaker of row.speakers as SpeakerRow[]) {
+      const account = speaker?.account as { photo?: unknown } | undefined;
+      if (account && typeof account === 'object' && typeof account.photo === 'number') {
+        const doc = byId.get(account.photo);
+        if (doc) account.photo = doc;
+      }
+    }
+  }
+  return rows;
+};
+
 /* Embedded speaker rows (depth-2) resolved to their display identity. */
 const resolveRows = (value: unknown): ResolvedSpeaker[] =>
   Array.isArray(value)
@@ -164,7 +215,7 @@ export const payloadSessionRepository: SessionRepository = {
       pagination: false,
       overrideAccess: true,
     });
-    return (result.docs as unknown as SessionRow[]).map(toSession);
+    return (await withAccountPhotos(payload, result.docs as unknown as SessionRow[])).map(toSession);
   },
 
   translationOf: async (sessionId, locale) => {
@@ -212,7 +263,9 @@ export const payloadSessionRepository: SessionRepository = {
         overrideAccess: true,
       })
       .catch(() => null);
-    return doc ? toSession(doc as unknown as SessionRow) : null;
+    if (!doc) return null;
+    const [row] = await withAccountPhotos(payload, [doc as unknown as SessionRow]);
+    return row ? toSession(row) : null;
   },
 
   countsBySession: async (sessionId): Promise<SessionCounts> => {

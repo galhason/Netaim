@@ -91,9 +91,10 @@ const TimeBlock = ({ block, locale, slug, open, onToggle, onOpen, registerAction
   if (block.isPlain) {
     const first = block.activities[0]!;
     const gathering = first.type === 'gathering';
+    const speakers = block.activities.flatMap((a) => a.speakers);
     return (
       <section
-        className={`${surface} flex items-center gap-4 border px-5 py-4 ${
+        className={`${surface} flex flex-wrap items-center gap-x-4 gap-y-2 border px-4 py-4 sm:flex-nowrap sm:px-5 ${
           gathering
             ? 'border-[var(--x-primary)]/30 bg-[var(--x-primary-wash)]/40'
             : 'border-[var(--x-line)] bg-[var(--x-raise)]'
@@ -103,26 +104,37 @@ const TimeBlock = ({ block, locale, slug, open, onToggle, onOpen, registerAction
         <span className="grid size-9 flex-none place-items-center rounded-full bg-[var(--x-primary-wash)] text-[var(--x-primary)]">
           <BandIcon type={first.type} className="size-4" />
         </span>
-        <span className="text-start">
-          <span className="block font-display text-base font-bold tabular-nums text-[var(--x-ink)]" dir="ltr">
+        <span className="flex-none text-start">
+          <span className="block whitespace-nowrap font-display text-base font-bold tabular-nums text-[var(--x-ink)]" dir="ltr">
             {range}
           </span>
           <span className="block text-[11px] text-[var(--x-soft)]">{first.dateShort}</span>
         </span>
-        <span className="min-w-0 flex-1">
-          <span className={`block truncate text-[var(--x-ink)] ${gathering ? 'font-display text-base font-bold' : 'text-sm font-medium'}`}>
+        <span className="min-w-0 basis-full sm:basis-0 sm:flex-1">
+          <span className={`line-clamp-3 break-words text-[var(--x-ink)] sm:line-clamp-2 ${gathering ? 'font-display text-base font-bold leading-snug' : 'text-sm font-medium'}`}>
             {block.activities.map((a) => a.title).join(' · ')}
           </span>
           {first.description ? (
-            <span className="block truncate text-xs text-[var(--x-soft)]">{first.description}</span>
+            <span className="line-clamp-2 break-words text-xs text-[var(--x-soft)]">{first.description}</span>
+          ) : null}
+          {/* Who leads it and where — one quiet line, like the date beside the hour. */}
+          {speakers.length > 0 || first.place ? (
+            <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[var(--x-soft)]">
+              {speakers.length > 0 ? (
+                <span className="inline-flex min-w-0 items-center gap-1.5">
+                  <IconUsers className="size-3.5 flex-none text-[var(--x-faint)]" />
+                  <span className="truncate">{speakers.map((s) => s.name).join(', ')}</span>
+                </span>
+              ) : null}
+              {first.place ? (
+                <span className="inline-flex min-w-0 items-center gap-1.5">
+                  <IconPin className="size-3.5 flex-none text-[var(--x-faint)]" />
+                  <span className="truncate">{first.place}</span>
+                </span>
+              ) : null}
+            </span>
           ) : null}
         </span>
-        {first.place ? (
-          <span className="hidden items-center gap-1.5 text-xs text-[var(--x-soft)] sm:inline-flex">
-            <IconPin className="size-3.5" />
-            {first.place}
-          </span>
-        ) : null}
       </section>
     );
   }
@@ -146,7 +158,7 @@ const TimeBlock = ({ block, locale, slug, open, onToggle, onOpen, registerAction
         {block.activities.map((activity, index) => (
           <li
             key={activity.id}
-            className="relative grid grid-cols-[46px_18px_1fr] items-start gap-2 sm:grid-cols-[54px_18px_1fr] sm:gap-3"
+            className="relative grid grid-cols-[46px_18px_minmax(0,1fr)] items-start gap-2 sm:grid-cols-[54px_18px_minmax(0,1fr)] sm:gap-3"
           >
             <span className="pt-4 text-end text-sm font-semibold tabular-nums text-[var(--x-ink)]">
               {index === 0 ? <span dir="ltr">{activity.time}</span> : ''}
@@ -222,10 +234,10 @@ const TimeBlock = ({ block, locale, slug, open, onToggle, onOpen, registerAction
             {held ? <IconUsers className="size-[18px] text-[var(--x-ok)]" /> : <IconClock className="size-[18px]" />}
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-[15px] font-bold text-[var(--x-ink)] md:text-base">
+            <span className="line-clamp-2 text-[15px] font-bold leading-snug text-[var(--x-ink)] md:text-base">
               {headline}
             </span>
-            <span className="block truncate text-[13px] text-[var(--x-soft)]">
+            <span className="line-clamp-2 text-[13px] text-[var(--x-soft)]">
               {held || subline}
             </span>
           </span>
@@ -258,7 +270,7 @@ const TimeBlock = ({ block, locale, slug, open, onToggle, onOpen, registerAction
         </button>
       </h2>
       <div id={panelId} hidden={!shown} className="p-4 md:p-5">
-        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <ul className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {block.activities.map((activity, index) => (
             <li key={activity.id} className="min-w-0">
               <ActivityTile

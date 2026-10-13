@@ -209,6 +209,7 @@ const ScheduleRow = ({
               {activity.endTime ? `–${activity.endTime}` : ''}
             </span>
             {activity.place ? ` · ${activity.place}` : ''}
+            {activity.speakers.length > 0 ? ` · ${activity.speakers.map((s) => s.name).join(', ')}` : ''}
           </span>
         </span>
       </div>

@@ -364,7 +364,7 @@ const MyScheduleDashboard = ({
   const nowLine = (
     <li
       aria-label={`${t(locale, 'now')} ${venueClock(clock)}`}
-      className="grid grid-cols-[40px_14px_1fr] items-center gap-1.5 sm:grid-cols-[54px_18px_1fr] sm:gap-3"
+      className="grid grid-cols-[40px_14px_minmax(0,1fr)] items-center gap-1.5 sm:grid-cols-[54px_18px_minmax(0,1fr)] sm:gap-3"
     >
       <span className="text-end text-[12px] font-bold tabular-nums text-[var(--x-live)]">
         {venueClock(clock)}
@@ -499,7 +499,7 @@ const MyScheduleDashboard = ({
               />
             </div>
 
-            <div className="relative mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-10">
+            <div className="relative mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-10">
               <div className="min-w-0">
                 {/* ---- where the conference stands, when it is not today ---- */}
                 {ended ? (
@@ -601,7 +601,7 @@ const MyScheduleDashboard = ({
                       return (
                         <Fragment key={item.id}>
                           {nowIndex === i ? nowLine : null}
-                          <li className="grid grid-cols-[40px_14px_1fr] items-start gap-1.5 sm:grid-cols-[54px_18px_1fr] sm:gap-3">
+                          <li className="grid grid-cols-[40px_14px_minmax(0,1fr)] items-start gap-1.5 sm:grid-cols-[54px_18px_minmax(0,1fr)] sm:gap-3">
                             <span
                               dir="ltr"
                               className={`pt-[18px] text-end text-[12px] font-bold tabular-nums sm:text-[13px] ${

@@ -43,7 +43,7 @@ const ScheduleLoading = () => (
           {Array.from({ length: 4 }, (_, index) => (
             <li
               key={index}
-              className="grid grid-cols-[46px_18px_1fr] items-center gap-3"
+              className="grid grid-cols-[46px_18px_minmax(0,1fr)] items-center gap-3"
             >
               <div className={`${pulse} h-4 w-10`} />
               <span className="flex justify-center">

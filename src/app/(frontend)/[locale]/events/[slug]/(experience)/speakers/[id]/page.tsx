@@ -169,7 +169,7 @@ const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
               {activities.map((activity) => (
                 <li
                   key={activity.id}
-                  className="relative grid grid-cols-[46px_18px_1fr] items-start gap-2 sm:grid-cols-[54px_18px_1fr] sm:gap-3"
+                  className="relative grid grid-cols-[46px_18px_minmax(0,1fr)] items-start gap-2 sm:grid-cols-[54px_18px_minmax(0,1fr)] sm:gap-3"
                 >
                   <span className="pt-4 text-end text-sm font-semibold tabular-nums text-[var(--x-ink)]">
                     {formatTimeLabel(activity.startsAt, lang) || '—'}
