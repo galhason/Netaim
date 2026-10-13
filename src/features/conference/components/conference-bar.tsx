@@ -110,13 +110,22 @@ const ConferenceBar = ({ locale, slug, viewer, brandLogo, brand }: ConferenceBar
           { key: 'schedule', href: `${conf}/my-activities`, label: t('schedule') },
         ]
       : []),
-    { key: 'profile', href: `/${locale}/me/profile`, label: t('profile') },
+    /*
+     * "My profile" is the Lounge itself — the room with the person's
+     * day, their card and the door to editing it — not the edit form.
+     */
+    { key: 'profile', href: `/${locale}/me`, label: t('profile') },
     { key: 'messages', href: `/${locale}/me/messages`, label: t('messages') },
   ];
 
-  /* A platform address is current when the page is it or under it. */
+  /*
+   * A platform address is current when the page is it or under it —
+   * except the Lounge's own door, which every personal page sits
+   * under: that one is current only when it is the page.
+   */
   const isCurrent = (href: string): boolean =>
-    !isWordPressHref(href) && (pathname === href || pathname.startsWith(`${href}/`));
+    !isWordPressHref(href) &&
+    (pathname === href || (href !== `/${locale}/me` && pathname.startsWith(`${href}/`)));
 
   const link = (item: { key: string; href: string; label: string }, className = '') => {
     const current = isCurrent(item.href);
@@ -174,7 +183,7 @@ const ConferenceBar = ({ locale, slug, viewer, brandLogo, brand }: ConferenceBar
                   <NavBell locale={locale} />
                 </li>
                 <li className="nt-conf-nav__item">
-                  <Link href={`/${locale}/me/profile`} className="nt-conf-nav__me" title={t('areaLabel')} data-nt-dest="profile">
+                  <Link href={`/${locale}/me`} className="nt-conf-nav__me" title={t('areaLabel')} data-nt-dest="profile">
                     <span className="nt-conf-nav__avatar" aria-hidden="true">
                       {viewer.photoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element

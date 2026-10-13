@@ -48,6 +48,8 @@ export { default as BackgroundVideo } from './components/background-video';
 export { default as BrandMark } from './components/brand-mark';
 export { default as ShaderCanvas } from './components/shader-canvas';
 export { default as GuidingLight } from './components/guiding-light';
+export { default as ImageCropper } from './components/image-cropper';
+export { isCroppable } from './utils/crop-image';
 export {
   GUIDING_TONES,
   GUIDING_TONE_KEYS,

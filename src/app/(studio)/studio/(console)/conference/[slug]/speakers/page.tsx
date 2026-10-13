@@ -158,7 +158,7 @@ const ConferenceSpeakersPage = async ({ params, searchParams }: SpeakersPageProp
             <div className="grid gap-3 lg:grid-cols-[1fr_1fr_220px]">
               <Words locale={locale} lang="he" values={speaker.own} placeholders={speaker.isRegistered ? { name: speaker.name, jobTitle: speaker.jobTitle, company: speaker.company, bio: speaker.bio } : undefined} />
               <Words locale={locale} lang="en" values={other?.own ?? {}} placeholders={{ name: speaker.own.name ?? speaker.name, jobTitle: speaker.own.jobTitle, company: speaker.own.company, bio: speaker.own.bio }} />
-              <CMediaPicker name="photoId" label={UI.photo[locale]} defaultValue={speaker.own.photoId ?? ''} media={images} emptyLabel={UI.photoEmpty[locale]} uploadLabel={UI.upload[locale]} locale={locale} kind="image" />
+              <CMediaPicker name="photoId" label={UI.photo[locale]} defaultValue={speaker.own.photoId ?? ''} media={images} emptyLabel={UI.photoEmpty[locale]} uploadLabel={UI.upload[locale]} locale={locale} kind="image" crop={1} />
             </div>
           </form>
         );
@@ -186,7 +186,7 @@ const ConferenceSpeakersPage = async ({ params, searchParams }: SpeakersPageProp
         <div className="grid gap-3 lg:grid-cols-[1fr_1fr_220px]">
           <Words locale={locale} lang="he" values={{}} />
           <Words locale={locale} lang="en" values={{}} />
-          <CMediaPicker name="photoId" label={UI.photo[locale]} defaultValue="" media={images} emptyLabel={UI.photoEmpty[locale]} uploadLabel={UI.upload[locale]} locale={locale} kind="image" />
+          <CMediaPicker name="photoId" label={UI.photo[locale]} defaultValue="" media={images} emptyLabel={UI.photoEmpty[locale]} uploadLabel={UI.upload[locale]} locale={locale} kind="image" crop={1} />
         </div>
         <div className="mt-4">
           <button type="submit" className={BTN_PRIMARY}>{UI.addButton[locale]}</button>

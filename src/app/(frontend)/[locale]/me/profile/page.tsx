@@ -19,6 +19,7 @@ import {
   loungePrimary,
   loungeQuiet,
 } from '@/features/attendee';
+import ProfilePhotoForm from './photo-form';
 import {
   CountryFlag,
   CountrySelect,
@@ -428,22 +429,7 @@ const AccountProfilePage = async ({
               <h2 className="font-display text-xl font-semibold">
                 {he ? 'תמונת פרופיל' : 'Profile photo'}
               </h2>
-              <form
-                action={savePhotoAction}
-                className="mt-4 flex flex-wrap items-center gap-4"
-              >
-                <input type="hidden" name="locale" value={locale} />
-                <input
-                  type="file"
-                  name="photo"
-                  accept="image/*"
-                  required
-                  className="text-sm text-[var(--l-soft)] file:me-4 file:rounded-xl file:border-0 file:bg-[var(--l-navy)] file:px-5 file:py-2.5 file:text-sm file:font-medium file:text-white"
-                />
-                <button type="submit" className={loungeQuiet}>
-                  {he ? 'העלאה' : 'Upload'}
-                </button>
-              </form>
+              <ProfilePhotoForm locale={locale} action={savePhotoAction} buttonClass={loungeQuiet} />
             </div>
 
             <div className="lounge-rise mt-5 rounded-3xl bg-white p-7 shadow-[0_14px_44px_rgba(23,32,51,0.08)] [animation-delay:120ms]">

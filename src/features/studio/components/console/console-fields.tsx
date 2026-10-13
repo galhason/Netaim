@@ -3,6 +3,7 @@
 import { useId, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { withBasePath } from '@/config/site';
+import { ImageCropper, isCroppable } from '@/shared';
 
 /*
  * The Console's field primitives: dark glass over the deep surface,
@@ -138,6 +139,12 @@ interface CMediaPickerProps extends CFieldProps {
    * as a broken image, on the live site.
    */
   kind?: 'image' | 'video';
+  /*
+   * Offer a crop before a picture is sent: the kept picture's width
+   * over its height — 1 for a portrait's square. Pictures the browser
+   * cannot draw (a vector, say) go up untouched.
+   */
+  crop?: number;
 }
 
 /*
@@ -183,12 +190,14 @@ export const CMediaPicker = ({
   kind,
   uploadLabel,
   locale = 'he',
+  crop,
 }: CMediaPickerProps) => {
   const inputId = useId();
   const [added, setAdded] = useState<CMediaItem[]>([]);
   const [chosen, setChosen] = useState(defaultValue ?? '');
   const [refusal, setRefusal] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [cropping, setCropping] = useState<File | null>(null);
 
   const shown = [...added, ...library];
   const media = kind
@@ -230,6 +239,16 @@ export const CMediaPicker = ({
     }
   };
   const orphan = Boolean(chosen) && !current;
+
+  /* A picture with a crop on offer stops at the frame first; anything else goes straight up. */
+  const onPick = (file: File | undefined) => {
+    if (!file) return;
+    if (crop && isCroppable(file)) {
+      setCropping(file);
+      return;
+    }
+    void onFile(file);
+  };
 
   return (
     <fieldset className="block">
@@ -311,7 +330,7 @@ export const CMediaPicker = ({
           accept={ACCEPT[kind ?? 'either']}
           disabled={uploading}
           onChange={(event) => {
-            void onFile(event.target.files?.[0]);
+            onPick(event.target.files?.[0]);
             event.target.value = '';
           }}
           className="hidden"
@@ -319,6 +338,18 @@ export const CMediaPicker = ({
       </div>
       {refusal ? (
         <p className="mt-1 text-[10px] text-[var(--c-danger-text)]">{refusal}</p>
+      ) : null}
+      {cropping && crop ? (
+        <ImageCropper
+          file={cropping}
+          aspect={crop}
+          locale={locale}
+          onDone={(file) => {
+            setCropping(null);
+            void onFile(file);
+          }}
+          onCancel={() => setCropping(null)}
+        />
       ) : null}
     </fieldset>
   );

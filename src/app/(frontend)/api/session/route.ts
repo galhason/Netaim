@@ -94,7 +94,8 @@ export async function GET(request: NextRequest) {
       spotlight: { banner: note(spotlight.banner), popup: note(spotlight.popup) },
       links: {
         me: withBasePath(`/${locale}/me`),
-        profile: withBasePath(`/${locale}/me/profile`),
+        /* The profile door is the Lounge itself; the edit form is reached from there. */
+        profile: withBasePath(`/${locale}/me`),
         messages: withBasePath(`/${locale}/me/messages`),
         networking: withBasePath(`/${locale}/me/networking`),
         notifications: withBasePath(`/${locale}/me/notifications`),
