@@ -32,6 +32,7 @@ interface PlaceDoc {
   session: RelationshipValue;
   participant: RelationshipValue;
   status?: string | null;
+  language?: string | null;
 }
 
 const isRosterStatus = (value: string): value is RosterStatus =>
@@ -139,6 +140,7 @@ export const payloadActivityRosters: ActivityRosterSource = async (slug, locale,
       phone: person.phone ?? '',
       email: person.email ?? '',
       status,
+      ...(place.language ? { language: place.language } : {}),
     });
     bySession.set(session, list);
   }

@@ -16,7 +16,7 @@ import {
   type MyRegistrationsVM,
 } from '@/features/conference';
 import { isPlainSession } from '@/features/program/types/session';
-import { registerActivityAction, leaveActivityAction } from './actions';
+import { registerActivityAction, leaveActivityAction, chooseLanguageAction } from './actions';
 import { PageLeaves } from './botanical';
 import { t } from './copy';
 import DaySelector from './day-selector';
@@ -295,6 +295,8 @@ const MyScheduleDashboard = ({
     if (notice === 'notYet') out.push({ id: 'notYet', text: t(locale, 'noticeNotYet') });
     if (notice === 'closed') out.push({ id: 'closed', text: t(locale, 'noticeClosed') });
     if (notice === 'noCancel') out.push({ id: 'noCancel', text: t(locale, 'noticeNoCancel') });
+    if (notice === 'language') out.push({ id: 'language', text: t(locale, 'noticeLanguage') });
+    if (notice === 'voteClosed') out.push({ id: 'voteClosed', text: t(locale, 'noticeVoteClosed') });
     if (current && current.kind === 'activity') {
       out.push({
         id: `live-${current.id}`,
@@ -631,6 +633,7 @@ const MyScheduleDashboard = ({
                               waiting={waitingIds.has(item.id)}
                               onOpen={setSelectedId}
                               leaveAction={leaveActivityAction}
+                              voteAction={chooseLanguageAction}
                               networkingHref={networkingHref}
                             />
                           </li>
@@ -678,6 +681,7 @@ const MyScheduleDashboard = ({
         onClose={() => setSelectedId(null)}
         registerAction={registerActivityAction}
         leaveAction={leaveActivityAction}
+        voteAction={chooseLanguageAction}
       />
     </ToastProvider>
   );

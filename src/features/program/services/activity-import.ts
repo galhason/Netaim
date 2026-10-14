@@ -40,6 +40,8 @@ export const IMPORT_COLUMNS = [
   'language',
   'languageNote',
   'languageNoteEn',
+  'requirements',
+  'requirementsEn',
   'speakers',
   'speakersEn',
   'speakerRole',
@@ -50,6 +52,7 @@ export const IMPORT_COLUMNS = [
   'speakerBioEn',
   'capacity',
   'waitlist',
+  'languageVote',
   'featured',
 ] as const;
 
@@ -75,6 +78,8 @@ export const COLUMN_LABELS: Record<ImportColumn, Record<Locale, string>> = {
   language: { he: 'שפה', en: 'Language' },
   languageNote: { he: 'הערה על השפה', en: 'Language note' },
   languageNoteEn: { he: 'הערה על השפה באנגלית', en: 'Language note (English)' },
+  requirements: { he: 'דרישות מיוחדות מהמשתתפים', en: 'Special requirements' },
+  requirementsEn: { he: 'דרישות מיוחדות באנגלית', en: 'Special requirements (English)' },
   speakers: { he: 'מעביר/ת הפעילות', en: 'Presenter' },
   speakersEn: { he: 'מעביר/ת הפעילות באנגלית', en: 'Presenter (English)' },
   speakerRole: { he: 'תפקיד', en: 'Role' },
@@ -85,6 +90,7 @@ export const COLUMN_LABELS: Record<ImportColumn, Record<Locale, string>> = {
   speakerBioEn: { he: 'אודות המרצה באנגלית', en: 'About the presenter (English)' },
   capacity: { he: 'מקומות', en: 'Capacity' },
   waitlist: { he: 'רשימת המתנה', en: 'Waitlist' },
+  languageVote: { he: 'הצבעת שפה', en: 'Language vote' },
   featured: { he: 'מוצג בעמוד הבית', en: 'Featured' },
 };
 
@@ -126,6 +132,8 @@ const COLUMN_HELP: Record<ImportColumn, Record<Locale, string>> = {
   },
   languageNote: { he: 'לא חובה. למשל: אפשרות לדיון בצרפתית.', en: 'Optional. e.g. discussion possible in French.' },
   languageNoteEn: { he: 'לא חובה.', en: 'Optional.' },
+  requirements: { he: 'לא חובה. למשל: נעליים סגורות, כובע. מופיע בפרטי הפעילות רק כשכתוב.', en: 'Optional. e.g. closed shoes, a hat. Shown in the details only when written.' },
+  requirementsEn: { he: 'לא חובה.', en: 'Optional.' },
   speakers: {
     he: 'לא חובה. שם המעביר/ה. כמה דוברים מופרדים ב-;. דובר/ת שכבר קיימ/ת בכנס באותו שם מקושר/ת, לא נוצר/ת שוב.',
     en: 'Optional. The presenter’s name. Several separated by ;. A speaker already on this conference under the same name is linked, not created again.',
@@ -139,6 +147,10 @@ const COLUMN_HELP: Record<ImportColumn, Record<Locale, string>> = {
   speakerBioEn: { he: 'לא חובה.', en: 'Optional.' },
   capacity: { he: 'לא חובה. מספר מקומות — רק לסדנאות וסיורים.', en: 'Optional. Seats — seminars and tours only.' },
   waitlist: { he: 'כן / לא. ברירת מחדל: לא.', en: 'yes / no. Default: no.' },
+  languageVote: {
+    he: 'כן / לא. ברירת מחדל: לא. "כן" — הנרשמים בוחרים שפה מתוך עמודת השפה (צריך לפחות שתיים), והפעילות תתקיים בשפה שתקבעו לפי הספירה.',
+    en: 'yes / no. Default: no. "yes" — registrants pick a language from the language column (at least two), and the activity is held in the one you decide from the tally.',
+  },
   featured: { he: 'כן / לא. ברירת מחדל: לא.', en: 'yes / no. Default: no.' },
 };
 
@@ -167,6 +179,8 @@ const HEADER_ALIASES: Record<ImportColumn, string[]> = {
   language: ['שפה', 'language'],
   languageNote: ['הערה על השפה', 'הערת שפה', 'language note'],
   languageNoteEn: ['הערה על השפה באנגלית', 'language note en', 'language note english'],
+  requirements: ['דרישות מיוחדות מהמשתתפים', 'דרישות מיוחדות', 'דרישות', 'האם יש דרישות מיוחדות מהמשתתפים?', 'special requirements', 'requirements'],
+  requirementsEn: ['דרישות מיוחדות באנגלית', 'special requirements en', 'requirements en', 'requirements english'],
   speakers: ['מעביר/ת הפעילות', 'מעביר/ת הסדנה', 'מעביר', 'מעבירה', 'דובר', 'דוברים', 'מרצה', 'presenter', 'presenters', 'speaker', 'speakers'],
   speakersEn: ['מעביר/ת הפעילות באנגלית', 'דובר באנגלית', 'דוברים באנגלית', 'presenter en', 'presenter english', 'speaker en', 'speakers en', 'speaker english'],
   speakerRole: ['תפקיד', 'תפקיד הדובר', 'role', 'job title', 'speaker role'],
@@ -177,6 +191,7 @@ const HEADER_ALIASES: Record<ImportColumn, string[]> = {
   speakerBioEn: ['אודות המרצה באנגלית', 'about the presenter en', 'about the speaker en', 'bio en', 'speaker bio en', 'bio english'],
   capacity: ['מקומות', 'קיבולת', 'capacity', 'seats'],
   waitlist: ['רשימת המתנה', 'המתנה', 'waitlist'],
+  languageVote: ['הצבעת שפה', 'הצבעה', 'בחירת שפה', 'language vote', 'vote'],
   featured: ['מוצג בעמוד הבית', 'מוצג', 'featured'],
 };
 
@@ -504,6 +519,7 @@ const readRow = (
     ...(raw.trackEn ? { track: raw.trackEn } : {}),
     ...(raw.floorEn ? { floor: raw.floorEn } : {}),
     ...(raw.languageNoteEn ? { languageNote: raw.languageNoteEn } : {}),
+    ...(raw.requirementsEn ? { requirements: raw.requirementsEn } : {}),
   };
 
   return {
@@ -517,6 +533,8 @@ const readRow = (
       sessionType,
       capacity: Number.isFinite(capacity) ? capacity : null,
       waitlistEnabled: YES.has(flatten(raw.waitlist ?? '')),
+      /* A vote needs at least two languages to vote between. */
+      languageVote: YES.has(flatten(raw.languageVote ?? '')) && language.languages.length >= 2,
       featured: YES.has(flatten(raw.featured ?? '')),
       ...(startsAt ? { startsAt } : {}),
       ...(endsAt ? { endsAt } : {}),
@@ -532,6 +550,7 @@ const readRow = (
       ...(raw.languageNote || language.languageNote
         ? { languageNote: raw.languageNote || language.languageNote }
         : {}),
+      ...(raw.requirements ? { requirements: raw.requirements } : {}),
     },
   };
 };

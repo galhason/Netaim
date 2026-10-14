@@ -16,6 +16,7 @@ import {
   IconUsers,
   IconWait,
   IconWarn,
+  VoteLine,
 } from '@/features/conference';
 import type { SessionType } from '@/features/program';
 import { isPlainSession } from '@/features/program/types/session';
@@ -39,6 +40,8 @@ interface Props {
   waiting: boolean;
   onOpen: (id: string) => void;
   leaveAction: (formData: FormData) => void | Promise<void>;
+  /* Saves a changed language vote, where the activity holds one. */
+  voteAction?: (formData: FormData) => void | Promise<void>;
   networkingHref: string;
 }
 
@@ -116,6 +119,7 @@ const ScheduleRow = ({
   waiting,
   onOpen,
   leaveAction,
+  voteAction,
   networkingHref,
 }: Props) => {
   const frame = `relative rounded-[var(--x-r-card)] border bg-[var(--x-surface)] transition-[box-shadow,border-color] ${
@@ -256,6 +260,11 @@ const ScheduleRow = ({
                 </span>
               ) : null}
             </p>
+          ) : null}
+          {held && activity.vote ? (
+            <div className="mt-1.5">
+              <VoteLine vote={activity.vote} locale={locale} slug={slug} sessionId={activity.id} changeAction={past ? undefined : voteAction} />
+            </div>
           ) : null}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button type="button" onClick={() => onOpen(activity.id)} className={detailsBtn}>

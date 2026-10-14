@@ -52,6 +52,8 @@ export interface WizardInitial {
   translated?: boolean;
   languageNote?: string;
   languageNoteEn?: string;
+  requirements?: string;
+  requirementsEn?: string;
   capacity?: string;
   waitlistEnabled?: boolean;
   registrationOpensAt?: string;
@@ -60,6 +62,10 @@ export interface WizardInitial {
   cancellationDeadline?: string;
   featured?: boolean;
   image?: MediaOption;
+  /* The vote on the language: whether it is held, what was decided, and the tally so far. */
+  languageVote?: boolean;
+  decidedLanguage?: string;
+  votes?: { language: string; label: string; confirmed: number; waiting: number }[];
 }
 
 interface Props {
@@ -233,6 +239,12 @@ const T = (locale: Locale) => ({
   fLang: locale === 'he' ? 'שפת הפעילות' : 'Language',
   fTranslated: locale === 'he' ? 'עם תרגום סימולטני' : 'Simultaneous translation available',
   fLangNote: locale === 'he' ? 'הערה על השפה' : 'Language note',
+  fRequirements: locale === 'he' ? 'האם יש דרישות מיוחדות מהמשתתפים?' : 'Any special requirements of participants?',
+  fRequirementsPh: locale === 'he' ? 'לדוגמה: נעליים סגורות, כובע, לבוש צנוע' : 'e.g. closed shoes, a hat, modest dress',
+  fRequirementsHint:
+    locale === 'he'
+      ? 'מופיע בפרטי הפעילות רק אם כתבתם כאן משהו.'
+      : 'Shown in the activity’s details only when something is written here.',
   fLangNotePh: locale === 'he' ? 'לדוגמה: אפשרות לדיון בצרפתית' : 'e.g. discussion possible in French',
   fAudience: locale === 'he' ? 'קהל יעד' : 'Target audience',
   fTopics: locale === 'he' ? 'תחום' : 'Field',
@@ -263,6 +275,20 @@ const T = (locale: Locale) => ({
       ? 'השאירו ריק לפעילות ללא הגבלת מקומות.'
       : 'Leave empty for an activity with no seat limit.',
   fWaitlist: locale === 'he' ? 'פתיחת רשימת המתנה כשמתמלא' : 'Open a waiting list when full',
+  fVote: locale === 'he' ? 'הנרשמים בוחרים את שפת הפעילות' : 'Registrants choose the activity’s language',
+  fVoteHint:
+    locale === 'he'
+      ? 'כל נרשם חייב לבחור שפה אחת מהשפות שסומנו בצעד "פרטים" (לפחות שתיים). הפעילות תתקיים בשפה אחת — לפי מה שתקבעו מתוך הספירה.'
+      : 'Every registrant must pick one of the languages ticked in “Details” (at least two). The activity is held in one language — the one you decide from the tally.',
+  fDecided: locale === 'he' ? 'השפה שנקבעה' : 'Language decided',
+  fDecidedOpen: locale === 'he' ? 'טרם נקבעה — ההצבעה פתוחה' : 'Not yet — the vote is open',
+  fDecidedHint:
+    locale === 'he'
+      ? 'קביעת שפה נועלת את ההצבעה, מודיעה לכל הנרשמים (פעמון ומייל) ומציגה בתוכנייה את השפה הזו בלבד.'
+      : 'Deciding closes the vote, tells every registrant (bell and mail) and prints this language alone in the programme.',
+  votesTitle: locale === 'he' ? 'ההצבעה עד כה' : 'The vote so far',
+  votesNone: locale === 'he' ? 'עדיין אין נרשמים.' : 'No registrants yet.',
+  votesWaiting: locale === 'he' ? 'ממתינים' : 'waiting',
   fRegOpens: locale === 'he' ? 'פתיחת ההרשמה' : 'Registration opens',
   fRegCloses: locale === 'he' ? 'סגירת ההרשמה' : 'Registration closes',
   regBreakNote:
@@ -551,6 +577,18 @@ const ActivityWizard = ({
               />
               <p className="text-[11px] text-[var(--c-text-faint)]">{t.facetsHint}</p>
             </div>
+            <div>
+              <Pair
+                name="requirements"
+                label={t.fRequirements}
+                he={initial?.requirements ?? ''}
+                en={initial?.requirementsEn ?? ''}
+                placeholder={t.fRequirementsPh}
+                fieldClass={field}
+                labelClass={label}
+              />
+              <p className={hint}>{t.fRequirementsHint}</p>
+            </div>
             <ActivityImagePicker
               locale={locale}
               slug={slug}
@@ -641,6 +679,48 @@ const ActivityWizard = ({
             <Check name="waitlistEnabled" defaultChecked={initial?.waitlistEnabled}>
               {t.fWaitlist}
             </Check>
+            {registrable ? (
+              <div className="flex flex-col gap-3">
+                <Check name="languageVote" defaultChecked={initial?.languageVote}>
+                  {t.fVote}
+                </Check>
+                <p className={hint}>{t.fVoteHint}</p>
+                {editing && initial?.languageVote ? (
+                  <div className="rounded-lg border border-[var(--c-line)] bg-[rgba(255,255,255,0.02)] p-3.5">
+                    <p className="text-xs uppercase tracking-wide text-[var(--c-text-faint)]">{t.votesTitle}</p>
+                    {initial.votes && initial.votes.length > 0 ? (
+                      <ul className="mt-2 flex flex-wrap gap-2">
+                        {initial.votes.map((row) => (
+                          <li
+                            key={row.language}
+                            className="rounded-full border border-[var(--c-line)] px-3 py-1 text-sm text-[var(--c-text)]"
+                          >
+                            {row.label} <span className="font-semibold tabular-nums">{row.confirmed}</span>
+                            {row.waiting > 0 ? (
+                              <span className="text-[var(--c-text-faint)]"> (+{row.waiting} {t.votesWaiting})</span>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="mt-2 text-sm text-[var(--c-text-soft)]">{t.votesNone}</p>
+                    )}
+                    <label className={`${label} mt-4`} htmlFor="w-decided">
+                      {t.fDecided}
+                    </label>
+                    <select id="w-decided" name="decidedLanguage" defaultValue={initial.decidedLanguage ?? ''} className={field}>
+                      <option value="">{t.fDecidedOpen}</option>
+                      {(initial.languages ?? []).map((code) => (
+                        <option key={code} value={code}>
+                          {ACTIVITY_LANGUAGE_LABELS[code as keyof typeof ACTIVITY_LANGUAGE_LABELS]?.[locale] ?? code}
+                        </option>
+                      ))}
+                    </select>
+                    <p className={hint}>{t.fDecidedHint}</p>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
             <div className="grid gap-5 sm:grid-cols-2">
               <WhenField
                 name="registrationOpensAt"

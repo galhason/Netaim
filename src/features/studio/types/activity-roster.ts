@@ -12,6 +12,8 @@ export interface RosterPerson {
   phone: string;
   email: string;
   status: RosterStatus;
+  /* The language this person asked for, where the activity holds a vote. */
+  language?: string;
 }
 
 export interface ActivityRoster {

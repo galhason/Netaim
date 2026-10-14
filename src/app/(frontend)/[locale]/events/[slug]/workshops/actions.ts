@@ -28,7 +28,7 @@ export const selectWorkshopAction = async (formData: FormData) => {
   let target = base;
   if (sessionId) {
     try {
-      await selectWorkshop(sessionId, locale);
+      await selectWorkshop(sessionId, locale, String(formData.get('language') ?? '') || null);
     } catch (thrown) {
       target = `${base}?error=${reasonOf(thrown)}`;
     }

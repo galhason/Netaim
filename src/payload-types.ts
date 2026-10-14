@@ -877,6 +877,14 @@ export interface Session {
   languages?: ('he' | 'en' | 'ru' | 'es' | 'fr' | 'de')[] | null;
   translated?: boolean | null;
   languageNote?: string | null;
+  /**
+   * Registrants choose the language they want from the languages above; the organiser decides from the tally.
+   */
+  languageVote?: boolean | null;
+  /**
+   * The language the activity will be held in, once decided. Closes the vote.
+   */
+  decidedLanguage?: ('he' | 'en' | 'ru' | 'es' | 'fr' | 'de') | null;
   equipment?: string | null;
   subtitle?: string | null;
   floor?: string | null;
@@ -900,6 +908,7 @@ export interface SessionRegistration {
   event: number | Event;
   status: 'pending' | 'confirmed' | 'waitlisted' | 'cancelled' | 'declined' | 'attended' | 'expired' | 'noShow';
   waitlistPosition?: number | null;
+  language?: ('he' | 'en' | 'ru' | 'es' | 'fr' | 'de') | null;
   submittedAt?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -1725,6 +1734,8 @@ export interface SessionsSelect<T extends boolean = true> {
   languages?: T;
   translated?: T;
   languageNote?: T;
+  languageVote?: T;
+  decidedLanguage?: T;
   equipment?: T;
   subtitle?: T;
   floor?: T;
@@ -1747,6 +1758,7 @@ export interface SessionRegistrationsSelect<T extends boolean = true> {
   event?: T;
   status?: T;
   waitlistPosition?: T;
+  language?: T;
   submittedAt?: T;
   updatedAt?: T;
   createdAt?: T;

@@ -6,7 +6,8 @@ import {
   getStudioLocale as localeOf,
 } from '@/features/studio';
 import { getActiveConferenceSlug } from '@/features/events';
-import { listArchivedActivities, listConferenceActivities } from '@/features/program';
+import { languageTally, listArchivedActivities, listConferenceActivities } from '@/features/program';
+import { ACTIVITY_LANGUAGE_LABELS } from '@/shared/constants/activity-facets';
 import { can } from '@/permission-engine';
 import ActivityManager, { type ActivityRow } from './activity-manager';
 
@@ -39,6 +40,14 @@ const ActivityPage = async () => {
       ])
     : [[], []];
 
+  /* The vote of every activity that holds one, read once for the list. */
+  const tallies = new Map(
+    await Promise.all(
+      activities
+        .filter(({ session }) => session.languageVote)
+        .map(async ({ session }) => [session.id, await languageTally(session.id).catch(() => [])] as const),
+    ),
+  );
   const toRow = ({ session, capacity, status }: (typeof activities)[number]): ActivityRow => ({
       id: session.id,
       title: session.title,
@@ -57,6 +66,18 @@ const ActivityPage = async () => {
       available: capacity.available,
       state: capacity.state,
       status,
+      ...(session.languageVote
+        ? {
+            votes: (tallies.get(session.id) ?? []).map((row) => ({
+              label: ACTIVITY_LANGUAGE_LABELS[row.language][locale],
+              confirmed: row.confirmed,
+              waiting: row.waiting,
+            })),
+            ...(session.decidedLanguage
+              ? { decidedLanguage: ACTIVITY_LANGUAGE_LABELS[session.decidedLanguage][locale] }
+              : {}),
+          }
+        : {}),
   });
   const rows: ActivityRow[] = activities.map(toRow);
   const archived: ActivityRow[] = shelved.map((session) => ({

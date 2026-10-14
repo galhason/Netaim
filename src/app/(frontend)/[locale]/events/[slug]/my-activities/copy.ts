@@ -109,6 +109,14 @@ export const COPY = {
     he: 'לא ניתן עוד לבטל את ההרשמה לפעילות הזו.',
     en: 'This registration can no longer be cancelled.',
   },
+  noticeLanguage: {
+    he: 'לפעילות הזו נרשמים עם בחירת שפה — בחרו אחת מהשפות המוצעות.',
+    en: 'This activity asks for a language — choose one of those offered.',
+  },
+  noticeVoteClosed: {
+    he: 'השפה של הפעילות כבר נקבעה, ואי אפשר לשנות את הבחירה.',
+    en: 'The language of this activity has been decided; the choice can no longer be changed.',
+  },
   cannotCancel: {
     he: 'לא ניתן לבטל',
     en: 'Cannot cancel',

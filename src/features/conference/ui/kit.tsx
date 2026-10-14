@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'motion/react';
-import type { ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
+import LanguageDialog from './language-dialog';
 import type { Locale } from '@/config/locales';
 import type { SessionType } from '@/features/program';
 import type {
@@ -10,6 +11,7 @@ import type {
   DayVM,
   RegistrationState,
   SpeakerVM,
+  VoteVM,
 } from '../types';
 import {
   IconArrow,
@@ -264,7 +266,23 @@ interface RegProps {
   note?: string;
   size?: 'sm' | 'md';
   block?: boolean;
+  /*
+   * The vote on the language, where the activity holds one. While it
+   * is open, registering asks for a language first — the dialog joins
+   * this very form, so the server gets the choice with the request.
+   */
+  vote?: VoteVM;
 }
+
+const VOTE_COPY = {
+  ask: { he: 'באיזו שפה תרצו את הפעילות?', en: 'Which language would you like?' },
+  change: { he: 'שינוי הבחירה', en: 'Change your choice' },
+  chose: { he: 'בחרת:', en: 'You chose:' },
+  decided: { he: 'השפה שנקבעה:', en: 'Language decided:' },
+  differs: { he: 'שונה ממה שביקשת', en: 'not what you asked for' },
+  save: { he: 'שמירה', en: 'Save' },
+  changeLink: { he: 'שינוי', en: 'Change' },
+};
 
 /*
  * The registration control's shape and weight come from the page it is
@@ -292,10 +310,14 @@ export const RegistrationButton = ({
   note,
   size = 'md',
   block = false,
+  vote,
 }: RegProps) => {
   const pad = size === 'sm' ? 'min-h-9 px-4 text-sm' : 'min-h-11 px-6 text-sm';
   const width = block ? 'w-full' : '';
   const label = REG_LABEL[state][locale];
+  const formId = useId();
+  const [asking, setAsking] = useState(false);
+  const askFirst = Boolean(vote && !vote.decided && vote.options.length > 0);
 
   const Hidden = () => (
     <>
@@ -308,12 +330,26 @@ export const RegistrationButton = ({
   if ((state === 'available' || state === 'waitlist') && registerAction) {
     const cls = state === 'waitlist' ? WAIT_BTN : PRIMARY_BTN;
     return (
-      <form action={registerAction} className={block ? 'w-full' : ''}>
+      <form id={formId} action={registerAction} className={block ? 'w-full' : ''}>
         <Hidden />
-        <button type="submit" className={`${cls} ${pad} ${width}`}>
+        <button
+          type={askFirst ? 'button' : 'submit'}
+          onClick={askFirst ? () => setAsking(true) : undefined}
+          className={`${cls} ${pad} ${width}`}
+        >
           {state === 'waitlist' ? <IconWait className="size-4" /> : null}
           {label}
         </button>
+        {asking && vote ? (
+          <LanguageDialog
+            formId={formId}
+            options={vote.options}
+            confirmLabel={label}
+            title={VOTE_COPY.ask[locale]}
+            locale={locale}
+            onClose={() => setAsking(false)}
+          />
+        ) : null}
       </form>
     );
   }
@@ -349,6 +385,72 @@ export const RegistrationButton = ({
     <button type="button" disabled title={note} className={`${MUTED_BTN} ${pad} ${width}`}>
       {label}
     </button>
+  );
+};
+
+/*
+ * What a registered reader asked for, and what was decided. While the
+ * vote is open: "בחרת: אנגלית · שינוי". Once decided: the language the
+ * activity will be held in — with a quiet word when it is not the one
+ * this reader wanted, so the seat is theirs to keep or give back.
+ */
+export const VoteLine = ({
+  vote,
+  locale,
+  slug,
+  sessionId,
+  changeAction,
+}: {
+  vote: VoteVM;
+  locale: Locale;
+  slug: string;
+  sessionId: string;
+  /* Saves a changed vote; without it the line only states the choice. */
+  changeAction?: (formData: FormData) => void | Promise<void>;
+}) => {
+  const formId = useId();
+  const [asking, setAsking] = useState(false);
+  if (vote.decided) {
+    const differs = vote.mine && vote.mine.value !== vote.decided.value;
+    return (
+      <p className="text-[13px] text-[var(--x-soft)]">
+        <span>{VOTE_COPY.decided[locale]}</span>{' '}
+        <span className="font-semibold text-[var(--x-ink)]">{vote.decided.label}</span>
+        {differs ? <span className="text-[var(--x-warn)]"> · {VOTE_COPY.differs[locale]}</span> : null}
+      </p>
+    );
+  }
+  if (!vote.mine) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-x-1.5 text-[13px] text-[var(--x-soft)]">
+      <span>{VOTE_COPY.chose[locale]}</span>
+      <span className="font-semibold text-[var(--x-ink)]">{vote.mine.label}</span>
+      {changeAction ? (
+        <form id={formId} action={changeAction} className="inline">
+          <input type="hidden" name="slug" value={slug} />
+          <input type="hidden" name="locale" value={locale} />
+          <input type="hidden" name="sessionId" value={sessionId} />
+          <button
+            type="button"
+            onClick={() => setAsking(true)}
+            className="font-semibold text-[var(--x-primary)] underline-offset-2 hover:underline"
+          >
+            · {VOTE_COPY.changeLink[locale]}
+          </button>
+          {asking ? (
+            <LanguageDialog
+              formId={formId}
+              options={vote.options}
+              current={vote.mine}
+              confirmLabel={VOTE_COPY.save[locale]}
+              title={VOTE_COPY.change[locale]}
+              locale={locale}
+              onClose={() => setAsking(false)}
+            />
+          ) : null}
+        </form>
+      ) : null}
+    </div>
   );
 };
 

@@ -8,6 +8,7 @@ export {
   AvailabilityBadge,
   CapacityBar,
   RegistrationButton,
+  VoteLine,
   InfoRow,
   SectionHeader,
   SearchBar,

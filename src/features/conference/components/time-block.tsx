@@ -226,14 +226,25 @@ const TimeBlock = ({ block, locale, slug, open, onToggle, onOpen, registerAction
           aria-expanded={shown}
           aria-controls={panelId}
           aria-label={shown ? COPY.hide[locale] : COPY.show[locale]}
-          className={`flex w-full items-center gap-4 rounded-[var(--x-r-card)] px-4 py-4 text-start outline-none focus-visible:ring-2 focus-visible:ring-[var(--x-primary)] md:px-5 md:py-[18px] ${
+          className={`flex w-full flex-wrap items-center gap-x-4 gap-y-2 rounded-[var(--x-r-card)] px-4 py-4 text-start outline-none focus-visible:ring-2 focus-visible:ring-[var(--x-primary)] sm:flex-nowrap md:px-5 md:py-[18px] ${
             shown ? 'rounded-b-none border-b border-[var(--x-line)] bg-[var(--x-primary-wash)]/50' : 'bg-[var(--x-surface)]'
           }`}
         >
+          {/* The same line as a band: the icon, the hour and its day at the start, then the words, then the control. */}
           <span className="grid size-10 flex-none place-items-center rounded-full bg-[var(--x-surface)] text-[var(--x-soft)] shadow-[var(--x-shadow)]">
             {held ? <IconUsers className="size-[18px] text-[var(--x-ok)]" /> : <IconClock className="size-[18px]" />}
           </span>
-          <span className="min-w-0">
+          <span className="flex-none text-start">
+            <span
+              className="block whitespace-nowrap font-display text-xl font-bold tabular-nums text-[var(--x-primary-strong)] md:text-2xl"
+              dir="ltr"
+            >
+              {range}
+            </span>
+            <span className="block text-[11px] text-[var(--x-soft)]">{block.activities[0]?.dateShort}</span>
+          </span>
+          {/* On a phone the words take a line of their own under the hour; wider, they sit beside it. */}
+          <span className="order-last min-w-0 basis-full sm:order-none sm:basis-0 sm:flex-1">
             <span className="line-clamp-2 text-[15px] font-bold leading-snug text-[var(--x-ink)] md:text-base">
               {headline}
             </span>
@@ -242,30 +253,19 @@ const TimeBlock = ({ block, locale, slug, open, onToggle, onOpen, registerAction
             </span>
           </span>
           {state === 'live' ? (
-            <span className="inline-flex items-center gap-1.5 rounded-[var(--x-r-pill)] bg-[var(--x-live)]/12 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--x-live)]">
+            <span className="inline-flex flex-none items-center gap-1.5 rounded-[var(--x-r-pill)] bg-[var(--x-live)]/12 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--x-live)]">
               <span className="x-live-dot size-2 rounded-full bg-[var(--x-live)]" />
               {COPY.live[locale]}
             </span>
           ) : state === 'past' ? (
-            <span className="rounded-[var(--x-r-pill)] bg-[var(--x-raise)] px-2.5 py-1 text-[11px] font-semibold text-[var(--x-faint)]">
+            <span className="flex-none rounded-[var(--x-r-pill)] bg-[var(--x-raise)] px-2.5 py-1 text-[11px] font-semibold text-[var(--x-faint)]">
               {COPY.past[locale]}
             </span>
           ) : null}
-          <span className="ms-auto flex flex-none items-center gap-3">
-            <span className="text-end">
-              <span
-                className="block font-display text-xl font-bold tabular-nums text-[var(--x-primary-strong)] md:text-2xl"
-                dir="ltr"
-              >
-                {range}
-              </span>
-              <span className="block text-xs text-[var(--x-soft)]">{block.activities[0]?.dateLabel}</span>
-            </span>
-            <span className="grid size-10 flex-none place-items-center rounded-xl bg-[var(--x-surface)] text-[var(--x-primary)] shadow-[var(--x-shadow)]">
-              <IconChevronDown
-                className={`size-4 transition-transform duration-300 ${shown ? 'rotate-180' : ''}`}
-              />
-            </span>
+          <span className="ms-auto grid size-10 flex-none place-items-center rounded-xl bg-[var(--x-surface)] text-[var(--x-primary)] shadow-[var(--x-shadow)] sm:ms-0">
+            <IconChevronDown
+              className={`size-4 transition-transform duration-300 ${shown ? 'rotate-180' : ''}`}
+            />
           </span>
         </button>
       </h2>

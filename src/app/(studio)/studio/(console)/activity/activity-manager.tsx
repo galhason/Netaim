@@ -22,6 +22,9 @@ export interface ActivityRow {
   available: number | null;
   state: 'unlimited' | 'open' | 'limited' | 'full';
   status: WorkshopStatus;
+  /* The vote on the language, where the activity holds one: the tally, and the decision once taken. */
+  votes?: { label: string; confirmed: number; waiting: number }[];
+  decidedLanguage?: string;
 }
 
 export interface ActivityPermissions {
@@ -108,11 +111,18 @@ const T = (locale: Locale) => ({
       : 'An archived activity is unpublished and off the program. It can be restored at any time.',
   archiveEmpty: locale === 'he' ? 'הארכיון ריק.' : 'The archive is empty.',
   empty: locale === 'he' ? 'אין עדיין פעילויות.' : 'No activities yet.',
+  allDays: locale === 'he' ? 'כל הימים' : 'All days',
+  undated: locale === 'he' ? 'ללא תאריך' : 'No date',
+  dayCount: (n: number) =>
+    n === 1 ? (locale === 'he' ? 'פעילות אחת' : '1 activity') : locale === 'he' ? `${n} פעילויות` : `${n} activities`,
   statTotal: locale === 'he' ? 'סך הכל פעילויות' : 'Total activities',
   statRegistered: locale === 'he' ? 'סה״כ נרשמים' : 'Total registered',
   statFill: locale === 'he' ? 'תפוסה ממוצעת' : 'Average fill',
   statFull: locale === 'he' ? 'פעילויות מלאות' : 'Full activities',
   statWaiting: locale === 'he' ? 'ברשימת המתנה' : 'On waiting list',
+  votes: locale === 'he' ? 'הצבעת שפה:' : 'Language vote:',
+  voteDecided: locale === 'he' ? 'שפה נקבעה:' : 'Language decided:',
+  votesNone: locale === 'he' ? 'הצבעת שפה: אין נרשמים עדיין' : 'Language vote: no registrants yet',
   exportAll: locale === 'he' ? 'ייצוא כל הנרשמים' : 'Export all registrants',
   exportAllHint:
     locale === 'he'
@@ -150,18 +160,64 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<'all' | WorkshopStatus>('all');
   const [type, setType] = useState<'all' | SessionType>('all');
+  const [day, setDay] = useState<string>('all');
+
+  /*
+   * The day an activity belongs to, as the list names it: a calendar
+   * day in the operator's own clock, the same one the row prints — so
+   * the heading and the dates under it never disagree. An activity
+   * without a start has no day, and gathers with the others of its kind
+   * at the end, under "no date".
+   */
+  const dayOf = (startsAt: string | null): string => {
+    if (!startsAt || Number.isNaN(Date.parse(startsAt))) return '';
+    return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(startsAt));
+  };
+  const dayName = (key: string): string =>
+    key === ''
+      ? t.undated
+      : new Intl.DateTimeFormat(tag, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(
+          new Date(`${key}T12:00:00`),
+        );
 
   const filtered = useMemo(
     () =>
-      rows.filter(
-        (r) =>
-          (status === 'all' || r.status === status) &&
-          (type === 'all' || r.type === type) &&
-          (query.trim() === '' ||
-            r.title.toLowerCase().includes(query.trim().toLowerCase())),
-      ),
-    [rows, query, status, type],
+      rows
+        .filter(
+          (r) =>
+            (status === 'all' || r.status === status) &&
+            (type === 'all' || r.type === type) &&
+            (day === 'all' || dayOf(r.startsAt) === day) &&
+            (query.trim() === '' ||
+              r.title.toLowerCase().includes(query.trim().toLowerCase())),
+        )
+        .sort((a, b) => {
+          /* Dated before undated; then by the clock; then by name. */
+          const da = dayOf(a.startsAt);
+          const db = dayOf(b.startsAt);
+          if (da !== db) return da === '' ? 1 : db === '' ? -1 : da.localeCompare(db);
+          return (Date.parse(a.startsAt ?? '') || 0) - (Date.parse(b.startsAt ?? '') || 0) || a.title.localeCompare(b.title, tag);
+        }),
+    [rows, query, status, type, day, tag],
   );
+
+  /* The list as days: one group per calendar day, in order, "no date" last. */
+  const groups = useMemo(() => {
+    const out: { key: string; rows: ActivityRow[] }[] = [];
+    for (const row of filtered) {
+      const key = dayOf(row.startsAt);
+      const last = out[out.length - 1];
+      if (last && last.key === key) last.rows.push(row);
+      else out.push({ key, rows: [row] });
+    }
+    return out;
+  }, [filtered]);
+
+  /* Every day the programme has, for the day filter — dated days in order, then "no date" if any. */
+  const days = useMemo(() => {
+    const keys = Array.from(new Set(rows.map((r) => dayOf(r.startsAt))));
+    return keys.sort((a, b) => (a === '' ? 1 : b === '' ? -1 : a.localeCompare(b)));
+  }, [rows]);
 
   const stats = useMemo(() => {
     const registered = rows.reduce((s, r) => s + r.confirmed, 0);
@@ -258,6 +314,20 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
           placeholder={t.search}
           className="min-w-0 flex-1 rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.5)] px-3 py-2 text-sm text-[var(--c-text)] placeholder:text-[var(--c-text-faint)]"
         />
+        {days.length > 1 ? (
+          <select
+            value={day}
+            onChange={(e) => setDay(e.target.value)}
+            className="rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.5)] px-3 py-2 text-sm text-[var(--c-text)]"
+          >
+            <option value="all">{t.allDays}</option>
+            {days.map((key) => (
+              <option key={key || 'undated'} value={key}>
+                {dayName(key)}
+              </option>
+            ))}
+          </select>
+        ) : null}
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value as typeof status)}
@@ -308,7 +378,20 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
                 </td>
               </tr>
             ) : (
-              filtered.map((r) => {
+              groups.flatMap((group) => [
+                <tr key={`day-${group.key || 'undated'}`} className="bg-[rgba(255,255,255,0.04)]">
+                  <th
+                    colSpan={6}
+                    scope="rowgroup"
+                    className="border-t border-[var(--c-line)] px-3 py-2 text-start text-xs font-semibold uppercase tracking-wide text-[var(--c-bronze)]"
+                  >
+                    {dayName(group.key)}
+                    <span className="ms-2 font-normal normal-case tracking-normal text-[var(--c-text-faint)]">
+                      · {t.dayCount(group.rows.length)}
+                    </span>
+                  </th>
+                </tr>,
+                ...group.rows.map((r) => {
                 const when = timeRange(r.startsAt, r.endsAt, tag);
                 const meta = STATUS_META[r.status];
                 const pct =
@@ -371,6 +454,26 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
                           />
                         </span>
                       ) : null}
+                      {r.votes ? (
+                        <p className="mt-1.5 text-xs text-[var(--c-text-soft)]">
+                          {r.decidedLanguage ? (
+                            <span className="text-[var(--c-bronze)]">{t.voteDecided} {r.decidedLanguage}</span>
+                          ) : r.votes.length > 0 ? (
+                            <>
+                              <span className="text-[var(--c-text-faint)]">{t.votes} </span>
+                              {r.votes.map((v, i) => (
+                                <span key={v.label} className="tabular-nums">
+                                  {i > 0 ? ' · ' : ''}
+                                  {v.label} {v.confirmed}
+                                  {v.waiting > 0 ? ` (+${v.waiting})` : ''}
+                                </span>
+                              ))}
+                            </>
+                          ) : (
+                            <span className="text-[var(--c-text-faint)]">{t.votesNone}</span>
+                          )}
+                        </p>
+                      ) : null}
                     </td>
                     <td className="p-3">
                       <span
@@ -426,7 +529,8 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
                     </td>
                   </tr>
                 );
-              })
+              }),
+              ])
             )}
           </tbody>
         </table>

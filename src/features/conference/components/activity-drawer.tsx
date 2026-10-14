@@ -9,6 +9,7 @@ import {
   AvailabilityBadge,
   RegistrationButton,
   TypePill,
+  VoteLine,
   surface,
 } from '../ui/kit';
 import {
@@ -37,6 +38,8 @@ interface Props {
   onClose: () => void;
   registerAction: (formData: FormData) => void | Promise<void>;
   leaveAction: (formData: FormData) => void | Promise<void>;
+  /* Saves a changed language vote, where the activity holds one. */
+  voteAction?: (formData: FormData) => void | Promise<void>;
 }
 
 const fullDate = (dayKey: string, locale: Locale): string => {
@@ -63,12 +66,14 @@ const RegistrationPanel = ({
   slug,
   registerAction,
   leaveAction,
+  voteAction,
 }: {
   activity: ActivityVM;
   locale: Locale;
   slug: string;
   registerAction: (formData: FormData) => void | Promise<void>;
   leaveAction: (formData: FormData) => void | Promise<void>;
+  voteAction?: (formData: FormData) => void | Promise<void>;
 }) => {
   const he = locale === 'he';
   const { confirmed, waiting, limit } = activity.capacity;
@@ -100,10 +105,16 @@ const RegistrationPanel = ({
             leaveAction={leaveAction}
             canLeave={activity.canCancel}
             note={activity.registrationNote}
+            vote={activity.vote}
             block
           />
         </div>
       </div>
+      {activity.vote && activity.registration === 'registered' ? (
+        <div className="mt-3">
+          <VoteLine vote={activity.vote} locale={locale} slug={slug} sessionId={activity.id} changeAction={voteAction} />
+        </div>
+      ) : null}
 
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
         {stats.map((s) => (
@@ -229,6 +240,7 @@ const ActivityDrawer = ({
   onClose,
   registerAction,
   leaveAction,
+  voteAction,
 }: Props) => {
   const reduce = useReducedMotion();
   const toast = useToast();
@@ -395,6 +407,7 @@ const ActivityDrawer = ({
                   slug={slug}
                   registerAction={registerAction}
                   leaveAction={leaveAction}
+                  voteAction={voteAction}
                 />
 
                 {facets.length > 0 ? (
@@ -430,6 +443,15 @@ const ActivityDrawer = ({
                       lines={5}
                       className="text-[15px] leading-relaxed text-[var(--x-soft)]"
                     />
+                  </div>
+                ) : null}
+
+                {activity.requirements ? (
+                  <div className="rounded-[var(--x-r-field)] border border-[var(--x-warn)]/30 bg-[var(--x-warn-wash)] p-4">
+                    <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--x-warn)]">
+                      {he ? 'דרישות מיוחדות מהמשתתפים' : 'Special requirements'}
+                    </h3>
+                    <p className="text-[15px] leading-relaxed text-[var(--x-ink)]">{activity.requirements}</p>
                   </div>
                 ) : null}
 
@@ -497,6 +519,7 @@ const ActivityDrawer = ({
                   leaveAction={leaveAction}
                   canLeave={activity.canCancel}
                   note={activity.registrationNote}
+                  vote={activity.vote}
                   block
                 />
               </div>

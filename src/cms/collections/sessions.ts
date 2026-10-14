@@ -145,6 +145,26 @@ export const Sessions: CollectionConfig = {
     },
     { name: 'translated', type: 'checkbox', defaultValue: false },
     { name: 'languageNote', type: 'text', localized: true },
+    /*
+     * The language put to a vote: registrants choose among `languages`,
+     * the organiser reads the tally and sets `decidedLanguage`, which
+     * closes the vote.
+     */
+    {
+      name: 'languageVote',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: { description: 'Registrants choose the language they want from the languages above; the organiser decides from the tally.' },
+    },
+    {
+      name: 'decidedLanguage',
+      type: 'select',
+      options: ACTIVITY_LANGUAGES.map((value) => ({
+        label: ACTIVITY_LANGUAGE_LABELS[value].en,
+        value,
+      })),
+      admin: { description: 'The language the activity will be held in, once decided. Closes the vote.' },
+    },
     {
       name: 'equipment',
       type: 'text',

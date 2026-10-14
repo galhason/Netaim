@@ -1,4 +1,5 @@
 import type { SessionType } from '@/features/program';
+import type { ActivityLanguage } from '@/shared/constants/activity-facets';
 
 /*
  * The public experience view models — plain, serializable shapes the
@@ -44,6 +45,22 @@ export interface CapacityVM {
   state: CapacityStateVM;
 }
 
+export interface VoteOptionVM {
+  value: ActivityLanguage;
+  label: string;
+}
+
+/*
+ * A vote on the activity's language: the languages to choose from, the
+ * organiser's decision once there is one (which closes the vote), and
+ * what this reader asked for when they registered.
+ */
+export interface VoteVM {
+  options: VoteOptionVM[];
+  decided?: VoteOptionVM;
+  mine?: VoteOptionVM;
+}
+
 export interface ActivityVM {
   id: string;
   type: SessionType;
@@ -59,6 +76,10 @@ export interface ActivityVM {
   duration?: string;
   /* The language line, composed for the reader: "אנגלית · תרגום סימולטני". */
   language?: string;
+  /* The vote on the language, where the activity holds one. */
+  vote?: VoteVM;
+  /* What the activity asks of the people who come — printed only when written. */
+  requirements?: string;
   /* Who it is for and what field it belongs to — labels in the reader's language. */
   audiences: string[];
   topics: string[];

@@ -19,6 +19,7 @@ import { staffRoleOf } from '@/features/access';
 import { currentParticipant } from '@/features/registration';
 import type {
   CreateSessionInput,
+  LanguageTally,
   SessionCounts,
   SessionRegistrationSummary,
   SessionSummary,
@@ -30,9 +31,25 @@ import {
   type WorkshopStatus,
 } from '../constants/workshop-status';
 import {
+  announceLanguageDecided,
   announceSessionCancelled,
   announceSessionChange,
 } from './session-change-notices';
+import type { ActivityLanguage } from '@/shared/constants/activity-facets';
+
+/*
+ * Whether this activity asks its registrants for a language right now:
+ * the vote is on, and nobody has decided yet.
+ */
+export const voteIsOpen = (session: Pick<SessionSummary, 'languageVote' | 'decidedLanguage'>): boolean =>
+  session.languageVote === true && !session.decidedLanguage;
+
+/* A language the activity actually offers — the vote is among those, not any six. */
+const offeredLanguage = (
+  session: Pick<SessionSummary, 'languages'>,
+  language: string | null | undefined,
+): ActivityLanguage | null =>
+  (session.languages ?? []).find((offered) => offered === language) ?? null;
 
 export interface SessionSituation {
   session: SessionSummary;
@@ -156,6 +173,10 @@ export const updateSession = async (
     const titles = await titlesOf(sessionId);
     if (titles && titles.eventSlug) {
       await announceSessionChange(titles.eventSlug, sessionId, titles, before, after);
+      /* The organiser decided the language: the vote closes, and everyone registered hears which. */
+      if (after.decidedLanguage && after.decidedLanguage !== before.decidedLanguage) {
+        await announceLanguageDecided(titles.eventSlug, sessionId, titles, after.decidedLanguage).catch(() => false);
+      }
     }
     /*
      * More room, or a waiting list switched on: the people in line
@@ -243,6 +264,8 @@ const overlaps = (
 export const selectWorkshop = async (
   sessionId: string,
   locale: Locale,
+  /* The registrant's language, where the activity holds a vote. */
+  language?: string | null,
 ): Promise<SessionRegistrationSummary> => {
   const participant = await currentParticipant();
   if (!participant) {
@@ -270,6 +293,15 @@ export const selectWorkshop = async (
    */
   if (isPlainSession(situation.session.sessionType)) {
     throw new Error('Session not found');
+  }
+  /*
+   * An activity that puts its language to a vote takes no registration
+   * without one — the whole point is a tally everyone is in. Only a
+   * language the activity offers counts; the form lists exactly those.
+   */
+  const vote = voteIsOpen(situation.session) ? offeredLanguage(situation.session, language) : null;
+  if (voteIsOpen(situation.session) && !vote) {
+    throw new Error('language');
   }
   /*
    * A conference the Studio keeps to the Netaim team takes nobody else's
@@ -334,8 +366,44 @@ export const selectWorkshop = async (
     participant.id,
     status,
     waitlistPosition,
+    vote,
   );
 };
+
+/*
+ * A registrant changes their vote. Open only while the organiser has
+ * not decided; once decided, the language is what it is and the vote
+ * is history.
+ */
+export const chooseLanguage = async (
+  sessionId: string,
+  locale: Locale,
+  language: string,
+): Promise<SessionRegistrationSummary> => {
+  const participant = await currentParticipant();
+  if (!participant) {
+    throw new Error('Sign-in required');
+  }
+  const [existing, session] = await Promise.all([
+    sessionRegistrationRepository.find(sessionId, participant.id),
+    sessionRepository.getById(sessionId, locale),
+  ]);
+  if (!existing || existing.status === 'cancelled' || !session) {
+    throw new Error('Session not found');
+  }
+  if (!voteIsOpen(session)) {
+    throw new Error('Vote closed');
+  }
+  const vote = offeredLanguage(session, language);
+  if (!vote) {
+    throw new Error('language');
+  }
+  return sessionRegistrationRepository.setLanguage(existing.id, vote);
+};
+
+/* The vote of one activity, for the organiser. */
+export const languageTally = (sessionId: string): Promise<LanguageTally[]> =>
+  sessionRegistrationRepository.languageTally(sessionId);
 
 const nowIso = (): string => new Date().toISOString();
 

@@ -2,6 +2,7 @@ import type { Locale } from '@/config/locales';
 import type { SheetData } from '@/features/program';
 import { activityRosterSource } from '@/infrastructure';
 import { formatTimeLabel } from '@/shared/utils/format-date';
+import { ACTIVITY_LANGUAGE_LABELS, activityLanguagesOf } from '@/shared/constants/activity-facets';
 import { CONSOLE_UI } from '../constants/console';
 import type {
   ActivityRoster,
@@ -81,7 +82,13 @@ const sheetNamer = (fallback: string) => {
   };
 };
 
-const PEOPLE_WIDTHS = [28, 18, 34, 18];
+const PEOPLE_WIDTHS = [28, 18, 34, 18, 16];
+
+/* The language a person asked for, in the organiser's words; blank where the activity held no vote. */
+const languageOf = (code: string | undefined, locale: Locale): string => {
+  const known = activityLanguagesOf(code ? [code] : [])[0];
+  return known ? ACTIVITY_LANGUAGE_LABELS[known][locale] : '';
+};
 
 const peopleSheet = (
   activity: ActivityRoster,
@@ -94,12 +101,13 @@ const peopleSheet = (
     rightToLeft: locale === 'he',
     widths: PEOPLE_WIDTHS,
     rows: [
-      [ui.rosterColName[locale], ui.rosterColPhone[locale], ui.rosterColEmail[locale], ui.rosterColStatus[locale]],
+      [ui.rosterColName[locale], ui.rosterColPhone[locale], ui.rosterColEmail[locale], ui.rosterColStatus[locale], ui.rosterColLanguage[locale]],
       ...activity.people.map((person) => [
         person.name,
         person.phone,
         person.email,
         STATUS_LABEL[person.status][locale],
+        languageOf(person.language, locale),
       ]),
     ],
   };
@@ -132,6 +140,7 @@ export const activityRosterSheets = (
         ui.rosterColPhone[locale],
         ui.rosterColEmail[locale],
         ui.rosterColStatus[locale],
+        ui.rosterColLanguage[locale],
       ],
       ...rosters.activities.flatMap((activity) => {
         const date = dateOf(activity.startsAt, locale, timeZone);
@@ -144,6 +153,7 @@ export const activityRosterSheets = (
           person.phone,
           person.email,
           STATUS_LABEL[person.status][locale],
+          languageOf(person.language, locale),
         ]);
       }),
     ],

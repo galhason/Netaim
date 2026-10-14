@@ -111,6 +111,21 @@ export const saveActivityAction = async (formData: FormData) => {
     languages: activityLanguagesOf(formData.getAll('languages').map(String)),
     translated: formData.get('translated') === 'on',
     languageNote: text(formData.get('languageNote')),
+    requirements: text(formData.get('requirements')),
+    /*
+     * A vote needs something to vote between: with fewer than two
+     * languages ticked the switch stays off, whatever the box says.
+     * The decision is one of the ticked languages, or nothing — which
+     * is also how a decision is taken back while the vote should stay open.
+     */
+    languageVote:
+      formData.get('languageVote') === 'on' &&
+      activityLanguagesOf(formData.getAll('languages').map(String)).length >= 2,
+    decidedLanguage: formData.has('decidedLanguage')
+      ? (activityLanguagesOf([String(formData.get('decidedLanguage') ?? '')]).find((code) =>
+          formData.getAll('languages').map(String).includes(code),
+        ) ?? null)
+      : undefined,
   };
 
   /*
@@ -137,6 +152,9 @@ export const saveActivityAction = async (formData: FormData) => {
     ...(text(formData.get('floor_en')) ? { floor: text(formData.get('floor_en')) } : {}),
     ...(text(formData.get('languageNote_en'))
       ? { languageNote: text(formData.get('languageNote_en')) }
+      : {}),
+    ...(text(formData.get('requirements_en'))
+      ? { requirements: text(formData.get('requirements_en')) }
       : {}),
   };
 
@@ -196,6 +214,8 @@ export const duplicateActivityAction = async (formData: FormData) => {
       languages: s.languages,
       translated: s.translated,
       languageNote: s.languageNote,
+      requirements: s.requirements,
+      languageVote: s.languageVote,
     });
     const actor = await actorFor('activities:manage', slug);
     if (actor && copy) {

@@ -16,10 +16,18 @@ import type {
   RegistrationState,
   ScheduleItemVM,
   SpeakerVM,
+  VoteVM,
 } from '@/features/conference';
 import { cancellationAllowed, registrationWindow } from '@/registration-engine';
-import { audienceLabels, languageLine, placeOf, topicLabels } from '@/shared/constants/activity-facets';
-import type { SessionType } from '../types/session';
+import {
+  ACTIVITY_LANGUAGE_LABELS,
+  audienceLabels,
+  languageLine,
+  placeOf,
+  topicLabels,
+  type ActivityLanguage,
+} from '@/shared/constants/activity-facets';
+import type { SessionSummary, SessionType } from '../types/session';
 import {
   listConferenceActivities,
   myActivities,
@@ -46,6 +54,12 @@ export const TYPE_LABELS: Record<SessionType, Record<Locale, string>> = {
 const FILTER_ORDER: SessionType[] = ['keynote', 'talk', 'workshop', 'tour'];
 
 const HOUR_MS = 3600000;
+
+/* The word beside the choices, while the vote is open. */
+const VOTE_LINE: Record<Locale, string> = {
+  he: 'השפה תיקבע לפי הנרשמים',
+  en: 'language decided by the registrants',
+};
 
 /*
  * The line under a button that cannot be pressed yet: when registration
@@ -151,6 +165,32 @@ export const buildProgramModel = async (
       .filter((r) => r.status !== 'cancelled')
       .map((r) => [r.sessionId, r.status]),
   );
+  const myLanguage = new Map(
+    registrations
+      .filter((r) => r.status !== 'cancelled' && r.language)
+      .map((r) => [r.sessionId, r.language as ActivityLanguage]),
+  );
+  const option = (value: ActivityLanguage) => ({ value, label: ACTIVITY_LANGUAGE_LABELS[value][locale] });
+  /*
+   * The vote, as this reader sees it; and the language line it replaces:
+   * the choices with a word that they are a choice, or — once decided —
+   * the one language, as any activity prints it.
+   */
+  const voteOf = (session: SessionSummary): { vote?: VoteVM; language?: string } => {
+    if (!session.languageVote || (session.languages ?? []).length === 0) {
+      return { language: languageLine(session, locale) || undefined };
+    }
+    const mine = myLanguage.get(session.id);
+    const vote: VoteVM = {
+      options: (session.languages ?? []).map(option),
+      ...(session.decidedLanguage ? { decided: option(session.decidedLanguage) } : {}),
+      ...(mine ? { mine: option(mine) } : {}),
+    };
+    const language = session.decidedLanguage
+      ? languageLine({ ...session, languages: [session.decidedLanguage] }, locale)
+      : `${vote.options.map((o) => o.label).join(' / ')} · ${VOTE_LINE[locale]}`;
+    return { vote, language: language || undefined };
+  };
 
   const held = activities
     .filter((a) => {
@@ -233,7 +273,8 @@ export const buildProgramModel = async (
           ? formatTimeLabel(session.endsAt, locale, timeZone) || undefined
           : undefined,
         duration: durationLabel(session.startsAt, session.endsAt, locale),
-        language: languageLine(session, locale) || undefined,
+        ...voteOf(session),
+        ...(session.requirements ? { requirements: session.requirements } : {}),
         audiences: audienceLabels(session.audiences, locale),
         topics: topicLabels(session.topics, locale),
         dayKey: dayKeyOf(session.startsAt, timeZone),

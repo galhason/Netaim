@@ -281,7 +281,7 @@ describe('the card and the drawer register the same way', () => {
       expect(kit, field).toContain(field);
     }
     /* A form, submitted — not an anchor that would navigate away. */
-    expect(kit).toContain('<form action={registerAction}');
+    expect(kit).toContain('<form id={formId} action={registerAction}');
     expect(kit).toContain('type="submit"');
   });
 

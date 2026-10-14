@@ -239,6 +239,7 @@ const ActivityTile = ({ activity, locale, slug, onOpen, registerAction, leaveAct
               leaveAction={leaveAction}
               canLeave={activity.canCancel}
               note={activity.registrationNote}
+              vote={activity.vote}
             />
           </span>
         </div>

@@ -73,9 +73,10 @@ describe('every Studio path passes through the notice', () => {
 
   it('is targeted, and asks for a click', () => {
     const notices = read('src/features/program/services/session-change-notices.ts');
-    expect(notices.split("kind: 'popup'").length - 1).toBe(2);
-    expect(notices.split('targetSessionId: sessionId').length - 1).toBe(2);
-    expect(notices.split("topic: 'activity'").length - 1).toBe(2);
+    /* Three notices — a change, a decided language, a cancellation — each targeted. */
+    expect(notices.split("kind: 'popup'").length - 1).toBe(3);
+    expect(notices.split('targetSessionId: sessionId').length - 1).toBe(3);
+    expect(notices.split("topic: 'activity'").length - 1).toBe(3);
   });
 
   it('lands the reader on their own schedule', () => {

@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { FALLBACK_LOCALE, isSupportedLocale, type Locale } from '@/config/locales';
-import { leaveWorkshop, selectWorkshop } from '@/features/program';
+import { chooseLanguage, leaveWorkshop, selectWorkshop } from '@/features/program';
 
 const localeOf = (value: string): Locale =>
   isSupportedLocale(value) ? value : FALLBACK_LOCALE;
@@ -19,6 +19,7 @@ const reasonOf = (thrown: unknown): string => {
   if (message === 'conflict') return 'conflict';
   if (message === 'Registration not open yet') return 'notYet';
   if (message === 'Registration closed') return 'closed';
+  if (message === 'language') return 'language';
   return 'full';
 };
 
@@ -37,9 +38,26 @@ export const registerActivityAction = async (formData: FormData) => {
   let target = base;
   if (sessionId) {
     try {
-      await selectWorkshop(sessionId, locale);
+      await selectWorkshop(sessionId, locale, String(formData.get('language') ?? '') || null);
     } catch (thrown) {
       target = `${base}?notice=${reasonOf(thrown)}`;
+    }
+  }
+  redirect(target);
+};
+
+/* A registrant changes the language they asked for, while the vote is open. */
+export const chooseLanguageAction = async (formData: FormData) => {
+  const slug = String(formData.get('slug') ?? '');
+  const locale = localeOf(String(formData.get('locale') ?? ''));
+  const sessionId = String(formData.get('sessionId') ?? '');
+  const base = backTo(locale, slug);
+  let target = base;
+  if (sessionId) {
+    try {
+      await chooseLanguage(sessionId, locale, String(formData.get('language') ?? ''));
+    } catch (thrown) {
+      target = `${base}?notice=${thrown instanceof Error && thrown.message === 'Vote closed' ? 'voteClosed' : 'language'}`;
     }
   }
   redirect(target);

@@ -15,6 +15,12 @@ export interface ActivityFacets {
   translated?: boolean;
   /* "Discussion possible in French" — localized, free. */
   languageNote?: string;
+  /*
+   * What the activity asks of the people who come — "closed shoes",
+   * "bring a hat", a dress code. Localized, free, and printed only when
+   * written. Stored in the collection's `equipment` column, its older name.
+   */
+  requirements?: string;
 }
 
 export const SESSION_TYPES = ['talk', 'workshop', 'keynote', 'break', 'tour', 'gathering'] as const;
@@ -38,7 +44,20 @@ export const PLAIN_SESSION_TYPES = ['break', 'gathering'] as const satisfies rea
 export const isPlainSession = (type: string | null | undefined): boolean =>
   (PLAIN_SESSION_TYPES as readonly string[]).includes(type ?? '');
 
-export interface CreateSessionInput extends ActivityFacets {
+/*
+ * A vote on the language: the activity names its possible languages
+ * (the `languages` facet), each registrant says which they want, and
+ * the organiser reads the tally and decides. Until the decision the
+ * vote is open and a registrant may change theirs; once `decidedLanguage`
+ * is set the vote is closed and the programme prints that language
+ * alone.
+ */
+export interface LanguageVote {
+  languageVote?: boolean;
+  decidedLanguage?: ActivityLanguage | null;
+}
+
+export interface CreateSessionInput extends ActivityFacets, LanguageVote {
   title: string;
   subtitle?: string;
   description?: string;
@@ -65,9 +84,10 @@ export interface SessionTranslation {
   track?: string;
   floor?: string;
   languageNote?: string;
+  requirements?: string;
 }
 
-export interface SessionSummary extends ActivityFacets {
+export interface SessionSummary extends ActivityFacets, LanguageVote {
   id: string;
   eventSlug?: string;
   title: string;
@@ -105,6 +125,15 @@ export interface SessionRegistrationSummary {
   sessionId: string;
   status: RegistrationStatus;
   waitlistPosition?: number;
+  /* The language this registrant asked for, where the activity holds a vote. */
+  language?: ActivityLanguage;
+}
+
+/* The vote as the organiser reads it: per language, who holds a seat and who waits. */
+export interface LanguageTally {
+  language: ActivityLanguage;
+  confirmed: number;
+  waiting: number;
 }
 
 export interface SessionWaitlistEntry {
@@ -166,7 +195,12 @@ export interface SessionRegistrationRepository {
     participantId: string,
     status: RegistrationStatus,
     waitlistPosition: number | null,
+    language?: ActivityLanguage | null,
   ) => Promise<SessionRegistrationSummary>;
+  /* A registrant's vote, changed while the vote is open. */
+  setLanguage: (id: string, language: ActivityLanguage) => Promise<SessionRegistrationSummary>;
+  /* The vote of one activity, counted from its live registrations. */
+  languageTally: (sessionId: string) => Promise<LanguageTally[]>;
   listForParticipant: (
     slug: string,
     participantId: string,

@@ -29,7 +29,7 @@ const rosters: ConferenceRosters = {
       startsAt: '2026-11-12T07:00:00.000Z',
       endsAt: '2026-11-12T08:30:00.000Z',
       people: [
-        { name: 'Dana Levi', phone: '050-1234567', email: 'dana@example.com', status: 'confirmed' },
+        { name: 'Dana Levi', phone: '050-1234567', email: 'dana@example.com', status: 'confirmed', language: 'en' },
         { name: 'Avi Cohen', phone: '052-7654321', email: 'avi@example.com', status: 'waitlisted' },
       ],
     },
@@ -47,10 +47,11 @@ describe('one activity', () => {
   const [sheet] = activityRosterSheets({ ...rosters, activities: [rosters.activities[0]!] }, 'he', 'one');
 
   it('is one sheet: name, phone, email and status, in Hebrew, right to left', () => {
-    expect(sheet?.rows[0]).toEqual(['שם', 'טלפון', 'אימייל', 'סטטוס']);
+    /* The language asked for, where the activity held a vote; blank otherwise. */
+    expect(sheet?.rows[0]).toEqual(['שם', 'טלפון', 'אימייל', 'סטטוס', 'שפה מבוקשת']);
     expect(sheet?.rows.slice(1)).toEqual([
-      ['Dana Levi', '050-1234567', 'dana@example.com', 'רשום/ה'],
-      ['Avi Cohen', '052-7654321', 'avi@example.com', 'ברשימת המתנה'],
+      ['Dana Levi', '050-1234567', 'dana@example.com', 'רשום/ה', 'אנגלית'],
+      ['Avi Cohen', '052-7654321', 'avi@example.com', 'ברשימת המתנה', ''],
     ]);
     expect(sheet?.rightToLeft).toBe(true);
     expect(sheet?.name).toBe('הוראה חדשנית');
@@ -58,7 +59,7 @@ describe('one activity', () => {
 
   it('speaks English, left to right, on an English Studio', () => {
     const [english] = activityRosterSheets({ ...rosters, activities: [rosters.activities[0]!] }, 'en', 'one');
-    expect(english?.rows[0]).toEqual(['Name', 'Phone', 'Email', 'Status']);
+    expect(english?.rows[0]).toEqual(['Name', 'Phone', 'Email', 'Status', 'Requested language']);
     expect(english?.rows[2]?.[3]).toBe('Waiting list');
     expect(english?.rightToLeft).toBe(false);
   });
@@ -70,17 +71,17 @@ describe('every activity, in one file', () => {
   it('opens on everyone, one row per sign-up, with the activity, date and time beside it', () => {
     const [all] = sheets;
     expect(all?.name).toBe('כל הפעילויות');
-    expect(all?.rows[0]).toEqual(['פעילות', 'תאריך', 'שעה', 'שם', 'טלפון', 'אימייל', 'סטטוס']);
+    expect(all?.rows[0]).toEqual(['פעילות', 'תאריך', 'שעה', 'שם', 'טלפון', 'אימייל', 'סטטוס', 'שפה מבוקשת']);
     expect(all?.rows.slice(1)).toEqual([
-      ['הוראה חדשנית', '12.11.2026', '09:00–10:30', 'Dana Levi', '050-1234567', 'dana@example.com', 'רשום/ה'],
-      ['הוראה חדשנית', '12.11.2026', '09:00–10:30', 'Avi Cohen', '052-7654321', 'avi@example.com', 'ברשימת המתנה'],
-      [rosters.activities[1]!.title, '12.11.2026', '12:00', 'Dana Levi', '050-1234567', 'dana@example.com', 'הגיע/ה'],
+      ['הוראה חדשנית', '12.11.2026', '09:00–10:30', 'Dana Levi', '050-1234567', 'dana@example.com', 'רשום/ה', 'אנגלית'],
+      ['הוראה חדשנית', '12.11.2026', '09:00–10:30', 'Avi Cohen', '052-7654321', 'avi@example.com', 'ברשימת המתנה', ''],
+      [rosters.activities[1]!.title, '12.11.2026', '12:00', 'Dana Levi', '050-1234567', 'dana@example.com', 'הגיע/ה', ''],
     ]);
   });
 
   it('then gives each activity its own sheet, even one nobody signed up for', () => {
     expect(sheets).toHaveLength(4);
-    expect(sheets[3]?.rows).toEqual([['שם', 'טלפון', 'אימייל', 'סטטוס']]);
+    expect(sheets[3]?.rows).toEqual([['שם', 'טלפון', 'אימייל', 'סטטוס', 'שפה מבוקשת']]);
   });
 
   it('names every sheet the way Excel accepts: short, clean and unique', () => {
@@ -103,7 +104,7 @@ describe('the file itself', () => {
 
   it('is a workbook Excel opens, and reads back as written — phone numbers keep their leading zero', () => {
     const grid = readFirstSheet(file);
-    expect(grid[0]).toEqual(['פעילות', 'תאריך', 'שעה', 'שם', 'טלפון', 'אימייל', 'סטטוס']);
+    expect(grid[0]).toEqual(['פעילות', 'תאריך', 'שעה', 'שם', 'טלפון', 'אימייל', 'סטטוס', 'שפה מבוקשת']);
     expect(grid[1]?.[4]).toBe('050-1234567');
   });
 

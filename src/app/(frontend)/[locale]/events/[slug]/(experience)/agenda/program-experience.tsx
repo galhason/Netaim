@@ -20,7 +20,7 @@ import {
   type ScheduleItemVM,
 } from '@/features/conference';
 import { isPlainSession } from '@/features/program/types/session';
-import { registerActivityAction, leaveActivityAction } from './actions';
+import { registerActivityAction, leaveActivityAction, chooseLanguageAction } from './actions';
 
 interface Props {
   locale: Locale;
@@ -83,6 +83,14 @@ const COPY = {
   noCancel: {
     he: 'לא ניתן עוד לבטל את ההרשמה לפעילות הזו.',
     en: 'This registration can no longer be cancelled.',
+  },
+  language: {
+    he: 'לפעילות הזו נרשמים עם בחירת שפה — בחרו אחת מהשפות המוצעות.',
+    en: 'This activity asks for a language — choose one of those offered.',
+  },
+  voteClosed: {
+    he: 'השפה של הפעילות כבר נקבעה, ואי אפשר לשנות את הבחירה.',
+    en: 'The language of this activity has been decided; the choice can no longer be changed.',
   },
   live: { he: 'עכשיו', en: 'Now' },
 };
@@ -285,7 +293,11 @@ const ProgramExperience = ({
             ? COPY.closed[locale]
             : notice === 'noCancel'
               ? COPY.noCancel[locale]
-              : null;
+              : notice === 'language'
+                ? COPY.language[locale]
+                : notice === 'voteClosed'
+                  ? COPY.voteClosed[locale]
+                  : null;
 
   return (
     /*
@@ -433,6 +445,7 @@ const ProgramExperience = ({
         onClose={() => setSelectedId(null)}
         registerAction={registerActivityAction}
         leaveAction={leaveActivityAction}
+        voteAction={chooseLanguageAction}
       />
       </ToastProvider>
     </main>

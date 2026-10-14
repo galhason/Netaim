@@ -5,7 +5,8 @@ import {
   getStudioLocale as localeOf,
 } from '@/features/studio';
 import { getActiveConferenceSlug, listMedia } from '@/features/events';
-import { getSessionSituation, getSessionTranslation } from '@/features/program';
+import { getSessionSituation, getSessionTranslation, languageTally } from '@/features/program';
+import { ACTIVITY_LANGUAGE_LABELS } from '@/shared/constants/activity-facets';
 import { listSpeakerCandidates } from '@/features/speakers';
 import { toDateTimeInputValue } from '@/shared';
 import ActivityWizard, { type WizardInitial } from '../activity-wizard';
@@ -40,6 +41,7 @@ const EditActivityPage = async ({ params }: EditActivityPageProps) => {
     getSessionSituation(id, locale).catch(() => null),
     getSessionTranslation(id, 'en').catch(() => null),
   ]);
+  const votes = situation?.session.languageVote ? await languageTally(id).catch(() => []) : [];
   if (!situation) {
     notFound();
   }
@@ -76,6 +78,8 @@ const EditActivityPage = async ({ params }: EditActivityPageProps) => {
     translated: s.translated,
     languageNote: s.languageNote,
     languageNoteEn: en?.languageNote,
+    requirements: s.requirements,
+    requirementsEn: en?.requirements,
     capacity: s.capacity != null ? String(s.capacity) : '',
     waitlistEnabled: s.waitlistEnabled,
     registrationOpensAt: toDateTimeInputValue(s.registrationOpensAt),
@@ -85,6 +89,14 @@ const EditActivityPage = async ({ params }: EditActivityPageProps) => {
     featured: s.featured,
     image:
       s.imageId && s.image ? { id: s.imageId, url: s.image } : undefined,
+    languageVote: s.languageVote,
+    decidedLanguage: s.decidedLanguage ?? undefined,
+    votes: votes.map((row) => ({
+      language: row.language,
+      label: ACTIVITY_LANGUAGE_LABELS[row.language][locale],
+      confirmed: row.confirmed,
+      waiting: row.waiting,
+    })),
   };
 
   return (

@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload';
 import { REGISTRATION_STATUSES } from '@/registration-engine';
+import { ACTIVITY_LANGUAGES, ACTIVITY_LANGUAGE_LABELS } from '@/shared/constants/activity-facets';
 import { registrationAccess } from '../access-presets';
 
 /*
@@ -58,6 +59,15 @@ export const SessionRegistrations: CollectionConfig = {
     {
       name: 'waitlistPosition',
       type: 'number',
+    },
+    /* The language this registrant asked for, where the activity holds a vote. */
+    {
+      name: 'language',
+      type: 'select',
+      options: ACTIVITY_LANGUAGES.map((value) => ({
+        label: ACTIVITY_LANGUAGE_LABELS[value].en,
+        value,
+      })),
     },
     {
       name: 'submittedAt',

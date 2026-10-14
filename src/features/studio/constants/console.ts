@@ -229,6 +229,7 @@ export const CONSOLE_UI = {
   rosterColPhone: { he: 'טלפון', en: 'Phone' },
   rosterColEmail: { he: 'אימייל', en: 'Email' },
   rosterColStatus: { he: 'סטטוס', en: 'Status' },
+  rosterColLanguage: { he: 'שפה מבוקשת', en: 'Requested language' },
   rosterStatusConfirmed: { he: 'רשום/ה', en: 'Registered' },
   rosterStatusAttended: { he: 'הגיע/ה', en: 'Checked in' },
   rosterStatusPending: { he: 'ממתין/ה לאישור', en: 'Awaiting approval' },

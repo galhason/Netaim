@@ -1,7 +1,8 @@
 import { relationshipId } from '@/auth';
-import { activityLanguagesOf, audiencesOf, topicsOf } from '@/shared/constants/activity-facets';
+import { activityLanguagesOf, audiencesOf, topicsOf, type ActivityLanguage } from '@/shared/constants/activity-facets';
 import type { RegistrationStatus } from '@/registration-engine';
 import type {
+  LanguageTally,
   SessionCounts,
   SessionRegistrationRepository,
   SessionRegistrationSummary,
@@ -38,6 +39,9 @@ interface SessionRow {
   languages?: string[] | null;
   translated?: boolean | null;
   languageNote?: string | null;
+  equipment?: string | null;
+  languageVote?: boolean | null;
+  decidedLanguage?: string | null;
   subtitle?: string | null;
   floor?: string | null;
   registrationOpensAt?: string | null;
@@ -54,7 +58,12 @@ interface SessionRegRow {
   session: number | string | { id: number | string };
   status: RegistrationStatus;
   waitlistPosition?: number | null;
+  language?: string | null;
 }
+
+/* One language of the six, or nothing — a stray value is no vote. */
+const languageOf = (value: string | null | undefined): ActivityLanguage | undefined =>
+  activityLanguagesOf(value ? [value] : [])[0];
 
 const relName = (value: unknown): string | undefined => {
   if (value && typeof value === 'object' && 'name' in value) {
@@ -143,8 +152,11 @@ const toSession = (row: SessionRow): SessionSummary => ({
   audiences: audiencesOf(row.audiences ?? undefined),
   topics: topicsOf(row.topics ?? undefined),
   languages: activityLanguagesOf(row.languages ?? undefined),
+  languageVote: row.languageVote === true,
+  decidedLanguage: languageOf(row.decidedLanguage) ?? null,
   translated: row.translated === true,
   languageNote: row.languageNote ?? undefined,
+  requirements: row.equipment ?? undefined,
   featured: Boolean(row.featured),
   image: mediaUrl(row.image as never),
   imageId: mediaId(row.image as never),
@@ -165,6 +177,7 @@ const toRegistration = (row: SessionRegRow): SessionRegistrationSummary => ({
   sessionId: String(relationshipId(row.session)),
   status: row.status,
   waitlistPosition: row.waitlistPosition ?? undefined,
+  ...(languageOf(row.language) ? { language: languageOf(row.language) } : {}),
 });
 
 const eventIdBySlug = async (
@@ -241,6 +254,7 @@ export const payloadSessionRepository: SessionRepository = {
       track?: string | null;
       floor?: string | null;
       languageNote?: string | null;
+      equipment?: string | null;
     };
     return {
       ...(row.title ? { title: row.title } : {}),
@@ -249,6 +263,7 @@ export const payloadSessionRepository: SessionRepository = {
       ...(row.track ? { track: row.track } : {}),
       ...(row.floor ? { floor: row.floor } : {}),
       ...(row.languageNote ? { languageNote: row.languageNote } : {}),
+      ...(row.equipment ? { requirements: row.equipment } : {}),
     };
   },
 
@@ -319,8 +334,11 @@ export const payloadSessionRepository: SessionRepository = {
         audiences: input.audiences,
         topics: input.topics,
         languages: input.languages,
+        languageVote: input.languageVote === true,
+        decidedLanguage: input.decidedLanguage ?? null,
         translated: input.translated ?? false,
         languageNote: input.languageNote,
+        equipment: input.requirements,
         description: input.description,
         subtitle: input.subtitle,
         floor: input.floor,
@@ -376,9 +394,14 @@ export const payloadSessionRepository: SessionRepository = {
           ...(input.audiences !== undefined ? { audiences: input.audiences } : {}),
           ...(input.topics !== undefined ? { topics: input.topics } : {}),
           ...(input.languages !== undefined ? { languages: input.languages } : {}),
+          ...(input.languageVote !== undefined ? { languageVote: input.languageVote } : {}),
+          ...(input.decidedLanguage !== undefined ? { decidedLanguage: input.decidedLanguage } : {}),
           ...(input.translated !== undefined ? { translated: input.translated } : {}),
           ...(input.languageNote !== undefined
             ? { languageNote: input.languageNote || null }
+            : {}),
+          ...(input.requirements !== undefined
+            ? { equipment: input.requirements || null }
             : {}),
           ...(input.description !== undefined
             ? { description: input.description || null }
@@ -460,6 +483,7 @@ export const payloadSessionRegistrationRepository: SessionRegistrationRepository
       participantId,
       status,
       waitlistPosition,
+      language,
     ) => {
       const payload = await getSystemPayload();
       const session = (await payload.findByID({
@@ -477,11 +501,55 @@ export const payloadSessionRegistrationRepository: SessionRegistrationRepository
           event: Number(relationshipId(session.event)),
           status,
           waitlistPosition: waitlistPosition ?? undefined,
+          ...(language ? { language } : {}),
           submittedAt: new Date().toISOString(),
         },
         overrideAccess: true,
       });
       return toRegistration(doc as unknown as SessionRegRow);
+    },
+
+    setLanguage: async (id, language) => {
+      const payload = await getSystemPayload();
+      const doc = await payload.update({
+        collection: 'session-registrations',
+        id,
+        data: { language },
+        overrideAccess: true,
+      });
+      return toRegistration(doc as unknown as SessionRegRow);
+    },
+
+    /*
+     * The tally, read from the live registrations rather than kept as
+     * a number: a cancelled seat takes its vote with it, a promoted
+     * one moves from waiting to holding, and neither needs a counter
+     * to remember to change.
+     */
+    languageTally: async (sessionId): Promise<LanguageTally[]> => {
+      const payload = await getSystemPayload();
+      const result = await payload.find({
+        collection: 'session-registrations',
+        where: {
+          and: [
+            { session: { equals: sessionId } },
+            { status: { in: ['confirmed', 'pending', 'waitlisted'] } },
+          ],
+        },
+        depth: 0,
+        pagination: false,
+        overrideAccess: true,
+      });
+      const tally = new Map<ActivityLanguage, LanguageTally>();
+      for (const doc of result.docs as unknown as SessionRegRow[]) {
+        const language = languageOf(doc.language);
+        if (!language) continue;
+        const row = tally.get(language) ?? { language, confirmed: 0, waiting: 0 };
+        if (doc.status === 'waitlisted') row.waiting += 1;
+        else row.confirmed += 1;
+        tally.set(language, row);
+      }
+      return [...tally.values()].sort((a, b) => b.confirmed - a.confirmed || b.waiting - a.waiting);
     },
 
     listForParticipant: async (slug, participantId) => {

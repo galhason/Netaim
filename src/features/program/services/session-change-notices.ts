@@ -3,6 +3,7 @@ import {
   emailSessionRegistrants,
 } from '@/features/notifications';
 import { formatLongDate, formatTimeLabel } from '@/shared';
+import { ACTIVITY_LANGUAGE_LABELS, type ActivityLanguage } from '@/shared/constants/activity-facets';
 import type { SessionSummary } from '../types/session';
 
 /*
@@ -275,6 +276,48 @@ export const announceSessionChange = async (
     sessionId,
     type: 'activity.changed',
     versions: changeMailVersions(titles, before, after, delta),
+    ctaPath: myActivitiesPath(eventSlug),
+  }).catch(() => 0);
+  return told;
+};
+
+/*
+ * The organiser decided the language. Everyone registered hears which
+ * — those who asked for it and, more to the point, those who asked for
+ * another and may want their seat back. Same two channels as a change
+ * of time: the bell, and a mail with the way to their day.
+ */
+export const announceLanguageDecided = async (
+  eventSlug: string,
+  sessionId: string,
+  titles: { he: string; en: string },
+  language: ActivityLanguage,
+): Promise<boolean> => {
+  const name = ACTIVITY_LANGUAGE_LABELS[language];
+  const versions = [
+    {
+      locale: 'he' as const,
+      subject: `נקבעה שפה: ${titles.he}`,
+      body: `הפעילות שנרשמתם אליה תתקיים ב${name.he}. אם זו לא השפה שביקשתם ותרצו לפנות את מקומכם, אפשר לעשות זאת מהלוח האישי.`,
+    },
+    {
+      locale: 'en' as const,
+      subject: `Language decided: ${titles.en}`,
+      body: `The activity you registered for will be held in ${name.en}. If that is not the language you asked for and you would rather give up your place, you can do so from your schedule.`,
+    },
+  ];
+  const told = await broadcastAnnouncement({
+    eventSlug,
+    kind: 'popup',
+    topic: 'activity',
+    targetSessionId: sessionId,
+    versions,
+  }).catch(() => false);
+  await emailSessionRegistrants({
+    eventSlug,
+    sessionId,
+    type: 'activity.changed',
+    versions,
     ctaPath: myActivitiesPath(eventSlug),
   }).catch(() => 0);
   return told;

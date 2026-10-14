@@ -296,6 +296,7 @@ const ActivityCard = ({
               canLeave={activity.canCancel}
               note={activity.registrationNote}
               size="sm"
+              vote={activity.vote}
             />
           </div>
         </div>
