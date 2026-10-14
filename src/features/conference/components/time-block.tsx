@@ -17,8 +17,18 @@ import { BandIcon } from './activity-band';
  */
 export const DENSE_SLOT_THRESHOLD = 4;
 
+/*
+ * Tours fold sooner: three tours leaving at the same hour are already a
+ * choice between routes, and read better side by side than as three
+ * long rows. Counted on the tours alone, so two tours and a seminar
+ * stay a plain list.
+ */
+export const TOUR_GROUP_THRESHOLD = 3;
+
 export const isDense = (block: TimeBlockVM): boolean =>
-  !block.isPlain && block.activities.length >= DENSE_SLOT_THRESHOLD;
+  !block.isPlain &&
+  (block.activities.length >= DENSE_SLOT_THRESHOLD ||
+    block.activities.filter((activity) => activity.type === 'tour').length >= TOUR_GROUP_THRESHOLD);
 
 interface Props {
   block: TimeBlockVM;

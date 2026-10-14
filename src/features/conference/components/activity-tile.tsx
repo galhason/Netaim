@@ -39,6 +39,7 @@ const COPY = {
   removedFav: { he: 'הוסר מהמועדפים', en: 'Removed from favorites' },
   copied: { he: 'הקישור הועתק', en: 'Link copied' },
   copyFailed: { he: 'לא ניתן להעתיק', en: 'Could not copy' },
+  lastSeats: { he: 'נשארו מקומות אחרונים', en: 'Last places left' },
 };
 
 /*
@@ -228,7 +229,14 @@ const ActivityTile = ({ activity, locale, slug, onOpen, registerAction, leaveAct
         ) : null}
 
         {/* The foot: the one action — the same control, the same rules, as everywhere else. */}
-        <div className="mt-auto flex items-center justify-end pt-4">
+        <div className="mt-auto flex flex-wrap items-center justify-end gap-x-3 gap-y-2 pt-4">
+          {/* The last few seats, said once and quietly — never how many registered. */}
+          {activity.status === 'almostFull' && activity.registration === 'available' ? (
+            <span className="me-auto inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--x-warn)]">
+              <span className="size-2 rounded-full bg-[var(--x-warn)]" aria-hidden="true" />
+              {COPY.lastSeats[locale]}
+            </span>
+          ) : null}
           <span className="flex-none" onClick={stop} onKeyDown={stop}>
             <RegistrationButton
               state={activity.registration}

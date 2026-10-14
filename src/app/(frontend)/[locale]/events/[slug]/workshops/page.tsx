@@ -18,6 +18,7 @@ import {
 import { currentParticipant } from '@/features/registration';
 import {
   activityStatusLabel,
+  participantStatus,
   getSessionSituation,
   listAgenda,
   myWorkshops,
@@ -210,7 +211,9 @@ const WorkshopsPage = async ({ params, searchParams }: WorkshopsPageProps) => {
         <section key={group.title} className="mt-8">
         <h2 className="font-display text-xl font-semibold">{group.title}</h2>
         <ul className="mt-4 grid gap-4 md:grid-cols-2">
-          {group.items.map(({ session, status }, index) => {
+          {group.items.map(({ session, capacity }, index) => {
+            /* Room, the last few, or none — never how many registered. */
+            const status = participantStatus(capacity, session.waitlistEnabled);
             const selected = selectedIds.has(session.id);
             return (
               <li key={session.id}>

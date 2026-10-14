@@ -152,7 +152,7 @@ const AVAIL: Record<
   { dot: string; text: string; he: string; en: string }
 > = {
   available: { dot: 'bg-[var(--x-ok)]', text: 'text-[var(--x-ok)]', he: 'זמין', en: 'Available' },
-  almostFull: { dot: 'bg-[var(--x-warn)]', text: 'text-[var(--x-warn)]', he: 'כמעט מלא', en: 'Almost full' },
+  almostFull: { dot: 'bg-[var(--x-warn)]', text: 'text-[var(--x-warn)]', he: 'נשארו מקומות אחרונים', en: 'Last places left' },
   full: { dot: 'bg-[var(--x-full)]', text: 'text-[var(--x-full)]', he: 'מלא', en: 'Full' },
   waitlist: { dot: 'bg-[var(--x-wait)]', text: 'text-[var(--x-wait)]', he: 'רשימת המתנה', en: 'Waiting list' },
 };

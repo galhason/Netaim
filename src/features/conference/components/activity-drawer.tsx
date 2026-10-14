@@ -52,13 +52,6 @@ const fullDate = (dayKey: string, locale: Locale): string => {
   }).format(d);
 };
 
-const CAP_FILL: Record<string, string> = {
-  available: 'bg-[var(--x-ok)]',
-  almostFull: 'bg-[var(--x-warn)]',
-  full: 'bg-[var(--x-full)]',
-  waitlist: 'bg-[var(--x-wait)]',
-};
-
 /* The registration widget — capacity, status and the action in one card. */
 const RegistrationPanel = ({
   activity,
@@ -76,22 +69,17 @@ const RegistrationPanel = ({
   voteAction?: (formData: FormData) => void | Promise<void>;
 }) => {
   const he = locale === 'he';
-  const { confirmed, waiting, limit } = activity.capacity;
-  const remaining = limit != null ? Math.max(0, limit - confirmed) : null;
-  const pct =
-    limit != null ? Math.min(100, Math.round((confirmed / Math.max(1, limit)) * 100)) : 0;
-  const stats = [
-    { label: he ? 'רשומים' : 'Registered', value: confirmed },
-    { label: he ? 'רשימת המתנה' : 'Waiting list', value: waiting },
-    { label: he ? 'מקומות פנויים' : 'Seats left', value: remaining ?? '∞' },
-  ];
+  /*
+   * No counts here: a participant sees whether there is room and, in the
+   * last few seats, that they are the last — never how many registered.
+   */
   return (
     <div className="rounded-[var(--x-r-card)] border border-[var(--x-line)] bg-[var(--x-raise)] p-4">
       <div className="flex items-center justify-between gap-3">
         <AvailabilityBadge
           status={activity.status}
-          confirmed={confirmed}
-          limit={limit}
+          confirmed={0}
+          limit={null}
           locale={locale}
           showCount={false}
         />
@@ -113,36 +101,6 @@ const RegistrationPanel = ({
       {activity.vote && activity.registration === 'registered' ? (
         <div className="mt-3">
           <VoteLine vote={activity.vote} locale={locale} slug={slug} sessionId={activity.id} changeAction={voteAction} />
-        </div>
-      ) : null}
-
-      <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-        {stats.map((s) => (
-          <div key={s.label} className="rounded-[var(--x-r-field)] bg-[var(--x-surface)] py-2.5">
-            <p className="font-display text-xl font-bold tabular-nums text-[var(--x-ink)]">
-              {s.value}
-            </p>
-            <p className="mt-0.5 text-[11px] leading-tight text-[var(--x-soft)]">
-              {s.label}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {limit != null ? (
-        <div className="mt-3">
-          <div className="mb-1 flex justify-between text-xs">
-            <span className="font-semibold tabular-nums text-[var(--x-ink)]">
-              {confirmed} / {limit}
-            </span>
-            <span className="tabular-nums text-[var(--x-faint)]">{pct}%</span>
-          </div>
-          <span className="block h-2 w-full overflow-hidden rounded-full bg-[var(--x-line)]">
-            <span
-              className={`block h-full rounded-full transition-[width] duration-500 ${CAP_FILL[activity.status]}`}
-              style={{ width: `${Math.max(3, pct)}%` }}
-            />
-          </span>
         </div>
       ) : null}
 

@@ -49,6 +49,8 @@ export {
   TOUR_STATUS_LABELS,
   WORKSHOP_STATUS_LABELS,
   activityStatusLabel,
+  participantStatus,
+  LAST_SEATS,
   workshopStatus,
 } from './constants/workshop-status';
 export type { WorkshopStatus } from './constants/workshop-status';

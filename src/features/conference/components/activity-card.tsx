@@ -7,7 +7,6 @@ import type { ActivityVM } from '../types';
 import {
   AvailabilityBadge,
   AvatarGroup,
-  CapacityBar,
   RegistrationButton,
   TypePill,
   surface,
@@ -266,24 +265,14 @@ const ActivityCard = ({
         {/* Footer: capacity + availability + register */}
         <div className="mt-4 flex items-end justify-between gap-4 border-t border-[var(--x-line)] pt-3.5">
           <div className="min-w-0 flex-1">
-            {activity.capacity.limit != null ? (
-              <div className="max-w-[190px]">
-                <CapacityBar
-                  confirmed={activity.capacity.confirmed}
-                  limit={activity.capacity.limit}
-                  status={activity.status}
-                  locale={locale}
-                />
-              </div>
-            ) : (
-              <AvailabilityBadge
-                status={activity.status}
-                confirmed={activity.capacity.confirmed}
-                limit={activity.capacity.limit}
-                locale={locale}
-                showCount={false}
-              />
-            )}
+            {/* Room, the last few, or none — never how many registered. */}
+            <AvailabilityBadge
+              status={activity.status}
+              confirmed={0}
+              limit={null}
+              locale={locale}
+              showCount={false}
+            />
           </div>
           <div onClick={stop} onKeyDown={stop}>
             <RegistrationButton

@@ -19,7 +19,7 @@ export {
 } from './ui/kit';
 export { default as ActivityCard } from './components/activity-card';
 export { default as ActivityTile } from './components/activity-tile';
-export { default as TimeBlock, DENSE_SLOT_THRESHOLD, isDense } from './components/time-block';
+export { default as TimeBlock, DENSE_SLOT_THRESHOLD, TOUR_GROUP_THRESHOLD, isDense } from './components/time-block';
 export { timeBlocksOf } from './services/time-blocks';
 export { default as ActivityDrawer } from './components/activity-drawer';
 export { default as ConferenceBar } from './components/conference-bar';

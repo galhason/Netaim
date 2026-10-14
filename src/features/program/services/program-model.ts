@@ -19,6 +19,7 @@ import type {
   VoteVM,
 } from '@/features/conference';
 import { cancellationAllowed, registrationWindow } from '@/registration-engine';
+import { participantStatus } from '../constants/workshop-status';
 import {
   ACTIVITY_LANGUAGE_LABELS,
   audienceLabels,
@@ -231,7 +232,9 @@ export const buildProgramModel = async (
 
   const activityVMs: ActivityVM[] = activities
     .filter((a) => a.session.startsAt)
-    .map(({ session, capacity, status }) => {
+    .map(({ session, capacity }) => {
+      /* The participant's view of the seats: room, the last few, or none — never a count. */
+      const status = participantStatus(capacity, session.waitlistEnabled);
       const startMs = Date.parse(session.startsAt ?? '');
       const endMs = session.endsAt
         ? Date.parse(session.endsAt)
@@ -248,7 +251,14 @@ export const buildProgramModel = async (
       } else if (gate !== 'open') {
         registration = gate === 'notYet' ? 'opensLater' : 'closed';
         registrationNote = windowNote(gate, session.registrationOpensAt, locale, timeZone);
-      } else if (status === 'full') {
+      } else if (capacity.state === 'full') {
+        /*
+         * Full: the waiting list where there is one, else nothing to
+         * press. (Asked of the seats, not of the status — a full room
+         * with a waiting list has the status "waitlist", and used to
+         * fall through to a plain "register" button that quietly
+         * waitlisted the person.)
+         */
         registration = session.waitlistEnabled ? 'waitlist' : 'full';
       } else if (
         held.some(

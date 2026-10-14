@@ -62,6 +62,25 @@ describe('the programme by the hour', () => {
     expect(timeBlocksOf([])).toEqual([]);
   });
 
+  it('folds three tours leaving together, but not two tours and a seminar', async () => {
+    const { isDense } = await import('@/features/conference/components/time-block');
+    const tours = timeBlocksOf([
+      activity({ id: 't1', type: 'tour', typeLabel: 'סיור' }),
+      activity({ id: 't2', type: 'tour', typeLabel: 'סיור' }),
+      activity({ id: 't3', type: 'tour', typeLabel: 'סיור' }),
+    ]);
+    expect(isDense(tours[0]!)).toBe(true);
+    const mixed = timeBlocksOf([
+      activity({ id: 't1', type: 'tour', typeLabel: 'סיור' }),
+      activity({ id: 't2', type: 'tour', typeLabel: 'סיור' }),
+      activity({ id: 'w1' }),
+    ]);
+    expect(isDense(mixed[0]!)).toBe(false);
+    /* Seminars keep their own number: three are still a list. */
+    const seminars = timeBlocksOf([activity({ id: 'a' }), activity({ id: 'b' }), activity({ id: 'c' })]);
+    expect(isDense(seminars[0]!)).toBe(false);
+  });
+
   it('keeps a gathering as a band of its own, above the choices that begin with it', () => {
     /* The opening and three talks at 09:00: a band, then the hour's choices — never a fourth tile. */
     const blocks = timeBlocksOf([
@@ -111,6 +130,7 @@ describe('the page is the approved design', () => {
     expect(tile).toContain('onClick={open}');
     /* One number says when an hour is dense enough to fold. */
     expect(block).toContain('export const DENSE_SLOT_THRESHOLD = 4;');
+    expect(block).toContain('export const TOUR_GROUP_THRESHOLD = 3;');
     /* A sparse hour is part of the list — no container, no control — one wide card per activity, as before. */
     expect(block).toContain('if (!dense) {');
     expect(block).toContain('<ActivityCard');
