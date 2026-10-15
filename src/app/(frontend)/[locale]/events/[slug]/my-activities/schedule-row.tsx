@@ -64,9 +64,24 @@ const TYPE_TONE: Record<SessionType | 'networking', string> = {
   keynote: 'bg-[var(--x-ok-wash)] text-[var(--x-ok)]',
   talk: 'bg-[var(--x-primary-wash)] text-[var(--x-primary-strong)]',
   workshop: 'bg-[var(--x-warn-wash)] text-[var(--x-warn)]',
-  tour: 'bg-[var(--x-interactive-wash)] text-[var(--x-interactive)]',
+  tour: 'bg-[var(--x-tour-wash)] text-[var(--x-tour)]',
   break: 'bg-[var(--x-mute-wash)] text-[var(--x-soft)]',
   gathering: 'bg-[var(--x-primary-wash)] text-[var(--x-primary-strong)]',
+  networking: 'bg-[var(--x-interactive-wash)] text-[var(--x-interactive)]',
+};
+
+/*
+ * The kind's pill, in the kind's own colour where the scope paints the
+ * kinds (the programme sets `--x-kind-*`) — the same pill a reader saw
+ * on the agenda. Elsewhere it falls back to the row's quieter wash.
+ */
+const KIND_PILL: Record<SessionType | 'networking', string> = {
+  keynote: 'bg-[var(--x-kind-keynote,var(--x-ok-wash))] text-[var(--x-kind-ink,var(--x-ok))]',
+  talk: 'bg-[var(--x-kind-talk,var(--x-primary-wash))] text-[var(--x-kind-ink,var(--x-primary-strong))]',
+  workshop: 'bg-[var(--x-kind-workshop,var(--x-warn-wash))] text-[var(--x-kind-ink,var(--x-warn))]',
+  tour: 'bg-[var(--x-kind-tour,var(--x-tour-wash))] text-[var(--x-kind-ink,var(--x-tour))]',
+  break: 'bg-[var(--x-kind-break,var(--x-mute-wash))] text-[var(--x-kind-ink,var(--x-soft))]',
+  gathering: 'bg-[var(--x-kind-gathering,var(--x-primary-wash))] text-[var(--x-kind-ink,var(--x-primary-strong))]',
   networking: 'bg-[var(--x-interactive-wash)] text-[var(--x-interactive)]',
 };
 
@@ -233,7 +248,7 @@ const ScheduleRow = ({
               {activity.time}
               {activity.endTime ? `–${activity.endTime}` : ''}
             </span>
-            <Pill tone={TYPE_TONE[activity.type]}>{activity.typeLabel}</Pill>
+            <Pill tone={KIND_PILL[activity.type]}>{activity.typeLabel}</Pill>
             {waiting ? (
               <Pill tone="bg-[var(--x-wait-wash)] text-[var(--x-wait)]">
                 <IconWait className="me-1 size-3.5" />

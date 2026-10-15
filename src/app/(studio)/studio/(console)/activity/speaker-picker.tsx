@@ -38,7 +38,7 @@ const T = (locale: Locale) => ({
   editLead:
     locale === 'he'
       ? 'הפרטים כפי שיוצגו בתוכנייה, בשתי השפות. שורה באנגלית שנשארת ריקה מציגה את העברית.'
-      : 'The details as the programme shows them, in both languages. An empty English row shows the Hebrew.',
+      : 'The details as the program shows them, in both languages. An empty English row shows the Hebrew.',
   editFull: locale === 'he' ? 'עריכה מלאה (כולל תמונה)' : 'Full edit (with photo)',
   editingErr: locale === 'he' ? 'השמירה נכשלה. נסו שוב.' : 'Could not save. Try again.',
   loadingErr: locale === 'he' ? 'לא ניתן היה לטעון את הפרטים.' : 'Could not load the details.',

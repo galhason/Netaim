@@ -21,7 +21,8 @@ describe('a gathering on the schedule', () => {
     expect(isPlainSession('break')).toBe(true);
     expect(isPlainSession('talk')).toBe(false);
     expect(isPlainSession(undefined)).toBe(false);
-    expect(TYPE_LABELS.gathering).toEqual({ he: 'מפגש', en: 'Gathering' });
+    /* Named a panel since: an opening, a welcome, greetings — led by a host whose name it carries. */
+    expect(TYPE_LABELS.gathering).toEqual({ he: 'פאנל', en: 'Panel' });
   });
 
   it('may lead the front page, where a break never does', () => {
@@ -44,6 +45,22 @@ describe('a gathering on the schedule', () => {
     /* No forged request registers for one. */
     const service = read('src/features/program/services/program-service.ts');
     expect(service).toContain('if (isPlainSession(situation.session.sessionType)) {');
+  });
+
+  it('names its host, but a host of panels alone is not one of the speakers', async () => {
+    const { panelOnlyHosts } = await import('@/event-engine');
+    const hosts = panelOnlyHosts([
+      { sessionType: 'gathering', speakers: [{ id: 'host' }, { id: 'both' }] },
+      { sessionType: 'workshop', speakers: [{ id: 'both' }, { id: 'lecturer' }] },
+      { sessionType: 'gathering', speakers: null },
+    ]);
+    expect([...hosts]).toEqual(['host']);
+    expect(read('src/features/conference/components/activity-band.tsx')).toContain('export const BandHosts');
+    expect(read('src/features/marketing/services/marketing-service.ts')).toContain('panelOnlyHosts(sessions)');
+    expect(read('src/app/(frontend)/[locale]/events/[slug]/(experience)/speakers/page.tsx')).toContain(
+      "sessions.every((s) => s.sessionType === 'gathering')",
+    );
+    expect(read('src/features/program/services/activity-import.ts')).toContain("פאנל: 'gathering',");
   });
 
   it('is drawn as a band with its own picture, never as a tile with a button', () => {

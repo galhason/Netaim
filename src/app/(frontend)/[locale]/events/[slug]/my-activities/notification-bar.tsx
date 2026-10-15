@@ -59,7 +59,7 @@ const NotificationBar = ({ items, locale, onAction }: Props) => {
           transition={{ duration: 0.28, ease: 'easeOut' }}
           className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
         >
-          <div className="pointer-events-auto mx-auto flex max-w-3xl items-center gap-3 rounded-[var(--x-r-pill)] bg-[var(--x-navy)] px-4 py-2.5 text-white shadow-[var(--x-shadow-drawer)]">
+          <div className="pointer-events-auto mx-auto flex max-w-3xl items-center gap-3 rounded-[var(--x-r-pill)] bg-[var(--x-primary-strong)] px-4 py-2.5 text-white shadow-[var(--x-shadow-drawer)]">
             <span className="grid size-8 shrink-0 place-items-center rounded-full bg-white/10 text-[var(--x-primary-wash)]">
               <IconBell className="size-4" />
             </span>
@@ -70,7 +70,7 @@ const NotificationBar = ({ items, locale, onAction }: Props) => {
               <button
                 type="button"
                 onClick={() => onAction(notice.activityId as string)}
-                className="hidden shrink-0 rounded-[var(--x-r-pill)] bg-white px-3 py-1.5 text-[12px] font-semibold text-[var(--x-navy-deep)] transition-colors hover:bg-[var(--x-primary-wash)] sm:inline-flex"
+                className="hidden shrink-0 rounded-[var(--x-r-pill)] bg-white px-3 py-1.5 text-[12px] font-semibold text-[var(--x-primary-strong)] transition-colors hover:bg-[var(--x-primary-wash)] sm:inline-flex"
               >
                 {notice.actionLabel ?? (he ? 'הצג' : 'View')}
               </button>

@@ -59,7 +59,7 @@ interface MessagesPageProps {
 }
 
 const COPY = {
-  eyebrow: { he: 'מרכז ההתראות', en: 'Notification centre' },
+  eyebrow: { he: 'מרכז ההתראות', en: 'Notification center' },
   title: { he: 'התראות', en: 'Notifications' },
   intro: { he: 'כל העדכונים החשובים במקום אחד.', en: 'Everything that matters, in one place.' },
   wantsToConnect: { he: 'רוצה להתחבר איתך', en: 'would like to connect' },

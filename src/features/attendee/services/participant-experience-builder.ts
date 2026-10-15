@@ -21,7 +21,7 @@ const STATUS_LABEL: Record<RegistrationStatus, Record<Locale, string>> = {
   pending: { he: 'ממתין/ה לאישור', en: 'Awaiting approval' },
   waitlisted: { he: 'ברשימת המתנה', en: 'On the waiting list' },
   attended: { he: 'נכח/ה', en: 'Attended' },
-  cancelled: { he: 'בוטל', en: 'Cancelled' },
+  cancelled: { he: 'בוטל', en: 'Canceled' },
   declined: { he: 'לא אושר', en: 'Not approved' },
   expired: { he: 'פג תוקף', en: 'Expired' },
   noShow: { he: 'לא הגיע/ה', en: 'Did not attend' },

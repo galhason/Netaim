@@ -60,7 +60,7 @@ export const COPY = {
   networking: { he: 'Networking', en: 'Networking' },
   ended: { he: 'הסתיים', en: 'Ended' },
   live: { he: 'מתקיים עכשיו', en: 'Happening now' },
-  cancelledByYou: { he: 'פעילויות שביטלתם', en: 'Activities you cancelled' },
+  cancelledByYou: { he: 'פעילויות שביטלתם', en: 'Activities you canceled' },
   cancelledHint: {
     he: 'אפשר להירשם אליהן מחדש מהתוכנייה, כל עוד יש מקום.',
     en: 'You can re-join them from the program while there is room.',
@@ -107,7 +107,7 @@ export const COPY = {
   },
   noticeNoCancel: {
     he: 'לא ניתן עוד לבטל את ההרשמה לפעילות הזו.',
-    en: 'This registration can no longer be cancelled.',
+    en: 'This registration can no longer be canceled.',
   },
   noticeLanguage: {
     he: 'לפעילות הזו נרשמים עם בחירת שפה — בחרו אחת מהשפות המוצעות.',

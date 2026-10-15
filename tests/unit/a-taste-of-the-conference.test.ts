@@ -189,19 +189,20 @@ describe('the programme wears the day names', () => {
 });
 
 /*
- * The WordPress band does not draw these words: its heading and line are
- * the theme's own, and its pictures come from the activities. So the
- * Studio no longer offers a section that would change nothing on the
- * page. The marketing API above still carries what was written, so the
- * band can take it up again without losing anything.
+ * The WordPress band draws one thing the conference writes: its picture.
+ * Its heading and line are the theme's own, so the band's section in the
+ * Studio holds the picture alone, and there is none for the day themes,
+ * the quote or the moments. The marketing API above still carries what
+ * was written, so the band can take the words up again without losing
+ * anything.
  */
 describe('the Studio offers only what the page shows', () => {
-  it('has no section for the band, nor for the day themes, the quote or the moments', async () => {
+  it('has a section for the band\'s picture, and none for the day themes, the quote or the moments', async () => {
     const { CONFERENCE_SECTIONS } = await import(
       '@/features/studio/constants/conference-sections'
     );
     const ids = CONFERENCE_SECTIONS.map((entry) => entry.id);
-    expect(ids).toEqual(['identity', 'story', 'highlights', 'venue', 'closing']);
+    expect(ids).toEqual(['identity', 'story', 'highlights', 'preview', 'venue', 'closing']);
   });
 
   it('keeps what was written: the write path still knows every field', () => {
@@ -209,5 +210,26 @@ describe('the Studio offers only what the page shows', () => {
     for (const key of ['previewTitle', 'previewLede', 'previewImageId']) {
       expect(input, key).toContain(`${key}?:`);
     }
+  });
+});
+
+/*
+ * The band's picture is chosen in the Studio, in a section of its own,
+ * and travels as `preview.image` — the one picture the site shows there,
+ * the same for every day. Nothing is borrowed from the activities.
+ */
+describe('the picture is the Studio\'s choice', () => {
+  it('has its own section in the conference content editor', async () => {
+    const { CONFERENCE_SECTIONS } = await import('@/features/studio/constants/conference-sections');
+    const section = CONFERENCE_SECTIONS.find((entry) => entry.id === 'preview');
+    expect(section?.media.map((slot) => slot.key)).toEqual(['previewImageId']);
+    expect(section?.fields).toEqual([]);
+  });
+
+  it('is read back into the editor and can be uploaded straight into the slot', () => {
+    const page = readFileSync('src/app/(studio)/studio/(console)/conference/[slug]/content/page.tsx', 'utf8');
+    expect(page).toContain("previewImageId: draft.preview.imageId ?? ''");
+    const actions = readFileSync('src/app/(studio)/studio/(console)/actions.ts', 'utf8');
+    expect(actions).toContain("'previewImageId',");
   });
 });

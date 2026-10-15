@@ -55,7 +55,7 @@ describe('the words the registrant reads', () => {
   it('cancel in both languages', () => {
     const versions = cancelVersions(titles);
     expect(versions[0]?.subject).toBe('הפעילות בוטלה: סדנת AI בחינוך');
-    expect(versions[1]?.subject).toBe('Activity cancelled: AI in education');
+    expect(versions[1]?.subject).toBe('Activity canceled: AI in education');
   });
 });
 

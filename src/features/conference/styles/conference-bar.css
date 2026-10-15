@@ -35,6 +35,12 @@
   box-shadow: 0 1px 0 var(--nt-conf-line);
 }
 
+/* A page that pins its own header: the bar stays at the top of the page and scrolls with it. */
+.nt-bar.nt-bar--flow {
+  position: relative;
+  top: auto;
+}
+
 .nt-bar__brand {
   display: flex;
   align-items: center;

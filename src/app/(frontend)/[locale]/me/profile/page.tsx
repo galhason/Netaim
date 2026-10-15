@@ -40,6 +40,11 @@ import {
   startTotpAction,
 } from './actions';
 import TotpQr from './totp-qr';
+import { brandFor } from '@/config/brand';
+import { ConferenceBar } from '@/features/conference';
+import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
+import { visibleSiteConference } from '@/features/conference/services/conference-door';
+import { getSiteBrand } from '@/features/events';
 
 /*
  * The Profile Card (the approved participant vision): not a form — a
@@ -105,7 +110,22 @@ const AccountProfilePage = async ({
   const chips = interestChips(details.interests);
   const initial = (details.name ?? details.email).slice(0, 1).toUpperCase();
 
+  /* The site's one navigation, as every page of the platform wears it. */
+  const [barSlug, siteLogo, barViewer] = await Promise.all([
+    visibleSiteConference(locale).catch(() => null),
+    getSiteBrand(),
+    conferenceBarViewer(),
+  ]);
+
   return (
+    <>
+    <ConferenceBar
+      locale={locale}
+      slug={barSlug}
+      viewer={barViewer}
+      brand={brandFor(locale)}
+      brandLogo={siteLogo.onLight}
+    />
     <main
       id="main-content"
       className="lounge relative min-h-dvh bg-[var(--l-bg)] font-body text-[var(--l-ink)]"
@@ -120,23 +140,6 @@ const AccountProfilePage = async ({
             >
               ← {LOUNGE_UI.myExperience[locale]}
             </Link>
-            <div className="flex items-center gap-5">
-              <span className="font-display text-sm font-semibold tracking-[0.3em]">
-                נטעים
-              </span>
-              <form action={signOutAction}>
-                <input type="hidden" name="locale" value={locale} />
-                <button
-                  type="submit"
-                  className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 text-sm text-white/80 transition-colors hover:text-white"
-                >
-                  <svg viewBox="0 0 20 20" aria-hidden="true" className="size-4 rtl:-scale-x-100" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M8 4H4.5A1.5 1.5 0 0 0 3 5.5v9A1.5 1.5 0 0 0 4.5 16H8M12.5 6.5 16 10l-3.5 3.5M16 10H7.5" />
-                  </svg>
-                  {ACCOUNT_UI.signOut[locale]}
-                </button>
-              </form>
-            </div>
           </div>
           <div className="mt-auto pb-14 text-white">
             <p className="text-xs font-medium tracking-[0.18em] text-[var(--l-bronze-soft)]">
@@ -307,7 +310,7 @@ const AccountProfilePage = async ({
                 {contact?.prefs.directory === true
                   ? he
                     ? 'אתם מוצגים למשתתפי הכנסים שלכם — שם, תפקיד וארגון בלבד. פרטי הקשר נשארים סגורים עד שתאשרו התחברות.'
-                    : 'You are shown to fellow participants — name, role and organisation only. Contact details stay closed until you approve a connection.'
+                    : 'You are shown to fellow participants — name, role and organization only. Contact details stay closed until you approve a connection.'
                   : he
                     ? 'אתם לא מוצגים בספריית המשתתפים ולא ניתן לשלוח לכם בקשות התחברות.'
                     : 'You are not shown in the participants directory, and nobody can send you connection requests.'}
@@ -377,7 +380,7 @@ const AccountProfilePage = async ({
                 {contact?.prefs.scheduleEmails !== false
                   ? he
                     ? 'כשפעילות שנרשמתם אליה משנה שעה או מיקום, או מבוטלת — תקבלו גם מייל, נוסף על ההתראה כאן.'
-                    : 'When an activity you registered for changes time or location, or is cancelled, you also get an email, besides the notice here.'
+                    : 'When an activity you registered for changes time or location, or is canceled, you also get an email, besides the notice here.'
                   : he
                     ? 'תקבלו התראה כאן באזור האישי בלבד, בלי מייל.'
                     : 'You are told here in your personal area only, with no email.'}
@@ -629,7 +632,7 @@ const AccountProfilePage = async ({
                     <span className="mt-0.5 block text-xs text-[var(--l-soft)]">
                       {he
                         ? 'מוצגים השם, התפקיד והארגון שמסרתם. פרטי הקשר נשארים סגורים עד שתאשרו התחברות.'
-                        : 'Your name, role and organisation are shown. Contact details stay closed until you approve a connection.'}
+                        : 'Your name, role and organization are shown. Contact details stay closed until you approve a connection.'}
                     </span>
                   </span>
                 </label>
@@ -692,7 +695,7 @@ const AccountProfilePage = async ({
                   <span>
                     {he
                       ? 'לקבל מייל כשפעילות שנרשמתי אליה משנה שעה או מיקום, או מבוטלת'
-                      : 'Email me when an activity I registered for changes time or location, or is cancelled'}
+                      : 'Email me when an activity I registered for changes time or location, or is canceled'}
                     <span className="mt-0.5 block text-xs text-[var(--l-soft)]">
                       {he
                         ? 'ההתראה באזור האישי נשלחת תמיד; כאן בוחרים אם לקבל גם מייל.'
@@ -897,6 +900,7 @@ const AccountProfilePage = async ({
         </div>
       </div>
     </main>
+    </>
   );
 };
 

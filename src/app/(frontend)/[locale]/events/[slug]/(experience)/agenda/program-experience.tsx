@@ -38,7 +38,7 @@ interface Props {
 }
 
 const COPY = {
-  heading: { he: 'התוכנייה', en: 'The Programme' },
+  heading: { he: 'התוכנייה', en: 'The Program' },
   sub: {
     he: 'הרצאות, סדנאות, מפגשים ופעילויות לאורך ימי הכנס. בנו את הלוח האישי שלכם.',
     en: 'Talks, seminars, meetings and activities across the conference days. Build your personal schedule.',
@@ -82,7 +82,7 @@ const COPY = {
   },
   noCancel: {
     he: 'לא ניתן עוד לבטל את ההרשמה לפעילות הזו.',
-    en: 'This registration can no longer be cancelled.',
+    en: 'This registration can no longer be canceled.',
   },
   language: {
     he: 'לפעילות הזו נרשמים עם בחירת שפה — בחרו אחת מהשפות המוצעות.',

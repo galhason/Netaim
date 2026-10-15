@@ -66,7 +66,7 @@ export const NetworkingMeetings: CollectionConfig = {
       options: [
         { label: 'Proposed', value: 'proposed' },
         { label: 'Confirmed', value: 'confirmed' },
-        { label: 'Cancelled', value: 'cancelled' },
+        { label: 'Canceled', value: 'cancelled' },
       ],
     },
   ],

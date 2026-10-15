@@ -103,7 +103,7 @@ const SignInPreview = ({ locale, enterHref, signInHref }: Props) => {
         <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href={enterHref}
-            className="inline-flex min-h-12 items-center gap-2 rounded-[var(--x-r-pill)] bg-[var(--x-primary)] px-7 text-[15px] font-semibold text-[var(--x-primary-ink)] shadow-[0_10px_30px_rgb(42 144 200 / 0.28)] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-[var(--x-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] motion-reduce:transition-none"
+            className="inline-flex min-h-12 items-center gap-2 rounded-[var(--x-r-pill)] bg-[var(--x-primary)] px-7 text-[15px] font-semibold text-[var(--x-primary-ink)] shadow-[var(--x-shadow-lift)] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-[var(--x-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] motion-reduce:transition-none"
           >
             {t(locale, 'signInCta')}
             <IconArrow className="size-4 rtl:rotate-180" />

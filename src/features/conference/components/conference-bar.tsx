@@ -50,6 +50,14 @@ export interface ConferenceBarProps {
   /* The organisation's mark for a light ground. */
   brandLogo?: string;
   brand: string;
+  /*
+   * Whether the bar stays pinned to the top as the page scrolls — the
+   * default. A screen that pins its own header (a chat thread, whose
+   * header carries the other person and the way back) sets it false, so
+   * the bar sits at the top of the page and scrolls away instead of
+   * covering that header.
+   */
+  pinned?: boolean;
 }
 
 const WORDS = {
@@ -75,7 +83,7 @@ const WORDS = {
 
 const initialOf = (name: string): string => name.trim().charAt(0).toUpperCase() || '·';
 
-const ConferenceBar = ({ locale, slug, viewer, brandLogo, brand }: ConferenceBarProps) => {
+const ConferenceBar = ({ locale, slug, viewer, brandLogo, brand, pinned = true }: ConferenceBarProps) => {
   const pathname = usePathname() ?? `/${locale}`;
   const t = (key: keyof typeof WORDS) => WORDS[key][locale];
   const other: Locale = locale === 'he' ? 'en' : 'he';
@@ -142,7 +150,7 @@ const ConferenceBar = ({ locale, slug, viewer, brandLogo, brand }: ConferenceBar
   };
 
   return (
-    <header className="nt-bar" dir={locale === 'he' ? 'rtl' : 'ltr'}>
+    <header className={pinned ? 'nt-bar' : 'nt-bar nt-bar--flow'} dir={locale === 'he' ? 'rtl' : 'ltr'}>
       <div className="nt-bar__brand">
         <a href={home} aria-label={brand} className="nt-bar__logo">
           <BrandMark brand={brand} src={brandLogo} height={44} textClassName="nt-bar__wordmark" />

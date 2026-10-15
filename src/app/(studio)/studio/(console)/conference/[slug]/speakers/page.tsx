@@ -17,7 +17,7 @@ const UI = {
   fromAccount: t('חשבון קיים בפלטפורמה (אופציונלי)', 'Existing platform account (optional)'),
   name: t('שם', 'Name'),
   jobTitle: t('תפקיד', 'Job title'),
-  company: t('ארגון', 'Organisation'),
+  company: t('ארגון', 'Organization'),
   bio: t('כמה מילים', 'Short bio'),
   photo: t('תמונה', 'Photo'),
   photoEmpty: t('ללא תמונה', 'No photo'),

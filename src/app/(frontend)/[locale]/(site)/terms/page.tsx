@@ -81,11 +81,11 @@ const COPY = {
     en: [
       {
         head: 'What the service is',
-        body: 'The site is used to register for the conference and its activities, to view the programme and information, and to make professional contact with other participants. The service is free of charge.',
+        body: 'The site is used to register for the conference and its activities, to view the program and information, and to make professional contact with other participants. The service is free of charge.',
       },
       {
         head: 'Your account',
-        body: 'The account is personal. You are responsible for keeping your password safe and not sharing it. The details you provide should be accurate — particularly your name and organisation, which other participants may see. If you learn of unauthorised use of your account, tell us.',
+        body: 'The account is personal. You are responsible for keeping your password safe and not sharing it. The details you provide should be accurate — particularly your name and organization, which other participants may see. If you learn of unauthorized use of your account, tell us.',
       },
       {
         head: 'The content you write',
@@ -93,11 +93,11 @@ const COPY = {
       },
       {
         head: 'Community conduct',
-        body: 'The networking area is for professional acquaintance. Not allowed: harassment, threats, racism or incitement, sexual content, impersonating a person or organisation, spam or commercial advertising, harvesting participant details for outside use, and attempting to bypass another person’s privacy settings.',
+        body: 'The networking area is for professional acquaintance. Not allowed: harassment, threats, racism or incitement, sexual content, impersonating a person or organization, spam or commercial advertising, harvesting participant details for outside use, and attempting to bypass another person’s privacy settings.',
       },
       {
         head: 'Blocking and reporting',
-        body: 'You can block any participant at any moment — the block is silent, two-way and immediate, and the other side receives no indication of it. You can also report abusive behaviour; a report reaches the conference team and is handled by a person.',
+        body: 'You can block any participant at any moment — the block is silent, two-way and immediate, and the other side receives no indication of it. You can also report abusive behavior; a report reaches the conference team and is handled by a person.',
       },
       {
         head: 'The team’s authority',

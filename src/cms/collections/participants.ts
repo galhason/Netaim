@@ -174,7 +174,7 @@ export const Participants: CollectionConfig = {
       name: 'headline',
       type: 'text',
       admin: {
-        description: 'One line — the role and organisation as they say it',
+        description: 'One line — the role and organization as they say it',
       },
     },
     {

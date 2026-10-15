@@ -32,7 +32,7 @@ const TEMPLATES: Record<RegistrationEventType, Template> = {
         'Your registration has been received and your place is saved. Thank you for joining us.',
         'In your personal area you can already:',
         '• Choose workshops and tours — places in each activity are limited and taken in order\n• Follow your own schedule\n• Meet other participants and arrange to sit down with them during the conference',
-        'We will let you know about any change to the programme, and send a reminder closer to the date.',
+        'We will let you know about any change to the program, and send a reminder closer to the date.',
         'Kind regards,\nThe Netaim team',
       ].join('\n\n'),
     },
@@ -73,10 +73,10 @@ const TEMPLATES: Record<RegistrationEventType, Template> = {
     },
   },
   'registration.cancelled': {
-    subject: { he: 'ההרשמה בוטלה', en: 'Your registration is cancelled' },
+    subject: { he: 'ההרשמה בוטלה', en: 'Your registration is canceled' },
     body: {
       he: 'הרשמתך בוטלה. אם זו טעות, אפשר להירשם שוב כל עוד ההרשמה פתוחה.',
-      en: 'Your registration has been cancelled. If this was a mistake, you can register again while registration is open.',
+      en: 'Your registration has been canceled. If this was a mistake, you can register again while registration is open.',
     },
   },
 };

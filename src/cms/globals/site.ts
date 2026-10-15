@@ -25,7 +25,7 @@ export const Site: GlobalConfig = {
       relationTo: 'events',
       admin: {
         description:
-          'The conference the front door points at: the site landing, the site chrome, the personal area and the Studio default. The programme, speakers and information pages are named in the address and no longer follow this pointer.',
+          'The conference the front door points at: the site landing, the site chrome, the personal area and the Studio default. The program, speakers and information pages are named in the address and no longer follow this pointer.',
       },
     },
     /*

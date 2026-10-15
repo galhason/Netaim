@@ -45,7 +45,7 @@ const LABELS: Record<AuditAction, Record<Locale, string>> = {
 
   'registration.approved': { he: 'הרשמה אושרה', en: 'Registration approved' },
   'registration.declined': { he: 'הרשמה נדחתה', en: 'Registration declined' },
-  'registration.cancelled': { he: 'הרשמה בוטלה', en: 'Registration cancelled' },
+  'registration.cancelled': { he: 'הרשמה בוטלה', en: 'Registration canceled' },
   'registration.promoted': {
     he: 'קודם מרשימת ההמתנה',
     en: 'Promoted from waitlist',

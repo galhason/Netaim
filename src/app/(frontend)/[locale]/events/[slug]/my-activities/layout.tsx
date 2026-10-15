@@ -17,10 +17,12 @@ interface Props {
 /*
  * The personal dashboard lives under /events/[slug], outside the
  * (experience) route group, yet it is the same product as the Program.
- * This shell repeats the Experience chrome — the navy navigation, the
- * daylight body, the conference footer — so a participant moving between
- * the program, an activity, a speaker and their own day never notices a
- * seam.
+ * This shell repeats the Experience chrome — the site bar, the daylight
+ * body, the conference footer — so a participant moving between the
+ * program, an activity, a speaker and their own day never notices a
+ * seam. It wears the programme's green (`experience--programme`), as the
+ * agenda does: the participant's own day is read beside the programme
+ * and should not look like a different organisation's page.
  */
 const MyScheduleLayout = async ({ children, params }: Props) => {
   const { locale, slug } = await params;
@@ -38,7 +40,7 @@ const MyScheduleLayout = async ({ children, params }: Props) => {
   const [viewer, logo] = await Promise.all([conferenceBarViewer(), getSiteBrand()]);
 
   return (
-    <div className="experience min-h-dvh bg-[var(--x-bg)] text-[var(--x-ink)]">
+    <div className="experience experience--programme min-h-dvh bg-[var(--x-bg)] text-[var(--x-ink)]">
       <ConferenceBar
         locale={lang}
         slug={slug}

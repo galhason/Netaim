@@ -50,7 +50,7 @@ const TYPE_LABELS: Record<SessionType, Record<Locale, string>> = {
   keynote: { he: 'מליאה', en: 'Keynote' },
   tour: { he: 'סיור', en: 'Tour' },
   break: { he: 'הפסקה', en: 'Break' },
-  gathering: { he: 'מפגש', en: 'Gathering' },
+  gathering: { he: 'פאנל', en: 'Panel' },
 };
 
 const STATUS_META: Record<

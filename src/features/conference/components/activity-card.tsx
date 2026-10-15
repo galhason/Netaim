@@ -11,8 +11,8 @@ import {
   TypePill,
   surface,
 } from '../ui/kit';
-import { IconCalendar, IconClock, IconPin, IconShare, IconStar, IconStarFilled, IconUsers } from '../ui/icons';
-import { BandIcon } from './activity-band';
+import { IconCalendar, IconClock, IconPin, IconShare, IconStar, IconStarFilled } from '../ui/icons';
+import { BandHosts, BandIcon } from './activity-band';
 import { useToast } from '../ui/feedback';
 import { useFavorites } from '../ui/favorites';
 import { withBasePath } from '@/config/site';
@@ -120,12 +120,7 @@ const ActivityCard = ({
           ) : null}
           {activity.speakers.length > 0 || activity.place ? (
             <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[var(--x-soft)]">
-              {activity.speakers.length > 0 ? (
-                <span className="inline-flex min-w-0 items-center gap-1.5">
-                  <IconUsers className="size-3.5 flex-none text-[var(--x-faint)]" />
-                  <span className="truncate">{activity.speakers.map((s) => s.name).join(', ')}</span>
-                </span>
-              ) : null}
+              <BandHosts speakers={activity.speakers} />
               {activity.place ? (
                 <span className="inline-flex min-w-0 items-center gap-1.5">
                   <IconPin className="size-3.5 flex-none text-[var(--x-faint)]" />

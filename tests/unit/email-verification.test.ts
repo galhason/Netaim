@@ -628,7 +628,9 @@ describe('a door that can be entered is visibly leavable', () => {
   });
 
   it('offers sign-out on the profile, here and everywhere', () => {
-    expect(profile.split('action={signOutAction}').length - 1).toBe(2);
+    /* Once at the foot of the page; the site bar above it carries the other. */
+    expect(profile.split('action={signOutAction}').length - 1).toBe(1);
+    expect(profile.includes('<ConferenceBar')).toBe(true);
     expect(profile.includes('action={signOutEverywhereAction}')).toBe(true);
     /* "Everywhere" revokes every session the account holds before ending this one. */
     const everywhere = action.slice(action.indexOf('signOutEverywhereAction'));

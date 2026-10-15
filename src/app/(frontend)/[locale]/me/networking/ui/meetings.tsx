@@ -34,7 +34,7 @@ const COPY = {
   tomorrow: { he: 'מחר', en: 'Tomorrow' },
   confirmed: { he: 'מאושרת', en: 'Confirmed' },
   proposed: { he: 'מוצעת', en: 'Proposed' },
-  cancelled: { he: 'בוטלה', en: 'Cancelled' },
+  cancelled: { he: 'בוטלה', en: 'Canceled' },
   confirm: { he: 'אישור', en: 'Accept' },
   cancel: { he: 'ביטול', en: 'Cancel' },
   minutes: { he: 'דק׳', en: 'min' },

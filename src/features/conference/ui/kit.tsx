@@ -246,7 +246,7 @@ const REG_LABEL: Record<RegistrationState, { he: string; en: string }> = {
   opensLater: { he: 'ההרשמה טרם נפתחה', en: 'Registration not open yet' },
   closed: { he: 'ההרשמה נסגרה', en: 'Registration closed' },
   completed: { he: 'הסתיים', en: 'Completed' },
-  cancelled: { he: 'בוטל', en: 'Cancelled' },
+  cancelled: { he: 'בוטל', en: 'Canceled' },
 };
 
 interface RegProps {
@@ -357,7 +357,7 @@ export const RegistrationButton = ({
     return (
       <span
         className={`${DONE_BTN} ${pad} ${width}`}
-        title={note ?? (locale === 'he' ? 'לא ניתן לבטל את ההרשמה' : 'This registration cannot be cancelled')}
+        title={note ?? (locale === 'he' ? 'לא ניתן לבטל את ההרשמה' : 'This registration cannot be canceled')}
       >
         <IconCheck className="size-4" />
         {label}

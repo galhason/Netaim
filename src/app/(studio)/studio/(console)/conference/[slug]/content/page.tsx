@@ -47,6 +47,7 @@ const shared = (draft: EventOpeningDraft): Record<string, string> => ({
   storyImageId: draft.story.imageId ?? '',
   venueImageId: draft.venue.imageId ?? '',
   closingImageId: draft.closing.imageId ?? '',
+  previewImageId: draft.preview.imageId ?? '',
 });
 
 const toValues = (he: EventOpeningDraft, en: EventOpeningDraft): EditorValues => {

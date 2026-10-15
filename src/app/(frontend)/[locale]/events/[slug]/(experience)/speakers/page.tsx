@@ -36,22 +36,26 @@ const SpeakersPage = async ({ params }: SpeakersPageProps) => {
 
   const roster = await listConferenceSpeakers(slug, lang).catch(() => []);
 
-  const speakers: DirectorySpeaker[] = await Promise.all(
+  const everyone = await Promise.all(
     roster.map(async (speaker) => {
       const sessions = await activitiesForSpeaker(speaker.id, lang).catch(
         () => [],
       );
-      return {
-        id: speaker.id,
-        name: speaker.name,
-        jobTitle: speaker.jobTitle,
-        company: speaker.company,
-        photoUrl: speaker.photoUrl,
-        isRegistered: speaker.isRegistered,
-        sessionCount: sessions.length,
-      };
+      return { speaker, sessions };
     }),
   );
+  /* Those who only host panels are named on the panel, not listed among the speakers. */
+  const speakers: DirectorySpeaker[] = everyone
+    .filter(({ sessions }) => !(sessions.length > 0 && sessions.every((s) => s.sessionType === 'gathering')))
+    .map(({ speaker, sessions }) => ({
+      id: speaker.id,
+      name: speaker.name,
+      jobTitle: speaker.jobTitle,
+      company: speaker.company,
+      photoUrl: speaker.photoUrl,
+      isRegistered: speaker.isRegistered,
+      sessionCount: sessions.length,
+    }));
 
   return (
     <main id="main-content" className="mx-auto max-w-6xl px-6 pb-24 pt-28 md:px-10 md:pt-32">

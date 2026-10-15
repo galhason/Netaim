@@ -29,7 +29,7 @@ const FILTERS = [
   { key: 'confirmed', label: { he: 'רשומים', en: 'Registered' } },
   { key: 'waitlisted', label: { he: 'המתנה', en: 'Waitlist' } },
   { key: 'attended', label: { he: 'נכחו', en: 'Attended' } },
-  { key: 'cancelled', label: { he: 'בוטלו', en: 'Cancelled' } },
+  { key: 'cancelled', label: { he: 'בוטלו', en: 'Canceled' } },
 ] as const;
 
 const STATUS_LABEL: Record<string, Record<Locale, string>> = {
@@ -38,7 +38,7 @@ const STATUS_LABEL: Record<string, Record<Locale, string>> = {
   waitlisted: { he: 'רשימת המתנה', en: 'Waitlist' },
   attended: { he: 'נכח', en: 'Attended' },
   declined: { he: 'נדחה', en: 'Declined' },
-  cancelled: { he: 'בוטל', en: 'Cancelled' },
+  cancelled: { he: 'בוטל', en: 'Canceled' },
   expired: { he: 'פג תוקף', en: 'Expired' },
   noShow: { he: 'לא הגיע', en: 'No-show' },
 };

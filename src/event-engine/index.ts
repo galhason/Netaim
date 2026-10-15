@@ -7,6 +7,8 @@ export {
   PROGRAM_PREVIEW_LIMIT,
 } from './program/session-selection';
 export type { SelectableSession } from './program/session-selection';
+export { panelOnlyHosts } from './program/panel-hosts';
+export type { HostedSession } from './program/panel-hosts';
 export type { EventPhase } from './lifecycle/phases';
 export {
   availableTransitions,

@@ -95,10 +95,10 @@ export const COLUMN_LABELS: Record<ImportColumn, Record<Locale, string>> = {
 };
 
 const COLUMN_HELP: Record<ImportColumn, Record<Locale, string>> = {
-  title: { he: 'חובה. שם הפעילות כפי שיופיע בלוח.', en: 'Required. The name as it appears in the programme.' },
+  title: { he: 'חובה. שם הפעילות כפי שיופיע בלוח.', en: 'Required. The name as it appears in the program.' },
   sessionType: {
-    he: 'חובה. אחד מהערכים: הרצאה, סדנה, מליאה, סיור, מפגש, הפסקה (או talk / seminar / keynote / tour / gathering / break). מפגש — פתיחה, קבלת פנים, סיום: מופיע בלוח בלי הרשמה.',
-    en: 'Required. One of: talk, seminar, keynote, tour, gathering, break. A gathering — opening, welcome, closing — is on the schedule with no registration.',
+    he: 'חובה. אחד מהערכים: הרצאה, סדנה, מליאה, סיור, פאנל, הפסקה (או talk / seminar / keynote / tour / panel / break). פאנל — פתיחה, קבלת פנים, ברכות, סיום: מופיע בלוח בלי הרשמה.',
+    en: 'Required. One of: talk, seminar, keynote, tour, panel, break. A panel — opening, welcome, greetings, closing — is on the schedule with no registration.',
   },
   date: { he: 'תאריך הפעילות, בצורה 2026-10-12.', en: 'The day, as 2026-10-12.' },
   startTime: { he: 'שעה בצורה 09:00.', en: 'A time, as 09:00.' },
@@ -212,6 +212,9 @@ const TYPE_WORDS: Record<string, SessionType> = {
   tour: 'tour',
   הפסקה: 'break',
   break: 'break',
+  פאנל: 'gathering',
+  פאנלים: 'gathering',
+  panel: 'gathering',
   מפגש: 'gathering',
   התכנסות: 'gathering',
   gathering: 'gathering',
@@ -442,7 +445,7 @@ const readRow = (
           ? `סוג לא מוכר: "${raw.sessionType}".`
           : 'חסר סוג פעילות.',
         raw.sessionType
-          ? `Unrecognised type: "${raw.sessionType}".`
+          ? `Unrecognized type: "${raw.sessionType}".`
           : 'The type is missing.',
       ),
     );
@@ -492,14 +495,14 @@ const readRow = (
       problem(
         'audiences',
         `קהל יעד לא מוכר: "${audiences.unknown.join(', ')}".`,
-        `Unrecognised audience: "${audiences.unknown.join(', ')}".`,
+        `Unrecognized audience: "${audiences.unknown.join(', ')}".`,
       ),
     );
   }
   const topics = readWords(raw.topics ?? '', TOPIC_WORDS);
   if (topics.unknown.length > 0) {
     problems.push(
-      problem('topics', `תחום לא מוכר: "${topics.unknown.join(', ')}".`, `Unrecognised field: "${topics.unknown.join(', ')}".`),
+      problem('topics', `תחום לא מוכר: "${topics.unknown.join(', ')}".`, `Unrecognized field: "${topics.unknown.join(', ')}".`),
     );
   }
   const language = parseLanguageText(raw.language);

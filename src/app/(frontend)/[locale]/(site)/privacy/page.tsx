@@ -39,7 +39,7 @@ const COPY = {
   updated: { he: 'עודכן: אוגוסט 2026', en: 'Updated: August 2026' },
   intro: {
     he: 'המסמך הזה מתאר בדיוק איזה מידע המערכת אוספת עליכם, למה, מי יכול לראות אותו, כמה זמן הוא נשמר ומה אתם יכולים לעשות בנוגע אליו. הוא נכתב מול הקוד עצמו — כל סעיף כאן משקף התנהגות שקיימת במערכת בפועל.',
-    en: 'This document describes exactly what information the platform collects about you, why, who can see it, how long it is kept, and what you can do about it. It was written against the implementation itself — every statement here reflects behaviour that actually exists in the system.',
+    en: 'This document describes exactly what information the platform collects about you, why, who can see it, how long it is kept, and what you can do about it. It was written against the implementation itself — every statement here reflects behavior that actually exists in the system.',
   },
 
   operatorTitle: { he: 'מי מפעיל את המערכת', en: 'Who operates the platform' },
@@ -87,7 +87,7 @@ const COPY = {
     en: [
       {
         head: 'At registration',
-        body: 'Full name, email address, phone number, organisation and role, dietary preference and accessibility needs (if you provided them). The email address also serves as your username.',
+        body: 'Full name, email address, phone number, organization and role, dietary preference and accessibility needs (if you provided them). The email address also serves as your username.',
       },
       {
         head: 'Your account',
@@ -129,7 +129,7 @@ const COPY = {
       'There is no Google Analytics, no advertising pixel, no heatmap and no session recording on this site — not one.',
       'We do not store your IP address.',
       'There are no tracking cookies and no third-party cookies. Until you sign in, the site writes no cookie to your browser at all. After signing in it sets three, and only three: your sign-in cookie (signed, not readable by JavaScript, valid 30 days), a language cookie, and a second language cookie for the management team. All three are strictly necessary — which is why the site carries no cookie banner.',
-      'Separately, your browser remembers a few display preferences for itself: the accessibility settings you chose, items you marked as favourites, and announcements you have already read or dismissed. These stay on your device (localStorage), are never sent to us, and do not identify you. Clearing your browsing data removes them.',
+      'Separately, your browser remembers a few display preferences for itself: the accessibility settings you chose, items you marked as favorites, and announcements you have already read or dismissed. These stay on your device (localStorage), are never sent to us, and do not identify you. Clearing your browsing data removes them.',
       'We do not sell, rent or transfer information to third parties for marketing. There is no marketing mailing system at all.',
     ],
   },
@@ -147,7 +147,7 @@ const COPY = {
       'To manage your registration for the conference and its activities, including capacity and the waiting list.',
       'To let you sign in to your account and to keep it secure.',
       'To operate the networking area — strictly according to the preferences you set (see the next section).',
-      'To send you operational updates about the conference: registration confirmation, programme changes, connection requests and messages you received. These are service messages, not advertising.',
+      'To send you operational updates about the conference: registration confirmation, program changes, connection requests and messages you received. These are service messages, not advertising.',
       'To keep the community safe — blocks and reports.',
     ],
   },
@@ -167,9 +167,9 @@ const COPY = {
     ],
     en: [
       'The participants directory is opt-in only. You do not appear in it unless you answered "yes" to the question on the registration form. You can change that choice at any moment from your profile, and it applies immediately.',
-      'Even if you chose to appear — only your name, role and organisation are shown. Your phone and email stay closed.',
+      'Even if you chose to appear — only your name, role and organization are shown. Your phone and email stay closed.',
       'The directory is shown only to participants of the same conference; not to the public and not to search engines.',
-      'Phone and email are revealed only once a connection request is accepted — and then mutually, to both sides, including a downloadable contact card. You can close any channel (phone, email, WhatsApp) from your profile at any moment; a channel you closed is not shown to the other side at all — not even greyed out.',
+      'Phone and email are revealed only once a connection request is accepted — and then mutually, to both sides, including a downloadable contact card. You can close any channel (phone, email, WhatsApp) from your profile at any moment; a channel you closed is not shown to the other side at all — not even grayed out.',
       'Blocking is silent and two-way: someone you blocked cannot see you, cannot reach you — and receives no indication that they were blocked.',
       'Chat content is visible to the two parties only. Even the management team cannot read it; the console shows a message count and nothing more.',
     ],

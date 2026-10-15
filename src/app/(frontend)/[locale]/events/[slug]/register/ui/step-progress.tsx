@@ -13,7 +13,7 @@ import type { Locale } from '@/config/locales';
  */
 export const STEP_LABELS: Record<Locale, readonly [string, string, string]> = {
   he: ['פרטים אישיים', 'הארגון והמוסד', 'אימות וסיום'],
-  en: ['Personal details', 'Organisation', 'Verify & finish'],
+  en: ['Personal details', 'Organization', 'Verify & finish'],
 };
 
 const STEP_NAME: Record<Locale, string> = {

@@ -208,9 +208,9 @@ export const cancelMailVersions = (
     .join('\n\n');
   const en = [
     'Hello,',
-    `We are sorry to let you know that "${titles.en}", an activity you registered for, has been cancelled.`,
+    `We are sorry to let you know that "${titles.en}", an activity you registered for, has been canceled.`,
     plannedLines('en'),
-    'Your place has been released, and you can pick another activity from the programme in your personal area. We apologise for the inconvenience.',
+    'Your place has been released, and you can pick another activity from the program in your personal area. We apologize for the inconvenience.',
     'Kind regards,\nThe Netaim team',
   ]
     .filter(Boolean)
@@ -232,8 +232,8 @@ export const cancelVersions = (titles: {
   },
   {
     locale: 'en',
-    subject: `Activity cancelled: ${titles.en}`,
-    body: 'The activity you registered for has been cancelled. Your place is released and you can pick another activity from the programme. We apologise for the inconvenience.',
+    subject: `Activity canceled: ${titles.en}`,
+    body: 'The activity you registered for has been canceled. Your place is released and you can pick another activity from the program. We apologize for the inconvenience.',
   },
 ];
 

@@ -187,7 +187,7 @@ const TYPE_LABELS: Record<SessionType, Record<Locale, string>> = {
   keynote: { he: 'מליאה', en: 'Keynote' },
   tour: { he: 'סיור', en: 'Tour' },
   break: { he: 'הפסקה', en: 'Break' },
-  gathering: { he: 'מפגש', en: 'Gathering' },
+  gathering: { he: 'פאנל', en: 'Panel' },
 };
 
 /* Registration is meaningful only for types that fill seats. */
@@ -227,7 +227,7 @@ const T = (locale: Locale) => ({
   fSubtitle: locale === 'he' ? 'כותרת משנה' : 'Subtitle',
   fSubtitlePh: locale === 'he' ? 'משפט קצר שמלווה את הכותרת' : 'A short line beside the title',
   fDesc: locale === 'he' ? 'תקציר ורציונל' : 'Abstract & rationale',
-  fDescPh: locale === 'he' ? 'על מה הפעילות, מה הרציונל שלה ומה ייקחו ממנה המשתתפים. בתוכנייה מוצגות השורות הראשונות עם "קרא עוד".' : 'What it covers, why, and what participants take away. The programme shows the first lines with "Read more".',
+  fDescPh: locale === 'he' ? 'על מה הפעילות, מה הרציונל שלה ומה ייקחו ממנה המשתתפים. בתוכנייה מוצגות השורות הראשונות עם "קרא עוד".' : 'What it covers, why, and what participants take away. The program shows the first lines with "Read more".',
   fFeatured: locale === 'he' ? 'הצגה בפעילויות הנבחרות בעמוד הבית' : 'Feature on the landing page',
 
   fStarts: locale === 'he' ? 'תחילת הפעילות' : 'Starts at',
@@ -251,7 +251,7 @@ const T = (locale: Locale) => ({
   facetsHint:
     locale === 'he'
       ? 'אפשר לסמן כמה. מה שמסומן מופיע בתוכנייה בשתי השפות.'
-      : 'Tick as many as apply. What is ticked appears in the programme in both languages.',
+      : 'Tick as many as apply. What is ticked appears in the program in both languages.',
 
   speakerLead:
     locale === 'he'
@@ -285,7 +285,7 @@ const T = (locale: Locale) => ({
   fDecidedHint:
     locale === 'he'
       ? 'קביעת שפה נועלת את ההצבעה, מודיעה לכל הנרשמים (פעמון ומייל) ומציגה בתוכנייה את השפה הזו בלבד.'
-      : 'Deciding closes the vote, tells every registrant (bell and mail) and prints this language alone in the programme.',
+      : 'Deciding closes the vote, tells every registrant (bell and mail) and prints this language alone in the program.',
   votesTitle: locale === 'he' ? 'ההצבעה עד כה' : 'The vote so far',
   votesNone: locale === 'he' ? 'עדיין אין נרשמים.' : 'No registrants yet.',
   votesWaiting: locale === 'he' ? 'ממתינים' : 'waiting',

@@ -1,6 +1,6 @@
 import type { Locale } from '@/config/locales';
 import { DEFAULT_VENUE_TIMEZONE, formatLongDate, venueDayKey } from '@/shared';
-import { eligibleSessions, marketingSessions } from '@/event-engine';
+import { eligibleSessions, marketingSessions, panelOnlyHosts } from '@/event-engine';
 import { cacheTags, cachedContent } from '@/shared/cache/content-cache';
 import {
   findEventOpeningContent,
@@ -117,7 +117,7 @@ const SESSION_TYPE_LABEL: Record<string, Record<Locale, string>> = {
   keynote: { he: 'מליאה', en: 'Keynote' },
   tour: { he: 'סיור', en: 'Tour' },
   break: { he: 'הפסקה', en: 'Break' },
-  gathering: { he: 'מפגש', en: 'Gathering' },
+  gathering: { he: 'פאנל', en: 'Panel' },
 };
 
 /*
@@ -403,6 +403,12 @@ const assembleExperience = (
  * state, not for its content. Cached per (slug, locale), cleared the
  * moment the Studio publishes that conference.
  */
+/* The landing's speakers: everyone but those who only host panels. */
+const withoutPanelHosts = (roster: ResolvedSpeaker[], sessions: SessionSummary[]): ResolvedSpeaker[] => {
+  const hosts = panelOnlyHosts(sessions.map((session) => ({ sessionType: session.sessionType, speakers: session.speakers ?? [] })));
+  return roster.filter((speaker) => !hosts.has(speaker.id));
+};
+
 const assembleConferenceExperience = async (
   slug: string,
   locale: Locale,
@@ -424,7 +430,7 @@ const assembleConferenceExperience = async (
     opening,
     sessions,
     sponsors,
-    roster,
+    withoutPanelHosts(roster, sessions),
   );
 };
 
@@ -467,6 +473,6 @@ export const getConferenceExperiencePreview = async (
     sources.opening,
     sessions,
     sponsors,
-    roster,
+    withoutPanelHosts(roster, sessions),
   );
 };

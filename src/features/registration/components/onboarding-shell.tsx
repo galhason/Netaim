@@ -47,7 +47,7 @@ export const ONBOARDING_COPY = {
   promoTitle: { he: 'אירועים טובים מתחילים כאן', en: 'Good events start here' },
   promoBody: {
     he: 'נטעים מחברת בין אנשים סביב כנס אחד: תוכנית ברורה, מקום שמור, ואנשים ששווה להכיר.',
-    en: 'Netaim brings people together around one conference: a clear programme, a saved place, and people worth meeting.',
+    en: 'Netaim brings people together around one conference: a clear program, a saved place, and people worth meeting.',
   },
   benefits: {
     he: [

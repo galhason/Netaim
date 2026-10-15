@@ -1,5 +1,5 @@
 import type { Locale } from '@/config/locales';
-import { dayPreviewSessions, marketingSessions } from '@/event-engine';
+import { dayPreviewSessions, marketingSessions, panelOnlyHosts } from '@/event-engine';
 import {
   findEventOpeningContent,
   findPortalEvent,
@@ -398,7 +398,11 @@ export const publicConference = async (
     marketingSessions(sessions, now).map((session) =>
       publicSession(session, origin, rosterById(speakers)),
     ),
-    speakers.map((speaker) => publicSpeaker(speaker, origin)),
+    /* The speakers' page: everyone but those who only host panels. */
+    ((hosts) =>
+      speakers
+        .filter((speaker) => !hosts.has(speaker.id))
+        .map((speaker) => publicSpeaker(speaker, origin)))(panelOnlyHosts(sessions)),
     sponsors.map((sponsor) => publicSponsor(sponsor, origin)),
   );
 };

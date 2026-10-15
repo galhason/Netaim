@@ -1,4 +1,9 @@
 import Link from 'next/link';
+import { brandFor } from '@/config/brand';
+import { ConferenceBar } from '@/features/conference';
+import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
+import { visibleSiteConference } from '@/features/conference/services/conference-door';
+import { getSiteBrand } from '@/features/events';
 import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
@@ -49,8 +54,23 @@ const ChatPage = async ({ params }: ChatPageProps) => {
     redirect(`/${locale}/me/networking`);
   }
   const channels = await connectionChannels(connectionId).catch(() => null);
+  /* The site's one navigation, as every page of the platform wears it. */
+  const [barSlug, siteLogo, barViewer] = await Promise.all([
+    visibleSiteConference(locale).catch(() => null),
+    getSiteBrand(),
+    conferenceBarViewer(),
+  ]);
 
   return (
+    <>
+    <ConferenceBar
+      locale={locale}
+      slug={barSlug}
+      viewer={barViewer}
+      brand={brandFor(locale)}
+      brandLogo={siteLogo.onLight}
+      pinned={false}
+    />
     <main
       id="main-content"
       className="lounge flex min-h-dvh flex-col bg-[var(--l-bg)] font-body text-[var(--l-ink)]"
@@ -121,6 +141,7 @@ const ChatPage = async ({ params }: ChatPageProps) => {
         }}
       />
     </main>
+    </>
   );
 };
 

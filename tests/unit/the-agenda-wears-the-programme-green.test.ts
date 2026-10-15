@@ -122,3 +122,27 @@ describe('nothing outside the agenda changes', () => {
     expect(kit).toContain("tour: 'bg-[var(--x-kind-tour,var(--x-tour-wash))] text-[var(--x-kind-ink,var(--x-tour))]'");
   });
 });
+
+/*
+ * The personal schedule is read beside the programme, so it wears the
+ * same green: its shell takes the scope, its kind pills take the
+ * programme's kind colours, and nothing in it names navy by value.
+ */
+describe('my schedule wears the programme green too', () => {
+  const MINE = 'src/app/(frontend)/[locale]/events/[slug]/my-activities';
+
+  it('is drawn in the programme scope', () => {
+    expect(read(`${MINE}/layout.tsx`)).toContain('className="experience experience--programme');
+  });
+
+  it('paints the kinds as the agenda does, and names no navy', () => {
+    const row = read(`${MINE}/schedule-row.tsx`);
+    expect(row).toContain('var(--x-kind-workshop,');
+    expect(row).toContain('<Pill tone={KIND_PILL[activity.type]}>');
+    for (const file of ['schedule-row.tsx', 'notification-bar.tsx', 'my-schedule-dashboard.tsx', 'sign-in-preview.tsx']) {
+      const source = read(`${MINE}/${file}`);
+      expect(source, file).not.toContain('--x-navy');
+      expect(source, file).not.toContain('rgba(23,63,115');
+    }
+  });
+});

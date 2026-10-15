@@ -38,7 +38,7 @@ export const GALLERY_COPY = {
       'הגלריה מתמלאת לאורך הדרך — שלחו לנו תמונה מהכנס, והיא תעלה לגלריה לאחר אישור צוות נטעים.',
       'The gallery grows throughout the event — send us a photo from the conference and it may be added to the gallery after approval by the Netaim team.',
     ),
-    agenda: t('חזרה לתוכנית', 'Back to programme'),
+    agenda: t('חזרה לתוכנית', 'Back to program'),
   },
   share: {
     open: t('שתפו תמונה', 'Share a photo'),

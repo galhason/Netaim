@@ -263,7 +263,7 @@ export const CONSOLE_UI = {
   },
   moveFailedNote: {
     he: 'ההעברה נכשלה — ההרשמה המקורית בוטלה אך ההרשמה החדשה לא נקלטה.',
-    en: 'The move failed — the original registration was cancelled but the new one was not accepted.',
+    en: 'The move failed — the original registration was canceled but the new one was not accepted.',
   },
   deleteFailedNote: {
     he: 'המחיקה לא הושלמה — החשבון נשאר כפי שהיה. נסו שוב, ואם זה חוזר, בדקו את יומן השרת.',
@@ -356,7 +356,7 @@ export const CONSOLE_UI = {
   networkingConnRemoved: { he: 'הוסרה', en: 'Removed' },
   networkingMeetConfirmed: { he: 'מאושרת', en: 'Confirmed' },
   networkingMeetProposed: { he: 'מוצעת', en: 'Proposed' },
-  networkingMeetCancelled: { he: 'בוטלה', en: 'Cancelled' },
+  networkingMeetCancelled: { he: 'בוטלה', en: 'Canceled' },
 
   groupMain: { he: 'ראשי', en: 'MAIN' },
   groupWorkspace: { he: 'סביבת עבודה', en: 'WORKSPACE' },
@@ -655,7 +655,7 @@ export const REGISTRATION_STATUS_LABELS: Record<string, Record<Locale, string>> 
   pending: { he: 'ממתין לאישור', en: 'Pending' },
   confirmed: { he: 'מאושר', en: 'Confirmed' },
   waitlisted: { he: 'רשימת המתנה', en: 'Waitlist' },
-  cancelled: { he: 'בוטל', en: 'Cancelled' },
+  cancelled: { he: 'בוטל', en: 'Canceled' },
   declined: { he: 'נדחה', en: 'Declined' },
   attended: { he: 'נכח', en: 'Attended' },
   expired: { he: 'פג תוקף', en: 'Expired' },

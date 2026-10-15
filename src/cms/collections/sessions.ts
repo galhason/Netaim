@@ -154,7 +154,7 @@ export const Sessions: CollectionConfig = {
       name: 'languageVote',
       type: 'checkbox',
       defaultValue: false,
-      admin: { description: 'Registrants choose the language they want from the languages above; the organiser decides from the tally.' },
+      admin: { description: 'Registrants choose the language they want from the languages above; the organizer decides from the tally.' },
     },
     {
       name: 'decidedLanguage',

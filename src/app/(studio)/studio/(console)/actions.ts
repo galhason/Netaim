@@ -261,6 +261,7 @@ const OPENING_IMAGE_FIELDS = new Set([
   'quoteImageId',
   'venueImageId',
   'closingImageId',
+  'previewImageId',
 ]);
 
 export const uploadOpeningImageAction = async (formData: FormData) => {

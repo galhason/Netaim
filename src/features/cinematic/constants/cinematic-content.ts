@@ -356,7 +356,7 @@ export const fallbackConference = (locale: Locale): ConferenceExperience => {
       name: he ? 'הבינלאומי, ירושלים' : 'The ICC, Jerusalem',
       narrative: he
         ? 'בלב ירושלים, במרכז הכנסים הגדול בישראל — מקום שנבנה כדי שאלפי אנשים יוכלו להיפגש בו כאילו הם חדר אחד.'
-        : 'In the heart of Jerusalem, at Israel’s largest convention centre — a place built so thousands can meet as if they were one room.',
+        : 'In the heart of Jerusalem, at Israel’s largest convention center — a place built so thousands can meet as if they were one room.',
       image: PLACEHOLDER_SCENE,
       facts: [
         { label: he ? 'נגישות מלאה' : 'Fully accessible', icon: 'accessibility' },

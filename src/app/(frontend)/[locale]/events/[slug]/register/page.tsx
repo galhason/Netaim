@@ -72,7 +72,7 @@ const COPY = {
   haveAccount: { he: 'כבר יש לך חשבון?', en: 'Already have an account?' },
   signIn: { he: 'התחברות', en: 'Sign in' },
   forgot: { he: 'שכחתי סיסמה', en: 'Forgot your password?' },
-  communityLine: { he: 'נטעים מקשרת בין אנשים וארגונים', en: 'Netaim connects people and organisations' },
+  communityLine: { he: 'נטעים מקשרת בין אנשים וארגונים', en: 'Netaim connects people and organizations' },
   registered: { he: 'משתמשים כבר נרשמו לכנס', en: 'people have already registered' },
   registeredOne: { he: 'משתמש כבר נרשם לכנס', en: 'person has already registered' },
   verifyEyebrow: { he: 'שלב 3 מתוך 3', en: 'Step 3 of 3' },
@@ -389,7 +389,7 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
                 },
                 stepOneTitle: he ? 'פרטים אישיים' : 'Personal details',
                 stepOneIntro: he ? 'נשמח להכיר אותך קצת יותר.' : 'A little about you.',
-                stepTwoTitle: he ? 'הארגון והמוסד' : 'Your organisation',
+                stepTwoTitle: he ? 'הארגון והמוסד' : 'Your organization',
                 stepTwoIntro: he
                   ? 'מאיפה אתם מגיעים, ומה נכין לכם.'
                   : 'Where you come from, and what to prepare for you.',

@@ -75,7 +75,7 @@ const uniqueById = (list: ActivityVM[]): ActivityVM[] => {
 };
 
 const primaryBtn =
-  'inline-flex min-h-[46px] items-center justify-center gap-2 rounded-[var(--x-r-pill)] bg-[var(--x-primary)] px-5 text-[14px] font-semibold text-[var(--x-primary-ink)] shadow-[0_8px_24px_rgba(23,63,115,0.24)] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-[var(--x-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] motion-reduce:transition-none';
+  'inline-flex min-h-[46px] items-center justify-center gap-2 rounded-[var(--x-r-pill)] bg-[var(--x-primary)] px-5 text-[14px] font-semibold text-[var(--x-primary-ink)] shadow-[var(--x-shadow-lift)] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-[var(--x-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] motion-reduce:transition-none';
 const ghostBtn =
   'inline-flex min-h-[46px] items-center justify-center gap-2 rounded-[var(--x-r-pill)] border border-[var(--x-line)] bg-[var(--x-surface)] px-5 text-[14px] font-semibold text-[var(--x-primary)] transition-colors hover:border-[var(--x-primary)]/40 hover:bg-[var(--x-primary-wash)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]';
 
@@ -449,10 +449,10 @@ const MyScheduleDashboard = ({
                 <IconCalendar className="size-7" />
               </span>
               <div className="min-w-0">
-                <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-[var(--x-primary)] rtl:tracking-normal">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-[var(--nt-orange)] rtl:tracking-normal">
                   {eventTitle}
                 </p>
-                <h1 className="mt-1 font-display text-[2rem] font-extrabold leading-[1.1] tracking-tight text-[var(--x-ink)] sm:text-[2.4rem]">
+                <h1 className="mt-1 font-display text-[2rem] font-extrabold leading-[1.1] tracking-tight text-[var(--x-primary)] sm:text-[2.4rem]">
                   {t(locale, 'title')}
                 </h1>
               </div>

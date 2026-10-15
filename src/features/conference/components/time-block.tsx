@@ -7,7 +7,7 @@ import { surface } from '../ui/kit';
 import { IconChevronDown, IconClock, IconPin, IconUsers } from '../ui/icons';
 import ActivityCard from './activity-card';
 import ActivityTile from './activity-tile';
-import { BandIcon } from './activity-band';
+import { BandHosts, BandIcon } from './activity-band';
 
 /*
  * From this many activities at once, an hour is "dense": it gets a
@@ -63,7 +63,7 @@ const PLURAL: Record<SessionType, Record<Locale, string>> = {
   workshop: { he: 'סדנאות', en: 'seminars' },
   tour: { he: 'סיורים', en: 'tours' },
   break: { he: 'הפסקות', en: 'breaks' },
-  gathering: { he: 'מפגשים', en: 'gatherings' },
+  gathering: { he: 'פאנלים', en: 'panels' },
 };
 
 /*
@@ -130,12 +130,7 @@ const TimeBlock = ({ block, locale, slug, open, onToggle, onOpen, registerAction
           {/* Who leads it and where — one quiet line, like the date beside the hour. */}
           {speakers.length > 0 || first.place ? (
             <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[var(--x-soft)]">
-              {speakers.length > 0 ? (
-                <span className="inline-flex min-w-0 items-center gap-1.5">
-                  <IconUsers className="size-3.5 flex-none text-[var(--x-faint)]" />
-                  <span className="truncate">{speakers.map((s) => s.name).join(', ')}</span>
-                </span>
-              ) : null}
+              <BandHosts speakers={speakers} />
               {first.place ? (
                 <span className="inline-flex min-w-0 items-center gap-1.5">
                   <IconPin className="size-3.5 flex-none text-[var(--x-faint)]" />
@@ -236,29 +231,26 @@ const TimeBlock = ({ block, locale, slug, open, onToggle, onOpen, registerAction
           aria-expanded={shown}
           aria-controls={panelId}
           aria-label={shown ? COPY.hide[locale] : COPY.show[locale]}
-          className={`flex w-full flex-wrap items-center gap-x-4 gap-y-2 rounded-[var(--x-r-card)] px-4 py-4 text-start outline-none focus-visible:ring-2 focus-visible:ring-[var(--x-primary)] sm:flex-nowrap md:px-5 md:py-[18px] ${
+          className={`flex w-full flex-wrap items-center gap-x-4 gap-y-2 rounded-[var(--x-r-card)] px-4 py-4 text-start outline-none focus-visible:ring-2 focus-visible:ring-[var(--x-primary)] sm:flex-nowrap sm:px-5 ${
             shown ? 'rounded-b-none border-b border-[var(--x-line)] bg-[var(--x-primary-wash)]/50' : 'bg-[var(--x-surface)]'
           }`}
         >
           {/* The same line as a band: the icon, the hour and its day at the start, then the words, then the control. */}
-          <span className="grid size-10 flex-none place-items-center rounded-full bg-[var(--x-surface)] text-[var(--x-soft)] shadow-[var(--x-shadow)]">
-            {held ? <IconUsers className="size-[18px] text-[var(--x-ok)]" /> : <IconClock className="size-[18px]" />}
+          <span className="grid size-9 flex-none place-items-center rounded-full bg-[var(--x-primary-wash)] text-[var(--x-primary)]">
+            {held ? <IconUsers className="size-4 text-[var(--x-ok)]" /> : <IconClock className="size-4" />}
           </span>
           <span className="flex-none text-start">
-            <span
-              className="block whitespace-nowrap font-display text-xl font-bold tabular-nums text-[var(--x-primary-strong)] md:text-2xl"
-              dir="ltr"
-            >
+            <span className="block whitespace-nowrap font-display text-base font-bold tabular-nums text-[var(--x-ink)]" dir="ltr">
               {range}
             </span>
             <span className="block text-[11px] text-[var(--x-soft)]">{block.activities[0]?.dateShort}</span>
           </span>
           {/* On a phone the words take a line of their own under the hour; wider, they sit beside it. */}
           <span className="order-last min-w-0 basis-full sm:order-none sm:basis-0 sm:flex-1">
-            <span className="line-clamp-2 text-[15px] font-bold leading-snug text-[var(--x-ink)] md:text-base">
+            <span className="line-clamp-2 font-display text-base font-bold leading-snug text-[var(--x-ink)]">
               {headline}
             </span>
-            <span className="line-clamp-2 text-[13px] text-[var(--x-soft)]">
+            <span className="line-clamp-2 text-xs text-[var(--x-soft)]">
               {held || subline}
             </span>
           </span>
@@ -272,7 +264,7 @@ const TimeBlock = ({ block, locale, slug, open, onToggle, onOpen, registerAction
               {COPY.past[locale]}
             </span>
           ) : null}
-          <span className="ms-auto grid size-10 flex-none place-items-center rounded-xl bg-[var(--x-surface)] text-[var(--x-primary)] shadow-[var(--x-shadow)] sm:ms-0">
+          <span className="ms-auto grid size-9 flex-none place-items-center rounded-xl bg-[var(--x-surface)] text-[var(--x-primary)] shadow-[var(--x-shadow)] sm:ms-0">
             <IconChevronDown
               className={`size-4 transition-transform duration-300 ${shown ? 'rotate-180' : ''}`}
             />

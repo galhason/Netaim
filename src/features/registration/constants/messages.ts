@@ -83,7 +83,7 @@ export const REGISTRATION_MESSAGES = {
     },
     directoryHint: {
       he: 'מוצגים רק שם, תפקיד וארגון. פרטי הקשר נשארים סגורים עד שתאשרו התחברות, ואפשר לשנות את הבחירה בכל רגע מהפרופיל.',
-      en: 'Only your name, role and organisation are shown. Contact details stay closed until you approve a connection, and you can change this choice at any time from your profile.',
+      en: 'Only your name, role and organization are shown. Contact details stay closed until you approve a connection, and you can change this choice at any time from your profile.',
     },
     /*
      * Consent to being photographed, asked at registration and required

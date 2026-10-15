@@ -113,6 +113,31 @@ export const CONFERENCE_SECTIONS: ConferenceSection[] = [
     special: 'highlights',
   },
   {
+    /*
+     * "A taste of the conference" on the site: one picture beside the
+     * days and their activities, chosen here and nowhere else. It used
+     * to be borrowed from the day's activities, so changing it meant
+     * changing an activity's cover; now it is the section's own, and
+     * the same whichever day the visitor picks.
+     */
+    id: 'preview',
+    label: t('טעימה מהכנס', 'A taste of the conference'),
+    description: t(
+      'הסקשן באתר שמציג את ימי הכנס וכמה פעילויות מכל יום. כאן בוחרים את התמונה שלצידו — תמונה אחת קבועה, שלא משתנה לפי היום. בלי תמונה, הסקשן מוצג בלי תמונה.',
+      'The section on the site that shows the conference days and a few activities from each. Choose the picture beside it here — one fixed picture that does not change with the day. Without one, the section shows no picture.',
+    ),
+    fields: [],
+    media: [
+      {
+        key: 'previewImageId',
+        kind: 'image',
+        label: t('תמונת הסקשן', 'Section picture'),
+        hint: t('מוצגת בגודל קטן לצד התוכנית. תמונה מרובעת או לאורך נראית הכי טוב.', 'Shown small beside the program. A square or portrait picture looks best.'),
+        onSite: true,
+      },
+    ],
+  },
+  {
     id: 'venue',
     label: t('המקום', 'The venue'),
     description: t(

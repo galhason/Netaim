@@ -14,6 +14,6 @@ export const PUBLIC_STATE_LABELS: Record<
   limited: { he: 'נותרו מעט מקומות', en: 'Only a few places left' },
   waitlist: { he: 'רשימת המתנה', en: 'Waiting list' },
   closed: { he: 'ההרשמה סגורה', en: 'Registration is closed' },
-  cancelled: { he: 'האירוע בוטל', en: 'The event is cancelled' },
+  cancelled: { he: 'האירוע בוטל', en: 'The event is canceled' },
   completed: { he: 'האירוע הסתיים', en: 'The event has ended' },
 };
