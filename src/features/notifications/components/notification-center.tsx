@@ -102,7 +102,7 @@ const FILTERS: {
 }[] = [
   { key: 'all', label: { he: 'הכל', en: 'All' }, Icon: IconBell },
   { key: 'conference', label: { he: 'התראות מהכנסים', en: 'Conference updates' }, Icon: IconCalendarNote },
-  { key: 'networking', label: { he: 'Networking', en: 'Networking' }, Icon: IconHandshake },
+  { key: 'networking', label: { he: 'נטוורקינג', en: 'Networking' }, Icon: IconHandshake },
   { key: 'system', label: { he: 'מערכת', en: 'System' }, Icon: IconSettingsDot },
 ];
 

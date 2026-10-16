@@ -33,6 +33,8 @@ interface AccountComboboxProps {
   locale: Locale;
   defaultValue?: string;
   className?: string;
+  /* Its own words, where it picks something other than an account — a card from the speaker library. */
+  copy?: Partial<Record<keyof typeof COPY, string>>;
 }
 
 const COPY = {
@@ -62,7 +64,8 @@ const Avatar = ({ option }: { option: AccountOption }) =>
     </span>
   );
 
-const AccountCombobox = ({ name, label, options, locale, defaultValue = '', className = '' }: AccountComboboxProps) => {
+const AccountCombobox = ({ name, label, options, locale, defaultValue = '', className = '', copy = {} }: AccountComboboxProps) => {
+  const say = (key: keyof typeof COPY): string => copy[key] ?? COPY[key][locale];
   const id = useId();
   const [chosen, setChosen] = useState<AccountOption | null>(
     () => options.find((option) => option.accountId === defaultValue) ?? null,
@@ -125,7 +128,7 @@ const AccountCombobox = ({ name, label, options, locale, defaultValue = '', clas
         <div className={`${className} flex items-center gap-3`}>
           <Avatar option={chosen} />
           <span className="min-w-0 flex-1 truncate">
-            <span className="text-[var(--c-text-faint)]">{COPY.linked[locale]} </span>
+            <span className="text-[var(--c-text-faint)]">{say('linked')} </span>
             <span className="font-medium">{chosen.name}</span>
             {chosen.company ? <span className="text-[var(--c-text-soft)]"> · {chosen.company}</span> : null}
           </span>
@@ -134,7 +137,7 @@ const AccountCombobox = ({ name, label, options, locale, defaultValue = '', clas
             onClick={() => setChosen(null)}
             className="shrink-0 rounded-md border border-[var(--c-line-strong)] px-2 py-1 text-xs text-[var(--c-text)] hover:border-[var(--c-bronze)] hover:text-[var(--c-bronze)]"
           >
-            {COPY.clear[locale]}
+            {say('clear')}
           </button>
         </div>
       ) : (
@@ -145,7 +148,7 @@ const AccountCombobox = ({ name, label, options, locale, defaultValue = '', clas
           autoComplete="off"
           dir={dir}
           value={query}
-          placeholder={COPY.placeholder[locale]}
+          placeholder={say('placeholder')}
           aria-expanded={open && query.trim() !== ''}
           aria-controls={listId}
           aria-autocomplete="list"
@@ -159,7 +162,7 @@ const AccountCombobox = ({ name, label, options, locale, defaultValue = '', clas
           className={className}
         />
       )}
-      {!chosen ? <p className="mt-1 text-[11px] text-[var(--c-text-faint)]">{COPY.hint[locale]}</p> : null}
+      {!chosen ? <p className="mt-1 text-[11px] text-[var(--c-text-faint)]">{say('hint')}</p> : null}
       {!chosen && open && query.trim() !== '' ? (
         <ul
           id={listId}
@@ -167,7 +170,7 @@ const AccountCombobox = ({ name, label, options, locale, defaultValue = '', clas
           className="absolute inset-x-0 top-full z-20 mt-1 max-h-72 overflow-y-auto rounded-md border border-[var(--c-line-strong)] bg-[var(--c-deep)] p-1 shadow-2xl"
         >
           {matches.length === 0 ? (
-            <li className="px-3 py-3 text-center text-xs text-[var(--c-text-faint)]">{COPY.none[locale]}</li>
+            <li className="px-3 py-3 text-center text-xs text-[var(--c-text-faint)]">{say('none')}</li>
           ) : (
             matches.map((option, index) => (
               <li

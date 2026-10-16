@@ -33,6 +33,7 @@ const LABELS: Record<AuditAction, Record<Locale, string>> = {
   'content.sessionRestored': { he: 'פעילות שוחזרה מהארכיון', en: 'Activity restored' },
   'content.speakerSaved': { he: 'דובר/ת נשמר/ה', en: 'Speaker saved' },
   'content.speakerRemoved': { he: 'דובר/ת הוסר/ה', en: 'Speaker removed' },
+  'content.speakersMerged': { he: 'כרטיסי דובר/ת מוזגו', en: 'Speaker cards merged' },
   'content.partnerSaved': { he: 'שותף נשמר', en: 'Partner saved' },
   'content.partnerRemoved': { he: 'שותף הוסר', en: 'Partner removed' },
   'content.partnersReordered': { he: 'סדר השותפים שונה', en: 'Partners reordered' },

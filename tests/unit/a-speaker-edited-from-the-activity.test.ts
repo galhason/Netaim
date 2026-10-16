@@ -23,8 +23,9 @@ describe('a speaker edited from the activity', () => {
 
   it('reads the words as written and saves one write per language, the link on the Hebrew', () => {
     const actions = read('src/app/(studio)/studio/(console)/activity/actions.ts');
-    expect(actions).toContain("listConferenceSpeakers(slug, 'he', { fallback: false })");
-    expect(actions).toContain("listConferenceSpeakers(slug, 'en', { fallback: false })");
+    /* Read by the card itself, as written: a speaker picked from the library is on no roster yet. */
+    expect(actions).toContain("getSpeaker(id, 'he', { fallback: false })");
+    expect(actions).toContain("getSpeaker(id, 'en', { fallback: false })");
     expect(actions).toContain("updateSpeaker(id, { ...he, socialLinks: link ? [{ url: link }] : [] }, 'he')");
     expect(actions).toContain("updateSpeaker(id, trimmed(input.en), 'en')");
     expect(actions).toContain('return getSpeaker(id, input.contentLocale)');

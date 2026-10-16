@@ -29,6 +29,20 @@ export interface ResolvedSpeaker {
    * current name into an override by accident.
    */
   own: { name?: string; jobTitle?: string; company?: string; bio?: string; photoId?: string };
+  /*
+   * Read on a conference's roster: listed on it by hand, and how many of
+   * its standing activities name the speaker. A speaker is on the roster
+   * when either is true.
+   */
+  presence?: { listed: boolean; activities: number };
+  /* Read in the library: the conferences the speaker is on, either way. */
+  conferences?: { slug: string; title: string }[];
+}
+
+/* A pair, or more, that look like one person — for a person to decide. */
+export interface SpeakerLookalikes {
+  key: string;
+  speakers: ResolvedSpeaker[];
 }
 
 /* An existing platform account offered under "Choose Existing User". */
@@ -50,7 +64,7 @@ export interface ExternalSpeakerInput {
   socialLinks?: SpeakerSocialLink[];
 }
 
-/* Per-conference overrides for a linked account (all optional). */
+/* Overrides for a linked account (all optional). */
 export interface SpeakerOverrides {
   name?: string;
   jobTitle?: string;
@@ -69,8 +83,25 @@ export interface SpeakerActivity {
 }
 
 /*
+ * Where a new card is made: in the organisation that runs `slug`, and —
+ * when `listOn` — listed on that conference by hand as well (the roster
+ * page adds that way; an activity does not need to, it names the speaker).
+ * `force` makes a second card even when one by the same name exists; by
+ * default the existing card is returned instead.
+ */
+export interface SpeakerPlacement {
+  slug: string;
+  listOn?: boolean;
+  force?: boolean;
+}
+
+/*
  * Speakers live behind this contract. Resolution (account defaults +
  * overrides) happens inside the repository, mirroring toOpeningSpeakers.
+ *
+ * A speaker is one card in the organisation's library. A conference's
+ * roster is read, not stored: the speakers its standing activities name,
+ * and those listed on it by hand.
  */
 export interface SpeakerRepository {
   /*
@@ -83,28 +114,48 @@ export interface SpeakerRepository {
     locale: Locale,
     options?: { fallback?: boolean },
   ) => Promise<ResolvedSpeaker[]>;
-  getById: (id: string, locale: Locale) => Promise<ResolvedSpeaker | null>;
+  /* Every card in the acting organisation, with the conferences each is on. */
+  listLibrary: (
+    locale: Locale,
+    options?: { fallback?: boolean },
+  ) => Promise<ResolvedSpeaker[]>;
+  getById: (
+    id: string,
+    locale: Locale,
+    options?: { fallback?: boolean },
+  ) => Promise<ResolvedSpeaker | null>;
   createExternal: (
-    slug: string,
     input: ExternalSpeakerInput,
     locale: Locale,
+    placement: SpeakerPlacement,
   ) => Promise<ResolvedSpeaker>;
   createLinked: (
-    slug: string,
     accountId: string,
     overrides: SpeakerOverrides,
     locale: Locale,
+    placement: SpeakerPlacement,
   ) => Promise<ResolvedSpeaker>;
   update: (
     id: string,
     input: SpeakerOverrides,
     locale: Locale,
   ) => Promise<ResolvedSpeaker | null>;
-  /* Takes one voice off the roster; the account behind it is untouched. */
+  /* Lists a speaker on a conference by hand, or takes that listing off. */
+  setListed: (id: string, slug: string, listed: boolean) => Promise<boolean>;
+  /*
+   * Two cards that are one person, made one: `keep` takes the other's
+   * activities, conferences, and any words, picture or link it lacked,
+   * and the other card is deleted. Refused (null) for two different
+   * accounts.
+   */
+  merge: (keepId: string, foldId: string) => Promise<ResolvedSpeaker | null>;
+  /* Deletes the card itself; the account behind it is untouched. */
   remove: (id: string) => Promise<boolean>;
   listCandidates: (locale: Locale) => Promise<SpeakerCandidate[]>;
+  /* The activities a speaker leads — in one conference, when `slug` is given. */
   activitiesForSpeaker: (
     speakerId: string,
     locale: Locale,
+    slug?: string,
   ) => Promise<SpeakerActivity[]>;
 }

@@ -693,6 +693,23 @@ main [id] {
   --l-bronze-on-navy: var(--nt-accent-on-dark);
 }
 /*
+ * The Lounge in the site's own colours: the forest green where it drew
+ * navy, the programme's green where it drew bronze, the programme's
+ * ground beneath. The warm orange stays — on the site it is the accent
+ * too. Worn by the personal area (the Lounge, the profile, a chat), so a
+ * participant who steps in from the programme sees one organisation.
+ */
+.lounge--site {
+  --l-bg: var(--nt-programme-bg);
+  --l-ink: var(--nt-programme-ink);
+  --l-soft: var(--nt-programme-ink-soft);
+  --l-faint: var(--nt-programme-ink-faint);
+  --l-hair: var(--nt-programme-line);
+  --l-bronze: var(--nt-green-deep);
+  --l-navy: var(--nt-forest);
+  --l-navy-soft: var(--nt-green-deeper);
+}
+/*
  * The Community — the conference's own small social network. Same warm
  * daylight family as the Lounge, deepened: an indigo night for the
  * entrance, and four quiet accent tones that each MEAN something on a

@@ -506,7 +506,7 @@ export interface Participant {
    */
   interests?: string | null;
   /**
-   * One line — the role and organisation as they say it
+   * One line — the role and organization as they say it
    */
   headline?: string | null;
   bio?: string | null;
@@ -536,9 +536,12 @@ export interface Participant {
 export interface Speaker {
   id: number;
   organization: number | Organization;
-  event?: (number | null) | Event;
   /**
-   * Link an existing נטעים account. Its profile fills the details below; leave any field empty to inherit, or fill it to override for this conference.
+   * Conferences that list this speaker even without an activity. A speaker on an activity appears on that conference anyway.
+   */
+  events?: (number | Event)[] | null;
+  /**
+   * Link an existing נטעים account. Its profile fills the details below; leave any field empty to inherit, or fill it to override.
    */
   account?: (number | null) | Participant;
   /**
@@ -878,7 +881,7 @@ export interface Session {
   translated?: boolean | null;
   languageNote?: string | null;
   /**
-   * Registrants choose the language they want from the languages above; the organiser decides from the tally.
+   * Registrants choose the language they want from the languages above; the organizer decides from the tally.
    */
   languageVote?: boolean | null;
   /**
@@ -1398,7 +1401,7 @@ export interface ScenesSelect<T extends boolean = true> {
  */
 export interface SpeakersSelect<T extends boolean = true> {
   organization?: T;
-  event?: T;
+  events?: T;
   account?: T;
   name?: T;
   jobTitle?: T;
@@ -1948,7 +1951,7 @@ export interface OpeningPage {
 export interface Site {
   id: number;
   /**
-   * The conference the front door points at: the site landing, the site chrome, the personal area and the Studio default. The programme, speakers and information pages are named in the address and no longer follow this pointer.
+   * The conference the front door points at: the site landing, the site chrome, the personal area and the Studio default. The program, speakers and information pages are named in the address and no longer follow this pointer.
    */
   activeConference?: (number | null) | Event;
   /**

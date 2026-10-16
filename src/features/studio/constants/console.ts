@@ -362,6 +362,7 @@ export const CONSOLE_UI = {
   groupWorkspace: { he: 'סביבת עבודה', en: 'WORKSPACE' },
   groupOrg: { he: 'הארגון', en: 'ORGANIZATION' },
   media: { he: 'ספריית מדיה', en: 'Media Library' },
+  speakerLibrary: { he: 'מאגר הדוברים', en: 'Speaker library' },
   communications: { he: 'התראות', en: 'Notifications' },
   insights: { he: 'מידע כנסים', en: 'Conference info' },
   history: { he: 'יומן פעולות', en: 'Audit log' },

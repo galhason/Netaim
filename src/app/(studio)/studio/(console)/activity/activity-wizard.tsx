@@ -72,6 +72,8 @@ interface Props {
   locale: Locale;
   slug: string;
   candidates: SpeakerCandidate[];
+  /* Every card in the organisation's speaker library, to pick from by name. */
+  speakerLibrary: ResolvedSpeaker[];
   /* Everything already uploaded, so a cover can be reused, not re-uploaded. */
   library?: MediaOption[];
   initial?: WizardInitial;
@@ -379,6 +381,7 @@ const ActivityWizard = ({
   locale,
   slug,
   candidates,
+  speakerLibrary,
   library = [],
   initial,
 }: Props) => {
@@ -650,6 +653,7 @@ const ActivityWizard = ({
               slug={slug}
               locale={locale}
               candidates={candidates}
+              library={speakerLibrary}
               initial={initial?.speakers}
               onCountChange={setSpeakerCount}
             />

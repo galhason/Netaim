@@ -365,7 +365,7 @@ const MessagesPage = async ({ params, searchParams }: MessagesPageProps) => {
   );
 
   return (
-    <div className="experience min-h-dvh overflow-x-clip bg-[var(--x-bg)] text-[var(--x-ink)]">
+    <div className="experience experience--programme min-h-dvh overflow-x-clip bg-[var(--x-bg)] text-[var(--x-ink)]">
       {/* The site's one navigation — the conference bar every page wears. */}
       <ConferenceBar
         locale={locale}
@@ -383,10 +383,10 @@ const MessagesPage = async ({ params, searchParams }: MessagesPageProps) => {
         <header className="relative flex items-start gap-4 md:gap-5">
           <BellMark />
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--x-primary)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--nt-orange)]">
               {t(COPY.eyebrow)}
             </p>
-            <h1 className="mt-1 font-display text-[2rem] font-extrabold leading-[1.1] tracking-tight text-[var(--x-ink)] md:text-[2.6rem]">
+            <h1 className="mt-1 font-display text-[2rem] font-extrabold leading-[1.1] tracking-tight text-[var(--x-primary)] md:text-[2.6rem]">
               {t(COPY.title)}
             </h1>
             <p className="mt-2 text-[15px] leading-relaxed text-[var(--x-soft)] md:text-[17px]">

@@ -29,8 +29,9 @@ const TYPE_LABELS: Record<string, Record<Locale, string>> = {
 
 /*
  * A speaker's public page — their identity resolved live from their
- * account (or the conference's own external details), and every activity
- * they lead, drawn from the reverse of the session↔speaker relationship.
+ * account (or the library card's own external details), and every
+ * activity they lead at this conference, drawn from the reverse of the
+ * session↔speaker relationship.
  * No links are authored by hand; the profile knows its sessions.
  */
 const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
@@ -50,7 +51,8 @@ const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
   if (!speaker) {
     notFound();
   }
-  const activities = await activitiesForSpeaker(id, lang).catch(() => []);
+  /* This conference's activities only: one speaker is one card across conferences. */
+  const activities = await activitiesForSpeaker(id, lang, slug).catch(() => []);
   const role = [speaker.jobTitle, speaker.company].filter(Boolean).join(' · ');
 
   return (

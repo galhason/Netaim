@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /*
  * When an activity changes its hour or room, or is cancelled, the people
@@ -42,6 +42,16 @@ const before = { startsAt: '2026-10-20T09:00:00.000Z', endsAt: '2026-10-20T10:00
 const titles = { he: 'סדנת AI', en: 'AI workshop' };
 
 describe('an email when the activity moves', () => {
+  /*
+   * The first import of these services builds a large module graph. Done
+   * inside a test it ran against the five-second test limit and, with every
+   * file running at once, sometimes lost; loaded here, the tests time only
+   * what they check.
+   */
+  beforeAll(async () => {
+    await Promise.all([notices(), service()]);
+  }, 60_000);
+
   beforeEach(() => {
     state.registrants = ['p1', 'p2', 'p3', 'p4'];
     state.people = [

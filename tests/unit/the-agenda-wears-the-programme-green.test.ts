@@ -146,3 +146,36 @@ describe('my schedule wears the programme green too', () => {
     }
   });
 });
+
+/*
+ * The personal area wears the site's green as well: the Lounge, the
+ * profile and a chat thread through `lounge--site`, the notification
+ * centre through the programme scope.
+ */
+describe('the personal area wears the site green', () => {
+  const lounge = block('.lounge--site');
+
+  it('draws forest where the Lounge drew navy, and green where it drew bronze', () => {
+    expect(value(lounge, '--l-navy')).toBe('var(--nt-forest)');
+    expect(value(lounge, '--l-bronze')).toBe('var(--nt-green-deep)');
+    expect(value(lounge, '--l-bg')).toBe('var(--nt-programme-bg)');
+  });
+
+  it('is worn by the Lounge, the profile, a chat thread and the notification centre', () => {
+    for (const [file, cls] of [
+      ['src/features/attendee/components/lounge/lounge-view.tsx', 'lounge lounge--site'],
+      ['src/app/(frontend)/[locale]/me/page.tsx', 'lounge lounge--site'],
+      ['src/app/(frontend)/[locale]/me/profile/page.tsx', 'lounge lounge--site'],
+      ['src/app/(frontend)/[locale]/me/chat/[connectionId]/page.tsx', 'lounge lounge--site'],
+      ['src/app/(frontend)/[locale]/me/messages/page.tsx', 'experience experience--programme'],
+    ] as const) {
+      expect(read(file), file).toContain(cls);
+    }
+  });
+
+  it('tints its veils from the scope, not from navy by value', () => {
+    for (const file of ['src/features/attendee/components/lounge/lounge-view.tsx', 'src/app/(frontend)/[locale]/me/page.tsx']) {
+      expect(read(file), file).not.toMatch(/(from|via|to)-\[rgba\(11,27,51/);
+    }
+  });
+});

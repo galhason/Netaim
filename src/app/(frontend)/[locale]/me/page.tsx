@@ -437,7 +437,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
   return (
     <main
       id="main-content"
-      className="lounge relative min-h-dvh bg-[var(--l-bg)] font-body text-[var(--l-ink)]"
+      className="lounge lounge--site relative min-h-dvh bg-[var(--l-bg)] font-body text-[var(--l-ink)]"
     >
       <div className="relative h-56 md:h-64">
         <Atmosphere />
@@ -526,7 +526,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
                       />
                       <span
                         aria-hidden="true"
-                        className="absolute inset-0 bg-gradient-to-t from-[rgba(11,27,51,0.55)] to-transparent"
+                        className="absolute inset-0 bg-gradient-to-t from-[color-mix(in_srgb,var(--l-navy)_55%,transparent)] to-transparent"
                       />
                       {conference.status ? (
                         <span className="absolute end-4 top-4 inline-flex items-center rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-[var(--l-bronze)] backdrop-blur-sm">
@@ -595,7 +595,7 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
                       />
                       <span
                         aria-hidden="true"
-                        className="absolute inset-0 bg-gradient-to-t from-[rgba(11,27,51,0.55)] to-transparent"
+                        className="absolute inset-0 bg-gradient-to-t from-[color-mix(in_srgb,var(--l-navy)_55%,transparent)] to-transparent"
                       />
                     </span>
                     <div className="flex flex-1 flex-col p-5">

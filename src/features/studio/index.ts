@@ -78,6 +78,8 @@ export { default as CanvasSelectBridge } from './components/console/canvas-selec
 export { default as WhenField } from './components/console/when-field';
 export { default as AccountCombobox } from './components/console/account-combobox';
 export type { AccountOption } from './components/console/account-combobox';
+export { default as SpeakerWordsFields } from './components/console/speaker-words';
+export type { SpeakerWordValues } from './components/console/speaker-words';
 export {
   CTextField,
   CTextAreaField,

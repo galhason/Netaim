@@ -9,6 +9,7 @@ import type {
 } from '@/features/marketing';
 import type { Media } from '@/payload-types';
 import { resolveSpeakerIdentity } from '@/features/speakers/services/speaker-identity';
+import { conferenceRoster } from './payload-speaker-roster';
 import { getSystemPayload } from './payload-context';
 import { payloadGalleryEntriesOfEvent } from './payload-gallery';
 
@@ -225,10 +226,12 @@ export const payloadMarketingRepository: MarketingRepository = {
 
   speakersOfEvent: async (eventId: string, locale: Locale) => {
     const payload = await getSystemPayload();
+    /* The conference's roster: who its activities name, and who it lists by hand. */
+    const roster = await conferenceRoster(payload, eventId);
     const result = await payload.find({
       collection: 'speakers',
       locale,
-      where: { event: { equals: eventId } },
+      where: roster.where,
       /*
        * Two, not one: the linked account is one hop away and its photo is
        * two. At depth 1 the account arrives but its photo is a bare id,

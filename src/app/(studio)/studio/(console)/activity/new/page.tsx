@@ -5,7 +5,7 @@ import {
   getStudioLocale as localeOf,
 } from '@/features/studio';
 import { getActiveConferenceSlug, listMedia } from '@/features/events';
-import { listSpeakerCandidates } from '@/features/speakers';
+import { listSpeakerCandidates, listSpeakerLibrary } from '@/features/speakers';
 import ActivityWizard from '../activity-wizard';
 import { BackToActivities } from '../activity-manager';
 
@@ -22,9 +22,10 @@ const NewActivityPage = async () => {
   if (!slug) {
     redirect('/studio/activity');
   }
-  const [candidates, media] = await Promise.all([
+  const [candidates, media, speakerLibrary] = await Promise.all([
     listSpeakerCandidates(locale).catch(() => []),
     listMedia().catch(() => []),
+    listSpeakerLibrary(locale).catch(() => []),
   ]);
   const library = media.map((item) => ({
     id: item.id,
@@ -43,6 +44,7 @@ const NewActivityPage = async () => {
         locale={locale}
         slug={slug}
         candidates={candidates}
+        speakerLibrary={speakerLibrary}
         library={library}
       />
     </ConsoleShell>

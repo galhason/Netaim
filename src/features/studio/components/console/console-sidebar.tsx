@@ -44,6 +44,7 @@ const buildGroups = (
     items: [
       { href: '/studio', label: CONSOLE_UI.experiences[locale] },
       { href: '/studio/media', label: CONSOLE_UI.media[locale], needs: ['activities:manage', 'events:manage'] },
+      { href: '/studio/speakers', label: CONSOLE_UI.speakerLibrary[locale], needs: ['activities:manage', 'events:manage'] },
       { href: '/studio/people', label: CONSOLE_UI.peopleTitle[locale], needs: 'access:manage' },
       { href: '/studio/participants', label: CONSOLE_UI.participantsTitle[locale], needs: 'participants:read' },
       { href: '/studio/logistics', label: CONSOLE_UI.logisticsTitle[locale], needs: 'logistics:read' },

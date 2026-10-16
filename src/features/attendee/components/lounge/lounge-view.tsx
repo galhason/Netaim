@@ -159,7 +159,7 @@ const SessionTile = ({
           />
           <span
             aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-t from-[rgba(11,27,51,0.6)] to-transparent"
+            className="absolute inset-0 bg-gradient-to-t from-[color-mix(in_srgb,var(--l-navy)_60%,transparent)] to-transparent"
           />
           {typeLabel ? (
             <span className="absolute bottom-3 start-3 inline-flex items-center rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-medium text-[var(--l-navy)] backdrop-blur-sm">
@@ -379,7 +379,7 @@ const LoungeView = ({
   ];
 
   return (
-    <div className="lounge grid min-h-dvh bg-[var(--l-bg)] font-body text-[var(--l-ink)] lg:grid-cols-[232px_1fr]">
+    <div className="lounge lounge--site grid min-h-dvh bg-[var(--l-bg)] font-body text-[var(--l-ink)] lg:grid-cols-[232px_1fr]">
       {siteNav ? <div className="col-span-full">{siteNav}</div> : null}
       <aside
         className="sticky top-0 hidden h-dvh flex-col bg-white/70 p-4 backdrop-blur-sm lg:flex"
@@ -472,7 +472,7 @@ const LoungeView = ({
             ) : null}
             <span
               aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-b from-[rgba(11,27,51,0.6)] via-[rgba(11,27,51,0.3)] to-[var(--l-bg)]"
+              className="absolute inset-0 bg-gradient-to-b from-[color-mix(in_srgb,var(--l-navy)_60%,transparent)] via-[color-mix(in_srgb,var(--l-navy)_30%,transparent)] to-[var(--l-bg)]"
             />
           </div>
           <div
@@ -836,7 +836,7 @@ const LoungeView = ({
                 <li key={update.id} className="flex gap-3">
                   <span
                     aria-hidden="true"
-                    className="mt-1 size-9 flex-none rounded-xl bg-gradient-to-br from-[var(--nt-dark-raise)] to-[var(--nt-dark)]"
+                    className="mt-1 size-9 flex-none rounded-xl bg-gradient-to-br from-[var(--l-navy-soft)] to-[var(--l-navy)]"
                   />
                   <span className="min-w-0">
                     <span className="block text-sm font-medium">{update.title}</span>
@@ -895,7 +895,7 @@ const LoungeView = ({
                   {sessionsSection.programHref ? (
                     <Link
                       href={sessionsSection.programHref}
-                      className="mt-3 inline-flex min-h-10 items-center rounded-xl bg-[var(--l-navy)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--nt-dark)]"
+                      className="mt-3 inline-flex min-h-10 items-center rounded-xl bg-[var(--l-navy)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--l-navy-soft)]"
                     >
                       {LOUNGE_UI.browseProgram[locale]}
                     </Link>
@@ -973,7 +973,7 @@ const LoungeView = ({
                       sizes="176px"
                       className="object-cover opacity-70 transition-transform duration-500 group-hover:scale-105"
                     />
-                    <span className="absolute inset-0 bg-gradient-to-t from-[rgba(11,27,51,0.8)] to-transparent" />
+                    <span className="absolute inset-0 bg-gradient-to-t from-[color-mix(in_srgb,var(--l-navy)_80%,transparent)] to-transparent" />
                     <span className="absolute inset-x-0 bottom-0 p-3.5 text-white">
                       <span className="block text-sm font-semibold leading-snug">
                         &ldquo;{LOUNGE_UI.waitingForYou[locale]}&rdquo;

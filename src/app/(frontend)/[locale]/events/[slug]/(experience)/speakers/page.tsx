@@ -38,7 +38,7 @@ const SpeakersPage = async ({ params }: SpeakersPageProps) => {
 
   const everyone = await Promise.all(
     roster.map(async (speaker) => {
-      const sessions = await activitiesForSpeaker(speaker.id, lang).catch(
+      const sessions = await activitiesForSpeaker(speaker.id, lang, slug).catch(
         () => [],
       );
       return { speaker, sessions };

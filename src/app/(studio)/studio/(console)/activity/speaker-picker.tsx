@@ -3,12 +3,15 @@
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import type { Locale } from '@/config/locales';
 import type { ResolvedSpeaker, SpeakerCandidate } from '@/features/speakers';
+import { likelySameSpeaker } from '@/features/speakers/utils/speaker-names';
 import { createSpeakerAction, speakerWordsAction, updateSpeakerAction, type SpeakerWords } from './actions';
 
 interface Props {
   slug: string;
   locale: Locale;
   candidates: SpeakerCandidate[];
+  /* The organisation's speaker library: every card, whichever conference it spoke at. */
+  library: ResolvedSpeaker[];
   initial?: ResolvedSpeaker[];
   onCountChange?: (count: number) => void;
 }
@@ -16,8 +19,25 @@ interface Props {
 const T = (locale: Locale) => ({
   lead:
     locale === 'he'
-      ? 'הוסיפו דובר אחד או יותר. בחרו משתמש קיים במערכת, או צרו דובר חיצוני.'
-      : 'Add one or more speakers. Pick an existing user, or create an external speaker.',
+      ? 'הוסיפו דובר אחד או יותר: חפשו לפי שם — משתמשים רשומים ודוברים חיצוניים שכבר במאגר — או צרו דובר חיצוני חדש.'
+      : 'Add one or more speakers: search by name — registered users and external speakers already in the library — or create a new external speaker.',
+  searchAll: locale === 'he' ? 'חיפוש דובר לפי שם, תפקיד או ארגון…' : 'Search a speaker by name, role or organization…',
+  typeToSearch:
+    locale === 'he'
+      ? 'התחילו להקליד שם — המאגר כולל את כל הדוברים מכל הכנסים.'
+      : 'Start typing a name — the library holds every speaker from every conference.',
+  groupRegistered: locale === 'he' ? 'משתמשים רשומים' : 'Registered users',
+  groupExternal: locale === 'he' ? 'דוברים חיצוניים במאגר' : 'External speakers in the library',
+  noneInGroup: locale === 'he' ? 'אין התאמות.' : 'No matches.',
+  alsoAt: locale === 'he' ? 'מופיע/ה ב:' : 'Appears at:',
+  newExternal: locale === 'he' ? '+ דובר/ת חיצוני/ת חדש/ה' : '+ New external speaker',
+  back: locale === 'he' ? 'חזרה לחיפוש' : 'Back to search',
+  lookalike:
+    locale === 'he'
+      ? 'כבר יש במאגר דובר/ת בשם דומה. אם זה אותו אדם — בחרו אותו/ה, כדי שלא ייווצר כרטיס כפול:'
+      : 'The library already holds a speaker with a similar name. If it is the same person, pick them, so no duplicate card is made:',
+  pickThis: locale === 'he' ? 'בחירה' : 'Pick',
+  createAnyway: locale === 'he' ? 'ליצור כרטיס חדש בכל זאת' : 'Create a new card anyway',
   add: locale === 'he' ? 'הוספת דובר' : 'Add speaker',
   tabUser: locale === 'he' ? 'משתמש קיים' : 'Existing user',
   tabExternal: locale === 'he' ? 'דובר חיצוני' : 'External speaker',
@@ -267,23 +287,37 @@ const SpeakerEditor = ({
   );
 };
 
+/* One row of a search result, whatever it came from. */
+interface Offer {
+  key: string;
+  name: string;
+  sub: string;
+  photoUrl?: string;
+  conferences?: string;
+  pick: () => void;
+}
+
+const matchesQuery = (q: string, ...values: (string | undefined)[]): boolean =>
+  values.some((value) => (value ?? '').toLowerCase().includes(q));
+
 const SpeakerPicker = ({
   slug,
   locale,
   candidates,
+  library,
   initial = [],
   onCountChange,
 }: Props) => {
   const t = T(locale);
   const [selected, setSelected] = useState<ResolvedSpeaker[]>(initial);
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<'user' | 'external'>('user');
+  const [mode, setMode] = useState<'search' | 'new'>('search');
   const [query, setQuery] = useState('');
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState('');
   const [editing, setEditing] = useState<string | null>(null);
 
-  // external form
+  // new external speaker
   const [name, setName] = useState('');
   const [jobTitle, setJobTitle] = useState('');
   const [company, setCompany] = useState('');
@@ -292,24 +326,16 @@ const SpeakerPicker = ({
 
   useEffect(() => onCountChange?.(selected.length), [selected, onCountChange]);
 
+  const selectedIds = useMemo(() => new Set(selected.map((s) => s.id)), [selected]);
   const selectedAccountIds = useMemo(
     () => new Set(selected.map((s) => s.accountId).filter(Boolean)),
     [selected],
   );
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return candidates
-      .filter((c) => !selectedAccountIds.has(c.accountId))
-      .filter(
-        (c) =>
-          q === '' ||
-          c.name.toLowerCase().includes(q) ||
-          (c.company ?? '').toLowerCase().includes(q) ||
-          (c.jobTitle ?? '').toLowerCase().includes(q),
-      )
-      .slice(0, 30);
-  }, [candidates, query, selectedAccountIds]);
+  /* An account that already has a card is offered as that card, never twice. */
+  const cardByAccount = useMemo(
+    () => new Map(library.filter((card) => card.accountId).map((card) => [card.accountId!, card])),
+    [library],
+  );
 
   const add = (speaker: ResolvedSpeaker | null) => {
     if (!speaker) {
@@ -319,6 +345,18 @@ const SpeakerPicker = ({
     setSelected((prev) =>
       prev.some((s) => s.id === speaker.id) ? prev : [...prev, speaker],
     );
+  };
+
+  const close = () => {
+    setOpen(false);
+    setMode('search');
+    setQuery('');
+    setError('');
+  };
+
+  const pickCard = (card: ResolvedSpeaker) => {
+    add(card);
+    close();
   };
 
   const pickUser = (candidate: SpeakerCandidate) => {
@@ -331,10 +369,62 @@ const SpeakerPicker = ({
         accountId: candidate.accountId,
       });
       add(speaker);
+      if (speaker) close();
     });
   };
 
-  const createExternal = () => {
+  const conferencesOf = (card: ResolvedSpeaker): string | undefined =>
+    (card.conferences ?? []).length > 0
+      ? `${t.alsoAt} ${(card.conferences ?? []).map((conference) => conference.title).join(', ')}`
+      : undefined;
+
+  const offers = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (q === '') {
+      return { registered: [] as Offer[], external: [] as Offer[] };
+    }
+    const cardOffer = (card: ResolvedSpeaker): Offer => ({
+      key: `card-${card.id}`,
+      name: card.name,
+      sub: subtitle(card),
+      photoUrl: card.photoUrl,
+      conferences: conferencesOf(card),
+      pick: () => pickCard(card),
+    });
+    const registered: Offer[] = [
+      ...library
+        .filter((card) => card.isRegistered && !selectedIds.has(card.id))
+        .filter((card) => matchesQuery(q, card.name, card.jobTitle, card.company))
+        .map(cardOffer),
+      ...candidates
+        .filter((c) => !cardByAccount.has(c.accountId) && !selectedAccountIds.has(c.accountId))
+        .filter((c) => matchesQuery(q, c.name, c.jobTitle, c.company))
+        .map((c) => ({
+          key: `account-${c.accountId}`,
+          name: c.name,
+          sub: subtitle(c),
+          photoUrl: c.photoUrl,
+          pick: () => pickUser(c),
+        })),
+    ].slice(0, 15);
+    const external = library
+      .filter((card) => !card.isRegistered && !selectedIds.has(card.id))
+      .filter((card) => matchesQuery(q, card.name, card.jobTitle, card.company))
+      .map(cardOffer)
+      .slice(0, 15);
+    return { registered, external };
+    // pickCard / pickUser / conferencesOf only read state through setters and props
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, library, candidates, selectedIds, selectedAccountIds, cardByAccount]);
+
+  /* Cards that may already be the person about to be created. */
+  const lookalikes = useMemo(() => {
+    const key = likelySameSpeaker(name);
+    if (key.length < 2) return [];
+    return library.filter((card) => !selectedIds.has(card.id) && likelySameSpeaker(card.name) === key);
+  }, [name, library, selectedIds]);
+
+  const createExternal = (force: boolean) => {
     if (!name.trim()) return;
     setError('');
     startTransition(async () => {
@@ -347,6 +437,7 @@ const SpeakerPicker = ({
         company,
         bio,
         socialLinks: link.trim() ? [{ url: link.trim() }] : undefined,
+        force,
       });
       add(speaker);
       if (speaker) {
@@ -355,7 +446,7 @@ const SpeakerPicker = ({
         setCompany('');
         setBio('');
         setLink('');
-        setOpen(false);
+        close();
       }
     });
   };
@@ -367,6 +458,37 @@ const SpeakerPicker = ({
     setSelected((prev) => prev.map((s) => (s.id === speaker.id ? speaker : s)));
     setEditing(null);
   };
+
+  const offerList = (title: string, items: Offer[]) => (
+    <div>
+      <p className="px-2 pb-1 text-[11px] font-semibold tracking-[0.06em] text-[var(--c-text-faint)]">{title}</p>
+      {items.length === 0 ? (
+        <p className="px-2 py-2 text-xs text-[var(--c-text-faint)]">{t.noneInGroup}</p>
+      ) : (
+        <ul>
+          {items.map((offer) => (
+            <li key={offer.key}>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={offer.pick}
+                className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-start hover:bg-[rgba(255,255,255,0.04)] disabled:opacity-50"
+              >
+                <Avatar url={offer.photoUrl} name={offer.name} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-[var(--c-text)]">{offer.name}</span>
+                  {offer.sub ? <span className="block truncate text-xs text-[var(--c-text-soft)]">{offer.sub}</span> : null}
+                  {offer.conferences ? (
+                    <span className="block truncate text-[11px] text-[var(--c-text-faint)]">{offer.conferences}</span>
+                  ) : null}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -445,66 +567,42 @@ const SpeakerPicker = ({
         </button>
       ) : (
         <div className="rounded-xl border border-[var(--c-line)] bg-[rgba(255,255,255,0.02)] p-3">
-          {/* Tabs */}
-          <div className="mb-3 flex gap-1 rounded-lg bg-[rgba(7,19,36,0.5)] p-1 text-sm">
-            {(['user', 'external'] as const).map((key) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setTab(key)}
-                className={`flex-1 rounded-md px-3 py-1.5 transition-colors ${
-                  tab === key
-                    ? 'bg-[var(--c-bronze)] font-medium text-[var(--c-on-accent)]'
-                    : 'text-[var(--c-text-soft)] hover:text-[var(--c-text)]'
-                }`}
-              >
-                {key === 'user' ? t.tabUser : t.tabExternal}
-              </button>
-            ))}
-          </div>
-
-          {tab === 'user' ? (
-            <div className="flex flex-col gap-2">
+          {mode === 'search' ? (
+            <div className="flex flex-col gap-3">
               <input
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder={t.search}
+                placeholder={t.searchAll}
                 className={field}
               />
-              <ul className="max-h-64 overflow-y-auto">
-                {filtered.length === 0 ? (
-                  <li className="px-2 py-6 text-center text-sm text-[var(--c-text-faint)]">
-                    {t.noMatches}
-                  </li>
-                ) : (
-                  filtered.map((c) => (
-                    <li key={c.accountId}>
-                      <button
-                        type="button"
-                        disabled={pending}
-                        onClick={() => pickUser(c)}
-                        className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-start hover:bg-[rgba(255,255,255,0.04)] disabled:opacity-50"
-                      >
-                        <Avatar url={c.photoUrl} name={c.name} />
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-medium text-[var(--c-text)]">
-                            {c.name}
-                          </span>
-                          {subtitle(c) ? (
-                            <span className="block truncate text-xs text-[var(--c-text-soft)]">
-                              {subtitle(c)}
-                            </span>
-                          ) : null}
-                        </span>
-                        <span aria-hidden="true" className="text-xs">
-                          🟢
-                        </span>
-                      </button>
-                    </li>
-                  ))
-                )}
-              </ul>
+              {query.trim() === '' ? (
+                <p className="px-2 py-2 text-xs text-[var(--c-text-faint)]">{t.typeToSearch}</p>
+              ) : (
+                <div className="grid max-h-80 gap-3 overflow-y-auto sm:grid-cols-2">
+                  {offerList(t.groupRegistered, offers.registered)}
+                  {offerList(t.groupExternal, offers.external)}
+                </div>
+              )}
+              <div className="flex flex-wrap items-center gap-2 border-t border-[var(--c-line)] pt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setName(query.trim());
+                    setMode('new');
+                  }}
+                  className="rounded-lg border border-[var(--c-line)] px-3 py-1.5 text-sm text-[var(--c-text)] hover:border-[var(--c-bronze)]"
+                >
+                  {t.newExternal}
+                </button>
+                <button
+                  type="button"
+                  onClick={close}
+                  className="rounded-lg px-3 py-1.5 text-sm text-[var(--c-text-soft)] hover:text-[var(--c-text)]"
+                >
+                  {t.cancel}
+                </button>
+              </div>
             </div>
           ) : (
             <div className="flex flex-col gap-2.5">
@@ -515,6 +613,31 @@ const SpeakerPicker = ({
                 placeholder={t.fName}
                 className={field}
               />
+              {lookalikes.length > 0 ? (
+                <div className="rounded-lg border border-[var(--c-bronze)]/50 bg-[var(--c-bronze)]/5 p-2.5">
+                  <p className="mb-2 text-xs text-[var(--c-text)]">{t.lookalike}</p>
+                  <ul className="flex flex-col gap-1.5">
+                    {lookalikes.map((card) => (
+                      <li key={card.id} className="flex items-center gap-3">
+                        <Avatar url={card.photoUrl} name={card.name} size={28} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm text-[var(--c-text)]">{card.name}</span>
+                          {conferencesOf(card) ? (
+                            <span className="block truncate text-[11px] text-[var(--c-text-faint)]">{conferencesOf(card)}</span>
+                          ) : null}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => pickCard(card)}
+                          className="rounded-md bg-[var(--c-bronze)] px-3 py-1 text-xs font-medium text-[var(--c-on-accent)]"
+                        >
+                          {t.pickThis}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
               <div className="grid gap-2.5 sm:grid-cols-2">
                 <input
                   value={jobTitle}
@@ -542,21 +665,25 @@ const SpeakerPicker = ({
                 placeholder={t.fLink}
                 className={field}
               />
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   disabled={pending || !name.trim()}
-                  onClick={createExternal}
-                  className="rounded-lg bg-[var(--c-bronze)] px-4 py-1.5 text-sm font-medium text-[var(--c-on-accent)] disabled:opacity-40"
+                  onClick={() => createExternal(lookalikes.length > 0)}
+                  className={
+                    lookalikes.length > 0
+                      ? 'rounded-lg border border-[var(--c-line-strong)] px-4 py-1.5 text-sm text-[var(--c-text)] disabled:opacity-40'
+                      : 'rounded-lg bg-[var(--c-bronze)] px-4 py-1.5 text-sm font-medium text-[var(--c-on-accent)] disabled:opacity-40'
+                  }
                 >
-                  {t.create}
+                  {lookalikes.length > 0 ? t.createAnyway : t.create}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setOpen(false)}
+                  onClick={() => setMode('search')}
                   className="rounded-lg px-3 py-1.5 text-sm text-[var(--c-text-soft)] hover:text-[var(--c-text)]"
                 >
-                  {t.cancel}
+                  {t.back}
                 </button>
               </div>
             </div>

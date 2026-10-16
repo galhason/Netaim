@@ -2,15 +2,20 @@ import type { CollectionConfig } from 'payload';
 import { orgContentAccess } from '../access-presets';
 
 /*
- * A Speaker is one conference's roster entry for a voice on stage. It is
- * hybrid by design: it may LINK an existing platform account (a
- * participant) and lend that account's identity live, or it may hold its
- * own EXTERNAL details for a guest with no Netaim account. When an account
- * is linked, the manual fields act as per-conference overrides — the same
- * account-or-manual pattern the opening speakers already use — so a
- * profile edit propagates to every activity without touching the speaker.
- * Sessions reference speakers many-to-many; a speaker's activities are the
- * reverse of that relationship, so future Speaker Pages need no new links.
+ * A Speaker is one person in the organisation's speaker library — one
+ * card, whichever conferences they speak at. It is hybrid by design: it
+ * may LINK an existing platform account (a participant) and lend that
+ * account's identity live, or it may hold its own EXTERNAL details for a
+ * guest with no Netaim account. When an account is linked, the manual
+ * fields act as overrides — the same account-or-manual pattern the
+ * opening speakers already use — so a profile edit propagates to every
+ * activity without touching the speaker.
+ *
+ * A conference's speakers are not stored on the speaker: they are
+ * everyone its activities name, read from the sessions, plus the few
+ * listed on it by hand (`events`) — a keynote whose slot is not set yet.
+ * So one person is one card in every conference, and taking a speaker
+ * off every activity takes them off that conference's page.
  */
 export const Speakers: CollectionConfig = {
   slug: 'speakers',
@@ -29,13 +34,17 @@ export const Speakers: CollectionConfig = {
       index: true,
     },
     {
-      /* The conference this roster entry belongs to. External speakers
-       * live only inside their conference; a linked account may appear as
-       * a separate roster entry in each conference it speaks at. */
-      name: 'event',
+      /* Conferences that list this speaker by hand, beyond the activities
+       * that name them — a speaker whose slot is not set yet. A speaker
+       * on an activity needs no entry here to be on that conference's
+       * page. */
+      name: 'events',
       type: 'relationship',
       relationTo: 'events',
-      index: true,
+      hasMany: true,
+      admin: {
+        description: 'Conferences that list this speaker even without an activity. A speaker on an activity appears on that conference anyway.',
+      },
     },
     {
       /* The link to an existing platform user. Set → Registered speaker;
@@ -46,7 +55,7 @@ export const Speakers: CollectionConfig = {
       relationTo: 'participants',
       admin: {
         description:
-          'Link an existing נטעים account. Its profile fills the details below; leave any field empty to inherit, or fill it to override for this conference.',
+          'Link an existing נטעים account. Its profile fills the details below; leave any field empty to inherit, or fill it to override.',
       },
     },
     {

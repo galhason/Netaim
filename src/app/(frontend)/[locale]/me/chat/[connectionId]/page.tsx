@@ -73,7 +73,7 @@ const ChatPage = async ({ params }: ChatPageProps) => {
     />
     <main
       id="main-content"
-      className="lounge flex min-h-dvh flex-col bg-[var(--l-bg)] font-body text-[var(--l-ink)]"
+      className="lounge lounge--site flex min-h-dvh flex-col bg-[var(--l-bg)] font-body text-[var(--l-ink)]"
     >
       <header className="sticky top-0 z-10 bg-[var(--l-navy)] text-white">
         <div className="mx-auto flex max-w-2xl items-center gap-4 px-5 py-4">

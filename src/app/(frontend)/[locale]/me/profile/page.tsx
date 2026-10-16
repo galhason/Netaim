@@ -128,7 +128,7 @@ const AccountProfilePage = async ({
     />
     <main
       id="main-content"
-      className="lounge relative min-h-dvh bg-[var(--l-bg)] font-body text-[var(--l-ink)]"
+      className="lounge lounge--site relative min-h-dvh bg-[var(--l-bg)] font-body text-[var(--l-ink)]"
     >
       <div className="relative h-56 md:h-64">
         <Atmosphere />

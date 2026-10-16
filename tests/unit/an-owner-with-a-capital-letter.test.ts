@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { principalEmail } from '@/infrastructure/payload/payload-context';
 
 /*
  * A person given a role whose address carries a capital letter.
@@ -14,8 +15,7 @@ import { describe, expect, it } from 'vitest';
 const read = (file: string): string => readFileSync(file, 'utf8');
 
 describe('the principal is found by one spelling of the address', () => {
-  it('is lowercased and trimmed', async () => {
-    const { principalEmail } = await import('@/infrastructure/payload/payload-context');
+  it('is lowercased and trimmed', () => {
     expect(principalEmail('  Gal.Hason@Example.ORG ')).toBe('gal.hason@example.org');
   });
 

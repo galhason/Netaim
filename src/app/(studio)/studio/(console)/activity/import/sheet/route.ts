@@ -8,7 +8,8 @@ import {
 } from '@/features/program';
 import {
   createExternalSpeaker,
-  listConferenceSpeakers,
+  listSpeakerLibrary,
+  sameSpeakerName,
   updateSpeaker,
 } from '@/features/speakers';
 import { authorized, getStudioLocale } from '@/features/studio';
@@ -118,29 +119,30 @@ export const POST = async (request: Request): Promise<Response> => {
    * bulk write behind its back would skip every one of them.
    */
   /*
-   * The presenters, by name. A speaker the conference already lists
-   * under this name — in either language — is linked, so a sheet
-   * uploaded twice, or two activities by one person, never doubles the
-   * roster. One not yet listed is created from the row, in Hebrew first
+   * The presenters, by name. A speaker the organisation's library already
+   * holds under this name — in either language, spacing and punctuation
+   * aside — is linked, so a sheet uploaded twice, two activities by one
+   * person, or one person at two conferences never makes a second card.
+   * One not yet in the library is created from the row, in Hebrew first
    * and English after, and remembered for the rows that follow.
    */
   const roster = new Map<string, string>();
   const remember = (name: string | undefined, id: string) => {
-    if (name) roster.set(name.trim().toLowerCase(), id);
+    const key = sameSpeakerName(name ?? '');
+    if (key && !roster.has(key)) roster.set(key, id);
   };
-  for (const speaker of await listConferenceSpeakers(slug, 'he').catch(() => [])) {
+  for (const speaker of await listSpeakerLibrary('he').catch(() => [])) {
     remember(speaker.name, speaker.id);
   }
-  for (const speaker of await listConferenceSpeakers(slug, 'en', { fallback: false }).catch(() => [])) {
-    remember(speaker.name, speaker.id);
+  for (const speaker of await listSpeakerLibrary('en', { fallback: false }).catch(() => [])) {
+    remember(speaker.own.name, speaker.id);
   }
   const speakerIdFor = async (speaker: ImportSpeaker): Promise<string | null> => {
-    const known = roster.get(speaker.name.toLowerCase()) ?? (speaker.nameEn ? roster.get(speaker.nameEn.toLowerCase()) : undefined);
+    const known = roster.get(sameSpeakerName(speaker.name)) ?? (speaker.nameEn ? roster.get(sameSpeakerName(speaker.nameEn)) : undefined);
     if (known) {
       return known;
     }
     const made = await createExternalSpeaker(
-      slug,
       {
         name: speaker.name,
         ...(speaker.jobTitle ? { jobTitle: speaker.jobTitle } : {}),
@@ -148,6 +150,7 @@ export const POST = async (request: Request): Promise<Response> => {
         ...(speaker.bio ? { bio: speaker.bio } : {}),
       },
       'he',
+      { slug },
     ).catch(() => null);
     if (!made) {
       return null;

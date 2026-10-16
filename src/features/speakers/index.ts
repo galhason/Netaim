@@ -1,13 +1,18 @@
 export {
   listConferenceSpeakers,
+  listSpeakerLibrary,
   getSpeaker,
   createExternalSpeaker,
   createLinkedSpeaker,
   updateSpeaker,
   removeSpeaker,
+  setSpeakerListed,
+  mergeSpeakers,
+  findSpeakerLookalikes,
   listSpeakerCandidates,
   activitiesForSpeaker,
 } from './services/speaker-service';
+export { sameSpeakerName, likelySameSpeaker } from './utils/speaker-names';
 export { resolveSpeakerIdentity } from './services/speaker-identity';
 export type {
   SpeakerIdentity,
@@ -20,5 +25,7 @@ export type {
   ExternalSpeakerInput,
   SpeakerOverrides,
   SpeakerActivity,
+  SpeakerLookalikes,
+  SpeakerPlacement,
   SpeakerRepository,
 } from './types/speaker';

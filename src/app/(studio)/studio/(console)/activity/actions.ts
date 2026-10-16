@@ -23,7 +23,6 @@ import {
   createExternalSpeaker,
   createLinkedSpeaker,
   getSpeaker,
-  listConferenceSpeakers,
   updateSpeaker,
   type ResolvedSpeaker,
   type SpeakerSocialLink,
@@ -291,6 +290,8 @@ export const createSpeakerAction = async (input: {
   company?: string;
   bio?: string;
   socialLinks?: SpeakerSocialLink[];
+  /* A second card under a name the library already holds — chosen, not by accident. */
+  force?: boolean;
 }): Promise<ResolvedSpeaker | null> => {
   const { slug } = input;
   if (!slug || !(await authorized(slug))) {
@@ -302,14 +303,13 @@ export const createSpeakerAction = async (input: {
     if (!input.accountId) {
       return null;
     }
-    return createLinkedSpeaker(slug, input.accountId, {}, locale);
+    return createLinkedSpeaker(input.accountId, {}, locale, { slug });
   }
   const name = (input.name ?? '').trim();
   if (!name) {
     return null;
   }
   return createExternalSpeaker(
-    slug,
     {
       name,
       jobTitle: input.jobTitle?.trim() || undefined,
@@ -318,6 +318,7 @@ export const createSpeakerAction = async (input: {
       socialLinks: links.length > 0 ? links : undefined,
     },
     locale,
+    { slug, force: input.force === true },
   );
 };
 
@@ -349,17 +350,17 @@ export const speakerWordsAction = async (input: {
   if (!slug || !id || !(await authorized(slug))) {
     return null;
   }
-  const [he, en] = await Promise.all([
-    listConferenceSpeakers(slug, 'he', { fallback: false }),
-    listConferenceSpeakers(slug, 'en', { fallback: false }),
+  /* By the card itself: a speaker picked from the library is on no roster until the activity is saved. */
+  const [own, en] = await Promise.all([
+    getSpeaker(id, 'he', { fallback: false }),
+    getSpeaker(id, 'en', { fallback: false }),
   ]);
-  const own = he.find((speaker) => speaker.id === id);
   if (!own) {
     return null;
   }
   return {
     he: wordsOf(own),
-    en: wordsOf(en.find((speaker) => speaker.id === id)),
+    en: wordsOf(en ?? undefined),
     link: own.socialLinks[0]?.url ?? '',
   };
 };

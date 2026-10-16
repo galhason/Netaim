@@ -7,7 +7,7 @@ import {
 import { getActiveConferenceSlug, listMedia } from '@/features/events';
 import { getSessionSituation, getSessionTranslation, languageTally } from '@/features/program';
 import { ACTIVITY_LANGUAGE_LABELS } from '@/shared/constants/activity-facets';
-import { listSpeakerCandidates } from '@/features/speakers';
+import { listSpeakerCandidates, listSpeakerLibrary } from '@/features/speakers';
 import { toDateTimeInputValue } from '@/shared';
 import ActivityWizard, { type WizardInitial } from '../activity-wizard';
 import { BackToActivities } from '../activity-manager';
@@ -46,9 +46,10 @@ const EditActivityPage = async ({ params }: EditActivityPageProps) => {
     notFound();
   }
   const s = situation.session;
-  const [candidates, media] = await Promise.all([
+  const [candidates, media, speakerLibrary] = await Promise.all([
     listSpeakerCandidates(locale).catch(() => []),
     listMedia().catch(() => []),
+    listSpeakerLibrary(locale).catch(() => []),
   ]);
   const library = media.map((item) => ({
     id: item.id,
@@ -110,6 +111,7 @@ const EditActivityPage = async ({ params }: EditActivityPageProps) => {
         locale={locale}
         slug={slug}
         candidates={candidates}
+        speakerLibrary={speakerLibrary}
         library={library}
         initial={initial}
       />

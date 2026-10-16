@@ -5,9 +5,10 @@ import { redirect } from 'next/navigation';
 import type { Locale } from '@/config/locales';
 import { audit } from '@/features/access';
 import {
+  activitiesForSpeaker,
   createExternalSpeaker,
   createLinkedSpeaker,
-  removeSpeaker,
+  setSpeakerListed,
   updateSpeaker,
 } from '@/features/speakers';
 import { actorFor } from '@/features/studio/services/studio-auth';
@@ -21,6 +22,10 @@ const LOCALES: Locale[] = ['he', 'en'];
  * The words a speaker card shows are localized; the picture and the
  * account behind them are not. So a save is two writes, one per
  * language, with the picture riding the Hebrew one.
+ *
+ * A speaker added here is listed on this conference by hand. If the
+ * library already holds them — the same account, or the same name — that
+ * card is listed, and no second one is made.
  */
 export const addSpeakerAction = async (formData: FormData) => {
   const slug = text(formData, 'slug');
@@ -40,9 +45,10 @@ export const addSpeakerAction = async (formData: FormData) => {
   if (!accountId && !heWords.name) {
     redirect(`${page(slug)}?notice=name-required`);
   }
+  const placement = { slug, listOn: true };
   const created = accountId
-    ? await createLinkedSpeaker(slug, accountId, { ...heWords, ...(photoId ? { photoId } : {}) }, 'he')
-    : await createExternalSpeaker(slug, { ...heWords, ...(photoId ? { photoId } : {}) }, 'he');
+    ? await createLinkedSpeaker(accountId, { ...heWords, ...(photoId ? { photoId } : {}) }, 'he', placement)
+    : await createExternalSpeaker({ ...heWords, ...(photoId ? { photoId } : {}) }, 'he', placement);
   const enWords = words('en');
   if (Object.values(enWords).some((value) => value !== '')) {
     await updateSpeaker(created.id, enWords, 'en');
@@ -79,6 +85,28 @@ export const updateSpeakerAction = async (formData: FormData) => {
   redirect(`${page(slug)}?notice=saved#speaker-${id}`);
 };
 
+/* A card from the library, listed on this conference — nothing is copied. */
+export const listFromLibraryAction = async (formData: FormData) => {
+  const slug = text(formData, 'slug');
+  const id = text(formData, 'speakerId');
+  const actor = slug ? await actorFor('events:manage', slug) : null;
+  if (!actor) {
+    return;
+  }
+  if (!id) {
+    redirect(`${page(slug)}?notice=pick-required`);
+  }
+  await setSpeakerListed(id, slug, true);
+  await audit(actor, 'content.speakerSaved', slug, { speaker: id, listed: true });
+  publishedEvent(slug);
+  revalidatePath(page(slug));
+  redirect(`${page(slug)}?notice=added#speaker-${id}`);
+};
+
+/*
+ * Off this conference's list — the card stays in the library, and the
+ * speaker stays on the page as long as an activity here names them.
+ */
 export const removeSpeakerAction = async (formData: FormData) => {
   const slug = text(formData, 'slug');
   const id = text(formData, 'id');
@@ -86,9 +114,10 @@ export const removeSpeakerAction = async (formData: FormData) => {
   if (!actor || !id) {
     return;
   }
-  await removeSpeaker(id);
+  await setSpeakerListed(id, slug, false);
   await audit(actor, 'content.speakerRemoved', slug, { speaker: id });
   publishedEvent(slug);
   revalidatePath(page(slug));
-  redirect(`${page(slug)}?notice=removed`);
+  const stillOn = (await activitiesForSpeaker(id, 'he', slug).catch(() => [])).length > 0;
+  redirect(`${page(slug)}?notice=${stillOn ? 'still-scheduled' : 'removed'}`);
 };

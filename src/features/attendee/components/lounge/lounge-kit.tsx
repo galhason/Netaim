@@ -15,7 +15,7 @@ export const loungeLabel =
   'mb-1.5 block text-xs font-medium text-[var(--l-soft)]';
 
 export const loungePrimary =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--l-navy)] px-6 text-sm font-medium text-white transition-colors hover:bg-[var(--nt-dark)]';
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--l-navy)] px-6 text-sm font-medium text-white transition-colors hover:bg-[var(--l-navy-soft)]';
 
 export const loungeQuiet =
   'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--l-hair)] bg-white px-5 text-sm font-medium text-[var(--l-ink)] transition-colors hover:border-[var(--l-bronze)]';
