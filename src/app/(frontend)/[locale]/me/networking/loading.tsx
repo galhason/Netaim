@@ -8,7 +8,7 @@
 const pulse = 'animate-pulse rounded-3xl bg-[var(--n-navy)]/8';
 
 const NetworkingLoading = () => (
-  <main id="main-content" className="community min-h-dvh bg-[var(--n-bg)] pb-28 md:pb-16">
+  <main id="main-content" className="community community--site min-h-dvh bg-[var(--n-bg)] pb-28 md:pb-16">
     <div className="px-3 pt-3 md:px-6 md:pt-6">
       <div className="mx-auto h-80 max-w-6xl animate-pulse rounded-[2rem] bg-[var(--n-navy)]/90 md:h-96" />
     </div>

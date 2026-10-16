@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { eligibleSessions } from '@/event-engine';
 import { PLAIN_SESSION_TYPES, SESSION_TYPES, isPlainSession } from '@/features/program/types/session';
@@ -47,19 +47,15 @@ describe('a gathering on the schedule', () => {
     expect(service).toContain('if (isPlainSession(situation.session.sessionType)) {');
   });
 
-  it('names its host, but a host of panels alone is not one of the speakers', async () => {
-    const { panelOnlyHosts } = await import('@/event-engine');
-    const hosts = panelOnlyHosts([
-      { sessionType: 'gathering', speakers: [{ id: 'host' }, { id: 'both' }] },
-      { sessionType: 'workshop', speakers: [{ id: 'both' }, { id: 'lecturer' }] },
-      { sessionType: 'gathering', speakers: null },
-    ]);
-    expect([...hosts]).toEqual(['host']);
+  it('names its host, and its host is one of the speakers like anyone else', () => {
     expect(read('src/features/conference/components/activity-band.tsx')).toContain('export const BandHosts');
-    expect(read('src/features/marketing/services/marketing-service.ts')).toContain('panelOnlyHosts(sessions)');
-    expect(read('src/app/(frontend)/[locale]/events/[slug]/(experience)/speakers/page.tsx')).toContain(
-      "sessions.every((s) => s.sessionType === 'gathering')",
+    /* A panel host is listed among the speakers, whether or not they also lead a seminar. */
+    expect(read('src/features/marketing/services/marketing-service.ts')).toContain('speakers.map((speaker) => publicSpeaker(speaker, origin)),');
+    expect(read('src/features/cinematic/services/cinematic-service.ts')).not.toContain('withoutPanelHosts');
+    expect(read('src/app/(frontend)/[locale]/events/[slug]/(experience)/speakers/page.tsx')).not.toContain(
+      "s.sessionType === 'gathering'",
     );
+    expect(existsSync('src/event-engine/program/panel-hosts.ts')).toBe(false);
     expect(read('src/features/program/services/activity-import.ts')).toContain("פאנל: 'gathering',");
   });
 

@@ -179,3 +179,32 @@ describe('the personal area wears the site green', () => {
     }
   });
 });
+
+/*
+ * The community — the networking room — in the same green: forest under
+ * the film, the site's green on every action, gold still the accent.
+ */
+describe('the networking room wears the site green', () => {
+  const community = block('.community--site');
+
+  it('draws the forest where it drew the night, and green where it drew navy', () => {
+    expect(value(community, '--n-deep')).toBe('var(--nt-forest)');
+    expect(value(community, '--n-veil')).toBe('var(--nt-forest)');
+    expect(value(community, '--n-purple')).toBe('var(--nt-green-deep)');
+    expect(value(community, '--n-bg')).toBe('var(--nt-programme-bg)');
+    /* Gold stays the accent; it is not restated here. */
+    expect(value(community, '--n-gold-soft')).toBeNull();
+  });
+
+  it('is worn by the room and by its loading sketch', () => {
+    expect(read('src/app/(frontend)/[locale]/me/networking/page.tsx')).toContain('community community--site lounge lounge--site');
+    expect(read('src/app/(frontend)/[locale]/me/networking/loading.tsx')).toContain('community community--site');
+  });
+
+  it('tints the hero from the scope, not from navy by value', () => {
+    const hero = read('src/app/(frontend)/[locale]/me/networking/ui/hero.tsx');
+    expect(hero).not.toContain('rgba(11,27,51');
+    expect(hero).not.toContain('var(--nt-navy)');
+    expect(hero).toContain('color-mix(in_srgb,var(--n-veil)_72%,transparent)');
+  });
+});

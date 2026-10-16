@@ -143,7 +143,7 @@ const NetworkingHero = ({
           <source src={withBasePath('/videos/networking-hero.mp4')} type="video/mp4" />
           <source src={withBasePath('/videos/networking-hero.webm')} type="video/webm" />
         </video>
-        <span className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(11,27,51,0.72),rgba(11,27,51,0.6)_45%,rgba(11,27,51,0.82))]" />
+        <span className="absolute inset-0 bg-[linear-gradient(to_bottom,color-mix(in_srgb,var(--n-veil)_72%,transparent),color-mix(in_srgb,var(--n-veil)_60%,transparent)_45%,color-mix(in_srgb,var(--n-veil)_82%,transparent))]" />
       </div>
       {/*
         * The atmosphere, in its own clipped layer: a violet orb rising
@@ -155,13 +155,13 @@ const NetworkingHero = ({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden rounded-[1.75rem] md:rounded-[2rem]"
       >
-        <span className="absolute -bottom-24 end-[-4rem] size-[16rem] rounded-full bg-[radial-gradient(circle_at_30%_30%,var(--nt-navy),var(--nt-dark-mid)_55%,var(--nt-dark-deep)_75%)] opacity-90 md:-bottom-40 md:end-[-6rem] md:size-[26rem]" />
+        <span className="absolute -bottom-24 end-[-4rem] size-[16rem] rounded-full bg-[radial-gradient(circle_at_30%_30%,var(--n-orb),var(--n-orb-mid)_55%,var(--n-orb-deep)_75%)] opacity-90 md:-bottom-40 md:end-[-6rem] md:size-[26rem]" />
         <span className="absolute -bottom-28 end-[-5rem] size-[18rem] rounded-full border border-white/5 md:-bottom-44 md:end-[-7rem] md:size-[28rem]" />
         <span className="absolute -bottom-32 end-[-6rem] hidden size-[30rem] rounded-full border border-white/[0.03] md:block" />
-        <span className="absolute -top-32 start-1/4 h-[24rem] w-[36rem] rounded-full bg-[radial-gradient(closest-side,rgba(42,144,200,0.22),transparent_70%)] blur-2xl" />
+        <span className="absolute -top-32 start-1/4 h-[24rem] w-[36rem] rounded-full bg-[radial-gradient(closest-side,var(--n-glow),transparent_70%)] blur-2xl" />
         <Sparkle className="absolute end-[30%] top-[22%] size-3 text-[var(--n-gold-soft)]/80" />
         <Sparkle className="absolute end-[12%] top-[55%] size-2 text-white/50" />
-        <Sparkle className="absolute start-[55%] top-[70%] size-2 text-[var(--n-purple-soft)]/60" />
+        <Sparkle className="absolute start-[55%] top-[70%] size-2 text-[var(--n-accent-on-dark)]/60" />
       </div>
 
       <div className="relative">
@@ -180,7 +180,7 @@ const NetworkingHero = ({
             */}
           <div className="min-w-0 max-w-xl text-white">
             <p
-              className={`text-[11px] font-medium tracking-[0.24em] text-[var(--n-purple-soft)] ${
+              className={`text-[11px] font-medium tracking-[0.24em] text-[var(--n-accent-on-dark)] ${
                 he ? '' : 'uppercase'
               }`}
             >
@@ -226,7 +226,7 @@ const NetworkingHero = ({
                 <span className="inline-flex items-center gap-1.5">
                   <span
                     aria-hidden="true"
-                    className="size-1.5 rounded-full bg-[var(--n-green)]"
+                    className="size-1.5 rounded-full bg-[var(--n-green-on-dark)]"
                   />
                   {num(openCount)} {COPY.openToMeetings[locale]}
                 </span>
@@ -248,7 +248,7 @@ const NetworkingHero = ({
                   {num(myself.connections)} {COPY.connections[locale]} ·{' '}
                   {num(myself.meetings)} {COPY.meetings[locale]}
                   {myself.open ? (
-                    <span className="text-[var(--n-green)]">
+                    <span className="text-[var(--n-green-on-dark)]">
                       {' '}
                       · {COPY.openBadge[locale]}
                     </span>
@@ -293,10 +293,10 @@ const NetworkingHero = ({
                 </span>
               </div>
               {myself.open ? (
-                <p className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] text-[var(--n-green)]">
+                <p className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] text-[var(--n-green-on-dark)]">
                   <span
                     aria-hidden="true"
-                    className="size-1.5 rounded-full bg-[var(--n-green)]"
+                    className="size-1.5 rounded-full bg-[var(--n-green-on-dark)]"
                   />
                   {COPY.openBadge[locale]}
                 </p>

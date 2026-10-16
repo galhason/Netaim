@@ -44,18 +44,16 @@ const SpeakersPage = async ({ params }: SpeakersPageProps) => {
       return { speaker, sessions };
     }),
   );
-  /* Those who only host panels are named on the panel, not listed among the speakers. */
-  const speakers: DirectorySpeaker[] = everyone
-    .filter(({ sessions }) => !(sessions.length > 0 && sessions.every((s) => s.sessionType === 'gathering')))
-    .map(({ speaker, sessions }) => ({
-      id: speaker.id,
-      name: speaker.name,
-      jobTitle: speaker.jobTitle,
-      company: speaker.company,
-      photoUrl: speaker.photoUrl,
-      isRegistered: speaker.isRegistered,
-      sessionCount: sessions.length,
-    }));
+  /* Everyone the conference names, panel hosts included. */
+  const speakers: DirectorySpeaker[] = everyone.map(({ speaker, sessions }) => ({
+    id: speaker.id,
+    name: speaker.name,
+    jobTitle: speaker.jobTitle,
+    company: speaker.company,
+    photoUrl: speaker.photoUrl,
+    isRegistered: speaker.isRegistered,
+    sessionCount: sessions.length,
+  }));
 
   return (
     <main id="main-content" className="mx-auto max-w-6xl px-6 pb-24 pt-28 md:px-10 md:pt-32">

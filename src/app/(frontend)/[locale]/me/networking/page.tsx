@@ -639,7 +639,7 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
   return (
     <main
       id="main-content"
-      className="community lounge min-h-dvh bg-[var(--n-bg)] pb-28 font-body text-[var(--n-ink)] md:pb-16"
+      className="community community--site lounge lounge--site min-h-dvh bg-[var(--n-bg)] pb-28 font-body text-[var(--n-ink)] md:pb-16"
     >
       {/* The site's one navigation — the conference bar every page wears. */}
       <ConferenceBar

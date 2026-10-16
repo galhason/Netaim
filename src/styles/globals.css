@@ -758,6 +758,43 @@ main [id] {
   --n-ink-on-accent: var(--nt-ink-on-accent);
   --n-gold-hover: var(--nt-accent-on-dark-hover);
   --n-gold-active: var(--nt-yellow);
+
+  /* The hero's atmosphere: a word set on the dark, the veil over the film, the orb, the glow. */
+  --n-accent-on-dark: var(--nt-blue-on-dark);
+  /* An open door to meetings, said on the dark: the same green, lit to be read there. */
+  --n-green-on-dark: var(--nt-green-on-dark);
+  --n-veil: var(--nt-dark);
+  --n-orb: var(--nt-navy);
+  --n-orb-mid: var(--nt-dark-mid);
+  --n-orb-deep: var(--nt-dark-deep);
+  --n-glow: rgb(42 144 200 / 0.22);
+}
+/*
+ * The Community in the site's own colours, as the Lounge wears them: the
+ * forest where it drew the night, the site's green for every action, the
+ * programme's ground and ink. Gold stays the accent, as on the site. Of
+ * the ring tones, blue (a shared interest) and the navy of the same
+ * organization stay as they are, so a ring still tells its reason apart
+ * from the green of plain discovery; green, an open door to meetings,
+ * keeps its own lighter green, and its words beside it.
+ */
+.community--site {
+  --n-bg: var(--nt-programme-bg);
+  --n-ink: var(--nt-programme-ink);
+  --n-soft: var(--nt-programme-ink-soft);
+  --n-faint: var(--nt-programme-ink-faint);
+  --n-hair: var(--nt-programme-line);
+  --n-navy: var(--nt-green-deeper);
+  --n-deep: var(--nt-forest);
+  --n-indigo: var(--nt-green-deeper);
+  --n-purple: var(--nt-green-deep);
+  --n-purple-soft: var(--nt-green-deeper);
+  --n-accent-on-dark: var(--nt-green-on-dark);
+  --n-veil: var(--nt-forest);
+  --n-orb: var(--nt-green-deep);
+  --n-orb-mid: var(--nt-green-deeper);
+  --n-orb-deep: var(--nt-forest);
+  --n-glow: rgb(21 154 75 / 0.22);
 }
 
 /*
