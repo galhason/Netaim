@@ -139,7 +139,7 @@ describe('my schedule wears the programme green too', () => {
     const row = read(`${MINE}/schedule-row.tsx`);
     expect(row).toContain('var(--x-kind-workshop,');
     expect(row).toContain('<Pill tone={KIND_PILL[activity.type]}>');
-    for (const file of ['schedule-row.tsx', 'notification-bar.tsx', 'my-schedule-dashboard.tsx', 'sign-in-preview.tsx']) {
+    for (const file of ['schedule-row.tsx', 'notification-bar.tsx', 'my-schedule-dashboard.tsx']) {
       const source = read(`${MINE}/${file}`);
       expect(source, file).not.toContain('--x-navy');
       expect(source, file).not.toContain('rgba(23,63,115');

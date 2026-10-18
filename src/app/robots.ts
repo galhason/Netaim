@@ -3,13 +3,14 @@ import type { MetadataRoute } from 'next';
 /*
  * What a crawler may look at.
  *
- * A conference's public face — its landing page, its registration form
- * and its participant information — is meant to be found. Everything
- * that answers for one person, or for the team, is not: the programme
- * and the cast (both behind a participant), the personal area, the
- * Studio, and the API surfaces. Those are already guarded in the
- * application and rendered per request; this file states the rule where
- * a crawler reads it first, before it ever asks for the page.
+ * A conference's registration form is meant to be found. Everything
+ * else on the platform answers for a registered participant, or for the
+ * team, and is not: the conference's own pages (all behind a
+ * participant), the personal area, the Studio, and the API surfaces.
+ * The conference's public face is the organisation's WordPress site.
+ * Those pages are already guarded in the application and rendered per
+ * request; this file states the rule where a crawler reads it first,
+ * before it ever asks for the page.
  *
  * robots.txt is a courtesy to a well-behaved crawler, never a control.
  * The guard that actually holds is `requireParticipant`, and it is
@@ -27,7 +28,7 @@ const robots = (): MetadataRoute.Robots => ({
   rules: [
     {
       userAgent: '*',
-      allow: '/',
+      allow: ['/', '/he/events/*/register', '/en/events/*/register'],
       disallow: [
         '/he/me/',
         '/en/me/',
@@ -41,29 +42,17 @@ const robots = (): MetadataRoute.Robots => ({
         '/he/connect',
         '/en/connect',
         /*
-         * A conference's own pages are public; the pages inside it that
-         * answer for one participant are not. These sit behind
-         * `requireParticipant` and meet a signed-out crawler with a
-         * redirect to the sign-in screen, so indexing them earns a
-         * redirect chain in Search Console and nothing else.
-         *
-         * `/events/{slug}` and `/events/{slug}/register` are deliberately
-         * absent from this list: they are the public face, and the whole
-         * point of the map. The conference's public information page
-         * lives on the organisation's WordPress site now, not here.
+         * A conference is read by people who registered: every page of
+         * it meets a signed-out crawler with a redirect to the sign-in
+         * screen, so indexing them earns a redirect chain in Search
+         * Console and nothing else. The registration form is the one
+         * page there that is open, and it is allowed back above — the
+         * longer, more specific rule wins.
          */
-        '/he/events/*/agenda',
-        '/en/events/*/agenda',
-        '/he/events/*/speakers',
-        '/en/events/*/speakers',
-        '/he/events/*/workshops',
-        '/en/events/*/workshops',
-        '/he/events/*/my-activities',
-        '/en/events/*/my-activities',
-        '/he/events/*/me',
-        '/en/events/*/me',
-        '/he/events/*/networking',
-        '/en/events/*/networking',
+        '/he/events/',
+        '/en/events/',
+        '/he/experiences/',
+        '/en/experiences/',
       ],
     },
   ],

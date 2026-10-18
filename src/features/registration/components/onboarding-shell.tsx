@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { brandFor } from '@/config/brand';
+import { wordpressHref } from '@/config/wordpress';
 import type { Locale } from '@/config/locales';
 import { ConferenceFooter } from '@/features/cinematic';
 import { BrandMark } from '@/shared';
@@ -22,7 +23,7 @@ import { BrandMark } from '@/shared';
 export const onboardingCls = {
   card: 'rounded-[var(--x-r-card)] border border-[var(--x-line)] bg-[var(--x-surface)] shadow-[var(--x-shadow)]',
   primary:
-    'inline-flex min-h-12 items-center justify-center gap-2 rounded-[var(--x-r-field)] bg-[var(--x-primary)] px-6 text-[15px] font-semibold text-white shadow-[0_10px_30px_rgb(42 144 200 / 0.28)] transition-[transform,background-color,box-shadow] hover:-translate-y-0.5 hover:bg-[var(--x-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0',
+    'inline-flex min-h-12 items-center justify-center gap-2 rounded-[var(--x-r-field)] bg-[var(--x-primary)] px-6 text-[15px] font-semibold text-white shadow-[0_10px_30px_color-mix(in_srgb,var(--x-primary)_28%,transparent)] transition-[transform,background-color,box-shadow] hover:-translate-y-0.5 hover:bg-[var(--x-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0',
   ghost:
     'inline-flex min-h-12 items-center justify-center gap-2 rounded-[var(--x-r-field)] border border-[var(--x-line-strong)] bg-[var(--x-surface)] px-5 text-[15px] font-medium text-[var(--x-ink)] transition-colors hover:border-[var(--x-primary)] hover:text-[var(--x-primary)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]',
   field:
@@ -32,6 +33,8 @@ export const onboardingCls = {
     'rounded-[var(--x-r-field)] border border-[var(--x-warn)]/30 bg-[var(--x-warn-wash)] px-4 py-3 text-sm leading-relaxed text-[var(--x-warn)]',
   noteOk:
     'rounded-[var(--x-r-field)] border border-[var(--x-ok)]/30 bg-[var(--x-ok-wash)] px-4 py-3 text-sm leading-relaxed text-[var(--x-ok)]',
+  noteInfo:
+    'rounded-[var(--x-r-field)] border border-[var(--x-primary)]/20 bg-[var(--x-primary-wash)] px-4 py-3 text-sm leading-relaxed text-[var(--x-ink)]',
   quietLink:
     'underline-offset-4 hover:text-[var(--x-primary)] hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] rounded',
   strongLink:
@@ -129,12 +132,17 @@ export const OnboardingFrame = ({
   bar?: ReactNode;
   children: ReactNode;
 }) => (
-  <div className="experience flex min-h-dvh flex-col bg-[var(--x-bg)] text-[var(--x-ink)]">
+  <div className="experience experience--programme flex min-h-dvh flex-col bg-[var(--x-bg)] text-[var(--x-ink)]">
     {bar ?? (
     <header className="border-b border-[var(--x-line)] bg-[var(--x-surface)]/80 backdrop-blur-sm">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 md:px-8">
-        <Link
-          href={`/${locale}`}
+        {/*
+          * Home is the organisation's site: the platform's own pages are
+          * behind a sign-in, so a visitor leaving the form goes there. A
+          * plain anchor, because it leaves this application.
+          */}
+        <a
+          href={wordpressHref('home', locale)}
           className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]"
         >
           {brandLogo ? null : <Sprout />}
@@ -149,7 +157,7 @@ export const OnboardingFrame = ({
               {pickCopy(locale, ONBOARDING_COPY.tagline)}
             </span>
           </span>
-        </Link>
+        </a>
         <div className="flex items-center gap-3 sm:gap-5">
           {/*
             * The language switch: both names, always, the current one
@@ -185,8 +193,8 @@ export const OnboardingFrame = ({
               );
             })}
           </nav>
-          <Link
-            href={`/${locale}`}
+          <a
+            href={wordpressHref('home', locale)}
             className="inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-[var(--x-soft)] transition-colors hover:text-[var(--x-primary)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)]"
           >
             <svg viewBox="0 0 20 20" aria-hidden="true" className="size-4 rtl:-scale-x-100" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -194,7 +202,7 @@ export const OnboardingFrame = ({
             </svg>
             <span className="hidden sm:inline">{pickCopy(locale, ONBOARDING_COPY.backHome)}</span>
             <span className="sr-only sm:hidden">{pickCopy(locale, ONBOARDING_COPY.backHome)}</span>
-          </Link>
+          </a>
         </div>
       </div>
     </header>

@@ -1,10 +1,9 @@
 import { cache } from 'react';
 import { brandFor } from '@/config/brand';
 import type { Locale } from '@/config/locales';
-import { withBasePath } from '@/config/site';
 import { staffRoleOf } from '@/features/access';
 import { getActiveConferenceSlug, getSiteBrand, getStaffOnlyConferenceSlug } from '@/features/events';
-import { currentParticipant } from '@/features/registration';
+import { currentParticipant, signInHref } from '@/features/registration';
 
 /*
  * The door of a conference that is open to the Netaim team only.
@@ -69,14 +68,6 @@ export const visibleSiteConference = async (locale: Locale): Promise<string | nu
 };
 
 /*
- * Where "Sign in" on the closed page leads: the sign-in screen, which
- * brings the person back to the page they asked for. The return path is
- * the browser's own, base path included.
- */
-export const signInBackTo = (locale: Locale, path: string): string =>
-  `/${locale}/me?next=${encodeURIComponent(withBasePath(path))}`;
-
-/*
  * The first thing every page of a conference asks: is this visitor
  * allowed in? Null when they are — the page carries on as it always
  * did — and otherwise what the "being prepared" page needs, which the
@@ -104,7 +95,8 @@ const closedFor = async (
   return {
     locale,
     viewer: door.viewer === 'member' ? 'member' : 'guest',
-    signInHref: signInBackTo(locale, returnTo),
+    /* "Sign in" on the closed page: the sign-in screen, which brings the person back here. */
+    signInHref: signInHref(locale, returnTo),
     brand: brandFor(locale),
     brandLogo: logo.onLight,
   };

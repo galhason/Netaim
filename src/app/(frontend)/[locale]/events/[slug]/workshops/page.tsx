@@ -15,7 +15,7 @@ import {
   loungePrimary,
   loungeQuiet,
 } from '@/features/attendee';
-import { currentParticipant } from '@/features/registration';
+import { requireParticipant } from '@/features/registration';
 import {
   activityStatusLabel,
   participantStatus,
@@ -49,10 +49,6 @@ const COPY = {
   join: { he: 'להצטרף לרשימת המתנה', en: 'Join the waiting list' },
   leave: { he: 'לבטל', en: 'Leave' },
   full: { he: 'מלאה', en: 'Full' },
-  signIn: {
-    he: 'כדי לבחור סדנאות, היכנסו לאזור האישי דרך הקישור שקיבלתם.',
-    en: 'To choose seminars, sign in to your personal area via the link you received.',
-  },
   error: {
     he: 'הפעילות התמלאה. נסו פעילות אחרת.',
     en: 'That activity just filled up. Try another.',
@@ -115,7 +111,8 @@ const WorkshopsPage = async ({ params, searchParams }: WorkshopsPageProps) => {
   }
   const { error } = await searchParams;
 
-  const participant = await currentParticipant().catch(() => null);
+  /* Read by people who registered: a visitor is sent to sign in, and brought back here. */
+  await requireParticipant(locale, `/${locale}/events/${slug}/workshops`);
   const [barViewer, siteLogo] = await Promise.all([conferenceBarViewer(), getSiteBrand()]);
   const bar = (
     <ConferenceBar
@@ -128,7 +125,7 @@ const WorkshopsPage = async ({ params, searchParams }: WorkshopsPageProps) => {
   );
   const [sessions, selections] = await Promise.all([
     listAgenda(slug, locale).catch(() => []),
-    participant ? myWorkshops(slug) : Promise.resolve([]),
+    myWorkshops(slug),
   ]);
 
   const activities = sessions.filter(
@@ -194,11 +191,6 @@ const WorkshopsPage = async ({ params, searchParams }: WorkshopsPageProps) => {
                   ? COPY.closed[locale]
                   : COPY.error[locale]}
           </LoungeNote>
-        </div>
-      ) : null}
-      {!participant ? (
-        <div className="mt-5">
-          <LoungeNote>{COPY.signIn[locale]}</LoungeNote>
         </div>
       ) : null}
 
@@ -269,15 +261,9 @@ const WorkshopsPage = async ({ params, searchParams }: WorkshopsPageProps) => {
                           </button>
                         </form>
                       </>
-                    ) : !participant || status === 'full' ? (
+                    ) : status === 'full' ? (
                       <span className="text-sm text-[var(--l-faint)]">
-                        {status === 'full'
-                          ? activityStatusLabel(
-                              session.sessionType,
-                              'full',
-                              locale,
-                            )
-                          : null}
+                        {activityStatusLabel(session.sessionType, 'full', locale)}
                       </span>
                     ) : (
                       <form action={selectWorkshopAction}>

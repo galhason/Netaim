@@ -8,6 +8,7 @@ import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { connectionChannels, myChatThread } from '@/features/networking';
+import { requireParticipant } from '@/features/registration';
 import { sendChatAction } from './actions';
 import ChatLive from './chat-live';
 
@@ -49,6 +50,8 @@ const ChatPage = async ({ params }: ChatPageProps) => {
   const locale: Locale = rawLocale;
   setRequestLocale(locale);
 
+  /* Read by people who registered: a visitor is sent to sign in, and brought back here. */
+  await requireParticipant(locale, `/${locale}/me/chat/${connectionId}`);
   const thread = await myChatThread(connectionId);
   if (!thread) {
     redirect(`/${locale}/me/networking`);

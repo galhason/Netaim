@@ -78,7 +78,7 @@ const MediaConsentDialog = ({
 
   return createPortal(
     <div
-      className="experience fixed inset-0 z-[90] grid place-items-center p-4"
+      className="experience experience--programme fixed inset-0 z-[90] grid place-items-center p-4"
       dir={locale === 'he' ? 'rtl' : 'ltr'}
       lang={locale}
     >
@@ -87,7 +87,7 @@ const MediaConsentDialog = ({
         tabIndex={-1}
         aria-label={closeLabel}
         onClick={onClose}
-        className="absolute inset-0 bg-[rgb(11_27_51/0.42)] backdrop-blur-[2px]"
+        className="absolute inset-0 bg-[color-mix(in_srgb,var(--x-ink)_42%,transparent)] backdrop-blur-[2px]"
       />
       <div
         ref={box}

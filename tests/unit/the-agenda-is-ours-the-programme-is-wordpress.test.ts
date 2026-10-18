@@ -87,11 +87,11 @@ describe('no platform address ends in /program any more', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('points the crawler at the agenda instead', () => {
+  it('keeps the crawler out of the conference, the agenda with it, and names no /program', () => {
     const robots = read('src/app/robots.ts');
-    expect(robots).toContain("'/he/events/*/agenda'");
-    expect(robots).toContain("'/en/events/*/agenda'");
-    expect(robots).not.toContain("'/he/events/*/program'");
+    expect(robots).toContain("'/he/events/'");
+    expect(robots).toContain("'/en/events/'");
+    expect(robots).not.toContain('/program');
   });
 
   /*

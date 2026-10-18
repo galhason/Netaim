@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale } from '@/config/locales';
 import { LOUNGE_UI, getAttendeeExperience } from '@/features/attendee';
+import { requireParticipant } from '@/features/registration';
 import { listSpeakersPublic } from '@/features/events';
 import { ConferencePreparing } from '@/features/conference';
 import { closedConferencePage } from '@/features/conference/services/conference-door';
@@ -29,6 +30,8 @@ const SpeakersPage = async ({ params }: SpeakersPageProps) => {
     return <ConferencePreparing {...closed} />;
   }
 
+  /* Read by people who registered: a visitor is sent to sign in, and brought back here. */
+  await requireParticipant(locale, `/${locale}/events/${slug}/me/speakers`);
   const content = await getAttendeeExperience(slug, locale);
   if (!content) {
     redirect(`/${locale}/events/${slug}/register`);

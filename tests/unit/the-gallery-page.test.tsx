@@ -239,13 +239,13 @@ describe('the address', () => {
     expect(read(PAGE)).toContain('GalleryExperience');
   });
 
-  it('is public: it asks no one to sign in', () => {
-    expect(read(PAGE)).not.toContain('requireParticipant');
+  it('is read by people who registered: a visitor signs in and comes back to it', () => {
+    expect(read(PAGE)).toContain('await requireParticipant(lang, `/${lang}/events/${slug}/gallery`)');
   });
 
-  it('is in the sitemap and not refused to crawlers', () => {
-    expect(read('src/app/sitemap.ts')).toContain("'/gallery'");
-    expect(read('src/app/robots.ts')).not.toContain('gallery');
+  it('is not offered to crawlers, like the rest of the conference', () => {
+    expect(read('src/app/sitemap.ts')).not.toContain("'/gallery'");
+    expect(read('src/app/robots.ts')).toContain("'/he/events/'");
   });
 
   it('declares its canonical and its other language, with no local port', () => {

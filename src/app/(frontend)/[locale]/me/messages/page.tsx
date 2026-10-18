@@ -27,6 +27,7 @@ import {
   noticeIconOf,
 } from '@/features/notifications';
 import type { CenterConversation, CenterNotice } from '@/features/notifications';
+import { signInHref } from '@/features/registration';
 import { formatLongDate, formatTimeLabel } from '@/shared';
 import {
   cancelMeetingAction,
@@ -115,7 +116,7 @@ const MessagesPage = async ({ params, searchParams }: MessagesPageProps) => {
 
   const account = await getMyAccount(locale);
   if (!account) {
-    redirect(`/${locale}/me`);
+    redirect(signInHref(locale, `/${locale}/me/messages`));
   }
 
   /*

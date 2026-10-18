@@ -29,6 +29,7 @@ import {
   getMyDetails,
   myContactPreferences,
   myTotpStatus,
+  signInHref,
 } from '@/features/registration';
 import {
   changePasswordAction,
@@ -103,7 +104,7 @@ const AccountProfilePage = async ({
   const totp = await myTotpStatus();
 
   if (!details) {
-    redirect(`/${locale}/me`);
+    redirect(signInHref(locale, `/${locale}/me/profile`));
   }
 
   const editing = view === 'edit';

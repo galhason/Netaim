@@ -17,7 +17,7 @@ import { getStaffOnlyConferenceSlug, listPortalEvents } from '@/features/events'
  * one domain, which is the definition of duplicate content.
  *
  * What is left is what is actually public: each published conference's
- * landing page, its registration form, and its participant information.
+ * registration form.
  * The list of conferences is read from the CMS on every request, so a
  * conference published tomorrow is in the map tomorrow, without a
  * deployment and without anyone maintaining a list.
@@ -27,11 +27,12 @@ import { getStaffOnlyConferenceSlug, listPortalEvents } from '@/features/events'
  */
 
 /*
- * Public, per conference: the landing, the registration form and the
- * gallery, which nobody signs in to see. Everything else there needs a
- * participant.
+ * Public, per conference: the registration form, and nothing else.
+ * Every other page of a conference — its landing included — is read by
+ * people who registered, and meets a crawler with the sign-in screen.
+ * The conference's public face is the organisation's WordPress site.
  */
-const PUBLIC_CONFERENCE_PATHS = ['', '/register', '/gallery'] as const;
+const PUBLIC_CONFERENCE_PATHS = ['/register'] as const;
 
 const sitemap = async (): Promise<MetadataRoute.Sitemap> => {
   const base = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, '');
@@ -56,8 +57,7 @@ const sitemap = async (): Promise<MetadataRoute.Sitemap> => {
           url: `${base}/${locale}/events/${event.slug}${path}`,
           lastModified: now,
           changeFrequency: 'weekly' as const,
-          /* The conference itself leads; its inner pages follow. */
-          priority: path === '' ? 1 : 0.6,
+          priority: 0.6,
         })),
       );
     }),

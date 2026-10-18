@@ -3,7 +3,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale } from '@/config/locales';
 import { ExperienceStage } from '@/experience-runtime';
 import { getDocumentExperience } from '@/features/experiences';
-import { currentParticipant } from '@/features/registration';
+import { requireParticipant } from '@/features/registration';
 import '@/scenes';
 
 interface DocumentExperiencePageProps {
@@ -21,18 +21,19 @@ const DocumentExperiencePage = async ({
 
   setRequestLocale(locale);
 
+  /* Read by people who registered: a visitor is sent to sign in, and brought back here. */
+  const me = await requireParticipant(locale, `/${locale}/experiences/${slug}`);
   const experience = await getDocumentExperience(slug);
 
   if (!experience) {
     notFound();
   }
 
-  const me = await currentParticipant().catch(() => null);
   return (
     <ExperienceStage
       experience={experience}
       locale={locale}
-      viewer={me ? { name: me.name || me.email } : null}
+      viewer={{ name: me.name || me.email }}
     />
   );
 };

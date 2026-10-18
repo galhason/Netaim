@@ -25,8 +25,9 @@ vi.mock('@/features/events', () => ({
   getActiveConferenceSlug: async () => state.active,
   getSiteBrand: async () => ({ onLight: '/logo.png', onDark: '/logo-dark.png' }),
 }));
-vi.mock('@/features/registration', () => ({
+vi.mock('@/features/registration', async () => ({
   currentParticipant: async () => state.me,
+  signInHref: (await vi.importActual<typeof import('@/features/registration/utils/sign-in-href')>('@/features/registration/utils/sign-in-href')).signInHref,
 }));
 vi.mock('@/features/access', () => ({
   staffRoleOf: async () => state.role,

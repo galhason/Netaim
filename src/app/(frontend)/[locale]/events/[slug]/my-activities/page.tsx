@@ -4,14 +4,13 @@ import { isSupportedLocale, type Locale } from '@/config/locales';
 import { findPortalEvent } from '@/features/events';
 import { myMeetings } from '@/features/networking';
 import { buildProgramModel } from '@/features/program';
-import { currentParticipant } from '@/features/registration';
+import { requireParticipant } from '@/features/registration';
 import { venueDayKey } from '@/shared';
 import { ConferencePreparing } from '@/features/conference';
 import { closedConferencePage } from '@/features/conference/services/conference-door';
 import AutoRefresh from './auto-refresh';
 import { toMeetingVMs } from './meetings';
 import MyScheduleDashboard from './my-schedule-dashboard';
-import SignInPreview from './sign-in-preview';
 
 interface Props {
   params: Promise<{ locale: string; slug: string }>;
@@ -45,17 +44,8 @@ const MySchedulePage = async ({ params, searchParams }: Props) => {
   const lang = locale as Locale;
   const { notice, activity } = await searchParams;
 
-  const participant = await currentParticipant().catch(() => null);
-
-  if (!participant) {
-    return (
-      <SignInPreview
-        locale={lang}
-        enterHref={`/${lang}/events/${slug}/register`}
-        signInHref={`/${lang}/me`}
-      />
-    );
-  }
+  /* Read by people who registered: a visitor is sent to sign in, and brought back here. */
+  await requireParticipant(lang, `/${lang}/events/${slug}/my-activities`);
 
   /* The event first: the schedule is read on the conference's clock. */
   const event = await findPortalEvent(slug, lang).catch(() => null);

@@ -44,7 +44,7 @@ const SpeakerProfilePage = async ({ params }: SpeakerProfilePageProps) => {
   if (closed) {
     return <ConferencePreparing {...closed} />;
   }
-  await requireParticipant(lang);
+  await requireParticipant(lang, `/${lang}/events/${slug}/speakers/${id}`);
   const he = lang === 'he';
 
   const speaker = await getSpeaker(id, lang).catch(() => null);

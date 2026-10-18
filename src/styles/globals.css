@@ -926,6 +926,8 @@ main [id] {
   --x-primary: var(--nt-green-deep);
   --x-primary-strong: var(--nt-green-deeper);
   --x-ring: var(--nt-green-ring);
+  /* The keyboard's focus outline in the same green: 7.04 on white, as clear as the blue it replaces. */
+  --color-focus-ring: var(--nt-green-deep);
   --x-tour: var(--nt-amber-ink);
   --x-tour-wash: var(--nt-orange-wash);
   /* The chosen filter chip — the one thing the platform draws in --x-nav. */

@@ -3,6 +3,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import { LoungeView, getAttendeeExperience } from '@/features/attendee';
+import { requireParticipant } from '@/features/registration';
 import { ConferenceBar, ConferencePreparing } from '@/features/conference';
 import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
 import { getSiteBrand } from '@/features/events';
@@ -38,6 +39,8 @@ const AttendeePage = async ({ params }: AttendeePageProps) => {
 
   }
 
+  /* Read by people who registered: a visitor is sent to sign in, and brought back here. */
+  await requireParticipant(locale, `/${locale}/events/${slug}/me`);
   const content = await getAttendeeExperience(slug, locale);
 
   if (!content) {

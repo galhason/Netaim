@@ -5,7 +5,7 @@ import { SITE_ORIGIN, siteUrl } from '@/config/site';
 import { findPortalEvent } from '@/features/events';
 import { GALLERY_COPY, composeGallery, publishedGallery } from '@/features/gallery';
 import { GalleryCta, GalleryExperience, GalleryHero } from '@/features/gallery/components';
-import { currentParticipant } from '@/features/registration';
+import { requireParticipant } from '@/features/registration';
 import { ConferencePreparing, PREPARING_COPY } from '@/features/conference';
 import { closedConferencePage, mayEnterConference } from '@/features/conference/services/conference-door';
 import { submitGalleryPhotoAction } from './actions';
@@ -77,9 +77,10 @@ const GalleryPage = async ({ params }: GalleryPageProps) => {
     return <ConferencePreparing {...closed} />;
   }
 
-  const [entries, participant, event] = await Promise.all([
+  /* Read by people who registered: a visitor is sent to sign in, and brought back here. */
+  await requireParticipant(lang, `/${lang}/events/${slug}/gallery`);
+  const [entries, event] = await Promise.all([
     publishedGallery(slug, lang).catch(() => []),
-    currentParticipant().catch(() => null),
     findPortalEvent(slug, lang).catch(() => null),
   ]);
   const composition = composeGallery(entries);
@@ -96,7 +97,7 @@ const GalleryPage = async ({ params }: GalleryPageProps) => {
       <GalleryCta
         locale={lang}
         slug={slug}
-        signedIn={participant !== null}
+        signedIn
         shareAction={submitGalleryPhotoAction}
       />
     </main>

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale } from '@/config/locales';
 import { LOUNGE_UI } from '@/features/attendee';
-import { CountrySelect, DietarySelect, PhoneField, getMyDetails } from '@/features/registration';
+import { CountrySelect, DietarySelect, PhoneField, getMyDetails, requireParticipant } from '@/features/registration';
 import { ConferencePreparing } from '@/features/conference';
 import { closedConferencePage } from '@/features/conference/services/conference-door';
 import { saveMyProfileAction } from './actions';
@@ -42,6 +42,8 @@ const ProfilePage = async ({ params, searchParams }: ProfilePageProps) => {
 
   }
 
+  /* Read by people who registered: a visitor is sent to sign in, and brought back here. */
+  await requireParticipant(locale, `/${locale}/events/${slug}/me/profile`);
   const details = await getMyDetails();
 
   if (!details) {

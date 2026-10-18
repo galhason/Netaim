@@ -5,13 +5,14 @@ import { siteNavLinks } from '@/features/cinematic';
 /*
  * Who may read the conference, and what the chrome says.
  *
- * The programme, the speakers and the community are what a person
- * registers for — they are read by people who joined. Everything that
- * leads *to* joining, and everything the law requires to be reachable,
- * stays open to anyone. Both halves of that sentence are easy to break
- * by accident in opposite directions: a forgotten guard opens the
- * conference, and an over-eager one locks the registration form or the
- * accessibility statement behind a login.
+ * The platform is read by people who registered — every page of a
+ * conference, its landing included. Only the way in stays open: the
+ * sign-in screen, the registration form, the links that sign a person
+ * in, and the legal pages, which the law requires to be reachable from
+ * every page. Both halves are easy to break by accident in opposite
+ * directions: a forgotten guard opens the conference, and an over-eager
+ * one locks the registration form or the accessibility statement
+ * behind a login.
  */
 const read = (path: string): string => readFileSync(path, 'utf8');
 const FRONTEND = 'src/app/(frontend)/[locale]';
@@ -22,16 +23,31 @@ const FRONTEND = 'src/app/(frontend)/[locale]';
  */
 const EXPERIENCE = `${FRONTEND}/events/[slug]/(experience)`;
 
-describe('the conference is read by people who joined it', () => {
-  const GUARDED = [
-    `${EXPERIENCE}/agenda/page.tsx`,
-    `${EXPERIENCE}/speakers/page.tsx`,
-    `${EXPERIENCE}/speakers/[id]/page.tsx`,
+describe('the conference is read by people who registered', () => {
+  /* Each page, and the address it asks to be brought back to. */
+  const GUARDED: [string, string][] = [
+    [`${FRONTEND}/page.tsx`, 'requireParticipant(locale as Locale, `/${locale}`)'],
+    [`${FRONTEND}/events/[slug]/page.tsx`, 'requireParticipant(locale, `/${locale}/events/${slug}`)'],
+    [`${EXPERIENCE}/agenda/page.tsx`, 'requireParticipant(lang, `/${lang}/events/${slug}/agenda`)'],
+    [`${EXPERIENCE}/speakers/page.tsx`, 'requireParticipant(lang, `/${lang}/events/${slug}/speakers`)'],
+    [`${EXPERIENCE}/speakers/[id]/page.tsx`, 'requireParticipant(lang, `/${lang}/events/${slug}/speakers/${id}`)'],
+    [`${EXPERIENCE}/gallery/page.tsx`, 'requireParticipant(lang, `/${lang}/events/${slug}/gallery`)'],
+    [`${FRONTEND}/events/[slug]/workshops/page.tsx`, 'requireParticipant(locale, `/${locale}/events/${slug}/workshops`)'],
+    [`${FRONTEND}/events/[slug]/my-activities/page.tsx`, 'requireParticipant(lang, `/${lang}/events/${slug}/my-activities`)'],
+    [`${FRONTEND}/events/[slug]/me/page.tsx`, 'requireParticipant(locale, `/${locale}/events/${slug}/me`)'],
+    [`${FRONTEND}/events/[slug]/me/speakers/page.tsx`, 'requireParticipant(locale, `/${locale}/events/${slug}/me/speakers`)'],
+    [`${FRONTEND}/events/[slug]/me/venue/page.tsx`, 'requireParticipant(locale, `/${locale}/events/${slug}/me/venue`)'],
+    [`${FRONTEND}/events/[slug]/me/profile/page.tsx`, 'requireParticipant(locale, `/${locale}/events/${slug}/me/profile`)'],
+    [`${FRONTEND}/experiences/[slug]/page.tsx`, 'requireParticipant(locale, `/${locale}/experiences/${slug}`)'],
+    [`${FRONTEND}/me/chat/[connectionId]/page.tsx`, 'requireParticipant(locale, `/${locale}/me/chat/${connectionId}`)'],
+    [`${FRONTEND}/me/networking/page.tsx`, 'signInHref(locale, `/${locale}/me/networking`)'],
+    [`${FRONTEND}/me/messages/page.tsx`, 'signInHref(locale, `/${locale}/me/messages`)'],
+    [`${FRONTEND}/me/profile/page.tsx`, 'signInHref(locale, `/${locale}/me/profile`)'],
   ];
 
-  it('asks every guarded page for a participant', () => {
-    for (const page of GUARDED) {
-      expect(read(page), page).toContain('await requireParticipant(');
+  it('asks every page for a participant, and names itself to come back to', () => {
+    for (const [page, gate] of GUARDED) {
+      expect(read(page), page).toContain(gate);
     }
   });
 
@@ -41,7 +57,7 @@ describe('the conference is read by people who joined it', () => {
    * This is how the programme stayed open after it was closed.
    */
   it('renders every guarded page per request', () => {
-    for (const page of GUARDED) {
+    for (const [page] of GUARDED) {
       expect(read(page), page).toContain("export const dynamic = 'force-dynamic'");
     }
   });
@@ -56,19 +72,20 @@ describe('the conference is read by people who joined it', () => {
     expect(read('src/middleware.ts')).not.toContain('participant_session');
   });
 
-  it('sends a visitor to the one screen that can change their answer', () => {
+  it('sends a visitor to the sign-in screen, which brings them back', () => {
     const gate = read('src/features/registration/services/participant-gate.ts');
-    expect(gate).toMatch(/redirect\(`\/\$\{locale\}\/me`\)/);
+    expect(gate).toContain('redirect(signInHref(locale, returnTo));');
   });
 
   /*
    * The open half. A person cannot register for something they may not
-   * look at, and the legal pages are reachable from every page by law.
+   * reach, and the legal pages are reachable from every page by law.
    */
   const OPEN = [
-    `${FRONTEND}/page.tsx`,
-    `${FRONTEND}/events/[slug]/page.tsx`,
+    `${FRONTEND}/me/page.tsx`,
     `${FRONTEND}/events/[slug]/register/page.tsx`,
+    `${FRONTEND}/events/[slug]/enter/route.ts`,
+    `${FRONTEND}/enter/route.ts`,
     `${FRONTEND}/(site)/privacy/page.tsx`,
     `${FRONTEND}/(site)/terms/page.tsx`,
     `${FRONTEND}/(site)/accessibility/page.tsx`,

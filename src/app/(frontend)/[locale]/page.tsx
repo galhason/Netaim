@@ -10,7 +10,7 @@ import { getActiveConferenceSlug, getSiteBrand } from '@/features/events';
 import { ConferencePreparing, TeamPreviewNote } from '@/features/conference';
 import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
 import { closedSitePage, conferenceDoor } from '@/features/conference/services/conference-door';
-import { currentParticipant, myAreaHref } from '@/features/registration';
+import { myAreaHref, requireParticipant } from '@/features/registration';
 import '@/scenes';
 
 interface ConferenceLandingPageProps {
@@ -42,28 +42,27 @@ const ConferenceLandingPage = async ({
   if (closed) {
     return <ConferencePreparing {...closed} />;
   }
+  /*
+   * Read by people who registered: a visitor is sent to sign in, and
+   * brought back here. Resolved per request and handed to the stage as
+   * render context; it never enters the descriptor, which is cached and
+   * shared.
+   */
+  const me = await requireParticipant(locale as Locale, `/${locale}`);
   const teamPreview = slug ? (await conferenceDoor(slug)).staffOnly : false;
   const experience = slug
     ? await getConferenceExperience(slug, locale as Locale)
     : null;
-
-  /*
-   * Resolved per request and handed to the stage as render context. It
-   * never enters the descriptor, which is cached and shared.
-   */
-  const me = await currentParticipant().catch(() => null);
   const logo = await getSiteBrand();
-  const barViewer = me ? await conferenceBarViewer() : null;
+  const barViewer = await conferenceBarViewer();
   /*
    * Where this guest's own area is. Depends on whether they have joined
    * this conference, so it is resolved here beside their name and never
    * inside the cached descriptor.
    */
-  const meHref = me
-    ? await myAreaHref(locale as Locale, slug ?? undefined).catch(
-        () => `/${locale}/me`,
-      )
-    : null;
+  const meHref = await myAreaHref(locale as Locale, slug ?? undefined).catch(
+    () => `/${locale}/me`,
+  );
 
   if (!slug || !experience) {
     return <ConferenceLandingEmpty locale={locale as Locale} />;
@@ -80,16 +79,12 @@ const ConferenceLandingPage = async ({
           logo.onLight,
         )}
         locale={locale as Locale}
-        viewer={
-          me
-            ? {
-                name: barViewer?.name ?? (me.name || me.email),
-                ...(meHref ? { href: meHref } : {}),
-                ...(barViewer?.photoUrl ? { photoUrl: barViewer.photoUrl } : {}),
-                ...(barViewer?.studio ? { studio: true } : {}),
-              }
-            : null
-        }
+        viewer={{
+          name: barViewer?.name ?? (me.name || me.email),
+          href: meHref,
+          ...(barViewer?.photoUrl ? { photoUrl: barViewer.photoUrl } : {}),
+          ...(barViewer?.studio ? { studio: true } : {}),
+        }}
       />
       {teamPreview && slug ? <TeamPreviewNote locale={locale as Locale} slug={slug} /> : null}
     </>

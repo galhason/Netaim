@@ -26,7 +26,7 @@ import {
   type MyConnection,
   type MyMeeting,
 } from '@/features/networking';
-import { getMyDetails, myContactPreferences } from '@/features/registration';
+import { getMyDetails, myContactPreferences, signInHref } from '@/features/registration';
 import {
   listDirectoryParticipants,
   sharedActivityPeers,
@@ -105,7 +105,7 @@ const NetworkingPage = async ({ params, searchParams }: NetworkingPageProps) => 
 
   const account = await getMyAccount(locale);
   if (!account) {
-    redirect(`/${locale}/me`);
+    redirect(signInHref(locale, `/${locale}/me/networking`));
   }
   const he = locale === 'he';
   const num = (value: number) => value.toLocaleString(he ? 'he-IL' : 'en-GB');

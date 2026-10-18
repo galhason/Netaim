@@ -119,3 +119,4 @@ export {
   pickCopy,
 } from './components/onboarding-shell';
 export { requireParticipant } from './services/participant-gate';
+export { signInHref } from './utils/sign-in-href';

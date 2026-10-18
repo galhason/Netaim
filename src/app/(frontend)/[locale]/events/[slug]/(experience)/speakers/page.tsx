@@ -31,7 +31,7 @@ const SpeakersPage = async ({ params }: SpeakersPageProps) => {
   if (closed) {
     return <ConferencePreparing {...closed} />;
   }
-  await requireParticipant(lang);
+  await requireParticipant(lang, `/${lang}/events/${slug}/speakers`);
   const he = lang === 'he';
 
   const roster = await listConferenceSpeakers(slug, lang).catch(() => []);

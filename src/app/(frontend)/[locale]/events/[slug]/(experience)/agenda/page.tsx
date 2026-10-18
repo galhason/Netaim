@@ -28,7 +28,7 @@ const ProgramPage = async ({ params, searchParams }: ProgramPageProps) => {
     return <ConferencePreparing {...closed} />;
   }
   /* The programme is the conference itself — it is read by people who joined it. */
-  await requireParticipant(lang);
+  await requireParticipant(lang, `/${lang}/events/${slug}/agenda`);
   const { notice, activity, focus } = await searchParams;
 
   /*

@@ -31,7 +31,7 @@ const ConferencePreparing = ({ locale, viewer, signInHref, brand, brandLogo }: C
   return (
     <main
       id="main-content"
-      className="experience flex min-h-dvh items-center justify-center bg-[var(--x-bg)] px-4 py-16"
+      className="experience experience--programme flex min-h-dvh items-center justify-center bg-[var(--x-bg)] px-4 py-16"
     >
       <section
         aria-labelledby="conference-preparing-title"

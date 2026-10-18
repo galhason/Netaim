@@ -86,6 +86,10 @@ const COPY = {
   passwordHint: { he: 'הסיסמה שקבעתם בהרשמה.', en: 'The password you set when registering.' },
   failed: { he: 'הכניסה נכשלה מסיבה טכנית.', en: 'Sign-in failed for a technical reason.' },
   invalidEmail: { he: 'הזינו כתובת אימייל.', en: 'Enter an email address.' },
+  gate: {
+    he: 'הכנס פתוח למשתתפים רשומים. התחברו כדי להמשיך — ואם עוד לא נרשמתם, ההרשמה לוקחת דקה.',
+    en: 'The conference is open to registered participants. Sign in to continue — and if you have not registered yet, it takes a minute.',
+  },
 } as const;
 
 const pick = (lang: Locale, entry: { he: string; en: string }): string =>
@@ -365,6 +369,16 @@ const SignInScreen = ({
       aside={aside}
     >
       <section className={`${onboardingCls.card} p-6 md:p-9`}>
+        {/*
+          * Sent here from a page of the conference: say why, once, before
+          * anything else — the person asked for the programme and was
+          * shown a form. Signing in brings them back to that page.
+          */}
+        {next && !note ? (
+          <p role="status" className={`${onboardingCls.noteInfo} mb-6`}>
+            {pick(locale, COPY.gate)}
+          </p>
+        ) : null}
         {/*
           * The way to register, one line above the form and subordinate
           * to it — the mirror of the sign-in line on the registration
