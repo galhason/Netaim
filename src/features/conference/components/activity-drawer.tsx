@@ -75,7 +75,18 @@ const RegistrationPanel = ({
    */
   return (
     <div className="rounded-[var(--x-r-card)] border border-[var(--x-line)] bg-[var(--x-raise)] p-4">
-      <div className="flex items-center justify-between gap-3">
+      {/*
+        * Registered: the mark and the cancel share the row and need the
+        * width, so the availability badge steps above them. Otherwise
+        * the badge and the one button sit side by side as before.
+        */}
+      <div
+        className={
+          activity.registration === 'registered'
+            ? 'flex flex-col gap-3'
+            : 'flex items-center justify-between gap-3'
+        }
+      >
         <AvailabilityBadge
           status={activity.status}
           confirmed={0}
@@ -83,7 +94,7 @@ const RegistrationPanel = ({
           locale={locale}
           showCount={false}
         />
-        <div className="min-w-[140px]">
+        <div className={activity.registration === 'registered' ? '' : 'min-w-[140px]'}>
           <RegistrationButton
             state={activity.registration}
             locale={locale}
@@ -106,9 +117,13 @@ const RegistrationPanel = ({
 
       {activity.registration === 'registered' ? (
         <p className="mt-3 text-xs text-[var(--x-faint)]">
-          {he
-            ? 'ניתן לבטל את ההרשמה בכל עת מהאזור האישי.'
-            : 'You can cancel anytime from your personal area.'}
+          {activity.canCancel
+            ? he
+              ? 'המקום שמור לך. אפשר לבטל כאן או מהלו״ז האישי.'
+              : 'Your place is saved. You can cancel here or from your schedule.'
+            : he
+              ? 'המקום שמור לך.'
+              : 'Your place is saved.'}
         </p>
       ) : null}
     </div>

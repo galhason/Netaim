@@ -117,7 +117,8 @@ describe('nothing outside the agenda changes', () => {
     const buttons = kit.slice(kit.indexOf('const PRIMARY_BTN'), kit.indexOf('const MUTED_BTN'));
     expect(buttons).not.toContain('rounded-[var(--x-r-field)]');
     expect(buttons).not.toContain(' font-medium ');
-    expect(buttons.match(/rounded-\[var\(--x-r-button\)\]/g)).toHaveLength(3);
+    /* Register, waiting list, registered, and the cancel beside it. */
+    expect(buttons.match(/rounded-\[var\(--x-r-button\)\]/g)).toHaveLength(4);
     /* The pill reads the kind's colour where a scope paints one, and the platform's wash where none does. */
     expect(kit).toContain("tour: 'bg-[var(--x-kind-tour,var(--x-tour-wash))] text-[var(--x-kind-ink,var(--x-tour))]'");
   });

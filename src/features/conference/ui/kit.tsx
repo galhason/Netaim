@@ -296,6 +296,14 @@ const WAIT_BTN =
   'inline-flex items-center justify-center gap-2 rounded-[var(--x-r-button)] bg-[var(--x-warn-wash)] [font-weight:var(--x-button-weight)] text-[var(--x-warn)] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--x-warn)]';
 const DONE_BTN =
   'inline-flex items-center justify-center gap-2 rounded-[var(--x-r-button)] bg-[var(--x-ok-wash)] [font-weight:var(--x-button-weight)] text-[var(--x-ok)]';
+/*
+ * Giving the place back: a quiet outlined button beside the green
+ * "registered" mark, never a surprise under it. It turns red only when
+ * the pointer is on it, so the row reads calm until the reader means it.
+ */
+const LEAVE_BTN =
+  'inline-flex items-center justify-center gap-2 rounded-[var(--x-r-button)] border border-[var(--x-line-strong)] bg-transparent [font-weight:var(--x-button-weight)] text-[var(--x-soft)] transition-colors hover:border-[var(--x-full)] hover:bg-[var(--x-full-wash)] hover:text-[var(--x-full)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--x-full)]';
+const LEAVE_LABEL = { he: 'ביטול הרשמה', en: 'Cancel registration' } as const;
 const MUTED_BTN =
   'inline-flex items-center justify-center gap-2 rounded-[var(--x-r-button)] bg-[var(--x-mute-wash)] [font-weight:var(--x-button-weight)] text-[var(--x-faint)] cursor-not-allowed';
 
@@ -364,21 +372,26 @@ export const RegistrationButton = ({
       </span>
     );
   }
+  /*
+   * Registered, and free to leave: the green mark says so, and a
+   * separate button cancels. The cancel used to hide behind the mark
+   * and show only on hover — which a phone never does, so a reader
+   * there had no way to know the mark could be pressed at all.
+   */
   if (state === 'registered' && leaveAction) {
     return (
-      <form action={leaveAction} className={block ? 'w-full' : ''}>
-        <Hidden />
-        <button
-          type="submit"
-          className={`${DONE_BTN} ${pad} ${width} group relative`}
-        >
+      <div className={`flex flex-wrap items-center gap-2 ${block ? 'w-full' : ''}`}>
+        <span className={`${DONE_BTN} ${pad} ${block ? 'flex-1' : ''}`}>
           <IconCheck className="size-4" />
-          <span className="group-hover:hidden">{label}</span>
-          <span className="hidden group-hover:inline">
-            {locale === 'he' ? 'ביטול הרשמה' : 'Cancel'}
-          </span>
-        </button>
-      </form>
+          {label}
+        </span>
+        <form action={leaveAction} className={block ? 'flex-1' : ''}>
+          <Hidden />
+          <button type="submit" className={`${LEAVE_BTN} ${pad} whitespace-nowrap ${block ? 'w-full' : ''}`}>
+            {LEAVE_LABEL[locale]}
+          </button>
+        </form>
+      </div>
     );
   }
   return (
