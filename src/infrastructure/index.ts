@@ -30,12 +30,14 @@ import type {
 } from '@/features/studio/types/activity';
 import type {
   AccountSearchSource,
+  ParticipantAccountReader,
   ParticipantAdminSource,
   ParticipantAdminWriter,
 } from '@/features/studio/types/participants';
 import { payloadProductionLog } from './payload/payload-activity';
 import {
   payloadListParticipantsAdmin,
+  payloadReadParticipantAccount,
   payloadSearchAccounts,
   payloadUpdateParticipantAdmin,
   payloadDeleteParticipantAccount,
@@ -166,6 +168,8 @@ export const listParticipantsAdmin: ParticipantAdminSource =
   payloadListParticipantsAdmin;
 export const updateParticipantAdmin: ParticipantAdminWriter =
   payloadUpdateParticipantAdmin;
+export const readParticipantAccount: ParticipantAccountReader =
+  payloadReadParticipantAccount;
 export const deleteParticipantAdmin = payloadDeleteParticipantAccount;
 export const eventLogisticsSource: EventLogisticsSource = payloadEventLogistics;
 export const activityRosterSource: ActivityRosterSource = payloadActivityRosters;

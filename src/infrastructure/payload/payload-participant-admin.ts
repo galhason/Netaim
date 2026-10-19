@@ -1,5 +1,6 @@
 import type { Where } from 'payload';
 import type {
+  ParticipantAccountReader,
   AccountSearchView,
   ParticipantAdminView,
   ParticipantRegistrationLine,
@@ -72,12 +73,14 @@ export const payloadListParticipantsAdmin = async (): Promise<
     id: String(participant.id),
     name: participant.name ?? '',
     email: participant.email ?? '',
+    phone: participant.phone ?? '',
     organization:
       typeof participant.organization === 'object' &&
       participant.organization !== null
         ? participant.organization.name
         : undefined,
     blocked: participant.blocked === true,
+    hasPassword: Boolean(participant.passwordHash),
     registrations: linesByParticipant.get(String(participant.id)) ?? [],
   }));
 };
@@ -115,9 +118,19 @@ export const payloadSearchAccounts = async (
   }));
 };
 
+export const payloadReadParticipantAccount: ParticipantAccountReader = async (id) => {
+  const { payload, user } = await requireActor();
+  const row = await payload
+    .findByID({ collection: 'participants', id, depth: 0, overrideAccess: false, user })
+    .catch(() => null);
+  return row
+    ? { id: String(row.id), email: row.email ?? '', phone: row.phone ?? '' }
+    : null;
+};
+
 export const payloadUpdateParticipantAdmin = async (
   id: string,
-  input: { name?: string; blocked?: boolean },
+  input: { name?: string; blocked?: boolean; email?: string; phone?: string },
 ): Promise<void> => {
   const { payload, user } = await requireActor();
   await payload.update({
@@ -128,6 +141,8 @@ export const payloadUpdateParticipantAdmin = async (
     data: {
       ...(input.name !== undefined ? { name: input.name } : {}),
       ...(input.blocked !== undefined ? { blocked: input.blocked } : {}),
+      ...(input.email !== undefined ? { email: input.email } : {}),
+      ...(input.phone !== undefined ? { phone: input.phone } : {}),
     },
   });
 };

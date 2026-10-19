@@ -12,8 +12,11 @@ export interface ParticipantAdminView {
   id: string;
   name: string;
   email: string;
+  phone: string;
   organization?: string;
   blocked: boolean;
+  /* Whether the person has set a password at all — the Admin's form says so before offering a new one. */
+  hasPassword: boolean;
   registrations: ParticipantRegistrationLine[];
 }
 
@@ -34,7 +37,16 @@ export type AccountSearchSource = (
 
 export type ParticipantAdminSource = () => Promise<ParticipantAdminView[]>;
 
+/* One account as the Admin's form needs it: what it says today, before it is changed. */
+export interface ParticipantAccountView {
+  id: string;
+  email: string;
+  phone: string;
+}
+
+export type ParticipantAccountReader = (id: string) => Promise<ParticipantAccountView | null>;
+
 export type ParticipantAdminWriter = (
   id: string,
-  input: { name?: string; blocked?: boolean },
+  input: { name?: string; blocked?: boolean; email?: string; phone?: string },
 ) => Promise<void>;

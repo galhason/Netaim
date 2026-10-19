@@ -30,6 +30,12 @@ export const CAPABILITIES = [
   'activities:delete',
   /* Removing a person's account, as opposed to blocking or editing it. */
   'participants:delete',
+  /*
+   * The keys to a person's account: the address they sign in with, and
+   * their password. The Admin's alone among the Netaim roles — a
+   * supervisor renames and blocks, but does not hold anyone's door key.
+   */
+  'participants:credentials',
   /* Rooms, equipment, the export — reading versus arranging. */
   'logistics:read',
   'logistics:manage',

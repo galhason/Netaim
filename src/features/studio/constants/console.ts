@@ -272,6 +272,34 @@ export const CONSOLE_UI = {
   cancelRegistration: { he: 'ביטול הרשמה', en: 'Cancel registration' },
   moveTo: { he: 'העברה אל…', en: 'Move to…' },
   moveConfirm: { he: 'העברה', en: 'Move' },
+  /* The keys to an account — the Admin's form. */
+  accountEdit: { he: 'עריכת חשבון', en: 'Edit account' },
+  accountEditHint: {
+    he: 'כתובת הכניסה, הטלפון, וסיסמה חדשה כשצריך. רק מנהל Netaim רואה את הטופס הזה.',
+    en: 'The sign-in address, the phone, and a new password when needed. Only the Netaim Admin sees this form.',
+  },
+  accountEmail: { he: 'אימייל לכניסה', en: 'Sign-in email' },
+  accountPhone: { he: 'טלפון', en: 'Phone' },
+  accountPassword: { he: 'סיסמה חדשה (לא חובה)', en: 'New password (optional)' },
+  accountPasswordHint: {
+    he: 'הסיסמה תחליף את הקיימת וכל ההתחברויות הפעילות של המשתמש ינותקו. מסרו לו אותה וביקשו שיחליף אותה בפרופיל.',
+    en: 'It replaces the current password and signs the person out everywhere. Hand it over and ask them to change it on their profile.',
+  },
+  accountNoPassword: { he: 'אין סיסמה עדיין — נכנס/ת בקישור בלבד', en: 'No password yet — signs in by link only' },
+  accountHasPassword: { he: 'יש סיסמה', en: 'Has a password' },
+  accountSave: { he: 'שמירת החשבון', en: 'Save account' },
+  accountSavedNote: { he: 'פרטי החשבון נשמרו.', en: 'The account details were saved.' },
+  accountPasswordNote: {
+    he: 'הפרטים נשמרו והסיסמה החדשה נקבעה. ההתחברויות הקודמות של המשתמש נותקו.',
+    en: 'The details were saved and the new password is set. The person’s earlier sign-ins were closed.',
+  },
+  accountTakenNote: { he: 'הכתובת הזו כבר שייכת לחשבון אחר — שום דבר לא השתנה.', en: 'That address already belongs to another account — nothing was changed.' },
+  accountInvalidNote: { he: 'כתובת האימייל אינה תקינה — שום דבר לא השתנה.', en: 'The email address is not valid — nothing was changed.' },
+  accountWeakNote: {
+    he: 'הפרטים נשמרו, אבל הסיסמה לא נקבעה: היא חלשה מדי. ',
+    en: 'The details were saved, but the password was not set: it is too weak. ',
+  },
+  accountFailedNote: { he: 'השמירה לא הצליחה — החשבון נשאר כפי שהיה.', en: 'The save did not go through — the account was left as it was.' },
   deleteAccount: { he: 'מחיקת משתמש ונתונים', en: 'Delete account & data' },
   deleteAccountHint: {
     he: 'מוחק לצמיתות את החשבון, ההרשמות, הנטוורקינג וההרשאות.',

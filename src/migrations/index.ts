@@ -27,6 +27,7 @@ import * as migration_20261009_120000_place_in_both_languages from './20261009_1
 import * as migration_20261012_090000_a_gathering_on_the_schedule from './20261012_090000_a_gathering_on_the_schedule';
 import * as migration_20261014_090000_a_vote_on_the_language from './20261014_090000_a_vote_on_the_language';
 import * as migration_20261016_090000_one_speaker_many_conferences from './20261016_090000_one_speaker_many_conferences';
+import * as migration_20261019_090000_one_spelling_of_an_address from './20261019_090000_one_spelling_of_an_address';
 
 export const migrations = [
   {
@@ -173,5 +174,10 @@ export const migrations = [
     up: migration_20261016_090000_one_speaker_many_conferences.up,
     down: migration_20261016_090000_one_speaker_many_conferences.down,
     name: '20261016_090000_one_speaker_many_conferences',
+  },
+  {
+    up: migration_20261019_090000_one_spelling_of_an_address.up,
+    down: migration_20261019_090000_one_spelling_of_an_address.down,
+    name: '20261019_090000_one_spelling_of_an_address',
   },
 ];

@@ -64,6 +64,8 @@ const LABELS: Record<AuditAction, Record<Locale, string>> = {
     en: 'Account blocked or unblocked',
   },
   'participant.deleted': { he: 'חשבון נמחק', en: 'Account deleted' },
+  'participant.accountEdited': { he: 'פרטי חשבון עודכנו', en: 'Account details edited' },
+  'participant.passwordSet': { he: 'סיסמה נקבעה על ידי מנהל', en: 'Password set by an admin' },
 
   'safety.reportHandled': {
     he: 'דיווח בטיחות טופל',

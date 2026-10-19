@@ -12,6 +12,7 @@ import {
   requireCapability,
 } from '@/features/studio';
 import { countOpenReports } from '@/features/networking';
+import { PASSWORD_POLICY_TEXT } from '@/features/registration';
 import { ROLE_LABELS, can, mayRevokeRole } from '@/permission-engine';
 import {
   cancelParticipantRegistrationAction,
@@ -21,6 +22,7 @@ import {
   renameParticipantAction,
   revokeGrantAction,
   toggleParticipantBlockedAction,
+  updateParticipantAccountAction,
 } from '../actions';
 
 /*
@@ -30,7 +32,7 @@ import {
  * checked actions; the panel itself decides nothing.
  */
 interface ParticipantsPageProps {
-  searchParams: Promise<{ grants?: string; move?: string; delete?: string }>;
+  searchParams: Promise<{ grants?: string; move?: string; delete?: string; account?: string; for?: string }>;
 }
 
 const chip =
@@ -45,6 +47,28 @@ const dangerButton =
 const selectField =
   'rounded-lg border border-[var(--c-line-strong)] bg-[rgba(7,19,36,0.6)] px-2 py-1 text-[11px] text-[var(--c-text)] focus:border-[var(--c-bronze)]/60 focus:outline-none';
 
+const textField =
+  'w-full rounded-lg border border-[var(--c-line-strong)] bg-[rgba(7,19,36,0.6)] px-3 py-1.5 text-sm text-[var(--c-text)] focus:border-[var(--c-bronze)]/60 focus:outline-none';
+
+const fieldLabel = 'block text-[10px] tracking-[0.14em] text-[var(--c-text-faint)]';
+
+/*
+ * What the account form has to say back, in the words of what happened.
+ * A weak password is a half-success: the details were saved and the
+ * policy is quoted, so the Admin knows what to type next.
+ */
+const ACCOUNT_NOTES = {
+  saved: { tone: 'ok', text: CONSOLE_UI.accountSavedNote },
+  password: { tone: 'ok', text: CONSOLE_UI.accountPasswordNote },
+  taken: { tone: 'danger', text: CONSOLE_UI.accountTakenNote },
+  invalid: { tone: 'danger', text: CONSOLE_UI.accountInvalidNote },
+  weak: { tone: 'danger', text: CONSOLE_UI.accountWeakNote },
+  failed: { tone: 'danger', text: CONSOLE_UI.accountFailedNote },
+} as const;
+
+const accountNote = (state: string | undefined) =>
+  state && state in ACCOUNT_NOTES ? ACCOUNT_NOTES[state as keyof typeof ACCOUNT_NOTES] : null;
+
 /* A refused grant change, said in the words of the rule that refused it. */
 const GRANT_NOTES = {
   lastOwner: CONSOLE_UI.lastOwnerNote,
@@ -57,11 +81,14 @@ const grantNote = (state: string | undefined) =>
   state && state in GRANT_NOTES ? GRANT_NOTES[state as keyof typeof GRANT_NOTES] : null;
 
 const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
-  const { grants: grantsState, move: moveState, delete: deleteState } = await searchParams;
+  const { grants: grantsState, move: moveState, delete: deleteState, account: accountState, for: accountFor } = await searchParams;
   const locale = await getStudioLocale();
   const creator = await getStudioCreator();
   const access = await getStudioAccess();
   const actorGrants = access?.grants ?? [];
+  /* The keys to an account — the Admin's alone. */
+  const holdsKeys = can(actorGrants, 'participants:credentials');
+  const note = accountNote(accountState);
   const [participants, allGrants, events, openReports, grantable] = await Promise.all([
     getParticipantsAdmin().catch(() => []),
     listAllGrants(),
@@ -192,6 +219,85 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
                     </button>
                   </form>
                 </div>
+
+                {holdsKeys ? (
+                  <details
+                    id={`keys-${participant.id}`}
+                    open={accountFor === participant.id}
+                    className="mt-3 rounded-lg border border-[var(--c-line)] bg-[rgba(7,19,36,0.35)]"
+                  >
+                    <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-[var(--c-text-soft)] hover:text-[var(--c-text)]">
+                      {CONSOLE_UI.accountEdit[locale]}
+                      <span className="ms-2 text-[10px] font-normal text-[var(--c-text-faint)]">
+                        {participant.hasPassword
+                          ? CONSOLE_UI.accountHasPassword[locale]
+                          : CONSOLE_UI.accountNoPassword[locale]}
+                      </span>
+                    </summary>
+                    <form action={updateParticipantAccountAction} className="flex flex-col gap-3 border-t border-[var(--c-line)] px-3 py-3">
+                      <input type="hidden" name="id" value={participant.id} />
+                      <p className="text-xs text-[var(--c-text-faint)]">{CONSOLE_UI.accountEditHint[locale]}</p>
+                      {note && accountFor === participant.id ? (
+                        <p
+                          role="status"
+                          className={`rounded-lg border px-3 py-2 text-xs ${
+                            note.tone === 'ok'
+                              ? 'border-[var(--c-live)]/40 bg-[var(--c-live)]/10 text-[var(--c-live)]'
+                              : 'border-[var(--c-danger)]/40 bg-[var(--c-danger)]/10 text-[var(--c-danger-text)]'
+                          }`}
+                        >
+                          {note.text[locale]}
+                          {accountState === 'weak' ? PASSWORD_POLICY_TEXT[locale] : ''}
+                        </p>
+                      ) : null}
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <label>
+                          <span className={fieldLabel}>{CONSOLE_UI.accountEmail[locale]}</span>
+                          <input
+                            name="email"
+                            type="email"
+                            required
+                            dir="ltr"
+                            autoComplete="off"
+                            defaultValue={participant.email}
+                            className={`${textField} mt-1`}
+                          />
+                        </label>
+                        <label>
+                          <span className={fieldLabel}>{CONSOLE_UI.accountPhone[locale]}</span>
+                          <input
+                            name="phone"
+                            type="tel"
+                            dir="ltr"
+                            autoComplete="off"
+                            defaultValue={participant.phone}
+                            className={`${textField} mt-1`}
+                          />
+                        </label>
+                        <label className="sm:col-span-2">
+                          <span className={fieldLabel}>{CONSOLE_UI.accountPassword[locale]}</span>
+                          <input
+                            name="password"
+                            type="text"
+                            dir="ltr"
+                            autoComplete="off"
+                            spellCheck={false}
+                            minLength={8}
+                            className={`${textField} mt-1 font-mono`}
+                          />
+                          <span className="mt-1 block text-[11px] text-[var(--c-text-faint)]">
+                            {CONSOLE_UI.accountPasswordHint[locale]}
+                          </span>
+                        </label>
+                      </div>
+                      <div>
+                        <button type="submit" className={quietButton}>
+                          {CONSOLE_UI.accountSave[locale]}
+                        </button>
+                      </div>
+                    </form>
+                  </details>
+                ) : null}
 
                 {participant.registrations.length > 0 ? (
                   <ul className="mt-3 flex flex-col gap-2 border-t border-[var(--c-line)] pt-3">

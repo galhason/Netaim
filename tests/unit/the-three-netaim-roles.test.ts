@@ -60,7 +60,7 @@ describe('the Netaim roles', () => {
       expect(can([supervisor], allowed), allowed).toBe(true);
     }
     for (const forbidden of [
-      'events:delete', 'activities:delete', 'participants:delete',
+      'events:delete', 'activities:delete', 'participants:delete', 'participants:credentials',
       'access:manage', 'audit:read', 'platform:manage',
     ] as const) {
       expect(can([supervisor], forbidden), forbidden).toBe(false);
@@ -73,7 +73,7 @@ describe('the Netaim roles', () => {
     }
     for (const forbidden of [
       'activities:archive', 'activities:delete', 'events:manage', 'logistics:manage',
-      'participants:read', 'registrations:manage', 'communications:manage', 'audit:read', 'access:manage',
+      'participants:read', 'participants:credentials', 'registrations:manage', 'communications:manage', 'audit:read', 'access:manage',
     ] as const) {
       expect(can([staff], forbidden), forbidden).toBe(false);
     }

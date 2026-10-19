@@ -6,7 +6,7 @@ import type {
   ParticipantSessionRepository,
 } from '@/features/registration/types/identity';
 import type { ParticipantSummary } from '@/features/registration/types/registration';
-import { getSystemPayload } from './payload-context';
+import { getSystemPayload, principalEmail } from './payload-context';
 
 interface ParticipantRow {
   id: number | string;
@@ -87,7 +87,7 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
       const payload = await getSystemPayload();
       const found = await payload.find({
         collection: 'participants',
-        where: { email: { equals: email } },
+        where: { email: { equals: principalEmail(email) } },
         limit: 1,
         depth: 0,
         overrideAccess: true,
@@ -120,9 +120,10 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
       });
     },
 
-    openAccount: async (email, name, passwordHash, preferredLocale) => {
+    openAccount: async (typed, name, passwordHash, preferredLocale) => {
       const payload = await getSystemPayload();
       const organization = await platformOrganizationId(payload);
+      const email = principalEmail(typed);
       const existing = await payload.find({
         collection: 'participants',
         where: { email: { equals: email } },
@@ -154,8 +155,9 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
       }
     },
 
-    issue: async (email, eventSlug, tokenHash, expiresAt) => {
+    issue: async (typed, eventSlug, tokenHash, expiresAt) => {
       const payload = await getSystemPayload();
+      const email = principalEmail(typed);
       const event = await payload.find({
         collection: 'events',
         where: { slug: { equals: eventSlug } },
@@ -203,7 +205,8 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
       return { participant: toParticipant(participant) };
     },
 
-    issueForPlatform: async (email, name, tokenHash, expiresAt) => {
+    issueForPlatform: async (typed, name, tokenHash, expiresAt) => {
+      const email = principalEmail(typed);
       const payload = await getSystemPayload();
       const organizations = await payload.find({
         collection: 'organizations',

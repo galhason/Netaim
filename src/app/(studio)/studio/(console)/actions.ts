@@ -30,6 +30,8 @@ import {
   renameParticipant,
   requireCapability,
   setParticipantBlocked,
+  setParticipantPassword,
+  updateParticipantAccount,
 } from '@/features/studio';
 import {
   audit,
@@ -581,6 +583,52 @@ export const renameParticipantAction = async (formData: FormData) => {
   }
   await renameParticipant(id, name);
   revalidatePath('/studio/participants');
+};
+
+/*
+ * The keys to an account — the Admin's alone (participants:credentials).
+ *
+ * One form, two acts, each written to the history on its own: the
+ * address and phone the person is reached by, and a password cut for
+ * them. The password itself is never recorded anywhere; that it was set,
+ * by whom and for whom, is. The answer goes back to the participants
+ * page in the words of what happened, so an address already taken or a
+ * password too weak is said, not swallowed.
+ */
+export const updateParticipantAccountAction = async (formData: FormData) => {
+  const id = String(formData.get('id') ?? '').trim();
+  const actor = await actorFor('participants:credentials');
+  if (!actor || !/^\d{1,12}$/.test(id)) {
+    return;
+  }
+  const email = String(formData.get('email') ?? '');
+  const phone = String(formData.get('phone') ?? '');
+  const password = String(formData.get('password') ?? '');
+
+  const details = await updateParticipantAccount(id, { email, phone });
+  if (!details.ok) {
+    redirect(`/studio/participants?account=${details.reason}&for=${id}#keys-${id}`);
+  }
+  if (details.emailChanged || details.phoneChanged) {
+    await audit(actor, 'participant.accountEdited', undefined, {
+      participantId: id,
+      email: details.emailChanged,
+      phone: details.phoneChanged,
+    });
+  }
+
+  let state = 'saved';
+  if (password !== '') {
+    const set = await setParticipantPassword(id, password);
+    if (!set.ok) {
+      state = set.reason;
+    } else {
+      await audit(actor, 'participant.passwordSet', undefined, { participantId: id });
+      state = 'password';
+    }
+  }
+  revalidatePath('/studio/participants');
+  redirect(`/studio/participants?account=${state}&for=${id}#keys-${id}`);
 };
 
 export const toggleParticipantBlockedAction = async (formData: FormData) => {

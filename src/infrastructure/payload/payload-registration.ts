@@ -10,7 +10,7 @@ import type {
   RegistrationSettingsRepository,
   RegistrationSummary,
 } from '@/features/registration/types/registration';
-import { actorContext, getSystemPayload } from './payload-context';
+import { actorContext, getSystemPayload, principalEmail } from './payload-context';
 import {
   LIVE_STATUSES,
   mayBeListed,
@@ -155,12 +155,13 @@ export const payloadRegistrationRepository: RegistrationRepository = {
     }
     const organization = Number(relationshipId(event.organization));
 
+    const email = principalEmail(participant.email);
     const existing = await payload.find({
       collection: 'participants',
       where: {
         and: [
           { organization: { equals: organization } },
-          { email: { equals: participant.email } },
+          { email: { equals: email } },
         ],
       },
       limit: 1,
@@ -171,7 +172,7 @@ export const payloadRegistrationRepository: RegistrationRepository = {
     const participantData = {
       organization,
       name: participant.name,
-      email: participant.email,
+      email,
       phone: participant.phone,
       accessibilityNeeds: participant.accessibility,
       dietary: participant.dietary,

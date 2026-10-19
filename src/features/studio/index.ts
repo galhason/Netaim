@@ -31,6 +31,8 @@ export {
   getParticipantsAdmin,
   moveParticipantRegistration,
   renameParticipant,
+  setParticipantPassword,
+  updateParticipantAccount,
   searchAccounts,
   setParticipantBlocked,
 } from './services/studio-participants';

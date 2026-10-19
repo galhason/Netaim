@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload';
 import { registrationAccess } from '../access-presets';
+import { oneSpellingOfAnAddress } from '../hooks/one-spelling-of-an-address';
 
 /*
  * Participants are attendees, deliberately separate from CMS Users
@@ -15,6 +16,9 @@ export const Participants: CollectionConfig = {
     useAsTitle: 'email',
   },
   access: registrationAccess,
+  hooks: {
+    beforeValidate: [oneSpellingOfAnAddress],
+  },
   fields: [
     {
       name: 'organization',

@@ -46,6 +46,8 @@ export const AUDIT_ACTIONS = [
   'registration.rosterExported',
   'participant.blocked',
   'participant.deleted',
+  'participant.accountEdited',
+  'participant.passwordSet',
 
   /* Safety */
   'safety.reportHandled',

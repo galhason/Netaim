@@ -42,6 +42,7 @@ const EVERYTHING: readonly Capability[] = [
   'participants:read',
   'participants:manage',
   'participants:delete',
+  'participants:credentials',
   'content:read',
   'access:manage',
   'audit:read',
