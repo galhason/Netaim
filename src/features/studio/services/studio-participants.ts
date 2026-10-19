@@ -1,5 +1,5 @@
 import type { Locale } from '@/config/locales';
-import { listAllGrants, revokeGrant } from '@/features/access';
+import { listAllGrants } from '@/features/access';
 import { mayRevokeRole, type Grant } from '@/permission-engine';
 import {
   cancelRegistration,
@@ -170,13 +170,18 @@ export const moveParticipantRegistration = async (
 };
 
 /*
- * Full deletion (approved decision §4): grants fall first — taking the
- * derived principal with them — then every trace of the person.
+ * Full deletion (approved decision §4): every trace of the person,
+ * grants and the principal they derived included, in one transaction.
  *
- * Only when every one of those grants can fall at this hand. Deleting
+ * Only when every one of those grants could fall at this hand. Deleting
  * the account is otherwise a way round the grant rules: an Admin could
  * not take the developer role from a developer, but could delete them;
  * and the last Owner or last Developer would vanish with their account.
+ * The question is asked of every grant before anything moves, and the
+ * grants themselves go with the rest of the deletion rather than one by
+ * one before it — a deletion that stopped half way used to leave a
+ * person with no grants, no registrations and an account that still
+ * said their address was taken.
  */
 export const deleteParticipantAccount = async (
   id: string,
@@ -184,7 +189,6 @@ export const deleteParticipantAccount = async (
 ): Promise<boolean> => {
   const all = await listAllGrants();
   const held = all.filter((grant) => grant.accountId === id);
-  /* Asked of every grant before any falls, so a refusal leaves the person exactly as they were. */
   const keeps = (role: string) => all.some((grant) => grant.role === role && grant.accountId !== id);
   const refused = held.some(
     (grant) =>
@@ -193,9 +197,6 @@ export const deleteParticipantAccount = async (
   );
   if (refused) {
     return false;
-  }
-  for (const grant of held) {
-    await revokeGrant(grant.id, actorGrants).catch(() => null);
   }
   await deleteParticipantAdmin(id);
   return true;

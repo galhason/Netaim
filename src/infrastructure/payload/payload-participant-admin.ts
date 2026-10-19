@@ -1,11 +1,11 @@
-import type { Where } from 'payload';
+import type { PayloadRequest, Where } from 'payload';
 import type {
   ParticipantAccountReader,
   AccountSearchView,
   ParticipantAdminView,
   ParticipantRegistrationLine,
 } from '@/features/studio/types/participants';
-import { actorContext } from './payload-context';
+import { actorContext, principalEmail } from './payload-context';
 
 /*
  * Participant administration for the Studio: every registered person,
@@ -150,20 +150,25 @@ export const payloadUpdateParticipantAdmin = async (
 /*
  * Full account deletion (approved decision: the panel can delete people
  * and their data rather than keep them needlessly). Every trace goes:
- * sign-ins, registrations, workshop places, the networking room, then
- * the account row itself. Grants are revoked by the caller first so the
- * derived principal falls with them.
+ * sign-ins, registrations, workshop places, the networking room, the
+ * notices addressed to them, their grants and the technical principal
+ * those grants derived, then the account row itself.
  *
  * The order is the database's, not ours. Every table that names a
  * person does so with a column that may not be empty, so the row has to
  * go before the person does — and a chat message names its connection
- * the same way, so messages go before connections. This used to sweep
- * four of the nine tables and swallow every failure, and the last
- * statement then fell over the five it had skipped: a person who had
- * ever signed in with a password, met someone, blocked someone or sent
- * a message could not be deleted, and the panel showed a server error
- * instead of a word. A report survives on purpose: it keeps the names
- * it copied, and its relationships are allowed to empty.
+ * the same way, so messages go before connections. A report survives on
+ * purpose: it keeps the names it copied, and its relationships are
+ * allowed to empty. So does the audit log: the row stays, in words, and
+ * only its pointer to the account is let go.
+ *
+ * All of it in one transaction. This used to run step by step and stop
+ * at the first refusal, which left a person half gone: grants revoked,
+ * registrations swept, and the account still there with its address
+ * still "taken" — the worst of both. A deletion now either finishes or
+ * leaves the person exactly as they were. The grants are taken here,
+ * inside the transaction, rather than revoked one by one by the caller
+ * before it; the caller still decides whether they may be.
  */
 type Sweepable =
   | 'account-sessions'
@@ -173,7 +178,9 @@ type Sweepable =
   | 'networking-chat-messages'
   | 'networking-meetings'
   | 'networking-blocks'
-  | 'networking-connections';
+  | 'networking-connections'
+  | 'notifications'
+  | 'account-grants';
 
 export const payloadDeleteParticipantAccount = async (
   id: string,
@@ -181,12 +188,20 @@ export const payloadDeleteParticipantAccount = async (
   const { payload, user } = await requireActor();
   const participantId = Number(id);
 
+  const transactionID = await payload.db.beginTransaction();
+  if (transactionID === null || transactionID === undefined) {
+    throw new Error('Could not open a transaction for the deletion');
+  }
+  /* One request object for every step, so every step rides the same transaction. */
+  const req = { transactionID } as unknown as PayloadRequest;
+
   const sweep = async (collection: Sweepable, where: Where) => {
     const result = await payload.delete({
       collection,
       where,
       overrideAccess: false,
       user,
+      req,
     });
     /* A bulk delete reports per-row failures instead of throwing; one left behind strands the account. */
     if (result.errors.length > 0) {
@@ -198,32 +213,65 @@ export const payloadDeleteParticipantAccount = async (
     or: [theirs(a), theirs(b)],
   });
 
-  await sweep('account-sessions', theirs('participant'));
-  await sweep('participant-sessions', theirs('participant'));
-  await sweep('registrations', theirs('participant'));
-  await sweep('session-registrations', theirs('participant'));
+  try {
+    await sweep('account-sessions', theirs('participant'));
+    await sweep('participant-sessions', theirs('participant'));
+    await sweep('registrations', theirs('participant'));
+    await sweep('session-registrations', theirs('participant'));
 
-  const connections = await payload.find({
-    collection: 'networking-connections',
-    where: either('requester', 'addressee'),
-    depth: 0,
-    pagination: false,
-    overrideAccess: false,
-    user,
-  });
-  const connectionIds = connections.docs.map((doc) => doc.id);
-  if (connectionIds.length > 0) {
-    await sweep('networking-chat-messages', { connection: { in: connectionIds } });
+    const connections = await payload.find({
+      collection: 'networking-connections',
+      where: either('requester', 'addressee'),
+      depth: 0,
+      pagination: false,
+      overrideAccess: false,
+      user,
+      req,
+    });
+    const connectionIds = connections.docs.map((doc) => doc.id);
+    if (connectionIds.length > 0) {
+      await sweep('networking-chat-messages', { connection: { in: connectionIds } });
+    }
+    await sweep('networking-chat-messages', theirs('sender'));
+    await sweep('networking-meetings', either('host', 'guest'));
+    await sweep('networking-blocks', either('blocker', 'blocked'));
+    await sweep('networking-connections', either('requester', 'addressee'));
+    await sweep('notifications', theirs('participant'));
+
+    /*
+     * The grants, and the technical principal they derived. The grant
+     * rows go under the Studio's own access; the principal is a `users`
+     * row that only the platform writes, matched by the one spelling of
+     * the address, and goes with the system's hand.
+     */
+    const account = await payload.findByID({
+      collection: 'participants',
+      id: participantId,
+      depth: 0,
+      overrideAccess: false,
+      user,
+      req,
+    });
+    await sweep('account-grants', theirs('account'));
+    if (account.email) {
+      await payload.delete({
+        collection: 'users',
+        where: { email: { equals: principalEmail(account.email) } },
+        overrideAccess: true,
+        req,
+      });
+    }
+
+    await payload.delete({
+      collection: 'participants',
+      id: participantId,
+      overrideAccess: false,
+      user,
+      req,
+    });
+    await payload.db.commitTransaction(transactionID);
+  } catch (error) {
+    await payload.db.rollbackTransaction(transactionID);
+    throw error;
   }
-  await sweep('networking-chat-messages', theirs('sender'));
-  await sweep('networking-meetings', either('host', 'guest'));
-  await sweep('networking-blocks', either('blocker', 'blocked'));
-  await sweep('networking-connections', either('requester', 'addressee'));
-
-  await payload.delete({
-    collection: 'participants',
-    id,
-    overrideAccess: false,
-    user,
-  });
 };

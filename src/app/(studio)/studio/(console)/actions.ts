@@ -47,7 +47,7 @@ import {
   saveHomepageCompositionEntries,
 } from '@/features/opening';
 import { applyComposition, resolveScene } from '@/experience-runtime';
-import { fromDateTimeInputValue } from '@/shared';
+import { createLogger, fromDateTimeInputValue } from '@/shared';
 import { publishedEvent, publishedHomepage } from '@/shared/cache/publish';
 import '@/scenes';
 import {
@@ -60,6 +60,8 @@ import {
  * Console actions: thin envelopes over the Studio's existing actions —
  * same engines, plus the Console's own revalidation and destinations.
  */
+const log = createLogger('studio');
+
 /*
  * Defence in depth (Identity Architecture §4): each console action
  * re-derives the actor's capability before acting. Envelopes over
@@ -782,7 +784,14 @@ export const deleteParticipantAction = async (formData: FormData) => {
   let deleted = false;
   try {
     deleted = await deleteParticipantAccount(id, access.grants);
-  } catch {
+  } catch (error) {
+    /* The word on the page says it failed; the log says why — the id, never the person. */
+    const cause = error instanceof Error ? error.cause : undefined;
+    log.error('account deletion failed', {
+      participantId: id,
+      reason: error instanceof Error ? error.message : String(error),
+      cause: cause instanceof Error ? cause.message : String(cause ?? ''),
+    });
     redirect('/studio/participants?delete=failed');
   }
   if (!deleted) {
