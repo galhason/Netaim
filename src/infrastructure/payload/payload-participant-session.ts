@@ -626,7 +626,7 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
           phone: row.contactPrefs?.phone !== false,
           email: row.contactPrefs?.email !== false,
           meetings: row.contactPrefs?.meetings !== false,
-          directory: row.contactPrefs?.directory === true,
+          directory: row.contactPrefs?.directory !== false,
           scheduleEmails: row.contactPrefs?.scheduleEmails !== false,
         },
       };

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ChipRail from './chip-rail';
 import LiveSearch from './live-search';
 import { railChip } from './shared';
 
@@ -10,9 +11,12 @@ import { railChip } from './shared';
  * so search and filters keep composing in the URL exactly as before.
  *
  * The chips are honest about what this platform can actually filter:
- * the organizations in the room with their real counts, and one green
+ * every organization in the room with its real count, and one green
  * chip for people open to meetings. Topic chips would be a taxonomy
- * the system does not keep — a row of buttons that lie.
+ * the system does not keep — a row of buttons that lie. The rail used
+ * to stop at twelve organizations and hide its scrollbar, so a mouse
+ * could reach neither the thirteenth nor, on a narrow screen, the
+ * fourth; it now holds them all, with arrows at its ends.
  */
 interface SearchProps {
   he: boolean;
@@ -64,7 +68,11 @@ const NetworkingSearch = ({
       }}
     />
 
-    <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+    <div className="mt-3">
+    <ChipRail
+      backLabel={he ? 'ארגונים קודמים' : 'Previous organizations'}
+      forwardLabel={he ? 'עוד ארגונים' : 'More organizations'}
+    >
       <Link
         href={linkTo({ org: undefined, open: undefined })}
         scroll={false}
@@ -77,7 +85,7 @@ const NetworkingSearch = ({
       >
         {he ? 'הכל' : 'All'}
       </Link>
-      {organizations.slice(0, 12).map(([name, count]) => {
+      {organizations.map(([name, count]) => {
         const active = org === name;
         return (
           <Link
@@ -112,6 +120,7 @@ const NetworkingSearch = ({
       >
         {he ? 'פתוחים לפגישות' : 'Open to meetings'}
       </Link>
+    </ChipRail>
     </div>
   </section>
 );

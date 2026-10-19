@@ -81,16 +81,19 @@ export interface ListableRow {
 /*
  * Whether this person may appear in a directory at all.
  *
- * Nobody is listed until they say so. The registration form asks the
- * question outright and the account carries the answer, so a guest who
- * never answered it is absent — `=== true`, never merely "not false".
+ * Everyone taking part is listed unless they said no. The question is
+ * still asked on the registration form — ticked by default now — and
+ * the profile carries a switch to leave the room at any time; "no" is
+ * the one answer that hides a person, and it is theirs to give.
  *
- * It was the other way round once, on the reasoning that a directory
- * which starts empty is not a directory. The client's specification
- * asks for consent, and consent that has to be withdrawn was never
- * given; an empty first day is the honest price of that. The switch
- * lives on the account, applies to every conference at once, and is
- * reachable from the personal area as well as the form.
+ * It was opt-in once, on the client's original specification, and the
+ * client reversed it on 19 October 2026: a directory where everyone
+ * waits to be the first in is not a room. The practical failure was
+ * worse than an empty day — a person who had opted in was silently
+ * dropped the next time anything re-registered them, because every
+ * registration rewrote the answer from a form that had not asked it.
+ * That rewrite is gone too: a registration writes the answer only when
+ * the form actually asked for one.
  *
  * What a listing exposes stays narrow — the name, role and organisation
  * the person already gave. Phone, email and WhatsApp remain closed
@@ -102,7 +105,7 @@ export interface ListableRow {
  */
 export const mayBeListed = (row: ListableRow | null | undefined): boolean =>
   row
-    ? row.contactPrefs?.directory === true &&
+    ? row.contactPrefs?.directory !== false &&
       row.blocked !== true &&
       !row.anonymizedAt
     : false;

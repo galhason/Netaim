@@ -21,11 +21,14 @@ import { describe, expect, it } from 'vitest';
  *  1. **Scope.** Only people taking part in *this* conference, and only
  *     to viewers taking part in it. This is the limit that fixed the
  *     original leak, and it has not moved.
- *  2. **Opt-in, asked at registration.** The client's PRD (§5.1)
- *     requires an explicit "yes": the question is on the registration
- *     form itself, so the room fills with people who chose it, and the
- *     answer lives on the account (`contactPrefs.directory`) where one
- *     change applies to every conference at once.
+ *  2. **Listed unless they say no.** The question is asked on the
+ *     registration form, ticked by default, and the profile carries the
+ *     switch to leave; the answer lives on the account
+ *     (`contactPrefs.directory`) where one change applies to every
+ *     conference at once. It was opt-in on the client's original
+ *     specification (§5.1); the client reversed it on 19 October 2026,
+ *     and a registration that does not ask the question no longer
+ *     rewrites the answer.
  *  3. **What a listing exposes stays narrow.** Name, role,
  *     organisation. Phone, email and WhatsApp stay closed until the
  *     person approves a connection — separate preferences, untouched.
@@ -82,7 +85,7 @@ describe('the people directory shows the room, and only the room', () => {
     ).toBe(true);
   });
 
-  it('lists only accounts that opted in, and drops blocked or anonymised accounts', () => {
+  it('lists everyone who has not said no, and drops blocked or anonymised accounts', () => {
     const rule = SOURCES.find(({ file }) =>
       file.replace(/\\/g, '/').endsWith('payload/payload-participation.ts'),
     );
@@ -91,9 +94,10 @@ describe('the people directory shows the room, and only the room', () => {
     const listed = body.slice(body.indexOf('export const mayBeListed'));
 
     expect(
-      listed.includes('contactPrefs?.directory === true'),
-      'only a person who explicitly opted in may appear (PRD §5.1)',
+      listed.includes('contactPrefs?.directory !== false'),
+      'a person is listed unless they said no (the client’s decision of 19 October 2026)',
     ).toBe(true);
+    expect(listed.includes('directory === true')).toBe(false);
     expect(listed.includes('blocked !== true')).toBe(true);
     expect(listed.includes('anonymizedAt')).toBe(true);
 
@@ -123,7 +127,7 @@ describe('the people directory shows the room, and only the room', () => {
     );
     expect(
       messages?.text.includes('directoryQuestion'),
-      'the opt-in question must exist in the registration copy (PRD §5.1)',
+      'the directory question must exist in the registration copy',
     ).toBe(true);
 
     const form = SOURCES.find(({ file }) =>
@@ -131,8 +135,9 @@ describe('the people directory shows the room, and only the room', () => {
     );
     expect(
       form?.text.includes('name="directory"'),
-      'the registration form must carry the directory opt-in checkbox',
+      'the registration form must carry the directory checkbox',
     ).toBe(true);
+    expect(form?.text.includes('  directory: true,'), 'ticked unless the guest says no').toBe(true);
     /*
      * The question reaches the form as a label rather than being read
      * from the copy table inside it — the component is a client one now,

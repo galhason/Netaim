@@ -152,7 +152,7 @@ const EMPTY: Values = {
   country: '',
   dietary: '',
   accessibility: '',
-  directory: false,
+  directory: true,
   mediaConsent: false,
 };
 
@@ -779,7 +779,7 @@ const RegisterForm = ({
               </div>
             ) : null}
 
-            {/* PRD §5.1 — the networking opt-in, asked at registration. */}
+            {/* The directory question, asked at registration — ticked unless the guest says no. */}
             <label
               htmlFor="reg-directory"
               className="flex cursor-pointer items-start gap-3 rounded-[var(--x-r-field)] border border-[var(--x-line)] bg-[var(--x-raise)] p-4 transition-colors has-[:checked]:border-[var(--x-primary)]/50 has-[:checked]:bg-[var(--x-primary-wash)]"

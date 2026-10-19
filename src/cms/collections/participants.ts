@@ -104,16 +104,16 @@ export const Participants: CollectionConfig = {
         { name: 'email', type: 'checkbox', defaultValue: true },
         { name: 'meetings', type: 'checkbox', defaultValue: true },
         /*
-         * Opt-in, per the client's PRD (§5.1): a person appears in the
-         * participants directory only after answering "yes" — the
-         * question is asked on the registration form itself, so the
-         * choice is made knowingly rather than discovered. What a "yes"
-         * shows is only the name, role and organisation the person
-         * already gave; the contact channels above stay closed either
-         * way. The answer lives on the person, not on a conference, so
-         * changing it in the profile applies everywhere at once.
+         * Listed unless they say no (the client's decision of 19 October
+         * 2026, reversing the original opt-in): a person appears in the
+         * participants directory by default; the registration form asks
+         * the question with the box ticked, and the profile carries the
+         * switch to leave. What a listing shows is only the name, role
+         * and organisation the person already gave; the contact channels
+         * above stay closed either way. The answer lives on the person,
+         * not on a conference, so changing it applies everywhere at once.
          */
-        { name: 'directory', type: 'checkbox', defaultValue: false },
+        { name: 'directory', type: 'checkbox', defaultValue: true },
         /*
          * An email, besides the in-app notice, when an activity this
          * person holds a place in changes its hour or room, or is

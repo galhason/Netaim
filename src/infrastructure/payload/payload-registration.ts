@@ -188,15 +188,18 @@ export const payloadRegistrationRepository: RegistrationRepository = {
       | undefined;
 
     /*
-     * The directory answer from the form (PRD §5.1, opt-in), written
-     * as one field of the preference set rather than as the whole of
-     * it. Writing the object wholesale erased the channels the person
-     * had opened for themselves — phone, email, WhatsApp, meetings —
-     * every time a registration touched their row.
+     * The directory answer from the form, written as one field of the
+     * preference set rather than as the whole of it — writing the object
+     * wholesale erased the channels the person had opened for themselves
+     * — and only when the form actually asked. Joining a conference from
+     * the personal area, or being moved between conferences by the
+     * Studio, registers a person without asking the question; writing
+     * "no" on their behalf there is how a person who had chosen to be
+     * listed vanished from the room the next day.
      */
     const contactPrefs = {
       ...(priorRow?.contactPrefs ?? {}),
-      directory: participant.directory === true,
+      ...(participant.directory !== undefined ? { directory: participant.directory } : {}),
     };
 
     const participantDoc = priorRow

@@ -29,6 +29,7 @@ import * as migration_20261014_090000_a_vote_on_the_language from './20261014_09
 import * as migration_20261016_090000_one_speaker_many_conferences from './20261016_090000_one_speaker_many_conferences';
 import * as migration_20261019_090000_one_spelling_of_an_address from './20261019_090000_one_spelling_of_an_address';
 import * as migration_20261019_120000_a_deleted_account_leaves_its_trail from './20261019_120000_a_deleted_account_leaves_its_trail';
+import * as migration_20261019_150000_everyone_is_in_the_room from './20261019_150000_everyone_is_in_the_room';
 
 export const migrations = [
   {
@@ -185,5 +186,10 @@ export const migrations = [
     up: migration_20261019_120000_a_deleted_account_leaves_its_trail.up,
     down: migration_20261019_120000_a_deleted_account_leaves_its_trail.down,
     name: '20261019_120000_a_deleted_account_leaves_its_trail',
+  },
+  {
+    up: migration_20261019_150000_everyone_is_in_the_room.up,
+    down: migration_20261019_150000_everyone_is_in_the_room.down,
+    name: '20261019_150000_everyone_is_in_the_room',
   },
 ];
