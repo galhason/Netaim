@@ -33,6 +33,7 @@ interface PlaceDoc {
   participant: RelationshipValue;
   status?: string | null;
   language?: string | null;
+  submittedAt?: string | null;
 }
 
 const isRosterStatus = (value: string): value is RosterStatus =>
@@ -129,17 +130,20 @@ export const payloadActivityRosters: ActivityRosterSource = async (slug, locale,
   const bySession = new Map<string, RosterPerson[]>();
   for (const place of held) {
     const session = String(relationshipId(place.session) ?? '');
-    const person = byId.get(String(relationshipId(place.participant) ?? ''));
+    const participantId = String(relationshipId(place.participant) ?? '');
+    const person = byId.get(participantId);
     const status = place.status ?? '';
     if (!session || !person || !isRosterStatus(status)) {
       continue;
     }
     const list = bySession.get(session) ?? [];
     list.push({
+      participantId,
       name: person.name ?? '',
       phone: person.phone ?? '',
       email: person.email ?? '',
       status,
+      ...(place.submittedAt ? { registeredAt: place.submittedAt } : {}),
       ...(place.language ? { language: place.language } : {}),
     });
     bySession.set(session, list);

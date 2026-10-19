@@ -380,7 +380,7 @@ export const RegistrationButton = ({
    */
   if (state === 'registered' && leaveAction) {
     return (
-      <div className={`flex flex-wrap items-center gap-2 ${block ? 'w-full' : ''}`}>
+      <div className={`flex max-w-full flex-wrap items-center gap-2 ${block ? 'w-full' : 'justify-end'}`}>
         <span className={`${DONE_BTN} ${pad} ${block ? 'flex-1' : ''}`}>
           <IconCheck className="size-4" />
           {label}

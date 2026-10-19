@@ -8,10 +8,14 @@ import type { Locale } from '@/config/locales';
 export type RosterStatus = 'confirmed' | 'pending' | 'waitlisted' | 'attended';
 
 export interface RosterPerson {
+  /* The account the place belongs to — what a release names. */
+  participantId: string;
   name: string;
   phone: string;
   email: string;
   status: RosterStatus;
+  /* When the place was taken, as an instant; the screen puts it on the conference's clock. */
+  registeredAt?: string;
   /* The language this person asked for, where the activity holds a vote. */
   language?: string;
 }

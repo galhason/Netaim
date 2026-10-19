@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import type { KeyboardEvent } from 'react';
 import type { Locale } from '@/config/locales';
 import { IconChevronLeft, IconChevronRight, type DayVM } from '@/features/conference';
-import { dayOrdinal, t } from './copy';
+import { t } from './copy';
 
 interface Props {
   days: DayVM[];
@@ -111,7 +111,7 @@ const DaySelector = ({ days, active, todayKey, counts, locale, onSelect }: Props
                     on ? 'text-[var(--x-primary-strong)]' : 'text-[var(--x-ink)]'
                   }`}
                 >
-                  {t(locale, 'dayWord')} {dayOrdinal(day.index, locale)}
+                  {day.weekdayLong}
                 </span>
                 {today ? (
                   <span className="rounded-[var(--x-r-pill)] bg-[var(--x-ok-wash)] px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.1em] rtl:tracking-normal text-[var(--x-ok)]">

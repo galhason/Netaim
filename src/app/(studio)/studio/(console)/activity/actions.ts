@@ -2,9 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { type Locale } from '@/config/locales';
+import { isSupportedLocale, type Locale } from '@/config/locales';
 import { audit } from '@/features/access';
-import { requireCapability } from '@/features/studio';
+import { getActivityRosters, requireCapability, type ActivityRoster } from '@/features/studio';
 import { actorFor } from '@/features/studio/services/studio-auth';
 import { fromDateTimeInputValue } from '@/shared';
 import { publishedEvent } from '@/shared/cache/publish';
@@ -15,6 +15,7 @@ import {
   deleteSession,
   getSessionSituation,
   isSessionType,
+  releaseWorkshopPlace,
   restoreSession,
   type CreateSessionInput,
 } from '@/features/program';
@@ -256,6 +257,74 @@ export const restoreActivityAction = async (formData: FormData) => {
   }
   publishedEvent(slug);
   revalidatePath('/studio/activity');
+};
+
+/*
+ * Who holds a place in one activity, for the list the activities screen
+ * opens — read on demand, not with the page, because a programme of
+ * sixty activities is thousands of names nobody asked for yet. The same
+ * door as the Excel file: the roles that may see participants, and only
+ * an activity of the active conference. The screen's own language
+ * decides the activity's title; the people are the people.
+ */
+/* An id is digits — an activity's or a guest's; anything else is not one of ours. */
+const RECORD_ID = /^\d{1,12}$/;
+
+const localeOf = (value: string): Locale => (isSupportedLocale(value) ? value : HEBREW);
+
+export const activityRegistrantsAction = async (input: {
+  slug: string;
+  sessionId: string;
+  locale: string;
+}): Promise<ActivityRoster | null> => {
+  const { slug, sessionId } = input;
+  if (!slug || !RECORD_ID.test(sessionId) || !(await requireCapability('participants:read', slug))) {
+    return null;
+  }
+  const rosters = await getActivityRosters(slug, localeOf(input.locale), sessionId).catch(() => null);
+  return rosters?.activities[0] ?? null;
+};
+
+/*
+ * The organiser gives one guest's place back. Through the same engine
+ * as the guest's own cancellation — the guest is told, the next in line
+ * moves up — and into the history with who did it. The place must be
+ * one of this activity's, in this conference: the roster is read first,
+ * and a guest who is not on it is not released, whatever the form said.
+ * Comes back with the list as it now stands, so the screen can redraw
+ * without a reload.
+ */
+export const releaseActivityPlaceAction = async (input: {
+  slug: string;
+  sessionId: string;
+  participantId: string;
+  locale: string;
+}): Promise<{ released: boolean; roster: ActivityRoster | null }> => {
+  const { slug, sessionId, participantId } = input;
+  const locale = localeOf(input.locale);
+  const actor = slug && RECORD_ID.test(sessionId) ? await actorFor('registrations:manage', slug) : null;
+  if (!actor || !RECORD_ID.test(participantId)) {
+    return { released: false, roster: null };
+  }
+  const before = (await getActivityRosters(slug, locale, sessionId).catch(() => null))?.activities[0] ?? null;
+  const person = before?.people.find((entry) => entry.participantId === participantId);
+  if (!before || !person) {
+    return { released: false, roster: before };
+  }
+  const outcome = await releaseWorkshopPlace(sessionId, participantId, locale).catch(() => null);
+  const released = outcome?.status === 'cancelled';
+  if (released) {
+    await audit(
+      actor,
+      'registration.cancelled',
+      slug,
+      { session: sessionId, title: before.title, participant: participantId, name: person.name, was: person.status, byOrganiser: true },
+      before.title,
+    );
+    revalidatePath('/studio/activity');
+  }
+  const after = (await getActivityRosters(slug, locale, sessionId).catch(() => null))?.activities[0] ?? before;
+  return { released, roster: after };
 };
 
 /* Gone for good — the admin's alone. */

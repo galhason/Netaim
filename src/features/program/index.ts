@@ -13,6 +13,7 @@ export {
   languageTally,
   voteIsOpen,
   leaveWorkshop,
+  releaseWorkshopPlace,
   myWorkshops,
   myActivities,
   listConferenceActivities,

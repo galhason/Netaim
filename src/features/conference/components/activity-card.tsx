@@ -269,7 +269,7 @@ const ActivityCard = ({
               showCount={false}
             />
           </div>
-          <div onClick={stop} onKeyDown={stop}>
+          <div className="min-w-0 max-w-full" onClick={stop} onKeyDown={stop}>
             <RegistrationButton
               state={activity.registration}
               locale={locale}

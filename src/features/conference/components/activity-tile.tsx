@@ -237,7 +237,8 @@ const ActivityTile = ({ activity, locale, slug, onOpen, registerAction, leaveAct
               {COPY.lastSeats[locale]}
             </span>
           ) : null}
-          <span className="flex-none" onClick={stop} onKeyDown={stop}>
+          {/* Two controls when registered: the pair may wrap, never leave the tile. */}
+          <span className="min-w-0 max-w-full" onClick={stop} onKeyDown={stop}>
             <RegistrationButton
               state={activity.registration}
               locale={locale}

@@ -24,7 +24,6 @@ export const COPY = {
 
   /* The day selector. */
   days: { he: 'ימי הכנס', en: 'Conference days' },
-  dayWord: { he: 'יום', en: 'Day' },
   today: { he: 'היום', en: 'Today' },
   previousDay: { he: 'היום הקודם', en: 'Previous day' },
   nextDay: { he: 'היום הבא', en: 'Next day' },
@@ -162,14 +161,3 @@ export const COPY = {
 export type CopyKey = keyof typeof COPY;
 
 export const t = (locale: Locale, key: CopyKey): string => COPY[key][locale];
-
-/*
- * The day's ordinal, the way each language writes it: a letter with a
- * geresh in Hebrew, a number in English. Beyond the seventh day the
- * Hebrew falls back to a number too — a conference that long has bigger
- * problems than typography.
- */
-const HEBREW_ORDINALS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ז׳'];
-
-export const dayOrdinal = (index: number, locale: Locale): string =>
-  locale === 'he' ? (HEBREW_ORDINALS[index - 1] ?? String(index)) : String(index);

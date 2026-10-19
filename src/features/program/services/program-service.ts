@@ -523,6 +523,57 @@ export const leaveWorkshop = async (
   return cancelled;
 };
 
+/*
+ * The organiser gives a place back on a guest's behalf.
+ *
+ * The same engine as the guest's own cancellation — the same transition,
+ * the same notice to the guest, the same promotion of the next in line —
+ * with two differences that are the organiser's by right: it names the
+ * guest rather than reading the session, and it is not held by the
+ * activity's cancellation deadline, which binds the guest and not the
+ * desk. Who released which place, and when, is the caller's to record
+ * in the history. Nothing to release — no live place for that guest —
+ * returns null.
+ */
+export const releaseWorkshopPlace = async (
+  sessionId: string,
+  participantId: string,
+  locale: Locale,
+): Promise<SessionRegistrationSummary | null> => {
+  const existing = await sessionRegistrationRepository.find(
+    sessionId,
+    participantId,
+  );
+  if (!existing) {
+    return null;
+  }
+  const result = applyTransition(existing.status, 'cancelled');
+  if (!result.ok) {
+    return null;
+  }
+  const freedSeat = existing.status === 'confirmed';
+  const session = await sessionRepository.getById(sessionId, locale);
+  const cancelled = await sessionRegistrationRepository.setStatus(
+    existing.id,
+    result.status,
+  );
+
+  const slug = session?.eventSlug;
+  if (slug) {
+    await emitRegistration({
+      type: 'registration.cancelled',
+      registrationId: existing.id,
+      participantId,
+      eventSlug: slug,
+      occurredAt: nowIso(),
+    });
+  }
+  if (freedSeat && session) {
+    await promoteWaitlist(session, slug);
+  }
+  return cancelled;
+};
+
 export const myWorkshops = async (
   slug: string,
 ): Promise<SessionRegistrationSummary[]> => {

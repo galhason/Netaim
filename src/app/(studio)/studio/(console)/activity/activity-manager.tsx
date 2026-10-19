@@ -6,6 +6,7 @@ import type { Locale } from '@/config/locales';
 import { withBasePath } from '@/config/site';
 import type { SessionType, WorkshopStatus } from '@/features/program';
 import { archiveActivityAction, removeActivityAction, restoreActivityAction } from './actions';
+import RegistrantsDialog from './registrants-dialog';
 
 export interface ActivityRow {
   id: string;
@@ -31,8 +32,10 @@ export interface ActivityPermissions {
   manage: boolean;
   archive: boolean;
   delete: boolean;
-  /* Downloading who signed up — names, phones, emails — as Excel. */
+  /* Seeing who signed up — names, phones, emails — on screen and as Excel. */
   roster: boolean;
+  /* Giving a guest's place back from the desk. */
+  release: boolean;
 }
 
 interface Props {
@@ -131,7 +134,18 @@ const T = (locale: Locale) => ({
   exportOne: locale === 'he' ? 'אקסל' : 'Excel',
   exportOneLabel: (title: string) =>
     locale === 'he' ? `ייצוא הנרשמים לאקסל: ${title}` : `Export registrants to Excel: ${title}`,
+  registrants: locale === 'he' ? 'נרשמים' : 'Registrants',
+  registrantsLabel: (title: string, n: number) =>
+    locale === 'he' ? `הנרשמים ל${title} (${n})` : `Registrants of ${title} (${n})`,
 });
+
+/* People, as a small line drawing: the button that opens the list. */
+const People = () => (
+  <svg viewBox="0 0 20 20" aria-hidden="true" className="size-3.5 flex-none" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="7.5" cy="6.5" r="3" />
+    <path d="M1.5 16.5a6 6 0 0 1 12 0M13 3.8a3 3 0 0 1 0 5.4M15 11.2a6 6 0 0 1 3.5 5.3" />
+  </svg>
+);
 
 /* A file to download, not a page — so a plain link, never a client navigation. */
 const Download = () => (
@@ -161,6 +175,8 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
   const [status, setStatus] = useState<'all' | WorkshopStatus>('all');
   const [type, setType] = useState<'all' | SessionType>('all');
   const [day, setDay] = useState<string>('all');
+  /* The activity whose registrants are open in the window, if any. */
+  const [open, setOpen] = useState<ActivityRow | null>(null);
 
   /*
    * The day an activity belongs to, as the list names it: a calendar
@@ -491,6 +507,21 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
                           {can.manage ? t.edit : t.view}
                         </Link>
                         {can.roster ? (
+                          <button
+                            type="button"
+                            onClick={() => setOpen(r)}
+                            aria-label={t.registrantsLabel(r.title, r.confirmed + r.waiting)}
+                            aria-haspopup="dialog"
+                            className="inline-flex items-center gap-1 rounded-md border border-[var(--c-line)] px-2.5 py-1 text-xs text-[var(--c-text-soft)] hover:border-[var(--c-bronze)]/50 hover:text-[var(--c-bronze)]"
+                          >
+                            <People />
+                            {t.registrants}
+                            <span className="rounded-full bg-[rgba(255,255,255,0.08)] px-1.5 text-[10px] tabular-nums text-[var(--c-text)]">
+                              {r.confirmed + r.waiting}
+                            </span>
+                          </button>
+                        ) : null}
+                        {can.roster ? (
                           <a
                             href={withBasePath(`/studio/activity/roster?session=${encodeURIComponent(r.id)}`)}
                             aria-label={t.exportOneLabel(r.title)}
@@ -584,6 +615,18 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
             </ul>
           )}
         </details>
+      ) : null}
+
+      {open && slug ? (
+        <RegistrantsDialog
+          key={open.id}
+          locale={locale}
+          slug={slug}
+          sessionId={open.id}
+          title={open.title}
+          canRelease={can.release}
+          onClose={() => setOpen(null)}
+        />
       ) : null}
     </div>
   );

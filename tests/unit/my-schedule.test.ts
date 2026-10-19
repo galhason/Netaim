@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { ActivityVM } from '@/features/conference';
-import { COPY, dayOrdinal } from '@/app/(frontend)/[locale]/events/[slug]/my-activities/copy';
+import { COPY } from '@/app/(frontend)/[locale]/events/[slug]/my-activities/copy';
 import {
   findConflicts,
   fromActivity,
@@ -118,10 +118,25 @@ describe('time is said the way a person says it', () => {
     expect(venueClock(Date.UTC(2026, 8, 16, 20, 2))).toBe('23:02');
   });
 
-  it('writes the day ordinal in each language’s own way', () => {
-    expect(dayOrdinal(1, 'he')).toBe('א׳');
-    expect(dayOrdinal(3, 'he')).toBe('ג׳');
-    expect(dayOrdinal(3, 'en')).toBe('3');
+  /*
+   * The tab used to count the conference's days — "יום א׳", "Day 1" — and
+   * in Hebrew that is also how Sunday is written. A conference opening on
+   * Friday 30 October 2026 announced itself as יום א׳, and a reader who
+   * knows the calendar went looking for the wrong day. The tab now names
+   * the day the calendar does.
+   */
+  it('names each day after the calendar, not after its place in the conference', () => {
+    const selector = readFileSync(
+      'src/app/(frontend)/[locale]/events/[slug]/my-activities/day-selector.tsx',
+      'utf8',
+    );
+    expect(selector).toContain('{day.weekdayLong}');
+    expect(selector).not.toMatch(/dayOrdinal|dayWord/);
+    expect(COPY).not.toHaveProperty('dayWord');
+    /* And the calendar, asked about 30 October 2026, answers Friday. */
+    const friday = new Date('2026-10-30T00:00:00');
+    expect(new Intl.DateTimeFormat('he-IL', { weekday: 'long' }).format(friday)).toBe('יום שישי');
+    expect(new Intl.DateTimeFormat('en-GB', { weekday: 'long' }).format(friday)).toBe('Friday');
   });
 });
 

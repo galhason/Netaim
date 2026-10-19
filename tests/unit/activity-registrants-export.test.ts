@@ -29,15 +29,15 @@ const rosters: ConferenceRosters = {
       startsAt: '2026-11-12T07:00:00.000Z',
       endsAt: '2026-11-12T08:30:00.000Z',
       people: [
-        { name: 'Dana Levi', phone: '050-1234567', email: 'dana@example.com', status: 'confirmed', language: 'en' },
-        { name: 'Avi Cohen', phone: '052-7654321', email: 'avi@example.com', status: 'waitlisted' },
+        { participantId: '1', name: 'Dana Levi', phone: '050-1234567', email: 'dana@example.com', status: 'confirmed', language: 'en' },
+        { participantId: '2', name: 'Avi Cohen', phone: '052-7654321', email: 'avi@example.com', status: 'waitlisted' },
       ],
     },
     {
       sessionId: '12',
       title: 'סיור: הגן הבוטני / חלק א׳ [בוקר] — מסלול ארוך במיוחד',
       startsAt: '2026-11-12T10:00:00.000Z',
-      people: [{ name: 'Dana Levi', phone: '050-1234567', email: 'dana@example.com', status: 'attended' }],
+      people: [{ participantId: '1', name: 'Dana Levi', phone: '050-1234567', email: 'dana@example.com', status: 'attended' }],
     },
     { sessionId: '13', title: 'הוראה חדשנית', people: [] },
   ],
