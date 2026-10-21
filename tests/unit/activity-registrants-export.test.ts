@@ -122,53 +122,65 @@ describe('a limited activity that holds a vote on its language', () => {
     expect(done?.rows).toContainEqual(['הצבעת שפה — שפה נקבעה: אנגלית']);
   });
 
-  it('puts the same counts on one line of the summary sheet', () => {
-    const [, totals] = activityRosterSheets(tour, 'he', 'all');
-    expect(totals?.rows[1]?.slice(3)).toEqual(['5', '3', '0', '1', '1', '4 מתוך 20', 'אנגלית 2 · עברית 1 · רוסית 0 (+1)']);
-  });
 });
 
 describe('every activity, in one file', () => {
-  const sheets = activityRosterSheets(rosters, 'he', 'all');
+  const withPanel: ConferenceRosters = {
+    ...rosters,
+    conferenceRegistrants: ['1', '2', '9'],
+    activities: [
+      { sessionId: '10', title: 'פאנל פתיחה', type: 'gathering', people: [] },
+      ...rosters.activities.map((activity) => ({ ...activity, type: 'workshop' })),
+    ],
+  };
+  const sheets = activityRosterSheets(withPanel, 'he', 'all');
+  const [sheet] = sheets;
+  const rows = sheet?.rows ?? [];
+
+  it('is one sheet', () => {
+    expect(sheets).toHaveLength(1);
+    expect(sheet?.name).toBe('כל הפעילויות');
+    expect(sheet?.rightToLeft).toBe(true);
+  });
 
   it('opens on every activity as a block: its title and hour, its people, its summary', () => {
-    const [all] = sheets;
-    expect(all?.name).toBe('כל הפעילויות');
-    expect(all?.rows.slice(0, 5)).toEqual([
+    expect(rows.slice(0, 5)).toEqual([
       ['הוראה חדשנית · 12.11.2026 · 09:00–10:30'],
       ['שם', 'טלפון', 'אימייל', 'סטטוס', 'שפה מבוקשת'],
       ['Dana Levi', '050-1234567', 'dana@example.com', 'רשום/ה', 'אנגלית'],
       ['Avi Cohen', '052-7654321', 'avi@example.com', 'ברשימת המתנה', ''],
       [],
     ]);
-    expect(all?.rows[5]).toEqual(['סיכום הפעילות']);
-    /* Every block title, header and summary heading is bold. */
-    for (const row of all?.boldRows ?? []) {
-      expect(all?.rows[row]?.[0]).toBeTruthy();
+    expect(rows[5]).toEqual(['סיכום הפעילות']);
+    expect(rows.filter((row) => row[0] === 'סיכום הפעילות')).toHaveLength(3);
+  });
+
+  it('leaves out what nobody registers for — a panel, a break', () => {
+    expect(rows.some((row) => String(row[0] ?? '').startsWith('פאנל פתיחה'))).toBe(false);
+  });
+
+  it('closes on the conference as a whole', () => {
+    const overall = rows.slice(rows.findIndex((row) => row[0] === 'סיכום כללי'));
+    expect(overall.slice(0, 5)).toEqual([
+      ['סיכום כללי'],
+      /* Dana (1) and Avi (2) hold places; 9 registered to the conference and chose nothing. */
+      ['סה״כ משתתפים בכנס', '3'],
+      ['נרשמו לכנס', '3'],
+      ['נרשמו לפעילות אחת לפחות', '2'],
+      ['נרשמו לכנס ולא לאף פעילות', '1'],
+    ]);
+    expect(overall).toContainEqual(['סה״כ הרשמות לפעילויות', '3']);
+    expect(overall).toContainEqual(['ממוצע פעילויות לנרשם', '1.5']);
+    expect(overall).toContainEqual(['פעילויות בלי נרשמים', '1']);
+    expect(overall).toContainEqual(['סדנה', '3', '3']);
+    expect(overall[overall.length - 1]).toEqual(['סה״כ', '3', '3']);
+  });
+
+  it('writes every block title, header and summary heading bold', () => {
+    for (const row of sheet?.boldRows ?? []) {
+      expect(rows[row]?.[0]).toBeTruthy();
     }
-    expect(all?.rows.filter((row) => row[0] === 'סיכום הפעילות')).toHaveLength(3);
-  });
-
-  it('then a summary sheet, one row per activity', () => {
-    const totals = sheets[1];
-    expect(totals?.name).toBe('סיכום');
-    expect(totals?.rows[0]).toEqual(['פעילות', 'תאריך', 'שעה', 'סה״כ', 'רשום/ה', 'הגיע/ה', 'ממתין/ה לאישור', 'ברשימת המתנה', 'תפוסה', 'הצבעת שפה']);
-    expect(totals?.rows.slice(1).map((row) => row[0])).toEqual(rosters.activities.map((activity) => activity.title));
-  });
-
-  it('then gives each activity its own sheet, even one nobody signed up for', () => {
-    expect(sheets).toHaveLength(5);
-    expect(sheets[4]?.rows.slice(0, 4)).toEqual([['שם', 'טלפון', 'אימייל', 'סטטוס', 'שפה מבוקשת'], [], ['סיכום הפעילות'], ['סה״כ נרשמים', 'אין נרשמים']]);
-  });
-
-  it('names every sheet the way Excel accepts: short, clean and unique', () => {
-    const names = sheets.map((sheet) => sheet.name);
-    for (const name of names) {
-      expect(name.length).toBeLessThanOrEqual(31);
-      expect(name).not.toMatch(/[:\\/?*[\]]/);
-    }
-    expect(new Set(names.map((name) => name.toLowerCase())).size).toBe(names.length);
-    expect(names[4]).toBe('הוראה חדשנית (2)');
+    expect(sheet?.boldRows).toContain(rows.findIndex((row) => row[0] === 'סיכום כללי'));
   });
 
   it('counts sign-ups for the history, not people', () => {
@@ -235,7 +247,7 @@ describe('who may take it, and how', () => {
 
   it('reads under the Studio’s own access rules and leaves out anonymised and cancelled places', () => {
     expect(adapter).not.toContain('overrideAccess: true');
-    expect(adapter.match(/overrideAccess: false/g)?.length).toBe(4);
+    expect(adapter.match(/overrideAccess: false/g)?.length).toBe(6);
     expect(adapter).toContain('.filter((person) => !person.anonymizedAt)');
     expect(adapter).toContain('{ status: { in: LIVE_STATUSES } }');
   });

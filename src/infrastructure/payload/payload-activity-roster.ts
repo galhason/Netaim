@@ -24,6 +24,7 @@ const ROSTER_LIMIT = 5000;
 interface SessionDoc {
   id: number | string;
   title?: string | null;
+  sessionType?: string | null;
   startsAt?: string | null;
   endsAt?: string | null;
   capacity?: number | null;
@@ -160,6 +161,7 @@ export const payloadActivityRosters: ActivityRosterSource = async (slug, locale,
     return {
       sessionId: String(activity.id),
       title: activity.title ?? '',
+      ...(activity.sessionType ? { type: activity.sessionType } : {}),
       ...(activity.startsAt ? { startsAt: activity.startsAt } : {}),
       ...(activity.endsAt ? { endsAt: activity.endsAt } : {}),
       ...(typeof activity.capacity === 'number' && activity.capacity > 0 ? { capacity: activity.capacity } : {}),
@@ -173,5 +175,50 @@ export const payloadActivityRosters: ActivityRosterSource = async (slug, locale,
       people: list,
     };
   });
-  return { ...withZone, activities: rosters };
+  /*
+   * The whole report closes on the conference as a whole: who holds a
+   * registration to it, whether or not they chose an activity. Same
+   * door as everything above — the acting creator's access, live
+   * statuses, anonymised accounts left out.
+   */
+  if (sessionId) {
+    return { ...withZone, activities: rosters };
+  }
+  const registrations = await payload.find({
+    collection: 'registrations',
+    where: { and: [{ event: { equals: event.id } }, { status: { in: LIVE_STATUSES } }] },
+    depth: 0,
+    limit: ROSTER_LIMIT,
+    pagination: false,
+    overrideAccess: false,
+    user,
+  });
+  const registrantIds = [
+    ...new Set(
+      (registrations.docs as unknown as { participant: RelationshipValue }[])
+        .map((row) => String(relationshipId(row.participant) ?? ''))
+        .filter(Boolean),
+    ),
+  ];
+  const unknown = registrantIds.filter((id) => !byId.has(id));
+  const forgotten = unknown.length
+    ? new Set(
+        (
+          await payload.find({
+            collection: 'participants',
+            where: { and: [{ id: { in: unknown } }, { anonymizedAt: { exists: true } }] },
+            depth: 0,
+            limit: ROSTER_LIMIT,
+            pagination: false,
+            overrideAccess: false,
+            user,
+          })
+        ).docs.map((person) => String(person.id)),
+      )
+    : new Set<string>();
+  return {
+    ...withZone,
+    conferenceRegistrants: registrantIds.filter((id) => !forgotten.has(id)),
+    activities: rosters,
+  };
 };

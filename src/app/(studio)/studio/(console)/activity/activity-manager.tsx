@@ -129,8 +129,8 @@ const T = (locale: Locale) => ({
   exportAll: locale === 'he' ? 'ייצוא כל הנרשמים' : 'Export all registrants',
   exportAllHint:
     locale === 'he'
-      ? 'קובץ אקסל אחד: כל הנרשמים לכל הפעילויות, וגיליון נפרד לכל פעילות'
-      : 'One Excel file: everyone signed up for every activity, plus a sheet per activity',
+      ? 'דוח אחד באקסל: הנרשמים לכל סדנה, הרצאה וסיור עם סיכום לכל אחת, וסיכום כללי בסוף'
+      : 'One Excel report: the registrants of every seminar, lecture and tour with a summary under each, and an overall summary at the end',
   exportOne: locale === 'he' ? 'אקסל' : 'Excel',
   exportOneLabel: (title: string) =>
     locale === 'he' ? `ייצוא הנרשמים לאקסל: ${title}` : `Export registrants to Excel: ${title}`,

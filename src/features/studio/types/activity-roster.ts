@@ -23,6 +23,8 @@ export interface RosterPerson {
 export interface ActivityRoster {
   sessionId: string;
   title: string;
+  /* The kind of activity — a panel or a break takes no registrations and is left out of the report. */
+  type?: string;
   startsAt?: string;
   endsAt?: string;
   /* The number of places, where the activity is limited; absent means unlimited. */
@@ -37,6 +39,12 @@ export interface ActivityRoster {
 export interface ConferenceRosters {
   /* The conference's own clock, for the dates and times in the file. */
   timeZone?: string;
+  /*
+   * Who holds a live registration to the conference itself — accounts,
+   * by id, for the report's closing summary. Read only for the whole
+   * report, never for one activity.
+   */
+  conferenceRegistrants?: string[];
   activities: ActivityRoster[];
 }
 

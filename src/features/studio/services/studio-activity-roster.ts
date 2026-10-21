@@ -1,5 +1,5 @@
 import type { Locale } from '@/config/locales';
-import type { SheetData } from '@/features/program';
+import { isPlainSession, isSessionType, TYPE_LABELS, type SheetData } from '@/features/program';
 import { activityRosterSource } from '@/infrastructure';
 import { formatTimeLabel } from '@/shared/utils/format-date';
 import { ACTIVITY_LANGUAGE_LABELS, activityLanguagesOf } from '@/shared/constants/activity-facets';
@@ -16,11 +16,16 @@ import type {
  * One activity: one sheet — name, phone, email, where each person
  * stands — and a summary under it: how many, by standing, how many of
  * the places are taken, and where the activity holds a vote on its
- * language, how the vote stands. Every activity: a first sheet that
- * reads like a printed list, one block per activity (its title and
- * hour, its people, its summary); a summary sheet, one row per
- * activity, for the totals at a glance; then a sheet per activity,
- * each the same as the single-activity file.
+ * language, how the vote stands.
+ *
+ * Every activity: still one sheet, read top to bottom like a printed
+ * list. Only the activities a person registers for — workshops,
+ * lectures, keynotes, tours; a panel or a break holds no places and has
+ * nobody to list. Each is a block: its title and hour, its people, its
+ * summary. The sheet closes on the conference as a whole: who is
+ * registered to it, how many of them chose an activity and how many did
+ * not, the places taken across the programme, and each kind of
+ * activity with its count.
  *
  * Dates and times are the conference's own clock, not the server's.
  * Every cell is text — a phone number keeps its leading zero.
@@ -150,19 +155,6 @@ const placesText = (activity: ActivityRoster, tally: ActivityTally, locale: Loca
     : `${tally.places} (${ui.rosterSummaryUnlimited[locale]})`;
 };
 
-/* "עברית 12 (+2) · אנגלית 5" — the vote on one line, for the summary sheet. */
-const voteText = (activity: ActivityRoster, tally: ActivityTally, locale: Locale): string => {
-  if (!activity.languageVote) {
-    return '';
-  }
-  const ui = CONSOLE_UI;
-  const decided = languageOf(activity.decidedLanguage, locale);
-  const line = tally.votes
-    .map((vote) => `${vote.label} ${vote.seated}${vote.waiting > 0 ? ` (+${vote.waiting})` : ''}`)
-    .join(' · ');
-  return decided ? `${ui.rosterSummaryDecided[locale]}: ${decided}${line ? ` — ${line}` : ''}` : line;
-};
-
 /*
  * The summary block under an activity's people, as rows of the sheet:
  * a heading, the total, each standing that has anyone in it, the
@@ -257,44 +249,99 @@ const blocksSheet = (rosters: ConferenceRosters, name: string, locale: Locale): 
   return { name, rightToLeft: locale === 'he', widths: PEOPLE_WIDTHS, rows, boldRows: bold };
 };
 
-/* The summary sheet: one row per activity, the totals at a glance. */
-const summarySheet = (rosters: ConferenceRosters, name: string, locale: Locale): SheetData => {
+/* The activities a person registers for: not a panel, not a break. */
+const takesRegistrations = (activity: ActivityRoster): boolean => !isPlainSession(activity.type);
+
+const KIND_ORDER = ['workshop', 'talk', 'keynote', 'tour'] as const;
+
+/*
+ * The closing summary of the whole report, as rows: the conference,
+ * the people in the activities, the places across the programme, and
+ * each kind of activity. Returns the rows and which are headings.
+ */
+const overallRows = (
+  rosters: ConferenceRosters,
+  activities: ActivityRoster[],
+  locale: Locale,
+): { rows: string[][]; bold: number[] } => {
   const ui = CONSOLE_UI;
-  const { timeZone } = rosters;
-  return {
-    name,
-    rightToLeft: locale === 'he',
-    widths: [34, 12, 13, 9, 11, 11, 13, 13, 16, 40],
-    rows: [
-      [
-        ui.rosterColActivity[locale],
-        ui.rosterColDate[locale],
-        ui.rosterColTime[locale],
-        ui.rosterColTotal[locale],
-        STATUS_LABEL.confirmed[locale],
-        STATUS_LABEL.attended[locale],
-        STATUS_LABEL.pending[locale],
-        STATUS_LABEL.waitlisted[locale],
-        ui.rosterColPlaces[locale],
-        ui.rosterColVote[locale],
-      ],
-      ...rosters.activities.map((activity) => {
-        const tally = tallyOf(activity, locale);
-        return [
-          activity.title,
-          dateOf(activity.startsAt, locale, timeZone),
-          timeOf(activity, locale, timeZone),
-          String(tally.total),
-          String(tally.byStatus.confirmed),
-          String(tally.byStatus.attended),
-          String(tally.byStatus.pending),
-          String(tally.byStatus.waitlisted),
-          placesText(activity, tally, locale),
-          voteText(activity, tally, locale),
-        ];
-      }),
-    ],
+  const rows: string[][] = [];
+  const bold: number[] = [];
+  const heading = (text: string) => {
+    bold.push(rows.length);
+    rows.push([text]);
   };
+  const line = (label: string, value: string | number, note = '') => {
+    rows.push(note ? [label, String(value), note] : [label, String(value)]);
+  };
+
+  const tallies = activities.map((activity) => ({ activity, tally: tallyOf(activity, locale) }));
+  const inActivities = new Set(activities.flatMap((activity) => activity.people.map((person) => person.participantId)));
+  const conference = new Set(rosters.conferenceRegistrants ?? []);
+  const everyone = new Set([...conference, ...inActivities]);
+  const withoutActivity = [...conference].filter((id) => !inActivities.has(id)).length;
+  const places = tallies.reduce((sum, { tally }) => sum + tally.total, 0);
+  const byStatus = STATUS_ORDER.map((status) => ({
+    status,
+    count: tallies.reduce((sum, { tally }) => sum + tally.byStatus[status], 0),
+  }));
+  const limited = tallies.filter(({ activity }) => activity.capacity);
+  const seats = limited.reduce((sum, { activity }) => sum + (activity.capacity ?? 0), 0);
+  const taken = limited.reduce((sum, { tally }) => sum + tally.places, 0);
+  const full = limited.filter(({ activity, tally }) => tally.places >= (activity.capacity ?? 0)).length;
+  const empty = tallies.filter(({ tally }) => tally.total === 0).length;
+  const average = inActivities.size > 0 ? (places / inActivities.size).toFixed(1) : '0';
+
+  heading(ui.rosterOverallHeading[locale]);
+  line(ui.rosterOverallPeople[locale], everyone.size);
+  line(ui.rosterOverallConference[locale], conference.size);
+  line(ui.rosterOverallInActivities[locale], inActivities.size);
+  line(ui.rosterOverallNoActivity[locale], withoutActivity);
+
+  rows.push([]);
+  heading(ui.rosterOverallPlacesHeading[locale]);
+  line(ui.rosterOverallRegistrations[locale], places);
+  for (const { status, count } of byStatus) {
+    if (count > 0) {
+      line(STATUS_LABEL[status][locale], count);
+    }
+  }
+  line(ui.rosterOverallAverage[locale], average);
+  if (limited.length > 0) {
+    line(ui.rosterOverallSeats[locale], `${taken} ${ui.rosterSummaryOutOf[locale]} ${seats}`);
+  }
+  line(ui.rosterOverallFull[locale], full);
+  line(ui.rosterOverallEmpty[locale], empty);
+
+  rows.push([]);
+  heading(ui.rosterOverallKindsHeading[locale]);
+  rows.push([ui.rosterOverallKind[locale], ui.rosterOverallKindActivities[locale], ui.rosterOverallKindRegistrations[locale]]);
+  bold.push(rows.length - 1);
+  for (const kind of KIND_ORDER) {
+    const ofKind = tallies.filter(({ activity }) => activity.type === kind);
+    if (ofKind.length > 0) {
+      rows.push([
+        TYPE_LABELS[kind][locale],
+        String(ofKind.length),
+        String(ofKind.reduce((sum, { tally }) => sum + tally.total, 0)),
+      ]);
+    }
+  }
+  const unnamed = tallies.filter(({ activity }) => !activity.type || !isSessionType(activity.type));
+  if (unnamed.length > 0) {
+    rows.push([
+      ui.rosterSheetUntitled[locale],
+      String(unnamed.length),
+      String(unnamed.reduce((sum, { tally }) => sum + tally.total, 0)),
+    ]);
+  }
+  rows.push([
+    ui.rosterColTotal[locale],
+    String(tallies.length),
+    String(places),
+  ]);
+  bold.push(rows.length - 1);
+  return { rows, bold };
 };
 
 export const activityRosterSheets = (
@@ -310,10 +357,16 @@ export const activityRosterSheets = (
     return activity ? [peopleSheet(activity, name(activity.title), locale)] : [];
   }
 
+  const activities = rosters.activities.filter(takesRegistrations);
+  const sheet = blocksSheet({ ...rosters, activities }, name(ui.rosterSheetAll[locale]), locale);
+  const overall = overallRows(rosters, activities, locale);
+  const offset = sheet.rows.length + (sheet.rows.length > 0 ? 3 : 0);
   return [
-    blocksSheet(rosters, name(ui.rosterSheetAll[locale]), locale),
-    summarySheet(rosters, name(ui.rosterSheetSummary[locale]), locale),
-    ...rosters.activities.map((activity) => peopleSheet(activity, name(activity.title), locale)),
+    {
+      ...sheet,
+      rows: [...sheet.rows, ...(sheet.rows.length > 0 ? [[], [], []] : []), ...overall.rows],
+      boldRows: [...(sheet.boldRows ?? []), ...overall.bold.map((row) => row + offset)],
+    },
   ];
 };
 
