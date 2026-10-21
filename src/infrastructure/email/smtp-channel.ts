@@ -108,6 +108,27 @@ type Transport = {
 
 let transport: Promise<Transport | null> | null = null;
 
+/*
+ * A pooled connection that the relay closed while it sat idle. Gmail
+ * does this after a few quiet minutes and answers the next command on
+ * it with "421 Connection expired, try reconnecting"; a reset socket
+ * says the same thing without the words. Neither is about the message
+ * — a fresh connection carries it — so the pool is dropped and the one
+ * send is tried once more. Anything else (a refused login, a rejected
+ * address, a quota) is final and is not retried here.
+ */
+const STALE_CONNECTION = /\b421\b|ECONNRESET|EPIPE|ETIMEDOUT|socket close|Connection closed|Connection expired/i;
+
+const isStaleConnection = (error: unknown): boolean =>
+  error instanceof Error && STALE_CONNECTION.test(`${error.message} ${(error as { code?: string }).code ?? ''}`);
+
+const dropTransport = async (): Promise<void> => {
+  const held = transport;
+  transport = null;
+  const mailer = await held?.catch(() => null);
+  (mailer as { close?: () => void } | null)?.close?.();
+};
+
 const getTransport = (config: SmtpConfig): Promise<Transport | null> => {
   transport ??= import('nodemailer')
     .then((nodemailer) =>
@@ -158,25 +179,42 @@ export const smtpChannel: ChannelAdapter = {
       });
       return 'failed';
     }
-    const mailer = await getTransport(config);
-    if (!mailer) {
-      return 'failed';
-    }
+    const mail = {
+      from: config.from,
+      to: recipient.email,
+      subject: message.subject,
+      /*
+       * Both parts, always. The text is the message; the HTML is the
+       * same message wearing the platform's clothes. A client that
+       * refuses HTML, a screen reader, and a person who reads mail in
+       * plain text all get the full content from `text` alone.
+       */
+      text: message.body,
+      html: htmlFor(message, await mailLogoUrl()),
+      ...(config.replyTo ? { replyTo: config.replyTo } : {}),
+    };
+    const send = async (): Promise<void> => {
+      const mailer = await getTransport(config);
+      if (!mailer) {
+        throw new Error('transport unavailable');
+      }
+      await mailer.sendMail(mail);
+    };
     try {
-      await mailer.sendMail({
-        from: config.from,
-        to: recipient.email,
-        subject: message.subject,
-        /*
-         * Both parts, always. The text is the message; the HTML is the
-         * same message wearing the platform's clothes. A client that
-         * refuses HTML, a screen reader, and a person who reads mail in
-         * plain text all get the full content from `text` alone.
-         */
-        text: message.body,
-        html: htmlFor(message, await mailLogoUrl()),
-        ...(config.replyTo ? { replyTo: config.replyTo } : {}),
-      });
+      try {
+        await send();
+      } catch (error) {
+        if (!isStaleConnection(error)) {
+          throw error;
+        }
+        log.warn('stale connection, reconnecting', {
+          type: message.type,
+          eventSlug: message.eventSlug,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        await dropTransport();
+        await send();
+      }
       log.info('sent', { type: message.type, eventSlug: message.eventSlug });
       return 'sent';
     } catch (error) {

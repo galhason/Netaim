@@ -1,5 +1,5 @@
 import { createHash, randomInt, timingSafeEqual } from 'crypto';
-import { emailChannel, emailVerificationRepository } from '@/infrastructure';
+import { emailChannel, emailVerificationRepository, notificationOutbox } from '@/infrastructure';
 import { checkRateLimit, clearRateLimit } from '@/features/access';
 import type { Locale } from '@/config/locales';
 import type {
@@ -98,7 +98,7 @@ export const beginEmailVerification = async (
 
   const he = locale === 'he';
   /*
-   * Straight to the channel, deliberately past the outbox.
+   * Straight to the channel, deliberately past the outbox's retry.
    *
    * Everything else the platform sends is recorded and retried, because
    * a confirmation that arrives late is still a confirmation. A code is
@@ -108,6 +108,9 @@ export const beginEmailVerification = async (
    * participant, and the whole point of this step is that there is not
    * one yet.
    */
+  const subject = he
+    ? 'קוד אימות להשלמת ההרשמה'
+    : 'Verification code to complete your registration';
   const status = await emailChannel
     .deliver(
       {
@@ -115,9 +118,7 @@ export const beginEmailVerification = async (
         eventSlug: slug,
         type: 'participant.verifyEmail',
         locale,
-        subject: he
-          ? 'קוד אימות להשלמת ההרשמה'
-          : 'Verification code to complete your registration',
+        subject,
         /*
          * The code appears in the words as well as in the box: a plain
          * text reader, and anyone whose client strips the HTML, must be
@@ -148,6 +149,29 @@ export const beginEmailVerification = async (
       { email: email.trim(), name: '' },
     )
     .catch((): 'failed' => 'failed');
+
+  /*
+   * Written to the outbox after the fact, as a record and not a queue:
+   * the hour, the conference and whether the relay took it, so the
+   * Studio's notifications page shows that a code went out — or did
+   * not — instead of the answer living only in the server log. Never
+   * the code, and never the address: the body says what happened, the
+   * person is not yet anyone the outbox could name. A failed write here
+   * must not fail the registration.
+   */
+  await notificationOutbox
+    .enqueue({
+      participantId: '',
+      eventSlug: slug,
+      type: 'participant.verifyEmail',
+      locale,
+      subject,
+      body: he
+        ? `קוד אימות ${status === 'sent' ? 'נמסר לשרת הדואר' : 'לא נשלח'} (${status}).`
+        : `Verification code ${status === 'sent' ? 'handed to the mail relay' : 'not sent'} (${status}).`,
+      status,
+    })
+    .catch(() => undefined);
 
   return {
     ok: true,

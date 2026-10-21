@@ -26,6 +26,10 @@ interface SessionDoc {
   title?: string | null;
   startsAt?: string | null;
   endsAt?: string | null;
+  capacity?: number | null;
+  languageVote?: boolean | null;
+  languages?: string[] | null;
+  decidedLanguage?: string | null;
 }
 
 interface PlaceDoc {
@@ -158,6 +162,14 @@ export const payloadActivityRosters: ActivityRosterSource = async (slug, locale,
       title: activity.title ?? '',
       ...(activity.startsAt ? { startsAt: activity.startsAt } : {}),
       ...(activity.endsAt ? { endsAt: activity.endsAt } : {}),
+      ...(typeof activity.capacity === 'number' && activity.capacity > 0 ? { capacity: activity.capacity } : {}),
+      ...(activity.languageVote
+        ? {
+            languageVote: true,
+            languages: activity.languages ?? [],
+            ...(activity.decidedLanguage ? { decidedLanguage: activity.decidedLanguage } : {}),
+          }
+        : {}),
       people: list,
     };
   });

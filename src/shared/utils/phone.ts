@@ -15,6 +15,17 @@ import { DIAL_PLANS, MAIN_COUNTRY_OF_DIAL, dialPlanOf, type DialPlan } from '../
  * goes in front. A number typed in full with + or 00 is taken as it is,
  * whatever country is chosen beside it.
  *
+ * And a number typed in full without either. A guest from Milan who
+ * leaves the country on Israel — the form's default — and types
+ * 39 345 123 4567 has written their international number, not an
+ * Israeli one twelve digits long; reading it as Israeli stored
+ * +972393451234567, a number that rings nowhere. So a number that
+ * starts with a calling code is read both ways, and when both fit:
+ * written with the trunk prefix (050…, 07700…) it is local; otherwise
+ * a local reading of eleven digits or more loses to the international
+ * one, because almost no country hands out national numbers that long
+ * and almost everyone who types eleven digits has put their code in.
+ *
  * The check is the length the country's numbering plan allows, not a
  * full parse of its plan: enough to stop a digit missing or two numbers
  * run together, without a numbering database in every browser.
@@ -40,8 +51,19 @@ const plansForInternational = (digits: string): DialPlan[] => {
 const fits = (plans: readonly DialPlan[], national: string): boolean =>
   plans.some((plan) => national.length >= plan.minDigits && national.length <= plan.maxDigits);
 
+/* The digits read as an international number with its calling code in front, or null. */
+const asInternational = (digits: string): string | null => {
+  const plans = plansForInternational(digits);
+  const dial = plans[0]?.dial;
+  return dial && fits(plans, digits.slice(dial.length)) ? `+${digits}` : null;
+};
+
+/* Past this, a "national" number is almost always an international one missing its +. */
+const LONGEST_LIKELY_NATIONAL = 10;
+
 export const readPhone = (country: string, typed: string): PhoneReading => {
-  const raw = typed.trim();
+  /* "(+39) 345…" is how many people write it: the bracket before the + is not part of the number. */
+  const raw = typed.trim().replace(/^\(\s*(\+[\d\s]*)\)/, '$1');
   if (!raw) {
     return { ok: false, reason: 'missing' };
   }
@@ -66,11 +88,20 @@ export const readPhone = (country: string, typed: string): PhoneReading => {
   if (!plan) {
     return { ok: false, reason: 'country' };
   }
+  const writtenAtHome = Boolean(plan.trunk) && digits.startsWith(plan.trunk);
   const national =
-    plan.trunk && digits.startsWith(plan.trunk) && digits.length - plan.trunk.length >= plan.minDigits
+    writtenAtHome && digits.length - plan.trunk.length >= plan.minDigits
       ? digits.slice(plan.trunk.length)
       : digits;
-  return fits([plan], national) ? { ok: true, e164: `+${plan.dial}${national}` } : { ok: false, reason: 'length' };
+  const local = fits([plan], national) ? `+${plan.dial}${national}` : null;
+  /* Written with the trunk prefix, it is the country's own way of writing a number: local. */
+  const international = writtenAtHome ? null : asInternational(digits);
+
+  if (local && international) {
+    return { ok: true, e164: national.length > LONGEST_LIKELY_NATIONAL ? international : local };
+  }
+  const e164 = local ?? international;
+  return e164 ? { ok: true, e164 } : { ok: false, reason: 'length' };
 };
 
 /*

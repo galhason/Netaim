@@ -79,14 +79,19 @@ export const RATE_LIMITS: Record<RateLimitedAction, RateLimitPolicy> = {
    *
    * Asking for a code sends mail to an address the asker has only
    * claimed, so the endpoint is a free mail relay unless it is counted:
-   * five in an hour is more than a real person needs after a typo and
-   * far less than a nuisance needs.
+   * ten in an hour is more than a real person needs after a typo and
+   * far less than a nuisance needs. It was five, with an hour's block
+   * — and a person whose first code was slow to arrive pressed "send
+   * again" four times in two minutes and was then locked out of
+   * registering for an hour. The block is a quarter of an hour now: a
+   * pause long enough to stop a script, short enough that a guest who
+   * was merely impatient is back before they have given up.
    *
    * Typing a code is a guess at six digits. Five wrong answers destroys
    * the pending registration outright, and this ceiling stops the same
    * address being retried through a hundred fresh codes.
    */
-  'email-verification': { attempts: 5, windowMs: HOUR, blockMs: HOUR },
+  'email-verification': { attempts: 10, windowMs: HOUR, blockMs: 15 * MINUTE },
   'email-code': { attempts: 15, windowMs: HOUR, blockMs: HOUR },
   /*
    * The registration form asking whether an address is taken. Generous,

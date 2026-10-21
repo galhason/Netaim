@@ -53,6 +53,38 @@ describe('reading a number', () => {
     expect(readPhone('IL', '0044 7700 900123')).toEqual({ ok: true, e164: '+447700900123' });
   });
 
+  /*
+   * A guest from abroad who leaves the country on Israel — the default
+   * — and types their own code without the +. It used to come out as
+   * +972393451234567: their number with Israel's code in front.
+   */
+  it('takes a number that starts with its own calling code as international, + or not', () => {
+    expect(readPhone('IL', '39 345 123 4567')).toEqual({ ok: true, e164: '+393451234567' });
+    expect(readPhone('IL', '393451234567')).toEqual({ ok: true, e164: '+393451234567' });
+    expect(readPhone('IL', '34 612 345 678')).toEqual({ ok: true, e164: '+34612345678' });
+    expect(readPhone('IL', '33 6 12 34 56 78')).toEqual({ ok: true, e164: '+33612345678' });
+    expect(readPhone('IL', '1 212 555 0100')).toEqual({ ok: true, e164: '+12125550100' });
+    expect(readPhone('US', '44 7700 900123')).toEqual({ ok: true, e164: '+447700900123' });
+    /* The chosen country's own code, typed again, is not doubled. */
+    expect(readPhone('IL', '972501234567')).toEqual({ ok: true, e164: '+972501234567' });
+    expect(readPhone('IT', '39 345 123 4567')).toEqual({ ok: true, e164: '+393451234567' });
+    expect(readPhone('GB', '44 7700 900123')).toEqual({ ok: true, e164: '+447700900123' });
+    /* And the bracket people put round the code is not a reason to refuse. */
+    expect(readPhone('IL', '(+39) 345 1234567')).toEqual({ ok: true, e164: '+393451234567' });
+  });
+
+  it('still reads a local number as local, even when its first digits look like a code', () => {
+    /* An Italian mobile in the 39x range, under Italy. */
+    expect(readPhone('IT', '391 234 5678')).toEqual({ ok: true, e164: '+393912345678' });
+    /* Israeli numbers, with and without the 0. */
+    expect(readPhone('IL', '501234567')).toEqual({ ok: true, e164: '+972501234567' });
+    expect(readPhone('IL', '03-1234567')).toEqual({ ok: true, e164: '+97231234567' });
+    expect(readPhone('IL', '1-800-123-456')).toEqual({ ok: true, e164: '+9721800123456' });
+    /* Written with the trunk prefix, it is the country's own way of writing a number. */
+    expect(readPhone('DE', '030 12345678')).toEqual({ ok: true, e164: '+493012345678' });
+    expect(readPhone('FR', '06 12 34 56 78')).toEqual({ ok: true, e164: '+33612345678' });
+  });
+
   it('refuses a missing number, letters, a digit short and two numbers run together', () => {
     expect(readPhone('IL', '  ')).toEqual({ ok: false, reason: 'missing' });
     expect(readPhone('IL', '050-CALL-ME')).toEqual({ ok: false, reason: 'format' });
@@ -156,6 +188,12 @@ describe('the registration form', () => {
     await expect(requestCodeAction({ error: null }, filled('07700 900123', 'GB'))).rejects.toThrow('NEXT_REDIRECT');
     const details = (sent.mock.calls[0]?.[3] as { details: { phone: string } }).details;
     expect(details.phone).toBe('+447700900123');
+  });
+
+  it('keeps a foreign number typed under Israel as that country’s number, not Israel’s', async () => {
+    await expect(requestCodeAction({ error: null }, filled('39 345 123 4567', 'IL'))).rejects.toThrow('NEXT_REDIRECT');
+    const details = (sent.mock.calls[0]?.[3] as { details: { phone: string } }).details;
+    expect(details.phone).toBe('+393451234567');
   });
 
   it('refuses a number it cannot read, before a code is sent, and keeps what was typed', async () => {

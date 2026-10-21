@@ -25,6 +25,12 @@ export interface ActivityRoster {
   title: string;
   startsAt?: string;
   endsAt?: string;
+  /* The number of places, where the activity is limited; absent means unlimited. */
+  capacity?: number;
+  /* The language put to a vote: the languages offered, and the decision once taken. */
+  languageVote?: boolean;
+  languages?: string[];
+  decidedLanguage?: string;
   people: RosterPerson[];
 }
 

@@ -189,6 +189,8 @@ export interface SheetData {
   widths?: number[];
   /* Opens right to left — a Hebrew sheet reads from the right, like the page it came from. */
   rightToLeft?: boolean;
+  /* Further rows written bold, besides the header: a block's title, a summary's heading. */
+  boldRows?: number[];
 }
 
 const sheetXml = (sheet: SheetData): string => {
@@ -205,6 +207,7 @@ const sheetXml = (sheet: SheetData): string => {
     ? '<sheetViews><sheetView rightToLeft="1" workbookViewId="0"/></sheetViews>'
     : '';
 
+  const bold = new Set([0, ...(sheet.boldRows ?? [])]);
   const rows = sheet.rows
     .map((row, r) => {
       const cells = row
@@ -212,7 +215,7 @@ const sheetXml = (sheet: SheetData): string => {
           value === ''
             ? ''
             : `<c r="${columnName(c)}${r + 1}" t="inlineStr"${
-                r === 0 ? ' s="1"' : ''
+                bold.has(r) ? ' s="1"' : ''
               }><is><t xml:space="preserve">${escapeXml(value)}</t></is></c>`,
         )
         .join('');

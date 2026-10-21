@@ -47,6 +47,13 @@ export const payloadNotificationOutboxRepository: NotificationOutboxRepository =
           where: {
             and: [
               { status: { equals: 'failed' } },
+              /*
+               * A verification code is recorded here as a fact, never a
+               * job: it is worthless after fifteen minutes and names no
+               * participant to send to. Left in this list it would only
+               * take a place from a confirmation that can still be sent.
+               */
+              { type: { not_equals: 'participant.verifyEmail' } },
               {
                 /*
                  * `attempts < 5` alone would drop every row where the
