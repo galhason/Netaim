@@ -165,7 +165,8 @@ export const restoreFromSettingsAction = async (formData: FormData) => {
 export const deleteFromSettingsAction = async (formData: FormData) => {
   const slug = String(formData.get('slug') ?? '').trim();
   const confirm = String(formData.get('confirm') ?? '').trim();
-  const actor = await actorFor('events:manage');
+  /* Permanent deletion asks for the same capability as the control center's. */
+  const actor = slug ? await actorFor('events:delete', slug) : null;
   if (!actor || !slug || confirm !== slug) {
     redirect(`${workspace(slug)}/settings?saved=delete-refused`);
   }

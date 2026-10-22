@@ -95,7 +95,7 @@ export type {
 } from './payload/payload-registration';
 import type { FellowParticipant } from './payload/payload-registration';
 import { payloadParticipantSessionRepository } from './payload/payload-participant-session';
-import { payloadAccountGrantRepository } from './payload/payload-grant';
+import { payloadAccountGrantRepository, payloadRefreshPrincipal } from './payload/payload-grant';
 import { payloadRateLimitRepository } from './payload/payload-rate-limit';
 import { payloadEmailVerificationRepository } from './payload/payload-email-verification';
 import { payloadAuditRepository } from './payload/payload-audit';
@@ -171,6 +171,8 @@ export const updateParticipantAdmin: ParticipantAdminWriter =
 export const readParticipantAccount: ParticipantAccountReader =
   payloadReadParticipantAccount;
 export const deleteParticipantAdmin = payloadDeleteParticipantAccount;
+export const refreshAccountPrincipal: (accountId: string, previousEmail?: string) => Promise<void> =
+  payloadRefreshPrincipal;
 export const eventLogisticsSource: EventLogisticsSource = payloadEventLogistics;
 export const activityRosterSource: ActivityRosterSource = payloadActivityRosters;
 export const systemUpdateRepository: SystemUpdateRepository = payloadSystemUpdateRepository;

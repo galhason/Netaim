@@ -29,6 +29,7 @@ export {
   cancelParticipantRegistration,
   deleteParticipantAccount,
   getParticipantsAdmin,
+  mayReachAccount,
   moveParticipantRegistration,
   renameParticipant,
   setParticipantPassword,

@@ -109,13 +109,21 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
     ticket,
     totpError,
     with: conflictWith,
-    link,
-    detail,
+    link: linkParam,
+    detail: detailParam,
     view,
     event: eventParam,
     next: nextParam,
   } = await searchParams;
   const returnTo = readReturnPath(nextParam);
+  /*
+   * The mailed link and the failure detail are shown on the page in
+   * development only. In production the address bar is not trusted to
+   * put a link on the site's own sign-in screen.
+   */
+  const development = process.env.NODE_ENV !== 'production';
+  const link = development ? linkParam : undefined;
+  const detail = development ? detailParam : undefined;
   const account = await getMyAccount(locale);
   /*
    * Someone sent here to sign in who already is goes straight back to

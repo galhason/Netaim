@@ -54,6 +54,12 @@ export const payloadNotificationOutboxRepository: NotificationOutboxRepository =
                * take a place from a confirmation that can still be sent.
                */
               { type: { not_equals: 'participant.verifyEmail' } },
+              /*
+               * Nor a sign-in link: its record keeps no token, so a retry
+               * would mail a link that opens nothing. The person asks
+               * again, and the new link is sent at once.
+               */
+              { type: { not_equals: 'participant.signin' } },
               {
                 /*
                  * `attempts < 5` alone would drop every row where the

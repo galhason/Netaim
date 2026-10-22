@@ -172,6 +172,28 @@ const syncPrincipal = async (
   });
 };
 
+/*
+ * The principal follows the account outside grant changes too: when the
+ * Studio changes the address an account signs in with, the principal of
+ * the old address is removed before the new one is derived, and a block
+ * or an unblock re-derives it (a blocked account keeps none).
+ */
+export const payloadRefreshPrincipal = async (
+  accountId: string,
+  previousEmail?: string,
+): Promise<void> => {
+  const payload = await getSystemPayload();
+  const account = await accountDoc(payload, accountId);
+  if (previousEmail && account?.email && principalEmail(previousEmail) !== principalEmail(account.email)) {
+    await payload.delete({
+      collection: 'users',
+      where: { email: { equals: principalEmail(previousEmail) } },
+      overrideAccess: true,
+    });
+  }
+  await syncPrincipal(payload, accountId);
+};
+
 const findGrant = async (
   payload: SystemPayload,
   grantId: string,

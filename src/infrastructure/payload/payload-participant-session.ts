@@ -13,6 +13,7 @@ interface ParticipantRow {
   name?: string;
   email?: string;
   organization?: number | string | { id: number | string };
+  blocked?: boolean | null;
 }
 
 interface SessionRow {
@@ -29,22 +30,31 @@ const toParticipant = (row: ParticipantRow): ParticipantSummary => ({
   email: row.email ?? '',
 });
 
+/*
+ * The account behind a session or a link — never a blocked one. A block
+ * used to stop the next password sign-in only: a session already open
+ * kept working for its whole life, and an unused link still opened one.
+ * Both are answered here, on every request, from the account row.
+ */
 const resolveParticipant = async (
   payload: Awaited<ReturnType<typeof getSystemPayload>>,
   value: SessionRow['participant'],
 ): Promise<ParticipantSummary | null> => {
-  if (typeof value === 'object') {
-    return toParticipant(value);
+  const row =
+    typeof value === 'object'
+      ? value
+      : ((await payload
+          .findByID({
+            collection: 'participants',
+            id: value,
+            depth: 0,
+            overrideAccess: true,
+          })
+          .catch(() => null)) as unknown as ParticipantRow | null);
+  if (!row || row.blocked === true) {
+    return null;
   }
-  const doc = await payload
-    .findByID({
-      collection: 'participants',
-      id: value,
-      depth: 0,
-      overrideAccess: true,
-    })
-    .catch(() => null);
-  return doc ? toParticipant(doc as unknown as ParticipantRow) : null;
+  return toParticipant(row);
 };
 
 /*

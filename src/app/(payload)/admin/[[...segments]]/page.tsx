@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import config from '@payload-config';
 import { generatePageMetadata, RootPage } from '@payloadcms/next/views';
+import { contentEngineShut } from '@/infrastructure/payload/content-engine-gate';
 import { importMap } from '../importMap';
 
 interface AdminPageArgs {
@@ -15,9 +16,7 @@ interface AdminPageArgs {
  * explicitly opts in via CONTENT_ENGINE_ADMIN=true. Editors live in
  * the Studio.
  */
-const adminBlocked = (): boolean =>
-  process.env.NODE_ENV === 'production' &&
-  process.env.CONTENT_ENGINE_ADMIN !== 'true';
+const adminBlocked = contentEngineShut;
 
 export const generateMetadata = ({
   params,

@@ -31,6 +31,7 @@ export {
   requestMagicLink,
   requestAccountLink,
   consumeMagicLink,
+  signInWithLink,
   establishSession,
   currentParticipant,
   emailHasAccount,

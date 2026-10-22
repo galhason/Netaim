@@ -1,6 +1,6 @@
 import type { Locale } from '@/config/locales';
 import { listAllGrants } from '@/features/access';
-import { mayRevokeRole, type Grant } from '@/permission-engine';
+import { can, mayRevokeRole, type Grant } from '@/permission-engine';
 import {
   cancelRegistration,
   isStrongPassword,
@@ -12,6 +12,7 @@ import {
   listParticipantsAdmin,
   participantSessionRepository,
   readParticipantAccount,
+  refreshAccountPrincipal,
   registrationRepository,
   searchParticipantAccounts,
   updateParticipantAdmin,
@@ -31,10 +32,61 @@ export const searchAccounts = (
 export const renameParticipant = (id: string, name: string): Promise<void> =>
   updateParticipantAdmin(id, { name });
 
-export const setParticipantBlocked = (
+/*
+ * May this hand reach this account?
+ *
+ * The Studio could block, re-address and re-key any account, a staff
+ * member's included: a Supervisor could shut out the Admin, and an
+ * Admin could cut a new key for a developer and walk in as them. The
+ * same rule as deletion now applies to both: every grant the account
+ * holds must be one this hand could take away. A block also needs the
+ * capability that governs grants, never falls on the hand's own
+ * account, and never on the last Admin or the last developer.
+ */
+export type AccountReach = 'credentials' | 'block';
+
+export const mayReachAccount = async (
+  id: string,
+  actor: { id: string; grants: readonly Grant[] },
+  reach: AccountReach,
+): Promise<boolean> => {
+  if (reach === 'block' && actor.id === id) {
+    return false;
+  }
+  const all = await listAllGrants();
+  const held = all.filter((grant) => grant.accountId === id);
+  if (held.length === 0) {
+    return true;
+  }
+  if (held.some((grant) => !mayRevokeRole(actor.grants, grant.role))) {
+    return false;
+  }
+  if (reach === 'credentials') {
+    return true;
+  }
+  const keeps = (role: string) =>
+    all.some((grant) => grant.role === role && grant.accountId !== id);
+  return (
+    can(actor.grants, 'access:manage') &&
+    !held.some((grant) => (grant.role === 'owner' || grant.role === 'developer') && !keeps(grant.role))
+  );
+};
+
+/*
+ * A block closes the door at once: every open session of the account is
+ * revoked (and the session check refuses a blocked account besides), and
+ * its technical principal is re-derived — a blocked account keeps none.
+ */
+export const setParticipantBlocked = async (
   id: string,
   blocked: boolean,
-): Promise<void> => updateParticipantAdmin(id, { blocked });
+): Promise<void> => {
+  await updateParticipantAdmin(id, { blocked });
+  if (blocked) {
+    await participantSessionRepository.revokeAllSessions(id, new Date().toISOString());
+  }
+  await refreshAccountPrincipal(id).catch(() => undefined);
+};
 
 /*
  * The keys to an account, turned by the Admin.
@@ -88,6 +140,14 @@ export const updateParticipantAccount = async (
       ...(emailChanged ? { email } : {}),
       ...(phoneChanged ? { phone } : {}),
     });
+    if (emailChanged) {
+      /*
+       * A new address is a new key: sessions opened under the old one
+       * close, and the principal follows the address.
+       */
+      await participantSessionRepository.revokeAllSessions(id, new Date().toISOString());
+      await refreshAccountPrincipal(id, current.email).catch(() => undefined);
+    }
   } catch {
     return { ok: false, reason: 'failed' };
   }

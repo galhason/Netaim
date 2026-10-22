@@ -26,6 +26,7 @@ import {
 import {
   cancelParticipantRegistration,
   deleteParticipantAccount,
+  mayReachAccount,
   moveParticipantRegistration,
   renameParticipant,
   requireCapability,
@@ -599,9 +600,14 @@ export const renameParticipantAction = async (formData: FormData) => {
  */
 export const updateParticipantAccountAction = async (formData: FormData) => {
   const id = String(formData.get('id') ?? '').trim();
-  const actor = await actorFor('participants:credentials');
-  if (!actor || !/^\d{1,12}$/.test(id)) {
+  const access = await requireCapability('participants:credentials');
+  if (!access || !/^\d{1,12}$/.test(id)) {
     return;
+  }
+  const actor = access.creator;
+  /* Never the keys of an account holding a role this hand could not take away. */
+  if (!(await mayReachAccount(id, { id: actor.id, grants: access.grants }, 'credentials'))) {
+    redirect(`/studio/participants?account=protected&for=${id}#keys-${id}`);
   }
   const email = String(formData.get('email') ?? '');
   const phone = String(formData.get('phone') ?? '');
@@ -635,14 +641,16 @@ export const updateParticipantAccountAction = async (formData: FormData) => {
 
 export const toggleParticipantBlockedAction = async (formData: FormData) => {
   const id = String(formData.get('id') ?? '');
-  const actor = await actorFor('participants:manage');
-  if (!actor) {
+  const access = await requireCapability('participants:manage');
+  if (!access || !id) {
     return;
   }
-  if (!id) {
-    return;
-  }
+  const actor = access.creator;
   const blocked = formData.get('blocked') === '1';
+  /* Opening the door is always allowed; closing it on a staff account is not everyone's. */
+  if (blocked && !(await mayReachAccount(id, { id: actor.id, grants: access.grants }, 'block'))) {
+    redirect('/studio/participants?grants=blockProtected');
+  }
   await setParticipantBlocked(id, blocked);
   await audit(actor, 'participant.blocked', undefined, {
     participantId: id,

@@ -13,6 +13,7 @@ import type {
   GalleryPlacement,
   GallerySubmission,
 } from '../types/gallery';
+import { sniffImageType as sniffShared } from '@/shared/utils/image-sniff';
 
 /* Every item of the conference, shown or not — the Studio's list. */
 export const listGalleryItems = (slug: string): Promise<GalleryItemSummary[]> =>
@@ -142,24 +143,8 @@ export const moveGalleryItem = async (
   return next.map((item, order) => ({ ...item, order }));
 };
 
-/*
- * What the file's first bytes say it is — not what its name or the
- * browser claim. Only the three formats a participant may send are
- * recognised; everything else is null.
- */
-export const sniffImageType = (data: Uint8Array): (typeof SUBMISSION_TYPES)[number] | null => {
-  const starts = (bytes: number[], at = 0) => bytes.every((byte, i) => data[at + i] === byte);
-  if (starts([0xff, 0xd8, 0xff])) {
-    return 'image/jpeg';
-  }
-  if (starts([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) {
-    return 'image/png';
-  }
-  if (starts([0x52, 0x49, 0x46, 0x46]) && starts([0x57, 0x45, 0x42, 0x50], 8)) {
-    return 'image/webp';
-  }
-  return null;
-};
+/* The same check the profile photo uses: the file's first bytes, never its name. */
+export const sniffImageType = (data: Uint8Array): (typeof SUBMISSION_TYPES)[number] | null => sniffShared(data);
 
 export type SubmissionRefusal = 'missing' | 'size' | 'type' | 'failed';
 

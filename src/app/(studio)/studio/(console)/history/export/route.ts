@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { audit, exportAudit } from '@/features/access';
 import { requireCapability } from '@/features/studio';
+import { csvField } from '@/shared/utils/csv';
 
 /*
  * The log, as a file. CSV for a spreadsheet, JSON for anything else;
@@ -9,10 +10,8 @@ import { requireCapability } from '@/features/studio';
  */
 export const dynamic = 'force-dynamic';
 
-const csvCell = (value: unknown): string => {
-  const text = value === null || value === undefined ? '' : typeof value === 'object' ? JSON.stringify(value) : String(value);
-  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-};
+/* Every field quoted, and none read as a formula (see csvField). */
+const csvCell = csvField;
 
 export const GET = async (request: NextRequest): Promise<Response> => {
   const access = await requireCapability('audit:read');

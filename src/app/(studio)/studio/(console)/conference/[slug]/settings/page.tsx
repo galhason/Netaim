@@ -3,7 +3,7 @@ import type { Locale } from '@/config/locales';
 import { phaseIsOffAir } from '@/event-engine';
 import { findEvent, getActiveConferenceSlug, getStaffOnlyConferenceSlug, reviewLaunch } from '@/features/events';
 import { EVENT_TIMEZONE_OPTIONS } from '@/features/events/constants/timezones';
-import { getStudioLocale } from '@/features/studio';
+import { authorized, getStudioLocale } from '@/features/studio';
 import { marketingRepository } from '@/infrastructure';
 import { toDateTimeInputValue } from '@/shared';
 import {
@@ -88,12 +88,13 @@ const ConferenceSettingsPage = async ({ params, searchParams }: SettingsPageProp
   const slug = decodeURIComponent(raw);
   const { saved, publish } = await searchParams;
   const locale = await getStudioLocale();
-  const [summary, activeSlug, staffOnlySlug, review, published] = await Promise.all([
+  const [summary, activeSlug, staffOnlySlug, review, published, mayDelete] = await Promise.all([
     findEvent(slug).catch(() => null),
     getActiveConferenceSlug(locale).catch(() => null),
     getStaffOnlyConferenceSlug().catch(() => null),
     reviewLaunch(slug, locale).catch(() => null),
     marketingRepository.findPublishedIdentity(slug, 'he').catch(() => null),
+    authorized('events:delete', slug).catch(() => false),
   ]);
   if (!summary) {
     notFound();
@@ -256,19 +257,21 @@ const ConferenceSettingsPage = async ({ params, searchParams }: SettingsPageProp
         </div>
       </section>
 
-      {/* danger */}
-      <form action={deleteFromSettingsAction} className={`${CARD} border-[var(--c-danger)]/40`}>
-        <input type="hidden" name="slug" value={slug} />
-        <h2 className="text-base font-semibold text-[var(--c-danger-text)]">{UI.danger[locale]}</h2>
-        <p className="mt-1 text-xs text-[var(--c-text-soft)]">{UI.dangerSub[locale]}</p>
-        <div className="mt-3 flex flex-wrap items-end gap-3">
-          <label className="block min-w-60">
-            <span className={LABEL}>{UI.slug[locale]}</span>
-            <input name="confirm" className={INPUT} dir="ltr" autoComplete="off" placeholder={slug} />
-          </label>
-          <button type="submit" className={BTN_DANGER}>{UI.delete[locale]}</button>
-        </div>
-      </form>
+      {/* danger — shown only to those who may delete permanently */}
+      {mayDelete ? (
+        <form action={deleteFromSettingsAction} className={`${CARD} border-[var(--c-danger)]/40`}>
+          <input type="hidden" name="slug" value={slug} />
+          <h2 className="text-base font-semibold text-[var(--c-danger-text)]">{UI.danger[locale]}</h2>
+          <p className="mt-1 text-xs text-[var(--c-text-soft)]">{UI.dangerSub[locale]}</p>
+          <div className="mt-3 flex flex-wrap items-end gap-3">
+            <label className="block min-w-60">
+              <span className={LABEL}>{UI.slug[locale]}</span>
+              <input name="confirm" className={INPUT} dir="ltr" autoComplete="off" placeholder={slug} />
+            </label>
+            <button type="submit" className={BTN_DANGER}>{UI.delete[locale]}</button>
+          </div>
+        </form>
+      ) : null}
     </div>
   );
 };

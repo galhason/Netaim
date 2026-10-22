@@ -1,9 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import {
-  consumeMagicLink,
-  currentParticipant,
-  establishSession,
-} from '@/features/registration';
+import { withBasePath } from '@/config/site';
+import { currentParticipant, signInWithLink } from '@/features/registration';
 import { siteRedirect } from '@/shared';
 
 interface RouteContext {
@@ -14,7 +11,8 @@ interface RouteContext {
  * The conference's doorway.
  *
  * With a magic-link token: consume it, establish the signed participant
- * session, and continue to the personal area of this conference.
+ * session, and continue to the personal area of this conference — by
+ * way of the authenticator step when the account has one armed.
  *
  * Without one — a "sign in" link from the public site, a bookmark, a
  * link whose token was already used — the doorway asks the platform's
@@ -28,11 +26,17 @@ export const GET = async (request: NextRequest, { params }: RouteContext) => {
   const token = request.nextUrl.searchParams.get('token');
 
   if (token) {
-    const participant = await consumeMagicLink(token);
-    if (participant) {
-      await establishSession(participant.id);
+    const result = await signInWithLink(token);
+    const conferenceHome = `/${locale}/events/${slug}/me`;
+    if (result.ok) {
+      return NextResponse.redirect(siteRedirect(request, conferenceHome));
+    }
+    if (result.reason === 'totp') {
       return NextResponse.redirect(
-        siteRedirect(request, `/${locale}/events/${slug}/me`),
+        siteRedirect(
+          request,
+          `/${locale}/me?state=totp&ticket=${encodeURIComponent(result.ticket)}&next=${encodeURIComponent(withBasePath(conferenceHome))}`,
+        ),
       );
     }
   }

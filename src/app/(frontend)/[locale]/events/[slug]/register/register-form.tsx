@@ -21,6 +21,7 @@ import {
   type RegisterFormState,
 } from './actions';
 import StepProgress from './ui/step-progress';
+import { PROFILE_LIMITS } from '@/features/registration/constants/profile-limits';
 
 /*
  * The registration form, in two steps that are one submission.
@@ -551,6 +552,7 @@ const RegisterForm = ({
               <input
                 id="reg-email"
                 name="email"
+                maxLength={PROFILE_LIMITS.email}
                 type="email"
                 required
                 autoComplete="email"
@@ -673,6 +675,7 @@ const RegisterForm = ({
                 <input
                   id="reg-organization"
                   name="organization"
+                  maxLength={PROFILE_LIMITS.organization}
                   type="text"
                   required
                   autoComplete="organization"
@@ -691,6 +694,7 @@ const RegisterForm = ({
                 <input
                   id="reg-role"
                   name="role"
+                  maxLength={PROFILE_LIMITS.role}
                   type="text"
                   required
                   autoComplete="organization-title"
@@ -764,6 +768,7 @@ const RegisterForm = ({
                 <textarea
                   id="reg-accessibility"
                   name="accessibility"
+                  maxLength={PROFILE_LIMITS.accessibility}
                   rows={2}
                   value={values.accessibility}
                   onChange={set('accessibility')}

@@ -156,7 +156,56 @@ const nextConfig: NextConfig = {
         source: '/:path*',
         headers: securityHeaders,
       },
+      /*
+       * Uploaded files, served as files and never as pages. An uploaded
+       * SVG — a logo from the Studio, or anything that slipped through —
+       * is a document that can carry a script, and opened directly it
+       * ran on the platform's own domain with the viewer's session. A
+       * sandbox with no script source makes every file under this path
+       * inert when opened, while it still shows as an image wherever a
+       * page embeds it. Listed after the site-wide rule, so this
+       * policy is the one these paths get.
+       */
+      {
+        source: '/api/media/file/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; media-src 'self'",
+          },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+        ],
+      },
     ]),
 };
 
-export default withPayload(withNextIntl(nextConfig));
+/*
+ * One request per click on a link.
+ *
+ * withPayload adds `Critical-CH: Sec-CH-Prefers-Color-Scheme` to every
+ * response, for the theme of its own panel. Chrome answers that header,
+ * on a first visit, by throwing the response away and sending the same
+ * request again with the hint. For most pages that costs a round trip;
+ * for a single-use link it costs the link: the first request spends the
+ * token, the second finds it spent. A guest whose account has an
+ * authenticator lost the authenticator step that way, and every first
+ * sign-in from an email did its work twice. The panel is shut in
+ * production, so the header goes; `Accept-CH` stays, and the hint still
+ * arrives from the second request on.
+ */
+const withoutCriticalHints = (config: NextConfig): NextConfig => {
+  const headers = config.headers;
+  if (!headers) {
+    return config;
+  }
+  return {
+    ...config,
+    headers: async () =>
+      (await headers()).map((rule) => ({
+        ...rule,
+        headers: rule.headers.filter((header) => header.key.toLowerCase() !== 'critical-ch'),
+      })),
+  };
+};
+
+export default withoutCriticalHints(withPayload(withNextIntl(nextConfig)));

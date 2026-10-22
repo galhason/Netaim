@@ -11,6 +11,8 @@ import {
   registrationRepository,
 } from '@/infrastructure';
 import { currentParticipant } from './participant-identity-service';
+import { IMAGE_EXTENSION, sniffImageType } from '@/shared/utils/image-sniff';
+import { boundedDetails } from '../utils/profile-text';
 
 export interface ParticipantRegistration {
   participantName: string;
@@ -53,7 +55,7 @@ export const updateMyDetails = async (
   }
   await participantSessionRepository.updateParticipantDetails(
     participant.id,
-    input,
+    boundedDetails(input),
   );
   return true;
 };
@@ -142,18 +144,27 @@ export const updateMyPhoto = async (file: {
   type: string;
   data: Uint8Array;
 }): Promise<boolean> => {
-  if (!file.type.startsWith('image/') || file.data.byteLength === 0) {
+  if (file.data.byteLength === 0 || file.data.byteLength > MAX_PHOTO_BYTES) {
     return false;
   }
-  if (file.data.byteLength > MAX_PHOTO_BYTES) {
+  /*
+   * What the bytes are, not what the browser or the file's name claim.
+   * The claimed type used to be trusted and the name kept, so an SVG
+   * carrying a script could be uploaded as a "photo" and served back
+   * from the platform's own domain. Now only a real JPEG, PNG or WebP
+   * is accepted, under a name and type the server chooses.
+   */
+  const type = sniffImageType(file.data);
+  if (!type) {
     return false;
   }
   const participant = await currentParticipant();
   if (!participant) {
     return false;
   }
-  return participantSessionRepository.setParticipantPhoto(
-    participant.id,
-    file,
-  );
+  return participantSessionRepository.setParticipantPhoto(participant.id, {
+    name: `portrait-${participant.id}-${Date.now()}.${IMAGE_EXTENSION[type]}`,
+    type,
+    data: file.data,
+  });
 };

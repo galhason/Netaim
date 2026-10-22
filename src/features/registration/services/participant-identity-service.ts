@@ -498,6 +498,39 @@ export const consumeMagicLink = async (
 };
 
 /*
+ * Signing in by a mailed link — the second factor still stands.
+ *
+ * The link proves the mailbox, which is what a password proves at the
+ * front door, and nothing more: an account that armed an authenticator
+ * owes its six digits here too, or a stolen mailbox would walk past the
+ * second factor. The link is spent either way; what it earns is the
+ * same five-minute ticket the password round earns, and the same
+ * authenticator step completes it. A blocked account is refused.
+ */
+export type LinkSignInResult =
+  | { ok: true; participant: ParticipantSummary }
+  | { ok: false; reason: 'invalid' }
+  | { ok: false; reason: 'totp'; ticket: string };
+
+export const signInWithLink = async (token: string): Promise<LinkSignInResult> => {
+  const participant = await consumeMagicLink(token).catch(() => null);
+  if (!participant) {
+    return { ok: false, reason: 'invalid' };
+  }
+  const credentials = await participantSessionRepository
+    .credentialsByEmail(participant.email)
+    .catch(() => null);
+  if (!credentials || credentials.participantId !== participant.id || credentials.blocked) {
+    return { ok: false, reason: 'invalid' };
+  }
+  if (credentials.totpEnabled) {
+    return { ok: false, reason: 'totp', ticket: totpTicket(participant.id) };
+  }
+  await establishSession(participant.id);
+  return { ok: true, participant };
+};
+
+/*
  * The language preference mirrored for the edge middleware, which cannot
  * reach the database. Written whenever a session starts or the choice
  * changes; removed when the account has no preference, so one account's

@@ -34,7 +34,7 @@ describe('who holds the keys', () => {
   it('is asked for by the action and by the page, not inferred from another capability', () => {
     const actions = read('src/app/(studio)/studio/(console)/actions.ts');
     const page = read('src/app/(studio)/studio/(console)/participants/page.tsx');
-    expect(actions).toContain("const actor = await actorFor('participants:credentials');");
+    expect(actions).toContain("const access = await requireCapability('participants:credentials');");
     expect(page).toContain("const holdsKeys = can(actorGrants, 'participants:credentials');");
     expect(page).toContain('{holdsKeys ? (');
   });
@@ -62,6 +62,7 @@ vi.mock('@/infrastructure', () => ({
   searchParticipantAccounts: async () => [],
   registrationRepository: {},
   readParticipantAccount: async (id: string) => (state.account && state.account.id === id ? { ...state.account } : null),
+  refreshAccountPrincipal: async () => undefined,
   updateParticipantAdmin: async (id: string, input: unknown) => {
     state.writes.push({ id, ...(input as object) });
   },

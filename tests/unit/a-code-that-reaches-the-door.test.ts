@@ -41,7 +41,13 @@ vi.mock('nodemailer', () => ({
     },
   },
 }));
-vi.mock('@/infrastructure/payload/payload-brand', () => ({ storedBrandLogo: async () => null }));
+/*
+ * The logo in the mail's header is read from the site settings; the
+ * test stands it in, so the channel never boots Payload or reaches for
+ * a database — on a machine without one that reach took longer than
+ * the test's whole allowance.
+ */
+vi.mock('@/infrastructure/payload/payload-site', () => ({ payloadSiteLogos: async () => null }));
 
 const stale = (text: string) => Object.assign(new Error(text), { responseCode: 421 });
 

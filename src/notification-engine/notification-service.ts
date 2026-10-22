@@ -7,6 +7,7 @@ import type {
   Recipient,
 } from './channel/channel';
 import type { NotificationOutboxRepository } from './outbox/outbox';
+import { redactForRecord } from './redact';
 import {
   renderRegistrationNotification,
   type RegistrationTemplateOverrides,
@@ -62,7 +63,8 @@ export const createNotificationSender =
       ? await recipientFor(message.participantId).catch(() => null)
       : null;
     const status = await channel.deliver(message, recipient);
-    await outbox.enqueue({ ...message, status });
+    /* The person gets the link; the record keeps its token out (see redact). */
+    await outbox.enqueue({ ...redactForRecord(message), status });
     return status;
   };
 

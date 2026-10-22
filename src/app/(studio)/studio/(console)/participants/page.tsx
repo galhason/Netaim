@@ -64,6 +64,7 @@ const ACCOUNT_NOTES = {
   invalid: { tone: 'danger', text: CONSOLE_UI.accountInvalidNote },
   weak: { tone: 'danger', text: CONSOLE_UI.accountWeakNote },
   failed: { tone: 'danger', text: CONSOLE_UI.accountFailedNote },
+  protected: { tone: 'danger', text: CONSOLE_UI.accountProtectedNote },
 } as const;
 
 const accountNote = (state: string | undefined) =>
@@ -75,6 +76,7 @@ const GRANT_NOTES = {
   lastDeveloper: CONSOLE_UI.lastDeveloperNote,
   forbidden: CONSOLE_UI.developerOnlyNote,
   protected: CONSOLE_UI.protectedAccountNote,
+  blockProtected: CONSOLE_UI.blockProtectedNote,
 } as const;
 
 const grantNote = (state: string | undefined) =>

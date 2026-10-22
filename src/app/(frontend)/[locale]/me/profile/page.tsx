@@ -46,6 +46,7 @@ import { ConferenceBar } from '@/features/conference';
 import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
 import { visibleSiteConference } from '@/features/conference/services/conference-door';
 import { getSiteBrand } from '@/features/events';
+import { PROFILE_LIMITS } from '@/features/registration/constants/profile-limits';
 
 /*
  * The Profile Card (the approved participant vision): not a form — a
@@ -451,6 +452,7 @@ const AccountProfilePage = async ({
                   </span>
                   <input
                     name="name"
+                    maxLength={PROFILE_LIMITS.name}
                     defaultValue={details.name}
                     autoComplete="name"
                     className={loungeField}
@@ -474,6 +476,7 @@ const AccountProfilePage = async ({
                   </span>
                   <input
                     name="organization"
+                    maxLength={PROFILE_LIMITS.organization}
                     defaultValue={details.organization}
                     className={loungeField}
                   />
@@ -484,6 +487,7 @@ const AccountProfilePage = async ({
                   </span>
                   <input
                     name="role"
+                    maxLength={PROFILE_LIMITS.role}
                     defaultValue={details.role}
                     className={loungeField}
                   />
@@ -514,6 +518,7 @@ const AccountProfilePage = async ({
                   </span>
                   <input
                     name="interests"
+                    maxLength={PROFILE_LIMITS.interests}
                     defaultValue={details.interests}
                     placeholder={he ? 'AI, מדיניות, חינוך' : 'AI, policy, education'}
                     className={loungeField}
@@ -532,6 +537,7 @@ const AccountProfilePage = async ({
                   </span>
                   <input
                     name="headline"
+                    maxLength={PROFILE_LIMITS.headline}
                     defaultValue={details.headline}
                     placeholder={
                       he
@@ -547,6 +553,7 @@ const AccountProfilePage = async ({
                   </span>
                   <textarea
                     name="bio"
+                    maxLength={PROFILE_LIMITS.bio}
                     rows={3}
                     defaultValue={details.bio}
                     className={`${loungeField} resize-none`}
@@ -560,6 +567,7 @@ const AccountProfilePage = async ({
                       </span>
                       <input
                         name={`linkLabel${index}`}
+                        maxLength={PROFILE_LIMITS.linkLabel}
                         defaultValue={details.links?.[index]?.label ?? ''}
                         className={loungeField}
                       />
@@ -570,6 +578,7 @@ const AccountProfilePage = async ({
                       </span>
                       <input
                         name={`linkUrl${index}`}
+                        maxLength={PROFILE_LIMITS.linkUrl}
                         defaultValue={details.links?.[index]?.url ?? ''}
                         dir="ltr"
                         className={loungeField}
@@ -583,6 +592,7 @@ const AccountProfilePage = async ({
                   </span>
                   <textarea
                     name="accessibility"
+                    maxLength={PROFILE_LIMITS.accessibility}
                     rows={2}
                     defaultValue={details.accessibility}
                     className={`${loungeField} resize-none`}

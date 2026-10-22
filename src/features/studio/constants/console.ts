@@ -289,6 +289,14 @@ export const CONSOLE_UI = {
     he: 'אי אפשר למחוק את החשבון הזה: הוא מחזיק תפקיד שאינכם יכולים להסיר, או שהוא המנהל או המתכנת האחרון.',
     en: 'This account cannot be deleted: it holds a role you cannot remove, or it is the last Admin or developer.',
   },
+  accountProtectedNote: {
+    he: 'אי אפשר לשנות את פרטי הכניסה של החשבון הזה: הוא מחזיק תפקיד שאינכם יכולים להסיר.',
+    en: 'The sign-in details of this account cannot be changed: it holds a role you cannot remove.',
+  },
+  blockProtectedNote: {
+    he: 'אי אפשר לחסום את החשבון הזה: זה החשבון שלכם, הוא מחזיק תפקיד שאינכם יכולים להסיר, או שהוא המנהל או המתכנת האחרון.',
+    en: 'This account cannot be blocked: it is your own, it holds a role you cannot remove, or it is the last Admin or developer.',
+  },
   moveFailedNote: {
     he: 'ההעברה נכשלה — ההרשמה המקורית בוטלה אך ההרשמה החדשה לא נקלטה.',
     en: 'The move failed — the original registration was canceled but the new one was not accepted.',

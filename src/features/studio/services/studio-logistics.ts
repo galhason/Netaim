@@ -5,6 +5,7 @@ import type {
   EventLogistics,
   LogisticsRow,
 } from '../types/logistics';
+import { csvField } from '@/shared/utils/csv';
 
 /*
  * Logistics: the roster and the numbers a caterer is actually phoned.
@@ -51,9 +52,10 @@ export const getEventLogistics = async (
  * A BOM in front and CRLF between rows: without them Excel opens a
  * Hebrew export as mojibake, which is the only way most people will
  * ever see this file. Quotes are doubled and every field is quoted, so
- * a comma inside an accessibility note cannot shift a column.
+ * a comma inside an accessibility note cannot shift a column; a field
+ * that would read as a formula is written as text (see csvField).
  */
-const cell = (value: string): string => `"${value.replace(/"/g, '""')}"`;
+const cell = (value: string): string => csvField(value);
 
 export const logisticsCsv = (
   logistics: EventLogistics,

@@ -7,6 +7,7 @@ import { CountrySelect, DietarySelect, PhoneField, getMyDetails, requireParticip
 import { ConferencePreparing } from '@/features/conference';
 import { closedConferencePage } from '@/features/conference/services/conference-door';
 import { saveMyProfileAction } from './actions';
+import { PROFILE_LIMITS } from '@/features/registration/constants/profile-limits';
 
 /*
  * The profile as a card, not a form-first screen: who the guest is, in
@@ -93,7 +94,7 @@ const ProfilePage = async ({ params, searchParams }: ProfilePageProps) => {
             <input type="hidden" name="locale" value={locale} />
             <label className="sm:col-span-2">
               <span className={LABEL_CLASS}>{LOUNGE_UI.fieldName[locale]}</span>
-              <input name="name" defaultValue={details.name} className={FIELD_CLASS} />
+              <input name="name" maxLength={PROFILE_LIMITS.name} defaultValue={details.name} className={FIELD_CLASS} />
             </label>
             <div>
               <label htmlFor="profile-phone" className={LABEL_CLASS}>
@@ -113,13 +114,14 @@ const ProfilePage = async ({ params, searchParams }: ProfilePageProps) => {
               </span>
               <input
                 name="organization"
+                maxLength={PROFILE_LIMITS.organization}
                 defaultValue={details.organization}
                 className={FIELD_CLASS}
               />
             </label>
             <label>
               <span className={LABEL_CLASS}>{LOUNGE_UI.fieldRole[locale]}</span>
-              <input name="role" defaultValue={details.role} className={FIELD_CLASS} />
+              <input name="role" maxLength={PROFILE_LIMITS.role} defaultValue={details.role} className={FIELD_CLASS} />
             </label>
             <label>
               <span className={LABEL_CLASS}>{LOUNGE_UI.fieldCountry[locale]}</span>
@@ -143,6 +145,7 @@ const ProfilePage = async ({ params, searchParams }: ProfilePageProps) => {
               </span>
               <textarea
                 name="accessibility"
+                maxLength={PROFILE_LIMITS.accessibility}
                 rows={2}
                 defaultValue={details.accessibility}
                 className={`${FIELD_CLASS} resize-none`}
