@@ -22,6 +22,7 @@ export { createDispatcher } from './dispatcher';
 export type { DispatchReport } from './dispatcher';
 export {
   defaultRegistrationTemplate,
+  renderActivityCancellation,
   renderRegistrationNotification,
 } from './templates/registration-templates';
 export type {

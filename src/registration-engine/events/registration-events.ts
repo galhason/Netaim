@@ -23,6 +23,12 @@ export interface RegistrationDomainEvent {
   participantId: string;
   eventSlug: string;
   occurredAt: string;
+  /*
+   * Set when the place is in one activity of the conference — a tour, a
+   * workshop, a seminar — rather than in the conference itself, so the
+   * notice can name what was let go.
+   */
+  sessionId?: string;
 }
 
 const OUTCOME_EVENT: Record<RegistrationOutcome, RegistrationEventType> = {

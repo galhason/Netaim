@@ -514,6 +514,7 @@ export const leaveWorkshop = async (
       participantId: participant.id,
       eventSlug: slug,
       occurredAt: nowIso(),
+      sessionId,
     });
   }
   /* only a released confirmed seat reopens the line */
@@ -566,6 +567,7 @@ export const releaseWorkshopPlace = async (
       participantId,
       eventSlug: slug,
       occurredAt: nowIso(),
+      sessionId,
     });
   }
   if (freedSeat && session) {

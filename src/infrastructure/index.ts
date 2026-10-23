@@ -418,6 +418,8 @@ subscribeRegistration(
     /* The language the person chose — on the account, beside the address. */
     (participantId) =>
       payloadParticipantSessionRepository.localePreference(participantId),
+    /* The activity a place was let go in, by its name in that language. */
+    async (sessionId, locale) => (await sessionRepository.getById(sessionId, locale))?.title ?? null,
   ),
 );
 

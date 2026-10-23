@@ -9,6 +9,7 @@ import type {
 import type { NotificationOutboxRepository } from './outbox/outbox';
 import { redactForRecord } from './redact';
 import {
+  renderActivityCancellation,
   renderRegistrationNotification,
   type RegistrationTemplateOverrides,
 } from './templates/registration-templates';
@@ -38,6 +39,13 @@ export type RecipientLookup = (participantId: string) => Promise<Recipient>;
  * — the way every notice was sent before a person could choose.
  */
 export type LocaleLookup = (participantId: string) => Promise<string | null>;
+
+/*
+ * The name of one activity, in the reader's language. Resolved at the
+ * seam like the address: absent, failing or empty, the notice keeps the
+ * platform's general wording rather than naming nothing.
+ */
+export type ActivityTitleLookup = (sessionId: string, locale: 'he' | 'en') => Promise<string | null>;
 
 const isLocale = (value: string | null | undefined): value is 'he' | 'en' =>
   value === 'he' || value === 'en';
@@ -80,6 +88,7 @@ export const createRegistrationNotifier =
     overridesFor?: TemplateOverrideLookup,
     recipientFor?: RecipientLookup,
     localeFor?: LocaleLookup,
+    activityTitleFor?: ActivityTitleLookup,
   ) =>
   async (event: RegistrationDomainEvent): Promise<void> => {
     /*
@@ -100,11 +109,14 @@ export const createRegistrationNotifier =
     const overrides = overridesFor
       ? await overridesFor(event.eventSlug, locale).catch(() => undefined)
       : undefined;
-    const rendered = renderRegistrationNotification(
-      event.type,
-      locale,
-      overrides,
-    );
+    /* A place let go in one activity is named — "which one?" is the first question. */
+    const activityTitle =
+      event.type === 'registration.cancelled' && event.sessionId && activityTitleFor
+        ? ((await activityTitleFor(event.sessionId, locale).catch(() => null)) ?? '').trim()
+        : '';
+    const rendered = activityTitle
+      ? renderActivityCancellation(locale, activityTitle)
+      : renderRegistrationNotification(event.type, locale, overrides);
     /*
      * One door out of every registration notice, into the space the
      * notice is about. Only when the deployment knows its own address —

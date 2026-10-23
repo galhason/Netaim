@@ -115,6 +115,39 @@ export const renderRegistrationNotification = (
   };
 };
 
+/*
+ * A place given back in one activity — a tour, a workshop, a seminar —
+ * rather than in the conference. The same calm words as the conference's
+ * cancellation, with the one thing a person holding several places needs
+ * to read: which of them this was. A conference's own rewording of the
+ * cancellation was written about the conference, so it is not used here.
+ */
+const ACTIVITY_CANCELLED: Template = {
+  subject: { he: 'ההרשמה בוטלה: {title}', en: 'Registration canceled: {title}' },
+  body: {
+    he: [
+      'שלום,',
+      'הרשמתכם לפעילות "{title}" בוטלה.',
+      'אם זו טעות, אפשר להירשם שוב מהתוכנייה באזור האישי, כל עוד נשארו מקומות.',
+      'בברכה,\nצוות נטעים',
+    ].join('\n\n'),
+    en: [
+      'Hello,',
+      'Your registration for "{title}" has been canceled.',
+      'If this was a mistake, you can register again from the program in your personal area, while places remain.',
+      'Kind regards,\nThe Netaim team',
+    ].join('\n\n'),
+  },
+};
+
+export const renderActivityCancellation = (
+  locale: Locale,
+  title: string,
+): RenderedNotification => ({
+  subject: ACTIVITY_CANCELLED.subject[locale].replace('{title}', () => title),
+  body: ACTIVITY_CANCELLED.body[locale].replace('{title}', () => title),
+});
+
 /* The platform's own wording, for a Studio form to show as the default. */
 export const defaultRegistrationTemplate = (
   type: RegistrationEventType,
