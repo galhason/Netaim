@@ -9,7 +9,9 @@ import {
   type KeyboardEvent,
 } from 'react';
 import type { Locale } from '@/config/locales';
+import { useFormStatus } from 'react-dom';
 import { confirmCodeAction, resendCodeAction } from './actions';
+
 
 /*
  * Step three: the six digits, one box each.
@@ -74,6 +76,23 @@ const fieldCls =
   'w-full rounded-[var(--x-r-field)] border border-[var(--x-line-strong)] bg-[var(--x-surface)] px-4 py-3 text-[15px] text-[var(--x-ink)] outline-none transition-[box-shadow,border-color] duration-200 placeholder:text-[var(--x-faint)] focus:border-[var(--x-primary)] focus:ring-4 focus:ring-[var(--x-ring)]';
 const primaryCls =
   'inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[var(--x-r-field)] bg-[var(--x-primary)] px-6 text-[15px] font-semibold text-white shadow-[0_10px_30px_color-mix(in_srgb,var(--x-primary)_28%,transparent)] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-[var(--x-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 motion-reduce:transition-none';
+
+/*
+ * One press, one request. The code is spent by the first request that
+ * carries it; a second press while the first is still on its way used
+ * to arrive at a code already used and answer "expired" — over an
+ * account the first press had just made and signed in. The button
+ * holds still from the press until the page moves on.
+ */
+const VerifyButton = ({ complete, label, pendingLabel }: { complete: boolean; label: string; pendingLabel: string }) => {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" disabled={!complete || pending} aria-busy={pending} className={primaryCls}>
+      {pending ? pendingLabel : label}
+    </button>
+  );
+};
+
 const ghostCls =
   'inline-flex min-h-11 items-center justify-center rounded-[var(--x-r-field)] border border-[var(--x-line-strong)] bg-[var(--x-surface)] px-5 text-sm font-medium text-[var(--x-ink)] transition-colors hover:border-[var(--x-primary)] hover:text-[var(--x-primary)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--x-ring)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-[var(--x-line-strong)] disabled:hover:text-[var(--x-ink)]';
 
@@ -236,9 +255,7 @@ const VerifyForm = ({
           </p>
         ) : null}
 
-        <button type="submit" disabled={!complete} className={primaryCls}>
-          {labels.submit}
-        </button>
+        <VerifyButton complete={complete} label={labels.submit} pendingLabel={labels.submitting} />
       </form>
 
       {/*

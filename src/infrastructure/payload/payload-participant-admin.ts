@@ -2,6 +2,7 @@ import type { PayloadRequest, Where } from 'payload';
 import type {
   ParticipantAccountReader,
   AccountSearchView,
+  ParticipantActivityLine,
   ParticipantAdminView,
   ParticipantRegistrationLine,
 } from '@/features/studio/types/participants';
@@ -12,9 +13,6 @@ import { actorContext, principalEmail } from './payload-context';
  * their conferences and their state — read and governed under the
  * acting creator, never through the engine's panel.
  */
-const PARTICIPANT_LIMIT = 200;
-const REGISTRATION_LIMIT = 600;
-
 const requireActor = async () => {
   const context = await actorContext();
   if (!context) {
@@ -23,40 +21,83 @@ const requireActor = async () => {
   return context;
 };
 
+const idOf = (value: unknown): string =>
+  value && typeof value === 'object' ? String((value as { id?: unknown }).id ?? '') : String(value ?? '');
+
+const text = (value: unknown): string | undefined =>
+  typeof value === 'string' && value.trim() !== '' ? value.trim() : undefined;
+
+/*
+ * Every account, with every conference place and every activity place.
+ *
+ * The list used to stop at the newest two hundred accounts and six
+ * hundred places: a conference past two hundred registrants simply lost
+ * its earliest people from the Studio, and an organiser looking for one
+ * of them concluded the account had been deleted. All of them now, in
+ * five reads whatever the size — the accounts, their conference places,
+ * their activity places, and the titles of the activities and the
+ * conferences those name. Read under the acting creator, as before.
+ */
 export const payloadListParticipantsAdmin = async (): Promise<
   ParticipantAdminView[]
 > => {
   const { payload, user } = await requireActor();
-  const [participants, registrations] = await Promise.all([
+  const [participants, registrations, places] = await Promise.all([
     payload.find({
       collection: 'participants',
       overrideAccess: false,
       user,
       sort: '-createdAt',
-      limit: PARTICIPANT_LIMIT,
+      pagination: false,
       depth: 0,
     }),
     payload.find({
       collection: 'registrations',
       overrideAccess: false,
       user,
-      limit: REGISTRATION_LIMIT,
+      pagination: false,
       depth: 1,
     }),
+    payload.find({
+      collection: 'session-registrations',
+      overrideAccess: false,
+      user,
+      pagination: false,
+      depth: 0,
+      select: { participant: true, session: true, event: true, status: true, language: true },
+    })
+      /* The activity places are a detail of the list; a refusal to read them never empties it. */
+      .catch(() => ({ docs: [] as { participant?: unknown; session?: unknown; event?: unknown; status?: string | null; language?: string | null }[] })),
   ]);
 
+  const sessionIds = [...new Set(places.docs.map((place) => idOf(place.session)).filter(Boolean))];
+  const sessions =
+    sessionIds.length > 0
+      ? await payload.find({
+          collection: 'sessions',
+          overrideAccess: false,
+          user,
+          pagination: false,
+          depth: 0,
+          where: { id: { in: sessionIds.map(Number) } },
+          select: { title: true, sessionType: true, startsAt: true, event: true },
+        })
+          .catch(() => ({ docs: [] }))
+      : { docs: [] };
+  const sessionById = new Map(sessions.docs.map((session) => [String(session.id), session]));
+
+  const eventSlugById = new Map<string, string>();
   const linesByParticipant = new Map<string, ParticipantRegistrationLine[]>();
   for (const registration of registrations.docs) {
-    const participant = registration.participant;
-    const participantId =
-      typeof participant === 'object' && participant !== null
-        ? String(participant.id)
-        : String(participant ?? '');
+    const participantId = idOf(registration.participant);
     const event = registration.event;
     const eventTitle =
       typeof event === 'object' && event !== null ? event.title : String(event ?? '');
     const eventSlug =
       typeof event === 'object' && event !== null ? (event.slug ?? '') : '';
+    if (typeof event === 'object' && event !== null) {
+      eventSlugById.set(String(event.id), eventSlug);
+    }
     if (!participantId) {
       continue;
     }
@@ -65,8 +106,32 @@ export const payloadListParticipantsAdmin = async (): Promise<
       eventTitle,
       eventSlug,
       status: registration.status ?? 'pending',
+      submittedAt: text(registration.submittedAt),
     });
     linesByParticipant.set(participantId, lines);
+  }
+
+  const activitiesByParticipant = new Map<string, ParticipantActivityLine[]>();
+  for (const place of places.docs) {
+    const participantId = idOf(place.participant);
+    const session = sessionById.get(idOf(place.session));
+    if (!participantId || !session) {
+      continue;
+    }
+    const lines = activitiesByParticipant.get(participantId) ?? [];
+    lines.push({
+      sessionId: String(session.id),
+      title: session.title ?? '',
+      sessionType: session.sessionType ?? 'talk',
+      startsAt: text(session.startsAt),
+      eventSlug: eventSlugById.get(idOf(session.event ?? place.event)) ?? '',
+      status: place.status ?? 'confirmed',
+      language: text(place.language),
+    });
+    activitiesByParticipant.set(participantId, lines);
+  }
+  for (const lines of activitiesByParticipant.values()) {
+    lines.sort((a, b) => (a.startsAt ?? '').localeCompare(b.startsAt ?? ''));
   }
 
   return participants.docs.map((participant) => ({
@@ -74,14 +139,18 @@ export const payloadListParticipantsAdmin = async (): Promise<
     name: participant.name ?? '',
     email: participant.email ?? '',
     phone: participant.phone ?? '',
-    organization:
-      typeof participant.organization === 'object' &&
-      participant.organization !== null
-        ? participant.organization.name
-        : undefined,
+    organization: text(participant.orgName),
+    role: text(participant.roleTitle),
+    country: text(participant.country),
+    dietary: text(participant.dietary),
+    accessibility: text(participant.accessibilityNeeds),
+    locale: text(participant.preferredLocale),
+    createdAt: text(participant.createdAt),
+    listed: participant.contactPrefs?.directory !== false,
     blocked: participant.blocked === true,
     hasPassword: Boolean(participant.passwordHash),
     registrations: linesByParticipant.get(String(participant.id)) ?? [],
+    activities: activitiesByParticipant.get(String(participant.id)) ?? [],
   }));
 };
 

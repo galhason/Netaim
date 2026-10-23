@@ -604,9 +604,10 @@ describe('a door that can be entered is visibly leavable', () => {
     expect(action.includes('export const signOutAction')).toBe(true);
     expect(action.includes('await clearSession()')).toBe(true);
     expect(meActions.includes('export const signOutAction'), 'no second sign-out action').toBe(false);
-    const mePage = read('src/app/(frontend)/[locale]/me/page.tsx');
-    expect(mePage.includes('action={signOutAction}')).toBe(true);
-    expect(/signOutAction,\n\} from '@\/features\/account'/.test(mePage), 'the account screen posts to the shared action').toBe(true);
+    /* The account screen is gone; the registration page's "not you?" posts to the shared action. */
+    const register = read('src/app/(frontend)/[locale]/events/[slug]/register/page.tsx');
+    expect(register.includes('action={signOutAction}')).toBe(true);
+    expect(register.includes("import { signOutAction } from '@/features/account';")).toBe(true);
   });
 
   it('offers sign-out in the one conference bar whenever someone is signed in', () => {

@@ -9,7 +9,9 @@ import {
   applyPasswordHash,
   beginEmailVerification,
   confirmEmailVerification,
+  currentParticipant,
   establishSession,
+  getParticipantRegistration,
   isLatinName,
   isStrongPassword,
   parseRegisterForm,
@@ -18,10 +20,48 @@ import {
   reissueEmailVerification,
   signInWithPassword,
 } from '@/features/registration';
-import { scheduleConflictFor } from '@/features/account';
+import { joinConference, scheduleConflictFor } from '@/features/account';
 import { isCountryCode } from '@/shared/constants/countries';
 import { readPhone } from '@/shared/utils/phone';
 import { mayEnterConference } from '@/features/conference/services/conference-door';
+import { createLogger } from '@/shared';
+
+const log = createLogger('registration');
+
+const OUTCOMES = ['confirmed', 'pending', 'waitlisted'] as const;
+
+/*
+ * A code that is no longer there, asked about by the person it made an
+ * account for.
+ *
+ * The first request that carries a code spends it. A second press of
+ * the button, a refresh of the page that posted it, a phone that sent
+ * the form again when it came back to the screen — each arrives at a
+ * code already used, and used to be answered "the code expired, fill in
+ * the details again", over an account the first request had just made
+ * and signed in. The person filled the form again, was told the address
+ * already had an account, and concluded that the platform had lost them.
+ *
+ * So before "expired" is said, the account is asked: signed in as this
+ * address and registered here, the registration is shown as done; an
+ * account for this address that is not signed in on this browser is
+ * told to sign in. Nothing is granted that the first request had not
+ * already granted.
+ */
+const alreadyRegistered = async (slug: string, email: string, base: string): Promise<string | null> => {
+  const address = email.trim().toLowerCase();
+  const me = await currentParticipant().catch(() => null);
+  if (me && me.email.trim().toLowerCase() === address) {
+    const held = await getParticipantRegistration(slug).catch(() => null);
+    if (held && (OUTCOMES as readonly string[]).includes(held.status)) {
+      return `${base}?outcome=${held.status}`;
+    }
+  }
+  if (await emailHasAccount(address).catch(() => false)) {
+    return `${base}?error=registered`;
+  }
+  return null;
+};
 
 const localeOf = (value: string): Locale =>
   isSupportedLocale(value) ? value : FALLBACK_LOCALE;
@@ -318,6 +358,13 @@ export const confirmCodeAction = async (formData: FormData) => {
 
   const checked = await confirmEmailVerification(email, code);
   if (!checked.ok) {
+    if (checked.reason === 'spent' || checked.reason === 'expired') {
+      const done = await alreadyRegistered(slug, email, base);
+      if (done) {
+        log.info('a spent code answered by the account it made', { slug });
+        redirect(done);
+      }
+    }
     /*
      * A spent or expired verification sends the person back to the form
      * rather than to the code box: there is nothing left to type a code
@@ -339,28 +386,86 @@ export const confirmCodeAction = async (formData: FormData) => {
     redirect(`${base}?error=expired`);
   }
 
-  let target = base;
+  const { details, passwordHash } = checked.pending;
+  let result: Awaited<ReturnType<typeof registerForEvent>> | null = null;
   try {
-    const { details, passwordHash } = checked.pending;
-    const result = await registerForEvent(slug, locale, details);
-    await establishSession(result.participantId);
-    /* The account is signed in — restore the password chosen at the form. */
-    await applyPasswordHash(result.participantId, passwordHash);
-    /*
-     * No profile row is written here. Being listed follows from
-     * taking part and is governed by the account's own preference;
-     * creating an empty row just to say "yes" would put a second
-     * answer beside the real one. The role the guest typed is already
-     * on their account, and the listing reads it from there.
-     */
-    /* A new person in the room: the shared directory must be reassembled. */
-    publishedDirectory(slug);
-    target = `${base}?outcome=${result.outcome}`;
-  } catch {
-    target = `${base}?error=closed`;
+    result = await registerForEvent(slug, locale, details);
+  } catch (error) {
+    /* The id of the conference and the reason, never the person. */
+    log.error('registration after a verified code failed', {
+      slug,
+      reason: error instanceof Error ? error.message : String(error),
+    });
+  }
+  if (!result) {
+    redirect(`${base}?error=closed`);
   }
 
-  redirect(target);
+  /*
+   * The account exists from here on, and nothing after this line may
+   * tell the person otherwise. The password first: it is what lets them
+   * back in on any device, and it used to come after the session — so a
+   * session that failed to open left an account with no password, which
+   * no sign-in could reach. Each step is logged if it fails and the
+   * registration is still reported as done, because it is.
+   */
+  await applyPasswordHash(result.participantId, passwordHash).catch((error: unknown) =>
+    log.error('password could not be set after registration', {
+      slug,
+      participantId: result.participantId,
+      reason: error instanceof Error ? error.message : String(error),
+    }),
+  );
+  await establishSession(result.participantId).catch((error: unknown) =>
+    log.error('session could not be opened after registration', {
+      slug,
+      participantId: result.participantId,
+      reason: error instanceof Error ? error.message : String(error),
+    }),
+  );
+  /*
+   * No profile row is written here. Being listed follows from
+   * taking part and is governed by the account's own preference;
+   * creating an empty row just to say "yes" would put a second
+   * answer beside the real one. The role the guest typed is already
+   * on their account, and the listing reads it from there.
+   */
+  /* A new person in the room: the shared directory must be reassembled. */
+  publishedDirectory(slug);
+  log.info('registered', { slug, participantId: result.participantId, outcome: result.outcome });
+  redirect(`${base}?outcome=${result.outcome}`);
+};
+
+/*
+ * Joining this conference with the account already signed in.
+ *
+ * Someone who holds an account — from an earlier conference, or whose
+ * place was released — has nothing to prove and no form to fill: the
+ * account is theirs and its details are on file. The one question the
+ * form would have asked that the account cannot answer is the consent
+ * to be photographed, so it is asked here too, and nothing is
+ * registered without it.
+ */
+export const joinThisConferenceAction = async (formData: FormData) => {
+  const slug = String(formData.get('slug') ?? '');
+  const locale = localeOf(String(formData.get('locale') ?? ''));
+  const base = `/${locale}/events/${slug}/register`;
+  if (!slug || !(await mayEnterConference(slug))) {
+    redirect(base);
+  }
+  if (formData.get('mediaConsent') !== 'on') {
+    redirect(`${base}?error=mediaConsent`);
+  }
+  const joined = await joinConference(slug, locale, { mediaConsent: true }).catch(() => null);
+  if (joined && !joined.ok && joined.reason === 'conflict') {
+    redirect(`${base}?error=conflict&with=${encodeURIComponent(joined.conflictTitle)}`);
+  }
+  if (!joined || !joined.ok || !(OUTCOMES as readonly string[]).includes(joined.status)) {
+    redirect(`${base}?error=closed`);
+  }
+  publishedDirectory(slug);
+  log.info('joined with a signed-in account', { slug });
+  redirect(`${base}?outcome=${joined.status}`);
 };
 
 /*

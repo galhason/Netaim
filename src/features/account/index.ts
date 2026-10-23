@@ -1,10 +1,9 @@
 export {
   getMyAccount,
   joinConference,
-  leaveConference,
   scheduleConflictFor,
 } from './services/account-service';
-export { ACCOUNT_UI, ACCOUNT_STATUS_LABELS } from './constants/account-ui';
+export { ACCOUNT_UI } from './constants/account-ui';
 export { chooseLocaleAction } from './actions/choose-locale';
 export { signOutAction, signOutEverywhereAction } from './actions/sign-out';
 export {

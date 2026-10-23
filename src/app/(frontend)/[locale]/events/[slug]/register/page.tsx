@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { isSupportedLocale, type Locale } from '@/config/locales';
+import { withBasePath } from '@/config/site';
 import { brandFor } from '@/config/brand';
 import { ConferenceBar, ConferencePreparing } from '@/features/conference';
 import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
@@ -10,6 +11,7 @@ import { getSiteBrand } from '@/features/events';
 import {
   ArrowOn,
   currentParticipant,
+  getParticipantRegistration,
   getRegistrationSituation,
   dietaryOptionsFor,
   LATIN_NAME_ERROR,
@@ -23,6 +25,8 @@ import {
   REGISTRATION_MESSAGES,
 } from '@/features/registration';
 import { closedConferencePage } from '@/features/conference/services/conference-door';
+import { signOutAction } from '@/features/account';
+import { joinThisConferenceAction } from './actions';
 import RegisterForm from './register-form';
 import VerifyForm from './verify-form';
 import StepProgress from './ui/step-progress';
@@ -149,6 +153,17 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
   } = await searchParams;
   const situation = await getRegistrationSituation(slug, lang);
   const participant = await currentParticipant().catch(() => null);
+  /*
+   * Someone signed in who already holds a place here is shown that
+   * place, not an empty form: a form invites a second registration the
+   * address cannot make, and a person who had just finished registering
+   * — and came back to this page — read the empty form as being lost.
+   */
+  const held =
+    participant && !verify && !(outcome && isOutcome(outcome))
+      ? await getParticipantRegistration(slug).catch(() => null)
+      : null;
+  const shownOutcome = outcome && isOutcome(outcome) ? outcome : held && isOutcome(held.status) ? held.status : null;
   const barViewer = await conferenceBarViewer();
   const m = REGISTRATION_MESSAGES;
   const open =
@@ -225,7 +240,7 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
   );
 
   /* ---- done ---- */
-  if (outcome && isOutcome(outcome)) {
+  if (shownOutcome) {
     return (
       <Layout
         eyebrow={pick(lang, COPY.doneEyebrow)}
@@ -239,10 +254,10 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
               <IconCheck />
             </span>
             <h2 className="mt-5 font-display text-2xl font-bold text-[var(--x-ink)]">
-              {OUTCOME_COPY[outcome].heading[lang]}
+              {OUTCOME_COPY[shownOutcome].heading[lang]}
             </h2>
             <p className="mt-2 max-w-md text-[15px] leading-relaxed text-[var(--x-soft)]">
-              {OUTCOME_COPY[outcome].text[lang]}
+              {OUTCOME_COPY[shownOutcome].text[lang]}
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
               <Link href={`/${lang}/events/${slug}/workshops`} className={primaryCls}>
@@ -316,6 +331,63 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
     );
   }
 
+  /*
+   * ---- signed in, no place here yet ----
+   * The account is on file, so there is nothing to fill: one press, and
+   * the consent the form would have asked for.
+   */
+  if (participant && open) {
+    const joinError =
+      error === 'conflict' && conflictWith
+        ? he
+          ? `הכנס מתנגש בזמן עם ${conflictWith}.`
+          : `This conference clashes with ${conflictWith}.`
+        : error === 'mediaConsent'
+          ? m.public.mediaConsentRequired[lang]
+          : error
+            ? m.public.closed[lang]
+            : null;
+    return (
+      <Layout eyebrow={pick(lang, COPY.eyebrow)} title={m.public.heading[lang]} intro={m.public.intro[lang]}>
+        <section className={`${cardCls} p-6 md:p-9`}>
+          <form action={joinThisConferenceAction} className="mx-auto flex max-w-md flex-col gap-5">
+            <input type="hidden" name="slug" value={slug} />
+            <input type="hidden" name="locale" value={lang} />
+            <div>
+              <h2 className="font-display text-xl font-bold text-[var(--x-ink)]">
+                {he ? `מחוברים כ־${participant.name || participant.email}` : `Signed in as ${participant.name || participant.email}`}
+              </h2>
+              <p className="mt-2 text-[15px] leading-relaxed text-[var(--x-soft)]">
+                {he
+                  ? 'הפרטים שלכם כבר אצלנו. כדי להירשם לכנס הזה נשאר רק לאשר ולשלוח.'
+                  : 'Your details are already on file. To register for this conference, just confirm and send.'}
+              </p>
+            </div>
+            <label className="flex items-start gap-3 text-sm text-[var(--x-ink)]">
+              <input type="checkbox" name="mediaConsent" required className="mt-1 size-4 flex-none accent-[var(--x-primary)]" />
+              <span>{m.public.mediaConsent[lang]}</span>
+            </label>
+            {joinError ? (
+              <p role="alert" className={onboardingCls.noteWarn}>
+                {joinError}
+              </p>
+            ) : null}
+            <button type="submit" className={primaryCls}>
+              {he ? 'הרשמה לכנס' : 'Register for the conference'}
+            </button>
+          </form>
+          <form action={signOutAction} className="mx-auto mt-5 max-w-md text-center text-sm text-[var(--x-soft)]">
+            <input type="hidden" name="locale" value={lang} />
+            {he ? 'לא אתם? ' : 'Not you? '}
+            <button type="submit" className={onboardingCls.quietLink}>
+              {he ? 'יציאה מהחשבון' : 'Sign out'}
+            </button>
+          </form>
+        </section>
+      </Layout>
+    );
+  }
+
   /* ---- steps one and two ---- */
   return (
     <Layout
@@ -335,7 +407,7 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
             <p className="mb-6 flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-sm text-[var(--x-soft)]">
               <span>{pick(lang, COPY.haveAccount)}</span>
               <Link
-                href={`/${lang}/me`}
+                href={`/${lang}/me?next=${encodeURIComponent(withBasePath(`/${lang}/events/${slug}/register`))}`}
                 className="inline-flex items-center gap-1 font-semibold text-[var(--x-primary)] underline-offset-4 hover:underline"
               >
                 {pick(lang, COPY.signIn)}
@@ -423,8 +495,11 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
                   invalid: m.public.invalid[lang],
                   closed: m.public.closed[lang],
                   exists: he
-                    ? 'כתובת הדוא״ל הזו כבר רשומה במערכת. אפשר להיכנס עם הסיסמה שלכם, ומשם להצטרף לכנס.'
-                    : 'This email address is already registered. Sign in with your password and join the conference from your space.',
+                    ? 'כתובת הדוא״ל הזו כבר רשומה במערכת. היכנסו עם הסיסמה שלכם, ותחזרו לכאן כדי להירשם לכנס בלחיצה אחת.'
+                    : 'This email address is already registered. Sign in with your password and you will come back here to register in one press.',
+                  registered: he
+                    ? 'ההרשמה עם הכתובת הזו כבר הושלמה. היכנסו עם הסיסמה שבחרתם בהרשמה.'
+                    : 'Your registration with this address is already complete. Sign in with the password you chose when registering.',
                   conflict: '',
                   weakPassword: he
                     ? `הסיסמה חלשה מדי. ${PASSWORD_POLICY_TEXT.he}`

@@ -47,6 +47,22 @@ export const Speakers: CollectionConfig = {
       },
     },
     {
+      /* The conferences that show this speaker at the top of their
+       * speakers page, and where: 1 is first. Set from the Studio's
+       * conference speakers page, never typed here; everyone without an
+       * entry follows in the usual order. */
+      name: 'featuredOn',
+      type: 'array',
+      admin: {
+        readOnly: true,
+        description: 'Set from the Studio, on the conference speakers page: shown first on that conference, in this place.',
+      },
+      fields: [
+        { name: 'conference', type: 'relationship', relationTo: 'events' },
+        { name: 'position', type: 'number', min: 1 },
+      ],
+    },
+    {
       /* The link to an existing platform user. Set → Registered speaker;
        * empty → External speaker. Lends name, job title, company and
        * photo unless a manual override is provided below. */

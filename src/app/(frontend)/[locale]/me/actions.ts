@@ -1,10 +1,7 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { isSupportedLocale, type Locale } from '@/config/locales';
-import { joinConference, leaveConference } from '@/features/account';
-import { mayEnterConference } from '@/features/conference/services/conference-door';
 import {
   completeTotpSignIn,
   requestAccountLink,
@@ -132,37 +129,6 @@ export const requestAccountLinkAction = async (formData: FormData) => {
    * the answer to their request as a note above it.
    */
   redirect(`/${locale}/me?view=reset&state=sent${devLink}`);
-};
-
-export const joinConferenceAction = async (formData: FormData) => {
-  const locale = readLocale(formData);
-  const slug = String(formData.get('slug') ?? '');
-  /* A conference kept to the Netaim team is joined by the team alone. */
-  if (!slug || !(await mayEnterConference(slug))) {
-    return;
-  }
-
-  const outcome = await joinConference(slug, locale);
-  if (!outcome.ok && outcome.reason === 'conflict') {
-    redirect(
-      `/${locale}/me?state=conflict&with=${encodeURIComponent(outcome.conflictTitle)}`,
-    );
-  }
-  if (!outcome.ok) {
-    redirect(`/${locale}/me?state=joinFailed`);
-  }
-
-  revalidatePath(`/${locale}/me`);
-};
-
-export const leaveConferenceAction = async (formData: FormData) => {
-  const locale = readLocale(formData);
-  const slug = String(formData.get('slug') ?? '');
-  if (!slug) {
-    return;
-  }
-  await leaveConference(slug);
-  revalidatePath(`/${locale}/me`);
 };
 
 /*

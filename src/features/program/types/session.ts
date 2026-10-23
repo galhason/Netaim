@@ -45,6 +45,15 @@ export const isPlainSession = (type: string | null | undefined): boolean =>
   (PLAIN_SESSION_TYPES as readonly string[]).includes(type ?? '');
 
 /*
+ * The kinds that seat a panel beside the one who leads it: the panel
+ * alone. Its speakers are its moderator; its panelists, the members.
+ */
+export const PANEL_SESSION_TYPES = ['gathering'] as const satisfies readonly SessionType[];
+
+export const takesPanel = (type: string | null | undefined): boolean =>
+  (PANEL_SESSION_TYPES as readonly string[]).includes(type ?? '');
+
+/*
  * A vote on the language: the activity names its possible languages
  * (the `languages` facet), each registrant says which they want, and
  * the organiser reads the tally and decides. Until the decision the
@@ -63,6 +72,8 @@ export interface CreateSessionInput extends ActivityFacets, LanguageVote {
   description?: string;
   sessionType: SessionType;
   speakerIds?: string[];
+  /* A panel's members; written only for a panel (see takesPanel). */
+  panelistIds?: string[];
   startsAt?: string;
   endsAt?: string;
   floor?: string;
@@ -96,6 +107,8 @@ export interface SessionSummary extends ActivityFacets, LanguageVote {
   sessionType: SessionType;
   speaker?: string;
   speakers?: ResolvedSpeaker[];
+  /* A panel's members, beside its moderator; absent when none. */
+  panelists?: ResolvedSpeaker[];
   room?: string;
   floor?: string;
   track?: string;

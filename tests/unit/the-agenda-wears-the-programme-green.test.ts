@@ -165,7 +165,6 @@ describe('the personal area wears the site green', () => {
   it('is worn by the Lounge, the profile, a chat thread and the notification centre', () => {
     for (const [file, cls] of [
       ['src/features/attendee/components/lounge/lounge-view.tsx', 'lounge lounge--site'],
-      ['src/app/(frontend)/[locale]/me/page.tsx', 'lounge lounge--site'],
       ['src/app/(frontend)/[locale]/me/profile/page.tsx', 'lounge lounge--site'],
       ['src/app/(frontend)/[locale]/me/chat/[connectionId]/page.tsx', 'lounge lounge--site'],
       ['src/app/(frontend)/[locale]/me/messages/page.tsx', 'experience experience--programme'],

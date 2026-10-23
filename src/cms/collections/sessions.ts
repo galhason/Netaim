@@ -72,6 +72,22 @@ export const Sessions: CollectionConfig = {
         description: 'One or more speakers leading this activity',
       },
     },
+    /*
+     * A panel's members, beside its moderator (the speakers above). Cards
+     * from the same speaker library; a member is credited on the panel
+     * and is not, by being one, on the conference's speakers page. Only
+     * a panel has them.
+     */
+    {
+      name: 'panelists',
+      type: 'relationship',
+      relationTo: 'speakers',
+      hasMany: true,
+      admin: {
+        description: 'Panel members (panels only)',
+        condition: (data) => data?.sessionType === 'gathering',
+      },
+    },
     {
       name: 'room',
       type: 'relationship',

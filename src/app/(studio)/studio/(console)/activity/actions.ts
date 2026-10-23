@@ -17,6 +17,7 @@ import {
   isSessionType,
   releaseWorkshopPlace,
   restoreSession,
+  takesPanel,
   type CreateSessionInput,
 } from '@/features/program';
 import { addMedia } from '@/features/events';
@@ -84,6 +85,21 @@ export const saveActivityAction = async (formData: FormData) => {
       .getAll('speakerId')
       .map((value) => String(value))
       .filter((value) => value !== ''),
+    /*
+     * A panel's members, and only a panel's: any other kind is saved
+     * with none, so an activity changed from a panel to a talk does not
+     * keep members nobody can see in the form any more.
+     */
+    panelistIds: takesPanel(type)
+      ? [
+          ...new Set(
+            formData
+              .getAll('panelistId')
+              .map((value) => String(value))
+              .filter((value) => value !== ''),
+          ),
+        ]
+      : [],
     startsAt: iso(formData.get('startsAt')),
     endsAt: iso(formData.get('endsAt')),
     floor: text(formData.get('floor')),
@@ -197,6 +213,7 @@ export const duplicateActivityAction = async (formData: FormData) => {
       description: s.description,
       sessionType: s.sessionType,
       speakerIds: s.speakers?.map((speaker) => speaker.id),
+      panelistIds: s.panelists?.map((speaker) => speaker.id),
       startsAt: s.startsAt,
       endsAt: s.endsAt,
       floor: s.floor,

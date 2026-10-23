@@ -16,6 +16,7 @@ import {
   IconUsers,
   IconWait,
   IconWarn,
+  PANEL_WORDS,
   VoteLine,
 } from '@/features/conference';
 import type { SessionType } from '@/features/program';
@@ -229,7 +230,13 @@ const ScheduleRow = ({
             </span>
             {activity.place ? ` · ${activity.place}` : ''}
             {activity.speakers.length > 0 ? ` · ${activity.speakers.map((s) => s.name).join(', ')}` : ''}
+            {activity.panelists && activity.speakers.length > 0 ? ` (${PANEL_WORDS.moderator[locale]})` : ''}
           </span>
+          {activity.panelists ? (
+            <span className="block text-[12px] text-[var(--x-soft)]">
+              {PANEL_WORDS.members[locale]}: {activity.panelists.map((s) => s.name).join(', ')}
+            </span>
+          ) : null}
         </span>
       </div>
     );

@@ -230,6 +230,19 @@ export const buildProgramModel = async (
     return out;
   };
 
+  /*
+   * A panel's members, once each, and never the moderator again: someone
+   * picked for both is credited as the one who leads it.
+   */
+  const panelOf = (
+    speakers: (typeof activities)[number]['session']['speakers'],
+    panelists: (typeof activities)[number]['session']['panelists'],
+  ): { panelists?: SpeakerVM[] } => {
+    const leading = new Set((speakers ?? []).map((sp) => sp.id));
+    const members = toSpeakerVM((panelists ?? []).filter((sp) => !leading.has(sp.id)));
+    return members.length > 0 ? { panelists: members } : {};
+  };
+
   const activityVMs: ActivityVM[] = activities
     .filter((a) => a.session.startsAt)
     .map(({ session, capacity }) => {
@@ -293,6 +306,7 @@ export const buildProgramModel = async (
         startMs,
         endMs,
         speakers: toSpeakerVM(session.speakers),
+        ...panelOf(session.speakers, session.panelists),
         capacity: {
           confirmed: capacity.confirmed,
           waiting: capacity.waiting,

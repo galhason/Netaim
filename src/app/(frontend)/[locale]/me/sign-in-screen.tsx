@@ -409,7 +409,10 @@ const SignInScreen = ({
               type="email"
               name="email"
               required
-              autoComplete="email"
+              /* Paired with current-password, so a saved credential is offered whole. */
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
               autoFocus
               dir="ltr"
               placeholder={pick(locale, COPY.emailPlaceholder)}

@@ -27,7 +27,7 @@ export type {
 } from './services/program-service';
 export { buildProgramModel, TYPE_LABELS, dayKeyOf } from './services/program-model';
 export type { ProgramModel } from './services/program-model';
-export { SESSION_TYPES, PLAIN_SESSION_TYPES, isSessionType, isPlainSession } from './types/session';
+export { SESSION_TYPES, PLAIN_SESSION_TYPES, isSessionType, isPlainSession, takesPanel } from './types/session';
 export type { LanguageTally, LanguageVote } from './types/session';
 export {
   COLUMN_LABELS,

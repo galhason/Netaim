@@ -68,6 +68,7 @@ const EditActivityPage = async ({ params }: EditActivityPageProps) => {
     trackEn: en?.track,
     sessionType: s.sessionType,
     speakers: s.speakers,
+    panelists: s.panelists,
     startsAt: toDateTimeInputValue(s.startsAt),
     endsAt: toDateTimeInputValue(s.endsAt),
     floor: s.floor,

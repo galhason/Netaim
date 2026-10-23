@@ -8,7 +8,9 @@ import {
   activitiesForSpeaker,
   createExternalSpeaker,
   createLinkedSpeaker,
+  moveSpeakerOnFront,
   setSpeakerListed,
+  type FrontMove,
   updateSpeaker,
 } from '@/features/speakers';
 import { actorFor } from '@/features/studio/services/studio-auth';
@@ -116,8 +118,39 @@ export const removeSpeakerAction = async (formData: FormData) => {
   }
   await setSpeakerListed(id, slug, false);
   await audit(actor, 'content.speakerRemoved', slug, { speaker: id });
+  const stillOn = (await activitiesForSpeaker(id, 'he', slug).catch(() => [])).length > 0;
+  /* Off the page altogether, so off its front row too. */
+  if (!stillOn) {
+    await moveSpeakerOnFront(slug, id, 'off');
+  }
   publishedEvent(slug);
   revalidatePath(page(slug));
-  const stillOn = (await activitiesForSpeaker(id, 'he', slug).catch(() => [])).length > 0;
   redirect(`${page(slug)}?notice=${stillOn ? 'still-scheduled' : 'removed'}`);
+};
+
+const FRONT_MOVES: readonly FrontMove[] = ['up', 'down', 'off', 'on'];
+
+/*
+ * The front row of the conference's speakers page — the few shown first,
+ * in the organisers' order. Each press is one step (`move` = "<id>:<step>"):
+ * onto the row at the end, up or down a place, or off it.
+ */
+export const moveFrontSpeakerAction = async (formData: FormData) => {
+  const slug = text(formData, 'slug');
+  const actor = slug ? await actorFor('events:manage', slug) : null;
+  if (!actor) {
+    return;
+  }
+  const [id = '', step = ''] = text(formData, 'move').split(':');
+  const move = FRONT_MOVES.find((candidate) => candidate === step);
+  if (!/^\d+$/.test(id) || !move) {
+    redirect(page(slug));
+  }
+  const done = await moveSpeakerOnFront(slug, id, move);
+  if (done) {
+    await audit(actor, 'content.speakersReordered', slug, { speaker: id, move });
+    publishedEvent(slug);
+  }
+  revalidatePath(page(slug));
+  redirect(`${page(slug)}?notice=${done ? 'front' : 'front-refused'}#front-row`);
 };

@@ -10,7 +10,8 @@ import { resolveSpeakerIdentity } from '@/features/speakers/services/speaker-ide
 import { sameSpeakerName } from '@/features/speakers/utils/speaker-names';
 import { actorContext, getSystemPayload } from './payload-context';
 import { mediaId, mediaUrl } from './payload-media';
-import { conferenceRoster, relationIds } from './payload-speaker-roster';
+import { frontFirst } from '@/features/speakers/utils/front-of-page';
+import { conferenceRoster, frontPlace, relationIds, type FrontEntry } from './payload-speaker-roster';
 
 interface AccountRow {
   id?: number | string;
@@ -32,6 +33,7 @@ interface SpeakerRow {
   role?: string | null;
   socialLinks?: { label?: string | null; url?: string | null }[] | null;
   events?: unknown;
+  featuredOn?: FrontEntry[] | null;
 }
 
 const clean = (value?: string | null): string | undefined => {
@@ -204,6 +206,24 @@ const writeListing = async (
 
 const WORDS = ['name', 'jobTitle', 'company', 'bio', 'role'] as const;
 
+/* A card's front places, as plain pairs; a place whose conference is gone is dropped. */
+const placesOf = (row: SpeakerRow): { event: string; position: number }[] =>
+  (row.featuredOn ?? [])
+    .map((entry) => ({ event: relationIds([entry.conference])[0], position: Number(entry.position) }))
+    .filter((entry): entry is { event: string; position: number } => Boolean(entry.event) && entry.position >= 1);
+
+/*
+ * A merge keeps every front place either card held: the kept card's own
+ * where both lead one conference, the folded card's where only it did.
+ */
+const frontOfBoth = (keep: SpeakerRow, fold: SpeakerRow): { featuredOn?: { conference: number; position: number }[] } => {
+  const kept = placesOf(keep);
+  const added = placesOf(fold).filter((entry) => !kept.some((held) => held.event === entry.event));
+  return added.length === 0
+    ? {}
+    : { featuredOn: [...kept, ...added].map((entry) => ({ conference: asNumber(entry.event), position: entry.position })) };
+};
+
 export const payloadSpeakerRepository: SpeakerRepository = {
   listByEvent: async (slug, locale, options) => {
     const payload = await getSystemPayload();
@@ -223,13 +243,18 @@ export const payloadSpeakerRepository: SpeakerRepository = {
       overrideAccess: true,
     });
     const eventId = String(event.id);
-    return (result.docs as unknown as SpeakerRow[]).map((row) => ({
-      ...resolveRow(row),
-      presence: {
-        listed: listedOn(row).includes(eventId),
-        activities: roster.activities.get(String(row.id)) ?? 0,
-      },
-    }));
+    const speakers = (result.docs as unknown as SpeakerRow[]).map((row) => {
+      const front = frontPlace(row.featuredOn, eventId);
+      return {
+        ...resolveRow(row),
+        presence: {
+          listed: listedOn(row).includes(eventId),
+          activities: roster.activities.get(String(row.id)) ?? 0,
+          ...(front !== undefined ? { front } : {}),
+        },
+      };
+    });
+    return frontFirst(speakers, (speaker) => speaker.presence.front);
   },
 
   listLibrary: async (locale, options) => {
@@ -254,23 +279,33 @@ export const payloadSpeakerRepository: SpeakerRepository = {
     if (rows.length === 0) {
       return [];
     }
-    /* The conferences each card is on: by hand, or through an activity. */
+    /*
+     * The conferences each card is on: by hand, or through an activity —
+     * leading it or sitting on its panel. A panel member is not on the
+     * conference's speakers page, but the card is in use there, and the
+     * library must not offer to delete it.
+     */
     const sessions = await payload
       .find({
         collection: 'sessions',
-        where: { and: [{ speakers: { exists: true } }, { archivedAt: { exists: false } }] },
+        where: {
+          and: [
+            { or: [{ speakers: { exists: true } }, { panelists: { exists: true } }] },
+            { archivedAt: { exists: false } },
+          ],
+        },
         depth: 0,
         pagination: false,
         overrideAccess: false,
         user,
-        select: { speakers: true, event: true },
+        select: { speakers: true, panelists: true, event: true },
       })
       .catch(() => null);
     const through = new Map<string, Set<string>>();
-    for (const session of (sessions?.docs ?? []) as { speakers?: unknown; event?: unknown }[]) {
+    for (const session of (sessions?.docs ?? []) as { speakers?: unknown; panelists?: unknown; event?: unknown }[]) {
       const eventId = relationIds([session.event])[0];
       if (!eventId) continue;
-      for (const id of relationIds(session.speakers)) {
+      for (const id of [...relationIds(session.speakers), ...relationIds(session.panelists)]) {
         through.set(id, (through.get(id) ?? new Set()).add(eventId));
       }
     }
@@ -481,6 +516,56 @@ export const payloadSpeakerRepository: SpeakerRepository = {
     return true;
   },
 
+  setFront: async (slug, ids) => {
+    const context = await actorContext();
+    if (!context) {
+      throw new Error('Sign-in required');
+    }
+    const { payload, user } = context;
+    const event = await eventBySlug(payload, slug);
+    if (!event) {
+      return false;
+    }
+    const eventId = String(event.id);
+    const wanted = [...new Set(ids)];
+    /* Read as the actor, so a card of another organisation is neither found nor written. */
+    const result = await payload
+      .find({
+        collection: 'speakers',
+        where: {
+          or: [
+            { 'featuredOn.conference': { equals: event.id } },
+            ...(wanted.length > 0 ? [{ id: { in: wanted.map(asNumber) } }] : []),
+          ],
+        },
+        depth: 0,
+        pagination: false,
+        overrideAccess: false,
+        user,
+        select: { featuredOn: true },
+      })
+      .catch(() => null);
+    for (const row of (result?.docs ?? []) as unknown as SpeakerRow[]) {
+      const current = placesOf(row);
+      const at = wanted.indexOf(String(row.id));
+      const next = [
+        ...current.filter((entry) => entry.event !== eventId),
+        ...(at === -1 ? [] : [{ event: eventId, position: at + 1 }]),
+      ];
+      if (JSON.stringify(next) === JSON.stringify(current)) {
+        continue;
+      }
+      await payload.update({
+        collection: 'speakers',
+        id: row.id,
+        data: { featuredOn: next.map((entry) => ({ conference: asNumber(entry.event), position: entry.position })) },
+        depth: 0,
+        overrideAccess: true,
+      });
+    }
+    return true;
+  },
+
   merge: async (keepId, foldId) => {
     const context = await actorContext();
     if (!context) {
@@ -509,21 +594,26 @@ export const payloadSpeakerRepository: SpeakerRepository = {
       return null;
     }
 
-    /* The activities: the folded card's become the kept one's, once each. */
+    /*
+     * The activities: the folded card's become the kept one's, once each —
+     * as a lead and as a panel member alike. A panel seat left on the
+     * folded card would be deleted with it.
+     */
     const sessions = await payload.find({
       collection: 'sessions',
-      where: { speakers: { in: [foldId] } },
+      where: { or: [{ speakers: { in: [foldId] } }, { panelists: { in: [foldId] } }] },
       depth: 0,
       pagination: false,
       overrideAccess: true,
-      select: { speakers: true },
+      select: { speakers: true, panelists: true },
     });
-    for (const session of sessions.docs as { id: number | string; speakers?: unknown }[]) {
-      const ids = relationIds(session.speakers).map((id) => (id === foldId ? keepId : id));
+    const swap = (value: unknown): number[] =>
+      [...new Set(relationIds(value).map((id) => (id === foldId ? keepId : id)))].map(asNumber);
+    for (const session of sessions.docs as { id: number | string; speakers?: unknown; panelists?: unknown }[]) {
       await payload.update({
         collection: 'sessions',
         id: session.id,
-        data: { speakers: [...new Set(ids)].map(asNumber) },
+        data: { speakers: swap(session.speakers), panelists: swap(session.panelists) },
         depth: 0,
         overrideAccess: true,
       });
@@ -539,6 +629,7 @@ export const payloadSpeakerRepository: SpeakerRepository = {
       id: keepId,
       data: {
         events: [...new Set([...listedOn(keepRow), ...listedOn(foldRow)])].map(asNumber),
+        ...frontOfBoth(keepRow, foldRow),
         ...(keepAccount || !foldAccount ? {} : { account: Number(foldAccount) }),
         ...(mediaId(keepRow.photo as never) || !mediaId(foldRow.photo as never)
           ? {}

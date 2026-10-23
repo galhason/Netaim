@@ -29,3 +29,12 @@ next-env.d.ts
 # Deliverables beside the code: the WordPress upload packages.
 /Claude outputs/
 /qq
+
+
+# Database backups and dumps: real people's data, never in the repository.
+*.dump
+*.sql
+*.sql.gz
+*.tgz
+# ...except the project's own SQL scripts.
+!scripts/sql/*.sql

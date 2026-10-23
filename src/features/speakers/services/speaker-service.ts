@@ -9,6 +9,7 @@ import type {
   SpeakerOverrides,
   SpeakerPlacement,
 } from '../types/speaker';
+import { moveOnFront, type FrontMove } from '../utils/front-of-page';
 import { likelySameSpeaker } from '../utils/speaker-names';
 
 /*
@@ -59,6 +60,22 @@ export const setSpeakerListed = (
   slug: string,
   listed: boolean,
 ): Promise<boolean> => speakerRepository.setListed(id, slug, listed);
+
+/*
+ * One step on the front row of a conference's speakers page: a speaker
+ * up or down by one place, taken off the row, or put on it at the end.
+ * Only someone on the conference's roster can be put there; the row is
+ * read fresh, so two organisers moving at once never lose a place, and
+ * anyone at the front who has since left the roster leaves the row too.
+ */
+export const moveSpeakerOnFront = async (slug: string, id: string, move: FrontMove): Promise<boolean> => {
+  const roster = await speakerRepository.listByEvent(slug, 'he');
+  if (move === 'on' && !roster.some((speaker) => speaker.id === id)) {
+    return false;
+  }
+  const row = roster.filter((speaker) => speaker.presence?.front !== undefined).map((speaker) => speaker.id);
+  return speakerRepository.setFront(slug, moveOnFront(row, id, move));
+};
 
 export const mergeSpeakers = (
   keepId: string,

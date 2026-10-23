@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Fragment } from 'react';
 import { notFound } from 'next/navigation';
 import type { Locale } from '@/config/locales';
 import { wordpressHref } from '@/config/wordpress';
@@ -6,7 +7,7 @@ import { findEvent, listMedia } from '@/features/events';
 import { listConferenceSpeakers, listSpeakerCandidates, listSpeakerLibrary } from '@/features/speakers';
 import type { ResolvedSpeaker } from '@/features/speakers';
 import { AccountCombobox, CMediaPicker, SpeakerWordsFields as Words, getStudioLocale } from '@/features/studio';
-import { addSpeakerAction, listFromLibraryAction, removeSpeakerAction, updateSpeakerAction } from './actions';
+import { addSpeakerAction, listFromLibraryAction, moveFrontSpeakerAction, removeSpeakerAction, updateSpeakerAction } from './actions';
 
 const t = (he: string, en: string): Record<Locale, string> => ({ he, en });
 
@@ -45,6 +46,17 @@ const UI = {
   linked: t('מקושר/ת לחשבון', 'Linked to an account'),
   onSite: t('מוצג באתר:', 'Shown on the site:'),
   empty: t('עדיין אין דוברים. הוסיפו את הראשון/ה למטה.', 'No speakers yet. Add the first one below.'),
+  front: t('מוצגים ראשונים בעמוד הדוברים', 'Shown first on the speakers page'),
+  frontHint: t('הדוברים שכאן מוצגים בראש עמוד הדוברים — באתר ובפלטפורמה — לפי הסדר הזה. כל השאר מופיעים אחריהם, כרגיל. מומלץ 4–5.', 'The speakers here lead the speakers page — on the site and on the platform — in this order. Everyone else follows as usual. Four or five work best.'),
+  frontEmpty: t('עדיין לא נבחרו דוברים. בחרו מהרשימה, או לחצו "הצגה בראש העמוד" בכרטיס של דובר/ת.', 'No one chosen yet. Pick from the list, or press "Show at the top" on a speaker’s card.'),
+  frontPick: t('הוספת דובר/ת לראש העמוד', 'Add a speaker to the top'),
+  frontPickNone: t('בחרו דובר/ת…', 'Choose a speaker…'),
+  frontAdd: t('הוספה', 'Add'),
+  frontUp: t('הזזה למעלה', 'Move up'),
+  frontDown: t('הזזה למטה', 'Move down'),
+  frontOff: t('הסרה מראש העמוד', 'Take off the top'),
+  frontPin: t('הצגה בראש העמוד', 'Show at the top'),
+  frontPlace: t('מקום {n} בראש העמוד', 'Place {n} at the top'),
   notices: {
     added: t('הדובר/ת נוספ/ה.', 'Speaker added.'),
     saved: t('נשמר.', 'Saved.'),
@@ -52,6 +64,8 @@ const UI = {
     'still-scheduled': t('הוסר/ה מהרשימה הידנית, אבל עדיין מופיע/ה — כי משובץ/ת לפעילות בכנס. כדי להוריד, הסירו אותו/ה מהפעילות.', 'Taken off the hand-made list, but still shown — an activity here names them. Remove them from the activity to take them off.'),
     'pick-required': t('בחרו דובר/ת מהמאגר.', 'Pick a speaker from the library.'),
     'name-required': t('צריך שם, או חשבון לקשר אליו.', 'A name, or an account to link, is required.'),
+    front: t('סדר הדוברים בראש העמוד עודכן.', 'The top of the speakers page is updated.'),
+    'front-refused': t('אפשר לשים בראש העמוד רק דובר/ת שמופיע/ה ברשימת הכנס.', 'Only a speaker on this conference’s list can be put at the top.'),
   } as Record<string, Record<Locale, string>>,
 };
 
@@ -96,6 +110,8 @@ const ConferenceSpeakersPage = async ({ params, searchParams }: SpeakersPageProp
       .filter(Boolean)
       .join(' · ');
   const images = media.filter((item) => !item.mimeType?.startsWith('video/'));
+  const front = he.filter((speaker) => speaker.presence?.front !== undefined);
+  const notFront = he.filter((speaker) => speaker.presence?.front === undefined);
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-5 px-6 py-6">
@@ -120,45 +136,148 @@ const ConferenceSpeakersPage = async ({ params, searchParams }: SpeakersPageProp
 
       {he.length === 0 ? <p className="text-sm text-[var(--c-text-soft)]">{UI.empty[locale]}</p> : null}
 
+      {he.length > 0 ? (
+        <section id="front-row" aria-labelledby="front-row-title" className={CARD}>
+          <h3 id="front-row-title" className="text-sm font-semibold text-[var(--c-text)]">{UI.front[locale]}</h3>
+          <p className="mt-1 text-xs text-[var(--c-text-soft)]">{UI.frontHint[locale]}</p>
+          <form action={moveFrontSpeakerAction} className="mt-3">
+            <input type="hidden" name="slug" value={slug} />
+            {front.length === 0 ? (
+              <p className="text-xs text-[var(--c-text-faint)]">{UI.frontEmpty[locale]}</p>
+            ) : (
+              <ol className="flex flex-col divide-y divide-[var(--c-line)] rounded-md border border-[var(--c-line)]">
+                {front.map((speaker, index) => (
+                  <li key={speaker.id} className="flex items-center gap-3 px-3 py-2">
+                    <span className="w-5 text-center text-sm font-semibold tabular-nums text-[var(--c-bronze)]">{index + 1}</span>
+                    {speaker.photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={speaker.photoUrl} alt="" className="size-8 rounded-full object-cover" />
+                    ) : (
+                      <span className="size-8 rounded-full bg-[rgba(255,255,255,0.08)]" aria-hidden="true" />
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm text-[var(--c-text)]">{speaker.name}</span>
+                      <span className="block truncate text-[11px] text-[var(--c-text-faint)]">
+                        {[speaker.jobTitle, speaker.company].filter(Boolean).join(', ')}
+                      </span>
+                    </span>
+                    <button
+                      type="submit"
+                      name="move"
+                      value={`${speaker.id}:up`}
+                      disabled={index === 0}
+                      aria-label={`${UI.frontUp[locale]}: ${speaker.name}`}
+                      title={UI.frontUp[locale]}
+                      className={`${BTN} disabled:cursor-not-allowed disabled:opacity-40`}
+                    >
+                      <span aria-hidden="true">↑</span>
+                    </button>
+                    <button
+                      type="submit"
+                      name="move"
+                      value={`${speaker.id}:down`}
+                      disabled={index === front.length - 1}
+                      aria-label={`${UI.frontDown[locale]}: ${speaker.name}`}
+                      title={UI.frontDown[locale]}
+                      className={`${BTN} disabled:cursor-not-allowed disabled:opacity-40`}
+                    >
+                      <span aria-hidden="true">↓</span>
+                    </button>
+                    <button
+                      type="submit"
+                      name="move"
+                      value={`${speaker.id}:off`}
+                      aria-label={`${UI.frontOff[locale]}: ${speaker.name}`}
+                      title={UI.frontOff[locale]}
+                      className={BTN}
+                    >
+                      <span aria-hidden="true">✕</span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </form>
+          {notFront.length > 0 ? (
+            <form action={moveFrontSpeakerAction} className="mt-3 flex flex-wrap items-end gap-3">
+              <input type="hidden" name="slug" value={slug} />
+              <label className="block min-w-64 max-w-xl flex-1">
+                <span className="text-xs text-[var(--c-text-soft)]">{UI.frontPick[locale]}</span>
+                <select name="move" required defaultValue="" className={`${INPUT} mt-1`}>
+                  <option value="" disabled>
+                    {UI.frontPickNone[locale]}
+                  </option>
+                  {notFront.map((speaker) => (
+                    <option key={speaker.id} value={`${speaker.id}:on`}>
+                      {[speaker.name, speaker.company].filter(Boolean).join(' · ')}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="submit" className={BTN_PRIMARY}>{UI.frontAdd[locale]}</button>
+            </form>
+          ) : null}
+        </section>
+      ) : null}
+
       {he.map((speaker) => {
         const other = enById.get(speaker.id);
         return (
-          <form key={speaker.id} id={`speaker-${speaker.id}`} action={updateSpeakerAction} className={CARD}>
-            <input type="hidden" name="slug" value={slug} />
-            <input type="hidden" name="id" value={speaker.id} />
-            <div className="mb-3 flex flex-wrap items-center gap-3">
-              {speaker.photoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={speaker.photoUrl} alt="" className="size-12 rounded-full object-cover" />
-              ) : (
-                <span className="size-12 rounded-full bg-[rgba(255,255,255,0.08)]" aria-hidden="true" />
-              )}
-              <div className="min-w-0">
-                <h3 className="truncate text-sm font-semibold text-[var(--c-text)]">{speaker.name}</h3>
-                <p className="truncate text-xs text-[var(--c-text-soft)]">
-                  <span className="text-[var(--c-text-faint)]">{UI.onSite[locale]} </span>
-                  {[speaker.jobTitle, speaker.company].filter(Boolean).join(', ')}
-                  {speaker.isRegistered ? ` · ${UI.linked[locale]}` : ''}
-                </p>
-                {presenceOf(speaker) ? (
-                  <p className="mt-0.5 text-[11px] text-[var(--c-text-faint)]">{presenceOf(speaker)}</p>
-                ) : null}
-              </div>
-              <div className="ms-auto flex items-center gap-2">
-                <button type="submit" className={BTN_PRIMARY}>{UI.save[locale]}</button>
-                {speaker.presence?.listed ? (
-                  <button type="submit" formAction={removeSpeakerAction} className={BTN}>{UI.remove[locale]}</button>
+          <Fragment key={speaker.id}>
+            {/* Its own form, outside the card's: a server action on a button takes the button's name. */}
+            {speaker.presence?.front === undefined ? (
+              <form id={`pin-${speaker.id}`} action={moveFrontSpeakerAction} hidden>
+                <input type="hidden" name="slug" value={slug} />
+                <input type="hidden" name="move" value={`${speaker.id}:on`} />
+              </form>
+            ) : null}
+            <form id={`speaker-${speaker.id}`} action={updateSpeakerAction} className={CARD}>
+              <input type="hidden" name="slug" value={slug} />
+              <input type="hidden" name="id" value={speaker.id} />
+              <div className="mb-3 flex flex-wrap items-center gap-3">
+                {speaker.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={speaker.photoUrl} alt="" className="size-12 rounded-full object-cover" />
                 ) : (
-                  <span className="max-w-40 text-[11px] leading-tight text-[var(--c-text-faint)]">{UI.stays[locale]}</span>
+                  <span className="size-12 rounded-full bg-[rgba(255,255,255,0.08)]" aria-hidden="true" />
                 )}
+                <div className="min-w-0">
+                  <h3 className="truncate text-sm font-semibold text-[var(--c-text)]">{speaker.name}</h3>
+                  <p className="truncate text-xs text-[var(--c-text-soft)]">
+                    <span className="text-[var(--c-text-faint)]">{UI.onSite[locale]} </span>
+                    {[speaker.jobTitle, speaker.company].filter(Boolean).join(', ')}
+                    {speaker.isRegistered ? ` · ${UI.linked[locale]}` : ''}
+                  </p>
+                  {presenceOf(speaker) ? (
+                    <p className="mt-0.5 text-[11px] text-[var(--c-text-faint)]">{presenceOf(speaker)}</p>
+                  ) : null}
+                </div>
+                <div className="ms-auto flex flex-wrap items-center gap-2">
+                  {/* First in the form: the button Enter presses is the save. */}
+                  <button type="submit" className={BTN_PRIMARY}>{UI.save[locale]}</button>
+                  {speaker.presence?.front !== undefined ? (
+                    <a href="#front-row" className="rounded-full border border-[var(--c-bronze)] px-2.5 py-1 text-[11px] text-[var(--c-bronze)]">
+                      {UI.frontPlace[locale].replace('{n}', String(front.indexOf(speaker) + 1))}
+                    </a>
+                  ) : (
+                    <button type="submit" form={`pin-${speaker.id}`} className={BTN}>
+                      {UI.frontPin[locale]}
+                    </button>
+                  )}
+                  {speaker.presence?.listed ? (
+                    <button type="submit" formAction={removeSpeakerAction} className={BTN}>{UI.remove[locale]}</button>
+                  ) : (
+                    <span className="max-w-40 text-[11px] leading-tight text-[var(--c-text-faint)]">{UI.stays[locale]}</span>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="grid gap-3 lg:grid-cols-[1fr_1fr_220px]">
-              <Words locale={locale} lang="he" values={speaker.own} placeholders={speaker.isRegistered ? { name: speaker.name, jobTitle: speaker.jobTitle, company: speaker.company, bio: speaker.bio } : undefined} />
-              <Words locale={locale} lang="en" values={other?.own ?? {}} placeholders={{ name: speaker.own.name ?? speaker.name, jobTitle: speaker.own.jobTitle, company: speaker.own.company, bio: speaker.own.bio }} />
-              <CMediaPicker name="photoId" label={UI.photo[locale]} defaultValue={speaker.own.photoId ?? ''} media={images} emptyLabel={UI.photoEmpty[locale]} uploadLabel={UI.upload[locale]} locale={locale} kind="image" crop={1} />
-            </div>
-          </form>
+              <div className="grid gap-3 lg:grid-cols-[1fr_1fr_220px]">
+                <Words locale={locale} lang="he" values={speaker.own} placeholders={speaker.isRegistered ? { name: speaker.name, jobTitle: speaker.jobTitle, company: speaker.company, bio: speaker.bio } : undefined} />
+                <Words locale={locale} lang="en" values={other?.own ?? {}} placeholders={{ name: speaker.own.name ?? speaker.name, jobTitle: speaker.own.jobTitle, company: speaker.own.company, bio: speaker.own.bio }} />
+                <CMediaPicker name="photoId" label={UI.photo[locale]} defaultValue={speaker.own.photoId ?? ''} media={images} emptyLabel={UI.photoEmpty[locale]} uploadLabel={UI.upload[locale]} locale={locale} kind="image" crop={1} />
+              </div>
+            </form>
+          </Fragment>
         );
       })}
 

@@ -11,6 +11,7 @@ import {
 } from 'react';
 import Link from 'next/link';
 import type { Locale } from '@/config/locales';
+import { withBasePath } from '@/config/site';
 import { isStrongPassword } from '@/features/registration/schemas/password';
 import { isLatinName } from '@/features/registration/schemas/latin-name';
 import { CountrySelect, MediaConsentDialog, PasswordField, PhoneField } from '@/features/registration/components';
@@ -170,6 +171,7 @@ const REFUSAL_FIELD: Record<string, { step: 1 | 2; field?: string }> = {
    * is a fork in the road. It gets the notice with both ways out.
    */
   exists: { step: 1 },
+  registered: { step: 1 },
   passwordMismatch: { step: 1, field: 'passwordConfirm' },
   /*
    * Each name answers for itself: a message under "first name" when
@@ -294,6 +296,8 @@ const RegisterForm = ({
   }));
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
+  /* Signing in from here comes back here, where a signed-in account joins in one press. */
+  const signInHref = `/${locale}/me?next=${encodeURIComponent(withBasePath(`/${locale}/events/${slug}/register`))}`;
   const [step, setStep] = useState<1 | 2>(1);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   /* The address the server said already has an account, and the wait. */
@@ -555,7 +559,15 @@ const RegisterForm = ({
                 maxLength={PROFILE_LIMITS.email}
                 type="email"
                 required
-                autoComplete="email"
+                /*
+                 * "username", not "email": it is what a password manager
+                 * pairs with the new password below, so the credential it
+                 * saves is this address and that password — and offers
+                 * both back on the sign-in screen.
+                 */
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
                 inputMode="email"
                 dir="ltr"
                 placeholder="name@example.com"
@@ -880,7 +892,7 @@ const RegisterForm = ({
             <span>
               {labels.errors.exists}{' '}
               <Link
-                href={`/${locale}/me`}
+                href={signInHref}
                 className="font-semibold underline underline-offset-4"
               >
                 {labels.existsSignIn}
@@ -908,11 +920,11 @@ const RegisterForm = ({
                   {labels.conflictBefore} <strong>{conflictWith}</strong>.{' '}
                   {labels.conflictAfter}
                 </>
-              ) : state.error === 'exists' ? (
+              ) : state.error === 'exists' || state.error === 'registered' ? (
                 <>
                   {generalError}{' '}
                   <Link
-                    href={`/${locale}/me`}
+                    href={signInHref}
                     className="font-semibold underline underline-offset-4"
                   >
                     {labels.existsSignIn}

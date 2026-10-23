@@ -306,6 +306,16 @@ export const CONSOLE_UI = {
     en: 'The deletion could not be completed — the account was left as it was. Try again, and if it repeats, check the server log.',
   },
   cancelRegistration: { he: 'ביטול הרשמה', en: 'Cancel registration' },
+  confirmCancelRegistration: { he: 'כן, לבטל את ההרשמה', en: 'Yes, cancel the registration' },
+  confirmCancelRegistrationNote: {
+    he: 'המקום של המשתתף/ת בכנס יתפנה.',
+    en: 'The participant’s place at the conference will be released.',
+  },
+  confirmDeleteAccount: { he: 'כן, למחוק לצמיתות', en: 'Yes, delete permanently' },
+  confirmDeleteAccountNote: {
+    he: 'החשבון וכל הנתונים שלו יימחקו ולא יהיה אפשר לשחזר אותם:',
+    en: 'The account and all its data will be deleted and cannot be restored:',
+  },
   moveTo: { he: 'העברה אל…', en: 'Move to…' },
   moveConfirm: { he: 'העברה', en: 'Move' },
   /* The keys to an account — the Admin's form. */

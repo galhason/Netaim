@@ -3,11 +3,7 @@ import type { Locale } from '@/config/locales';
 import { registrationRepository } from '@/infrastructure';
 import { listPortalEvents } from '@/features/events';
 import type { PortalEvent } from '@/features/events';
-import {
-  cancelRegistration,
-  currentParticipant,
-  registerForEvent,
-} from '@/features/registration';
+import { currentParticipant, registerForEvent } from '@/features/registration';
 import { findScheduleConflict } from '@/registration-engine';
 import type { ConferenceWindow, RegistrationStatus } from '@/registration-engine';
 import { formatLongDate } from '@/shared';
@@ -134,6 +130,8 @@ export const getMyAccount = async (
 export const joinConference = async (
   slug: string,
   locale: Locale,
+  /* The consent the registration form asks for, given on the join's own form. */
+  answers: { mediaConsent?: boolean } = {},
 ): Promise<JoinOutcome> => {
   const participant = await currentParticipant();
   if (!participant) {
@@ -160,23 +158,9 @@ export const joinConference = async (
   const result = await registerForEvent(slug, locale, {
     name: participant.name,
     email: participant.email,
+    ...(answers.mediaConsent === true ? { mediaConsent: true } : {}),
   });
   return { ok: true, status: result.outcome as RegistrationStatus };
-};
-
-export const leaveConference = async (slug: string): Promise<boolean> => {
-  const participant = await currentParticipant();
-  if (!participant) {
-    return false;
-  }
-  const held = await registrationRepository
-    .statusForParticipant(slug, participant.id)
-    .catch(() => null);
-  if (!held) {
-    return false;
-  }
-  await cancelRegistration(slug, held.registrationId);
-  return true;
 };
 
 /*

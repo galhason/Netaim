@@ -541,6 +541,16 @@ export interface Speaker {
    */
   events?: (number | Event)[] | null;
   /**
+   * Set from the Studio, on the conference speakers page: shown first on that conference, in this place.
+   */
+  featuredOn?:
+    | {
+        conference?: (number | null) | Event;
+        position?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Link an existing נטעים account. Its profile fills the details below; leave any field empty to inherit, or fill it to override.
    */
   account?: (number | null) | Participant;
@@ -861,6 +871,10 @@ export interface Session {
    * One or more speakers leading this activity
    */
   speakers?: (number | Speaker)[] | null;
+  /**
+   * Panel members (panels only)
+   */
+  panelists?: (number | Speaker)[] | null;
   room?: (number | null) | Room;
   track?: string | null;
   startsAt?: string | null;
@@ -1402,6 +1416,13 @@ export interface ScenesSelect<T extends boolean = true> {
 export interface SpeakersSelect<T extends boolean = true> {
   organization?: T;
   events?: T;
+  featuredOn?:
+    | T
+    | {
+        conference?: T;
+        position?: T;
+        id?: T;
+      };
   account?: T;
   name?: T;
   jobTitle?: T;
@@ -1724,6 +1745,7 @@ export interface SessionsSelect<T extends boolean = true> {
   description?: T;
   sessionType?: T;
   speakers?: T;
+  panelists?: T;
   room?: T;
   track?: T;
   startsAt?: T;

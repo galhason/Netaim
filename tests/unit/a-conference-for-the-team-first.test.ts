@@ -192,9 +192,9 @@ describe('every door of the conference', () => {
   });
 
   it('refuses every registration the public could send', () => {
-    expect(read(`${root}/register/actions.ts`).match(/await mayEnterConference\(slug\)/g)?.length).toBe(3);
+    /* The code, the resend, the confirmation — and the one-press join of a signed-in account. */
+    expect(read(`${root}/register/actions.ts`).match(/await mayEnterConference\(slug\)/g)?.length).toBe(4);
     expect(read(`${root}/(experience)/gallery/actions.ts`)).toContain('await mayEnterConference(slug)');
-    expect(read('src/app/(frontend)/[locale]/me/actions.ts')).toContain('!(await mayEnterConference(slug))');
     expect(read('src/app/(frontend)/[locale]/me/networking/actions.ts')).toContain('!(await mayEnterConference(slug))');
     expect(read('src/features/program/services/program-service.ts')).toContain('(await staffOnlyConferenceSlug()) === situation.session.eventSlug');
   });

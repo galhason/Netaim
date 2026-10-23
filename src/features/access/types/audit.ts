@@ -27,6 +27,7 @@ export const AUDIT_ACTIONS = [
   'content.speakerSaved',
   'content.speakerRemoved',
   'content.speakersMerged',
+  'content.speakersReordered',
   'content.partnerSaved',
   'content.partnerRemoved',
   'content.partnersReordered',

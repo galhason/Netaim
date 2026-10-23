@@ -53,3 +53,19 @@ export const conferenceRoster = async (
     activities.size > 0 ? { or: [listed, { id: { in: [...activities.keys()] } }] } : listed;
   return { where, activities };
 };
+
+/* A card's places at the front of conferences' speakers pages, as stored. */
+export interface FrontEntry {
+  conference?: unknown;
+  position?: number | string | null;
+}
+
+/*
+ * Where a card stands at the front of one conference's speakers page —
+ * 1 is first — or undefined when it is not at the front there.
+ */
+export const frontPlace = (entries: FrontEntry[] | null | undefined, eventId: string | number): number | undefined => {
+  const entry = (entries ?? []).find((item) => idOf(item.conference) === String(eventId));
+  const place = entry ? Number(entry.position) : Number.NaN;
+  return Number.isFinite(place) && place >= 1 ? place : undefined;
+};

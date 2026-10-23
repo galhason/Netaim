@@ -55,8 +55,6 @@ interface LoungeViewProps {
   unreadMessages?: number;
   /* Platform mode: the guest's other conferences, switchable in place. */
   conferences?: LoungeConferenceChip[];
-  /* Platform mode: where joining and leaving conferences is managed. */
-  accountHref?: string;
   /* The guest's own sessions: the ones attended and the ones presented. */
   sessionsSection?: LoungeSessionsSection;
   /* Platform mode: the personal home and profile live at /me. */
@@ -237,7 +235,6 @@ const LoungeView = ({
   pending,
   unreadMessages,
   conferences,
-  accountHref,
   sessionsSection,
   homeHref,
   profileHref,
@@ -566,14 +563,6 @@ const LoungeView = ({
               </div>
             ) : null}
             <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
-              {accountHref ? (
-                <Link
-                  href={accountHref}
-                  className="inline-flex items-center gap-2 px-1 py-2.5 text-sm text-white/75 transition-colors hover:text-white"
-                >
-                  {LOUNGE_UI.myAccount[locale]}
-                </Link>
-              ) : null}
               <Link
                 href={profile}
                 className="inline-flex items-center gap-2 rounded-xl border border-white/40 bg-white/10 px-4 py-2.5 text-sm backdrop-blur-sm transition-colors hover:bg-white/20"

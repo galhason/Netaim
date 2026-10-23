@@ -1,15 +1,16 @@
 import { relationshipId } from '@/auth';
 import { activityLanguagesOf, audiencesOf, topicsOf, type ActivityLanguage } from '@/shared/constants/activity-facets';
 import type { RegistrationStatus } from '@/registration-engine';
-import type {
-  LanguageTally,
-  SessionCounts,
-  SessionRegistrationRepository,
-  SessionRegistrationSummary,
-  SessionRepository,
-  SessionSummary,
-  SessionType,
-  SessionWaitlistEntry,
+import {
+  takesPanel,
+  type LanguageTally,
+  type SessionCounts,
+  type SessionRegistrationRepository,
+  type SessionRegistrationSummary,
+  type SessionRepository,
+  type SessionSummary,
+  type SessionType,
+  type SessionWaitlistEntry,
 } from '@/features/program/types/session';
 import { actorContext, getSystemPayload } from './payload-context';
 import { mediaId, mediaUrl } from './payload-media';
@@ -26,6 +27,7 @@ interface SessionRow {
   description?: string | null;
   sessionType?: SessionType;
   speakers?: unknown;
+  panelists?: unknown;
   room?: unknown;
   track?: string | null;
   startsAt?: string | null;
@@ -83,11 +85,14 @@ const relName = (value: unknown): string | undefined => {
  * for it. Without this a linked speaker showed initials beside a name
  * whose owner had uploaded a photo.
  */
+/* Every embedded speaker row of an activity: who leads it, and a panel's members. */
+const speakerRowsOf = (row: SessionRow): SpeakerRow[] =>
+  [row.speakers, row.panelists].flatMap((list) => (Array.isArray(list) ? (list as SpeakerRow[]) : []));
+
 const accountPhotoIds = (rows: SessionRow[]): number[] => {
   const ids = new Set<number>();
   for (const row of rows) {
-    if (!Array.isArray(row.speakers)) continue;
-    for (const speaker of row.speakers as SpeakerRow[]) {
+    for (const speaker of speakerRowsOf(row)) {
       const account = speaker?.account;
       if (!account || typeof account !== 'object') continue;
       const photo = (account as { photo?: unknown }).photo;
@@ -112,8 +117,7 @@ const withAccountPhotos = async (
   });
   const byId = new Map(media.docs.map((doc) => [Number(doc.id), doc]));
   for (const row of rows) {
-    if (!Array.isArray(row.speakers)) continue;
-    for (const speaker of row.speakers as SpeakerRow[]) {
+    for (const speaker of speakerRowsOf(row)) {
       const account = speaker?.account as { photo?: unknown } | undefined;
       if (account && typeof account === 'object' && typeof account.photo === 'number') {
         const doc = byId.get(account.photo);
@@ -143,6 +147,9 @@ const toSession = (row: SessionRow): SessionSummary => ({
   sessionType: row.sessionType ?? 'talk',
   speakers: resolveRows(row.speakers),
   speaker: resolveRows(row.speakers)[0]?.name,
+  ...(takesPanel(row.sessionType) && resolveRows(row.panelists).length > 0
+    ? { panelists: resolveRows(row.panelists) }
+    : {}),
   room: relName(row.room),
   track: row.track ?? undefined,
   startsAt: row.startsAt ?? undefined,
@@ -324,6 +331,7 @@ export const payloadSessionRepository: SessionRepository = {
         title: input.title,
         sessionType: input.sessionType,
         speakers: input.speakerIds?.map((id) => Number(id)),
+        panelists: takesPanel(input.sessionType) ? input.panelistIds?.map((id) => Number(id)) : [],
         startsAt: input.startsAt,
         endsAt: input.endsAt,
         capacity: input.capacity ?? undefined,
@@ -371,6 +379,9 @@ export const payloadSessionRepository: SessionRepository = {
             : {}),
           ...(input.speakerIds !== undefined
             ? { speakers: input.speakerIds.map((id) => Number(id)) }
+            : {}),
+          ...(input.panelistIds !== undefined
+            ? { panelists: input.panelistIds.map((id) => Number(id)) }
             : {}),
           ...(input.startsAt !== undefined
             ? { startsAt: input.startsAt || null }

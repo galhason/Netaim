@@ -24,6 +24,15 @@ import {
   toggleParticipantBlockedAction,
   updateParticipantAccountAction,
 } from '../actions';
+import { chip, dangerButton, fieldLabel, quietButton, selectField, textField } from './ui';
+import PeopleSearch, { SEARCH_COPY } from './people-search';
+import PersonDetails from './person-details';
+import {
+  activityChoices,
+  filterParticipants,
+  isFiltered,
+  readCriteria,
+} from '@/features/studio/services/participant-search';
 
 /*
  * Accounts in the Studio (approved decision §8): every registered
@@ -32,25 +41,19 @@ import {
  * checked actions; the panel itself decides nothing.
  */
 interface ParticipantsPageProps {
-  searchParams: Promise<{ grants?: string; move?: string; delete?: string; account?: string; for?: string }>;
+  searchParams: Promise<{
+    grants?: string;
+    move?: string;
+    delete?: string;
+    account?: string;
+    for?: string;
+    q?: string;
+    conference?: string;
+    place?: string;
+    activity?: string;
+    who?: string;
+  }>;
 }
-
-const chip =
-  'inline-flex items-center gap-2 rounded-full border border-[var(--c-line)] px-3 py-1 text-[11px] text-[var(--c-text-soft)]';
-
-const quietButton =
-  'rounded-lg border border-[var(--c-line-strong)] px-3 py-1 text-[11px] text-[var(--c-text-soft)] transition-colors hover:border-[var(--c-bronze)]/50 hover:text-[var(--c-bronze)]';
-
-const dangerButton =
-  'rounded-lg border border-[var(--c-danger)]/50 px-3 py-1 text-[11px] text-[var(--c-danger-text)] transition-colors hover:bg-[var(--c-danger)]/10';
-
-const selectField =
-  'rounded-lg border border-[var(--c-line-strong)] bg-[rgba(7,19,36,0.6)] px-2 py-1 text-[11px] text-[var(--c-text)] focus:border-[var(--c-bronze)]/60 focus:outline-none';
-
-const textField =
-  'w-full rounded-lg border border-[var(--c-line-strong)] bg-[rgba(7,19,36,0.6)] px-3 py-1.5 text-sm text-[var(--c-text)] focus:border-[var(--c-bronze)]/60 focus:outline-none';
-
-const fieldLabel = 'block text-[10px] tracking-[0.14em] text-[var(--c-text-faint)]';
 
 /*
  * What the account form has to say back, in the words of what happened.
@@ -83,7 +86,9 @@ const grantNote = (state: string | undefined) =>
   state && state in GRANT_NOTES ? GRANT_NOTES[state as keyof typeof GRANT_NOTES] : null;
 
 const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
-  const { grants: grantsState, move: moveState, delete: deleteState, account: accountState, for: accountFor } = await searchParams;
+  const params = await searchParams;
+  const { grants: grantsState, move: moveState, delete: deleteState, account: accountState, for: accountFor } = params;
+  const criteria = readCriteria(params);
   const locale = await getStudioLocale();
   const creator = await getStudioCreator();
   const access = await getStudioAccess();
@@ -107,6 +112,7 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
     held.push(grant);
     grantsByAccount.set(grant.accountId, held);
   }
+  const shown = filterParticipants(participants, criteria, new Set(grantsByAccount.keys()));
 
   return (
     <ConsoleShell
@@ -145,8 +151,23 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
           </p>
         ) : null}
 
+        <PeopleSearch
+          locale={locale}
+          criteria={criteria}
+          conferences={events.map((event) => ({ slug: event.slug, title: event.title }))}
+          activities={activityChoices(participants)}
+          shown={shown.length}
+          total={participants.length}
+          filtered={isFiltered(criteria)}
+        />
+        {shown.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-[var(--c-line)] px-4 py-6 text-center text-sm text-[var(--c-text-faint)]">
+            {SEARCH_COPY.nothing[locale]}
+          </p>
+        ) : null}
+
         <ul className="flex flex-col gap-3">
-          {participants.map((participant) => {
+          {shown.map((participant) => {
             const held = grantsByAccount.get(participant.id) ?? [];
             return (
               <li
@@ -178,6 +199,7 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
                       {participant.organization
                         ? ` · ${participant.organization}`
                         : ''}
+                      {participant.role ? ` · ${participant.role}` : ''}
                     </span>
                   </span>
                   {participant.blocked ? (
@@ -221,6 +243,8 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
                     </button>
                   </form>
                 </div>
+
+                <PersonDetails person={participant} locale={locale} />
 
                 {holdsKeys ? (
                   <details
@@ -321,21 +345,32 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
                             {line.status.toUpperCase()}
                           </span>
                         </Link>
-                        <form action={cancelParticipantRegistrationAction}>
-                          <input
-                            type="hidden"
-                            name="participantId"
-                            value={participant.id}
-                          />
-                          <input
-                            type="hidden"
-                            name="slug"
-                            value={line.eventSlug}
-                          />
-                          <button type="submit" className={dangerButton}>
+                        {/* Asked twice: one press used to release a guest's place. */}
+                        <details className="group">
+                          <summary className={`${dangerButton} cursor-pointer list-none`}>
                             {CONSOLE_UI.cancelRegistration[locale]}
-                          </button>
-                        </form>
+                          </summary>
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <span className="text-[11px] text-[var(--c-text-soft)]">
+                              {CONSOLE_UI.confirmCancelRegistrationNote[locale]}
+                            </span>
+                          <form action={cancelParticipantRegistrationAction}>
+                            <input
+                              type="hidden"
+                              name="participantId"
+                              value={participant.id}
+                            />
+                            <input
+                              type="hidden"
+                              name="slug"
+                              value={line.eventSlug}
+                            />
+                            <button type="submit" className={dangerButton}>
+                              {CONSOLE_UI.confirmCancelRegistration[locale]}
+                            </button>
+                          </form>
+                          </div>
+                        </details>
                         {events.length > 1 ? (
                           <form
                             action={moveParticipantRegistrationAction}
@@ -455,16 +490,28 @@ const ParticipantsPage = async ({ searchParams }: ParticipantsPageProps) => {
                     </button>
                   </form>
                   ) : null}
-                  <form action={deleteParticipantAction} className="ms-auto">
-                    <input type="hidden" name="id" value={participant.id} />
-                    <button
-                      type="submit"
-                      className={dangerButton}
+                  {/*
+                    * Deleting an account is permanent and asked twice: the
+                    * button sat beside the grant chips, and one press used
+                    * to remove a person and everything they had.
+                    */}
+                  <details className="ms-auto">
+                    <summary
+                      className={`${dangerButton} cursor-pointer list-none`}
                       title={CONSOLE_UI.deleteAccountHint[locale]}
                     >
                       {CONSOLE_UI.deleteAccount[locale]}
-                    </button>
-                  </form>
+                    </summary>
+                    <form action={deleteParticipantAction} className="mt-2 flex flex-col items-end gap-2">
+                      <input type="hidden" name="id" value={participant.id} />
+                      <span className="max-w-xs text-end text-[11px] text-[var(--c-text-soft)]">
+                        {CONSOLE_UI.confirmDeleteAccountNote[locale]} <strong>{participant.name || participant.email}</strong>
+                      </span>
+                      <button type="submit" className={dangerButton}>
+                        {CONSOLE_UI.confirmDeleteAccount[locale]}
+                      </button>
+                    </form>
+                  </details>
                 </div>
               </li>
             );

@@ -91,6 +91,11 @@ export interface ActivityVM {
   startMs: number;
   endMs?: number;
   speakers: SpeakerVM[];
+  /*
+   * A panel's members, beside its moderator (the speakers). Present only
+   * on a panel that seats some — every other activity is drawn as before.
+   */
+  panelists?: SpeakerVM[];
   capacity: CapacityVM;
   status: AvailabilityStatus;
   registration: RegistrationState;

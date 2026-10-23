@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import type { Locale } from '@/config/locales';
 import type { SessionType } from '@/features/program';
+import { takesPanel } from '@/features/program/types/session';
 import type { ResolvedSpeaker, SpeakerCandidate } from '@/features/speakers';
 /*
  * The client-safe entry, not the feature's main barrel: this file is a
@@ -41,6 +42,8 @@ export interface WizardInitial {
   trackEn?: string;
   sessionType?: SessionType;
   speakers?: ResolvedSpeaker[];
+  /* A panel's members, beside its moderator. */
+  panelists?: ResolvedSpeaker[];
   startsAt?: string;
   endsAt?: string;
   floor?: string;
@@ -265,6 +268,17 @@ const T = (locale: Locale) => ({
     locale === 'he'
       ? 'עדיין אין דוברים בכנס. הוסיפו דוברים דרך עורך הכנס ותוכלו לשייך אותם כאן.'
       : 'No speakers yet. Add speakers from the conference editor to assign them here.',
+  panelModerator: locale === 'he' ? 'מנחה הפאנל' : 'Panel moderator',
+  panelMembers: locale === 'he' ? 'חברי הפאנל' : 'Panel members',
+  panelMembersLead:
+    locale === 'he'
+      ? 'מי יושב בפאנל לצד המנחה: דובר מהמאגר, משתמש רשום, או חבר פאנל חיצוני חדש. חברי הפאנל מוצגים בפאנל בלבד — לא בעמוד הדוברים של הכנס.'
+      : 'Who sits on the panel beside the moderator: a speaker from the library, a registered user, or a new external member. Panel members are shown on the panel only — not on the conference speakers page.',
+  panelMembersAdd: locale === 'he' ? 'הוספת חבר/ת פאנל' : 'Add panel member',
+  panelMembersEmpty:
+    locale === 'he'
+      ? 'לא נבחרו חברי פאנל. בלעדיהם הפאנל מוצג עם המנחה בלבד.'
+      : 'No panel members yet. Without them the panel shows its moderator alone.',
 
   regLead:
     locale === 'he'
@@ -394,6 +408,8 @@ const ActivityWizard = ({
   const [speakerCount, setSpeakerCount] = useState(
     initial?.speakers?.length ?? 0,
   );
+  const [panelCount, setPanelCount] = useState(initial?.panelists?.length ?? 0);
+  const panel = takesPanel(type);
   const [touched, setTouched] = useState(false);
 
   const last = t.steps.length - 1;
@@ -649,6 +665,7 @@ const ActivityWizard = ({
 
           {/* STEP 2 — Speakers */}
           <section className={step === 2 ? 'flex flex-col gap-5' : 'hidden'}>
+            {panel ? <h3 className="text-sm font-semibold text-[var(--c-text)]">{t.panelModerator}</h3> : null}
             <SpeakerPicker
               slug={slug}
               locale={locale}
@@ -657,6 +674,20 @@ const ActivityWizard = ({
               initial={initial?.speakers}
               onCountChange={setSpeakerCount}
             />
+            {/* A panel's members — kept while the type changes, saved only for a panel. */}
+            <div className={panel ? 'flex flex-col gap-4 border-t border-[var(--c-line)] pt-5' : 'hidden'}>
+              <h3 className="text-sm font-semibold text-[var(--c-text)]">{t.panelMembers}</h3>
+              <SpeakerPicker
+                slug={slug}
+                locale={locale}
+                candidates={candidates}
+                library={speakerLibrary}
+                initial={initial?.panelists}
+                onCountChange={setPanelCount}
+                fieldName="panelistId"
+                words={{ lead: t.panelMembersLead, empty: t.panelMembersEmpty, add: t.panelMembersAdd }}
+              />
+            </div>
           </section>
 
           {/* STEP 3 — Registration */}
@@ -766,11 +797,12 @@ const ActivityWizard = ({
                 <Row k={t.fTitle} v={title.trim() || t.none} />
                 <Row k={t.fType} v={TYPE_LABELS[type][locale]} />
                 <Row
-                  k={t.fSpeaker}
+                  k={panel ? t.panelModerator : t.fSpeaker}
                   v={
                     speakerCount > 0 ? String(speakerCount) : t.none
                   }
                 />
+                {panel ? <Row k={t.panelMembers} v={panelCount > 0 ? String(panelCount) : t.none} /> : null}
                 <Row
                   k={t.fCapacity}
                   v={capacity.trim() ? capacity.trim() : t.unlimited}

@@ -22,7 +22,6 @@ export const LOUNGE_UI = {
     en: 'You have not registered for a session yet. The program is open — pick what interests you.',
   },
   browseProgram: { he: 'לתוכנית', en: 'Browse the program' },
-  myAccount: { he: 'החשבון שלי', en: 'My account' },
   openLounge: { he: 'כניסה ללאונג׳', en: 'Open lounge' },
   viewFullProgram: { he: 'לתוכנית המלאה', en: 'View full program' },
   onWaitlist: { he: 'רשימת המתנה', en: 'Waitlist' },

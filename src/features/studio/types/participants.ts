@@ -6,6 +6,18 @@ export interface ParticipantRegistrationLine {
   eventTitle: string;
   eventSlug: string;
   status: string;
+  submittedAt?: string;
+}
+
+/* One activity the person holds or held a place at: a workshop, a tour, a vote on its language. */
+export interface ParticipantActivityLine {
+  sessionId: string;
+  title: string;
+  sessionType: string;
+  startsAt?: string;
+  eventSlug: string;
+  status: string;
+  language?: string;
 }
 
 export interface ParticipantAdminView {
@@ -13,11 +25,21 @@ export interface ParticipantAdminView {
   name: string;
   email: string;
   phone: string;
+  /* The organisation and role the person wrote — not the platform's owning body. */
   organization?: string;
+  role?: string;
+  country?: string;
+  dietary?: string;
+  accessibility?: string;
+  locale?: string;
+  createdAt?: string;
+  /* Listed in the participants directory: yes unless they said no. */
+  listed: boolean;
   blocked: boolean;
   /* Whether the person has set a password at all — the Admin's form says so before offering a new one. */
   hasPassword: boolean;
   registrations: ParticipantRegistrationLine[];
+  activities: ParticipantActivityLine[];
 }
 
 /*

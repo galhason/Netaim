@@ -4,10 +4,10 @@ import type { Locale } from '@/config/locales';
 import type { SessionType } from '@/features/program';
 import type { TimeBlockVM } from '../types';
 import { surface } from '../ui/kit';
-import { IconChevronDown, IconClock, IconPin, IconUsers } from '../ui/icons';
+import { IconChevronDown, IconClock, IconUsers } from '../ui/icons';
 import ActivityCard from './activity-card';
 import ActivityTile from './activity-tile';
-import { BandHosts, BandIcon } from './activity-band';
+import { BandIcon, BandLine } from './activity-band';
 
 /*
  * From this many activities at once, an hour is "dense": it gets a
@@ -102,6 +102,7 @@ const TimeBlock = ({ block, locale, slug, open, onToggle, onOpen, registerAction
     const first = block.activities[0]!;
     const gathering = first.type === 'gathering';
     const speakers = block.activities.flatMap((a) => a.speakers);
+    const panelists = block.activities.flatMap((a) => a.panelists ?? []);
     return (
       <section
         className={`${surface} flex flex-wrap items-center gap-x-4 gap-y-2 border px-4 py-4 sm:flex-nowrap sm:px-5 ${
@@ -127,18 +128,8 @@ const TimeBlock = ({ block, locale, slug, open, onToggle, onOpen, registerAction
           {first.description ? (
             <span className="line-clamp-2 break-words text-xs text-[var(--x-soft)]">{first.description}</span>
           ) : null}
-          {/* Who leads it and where — one quiet line, like the date beside the hour. */}
-          {speakers.length > 0 || first.place ? (
-            <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[var(--x-soft)]">
-              <BandHosts speakers={speakers} />
-              {first.place ? (
-                <span className="inline-flex min-w-0 items-center gap-1.5">
-                  <IconPin className="size-3.5 flex-none text-[var(--x-faint)]" />
-                  <span className="truncate">{first.place}</span>
-                </span>
-              ) : null}
-            </span>
-          ) : null}
+          {/* Who leads it and where — one quiet line, like the date beside the hour; a panel's members on the next. */}
+          <BandLine speakers={speakers} panelists={panelists} place={first.place} locale={locale} />
         </span>
       </section>
     );

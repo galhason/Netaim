@@ -32,9 +32,11 @@ export interface ResolvedSpeaker {
   /*
    * Read on a conference's roster: listed on it by hand, and how many of
    * its standing activities name the speaker. A speaker is on the roster
-   * when either is true.
+   * when either is true. `front` is the speaker's place at the top of the
+   * conference's speakers page (1 is first), when the organisers put them
+   * there; the roster is read in that order, front row first.
    */
-  presence?: { listed: boolean; activities: number };
+  presence?: { listed: boolean; activities: number; front?: number };
   /* Read in the library: the conferences the speaker is on, either way. */
   conferences?: { slug: string; title: string }[];
 }
@@ -142,6 +144,13 @@ export interface SpeakerRepository {
   ) => Promise<ResolvedSpeaker | null>;
   /* Lists a speaker on a conference by hand, or takes that listing off. */
   setListed: (id: string, slug: string, listed: boolean) => Promise<boolean>;
+  /*
+   * The front row of a conference's speakers page, as speaker ids in
+   * order: each takes its place, and anyone who was at the front of this
+   * conference and is not in the list leaves it. Other conferences are
+   * untouched.
+   */
+  setFront: (slug: string, ids: string[]) => Promise<boolean>;
   /*
    * Two cards that are one person, made one: `keep` takes the other's
    * activities, conferences, and any words, picture or link it lacked,

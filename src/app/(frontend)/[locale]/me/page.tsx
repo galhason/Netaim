@@ -1,27 +1,15 @@
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { brandFor } from '@/config/brand';
 import { isSupportedLocale, type Locale } from '@/config/locales';
-import { wordpressHref } from '@/config/wordpress';
 import { ConferenceBar } from '@/features/conference';
 import { conferenceBarViewer } from '@/features/conference/services/conference-bar-viewer';
-import {
-  ACCOUNT_STATUS_LABELS,
-  ACCOUNT_UI,
-  JOINED_CONFERENCE_FANOUT,
-  getMyAccount,
-  signOutAction,
-} from '@/features/account';
+import { JOINED_CONFERENCE_FANOUT, getMyAccount } from '@/features/account';
 import type { AccountConference } from '@/features/account';
 import {
-  LoungeNote,
   LoungeView,
   buildPlatformLounge,
   getAttendeeExperience,
-  loungeGhost,
-  loungePrimary,
-  loungeQuiet,
   toAttendeeUpdates,
 } from '@/features/attendee';
 import { myConnections, myUnreadByConnection } from '@/features/networking';
@@ -31,7 +19,6 @@ import { getSiteBrand } from '@/features/events';
 import { isPlainSession, listAgenda, myActivities } from '@/features/program';
 import type { SessionSummary } from '@/features/program';
 import { formatDayLabel, formatTimeLabel } from '@/shared';
-import { joinConferenceAction, leaveConferenceAction } from './actions';
 import SignInScreen from './sign-in-screen';
 import { visibleSiteConference } from '@/features/conference/services/conference-door';
 import { readReturnPath, returnUrl } from '@/shared/utils/return-path';
@@ -49,7 +36,6 @@ interface AccountPageProps {
     state?: string;
     ticket?: string;
     totpError?: string;
-    with?: string;
     link?: string;
     detail?: string;
     view?: string;
@@ -87,16 +73,6 @@ const leadConference = (
   return latest ? latest.conference : joined[0] ?? null;
 };
 
-const DELAYS = ['', '[animation-delay:60ms]', '[animation-delay:120ms]', '[animation-delay:180ms]'] as const;
-
-const Atmosphere = () => (
-  <span aria-hidden="true" className="absolute inset-0 overflow-hidden">
-    <span className="absolute inset-0 bg-[var(--l-navy)]" />
-    <span className="absolute -top-32 left-1/2 h-[30rem] w-[48rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(249,161,27,0.4),transparent_70%)]" />
-    <span className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-[var(--l-bg)]" />
-  </span>
-);
-
 const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
   const { locale } = await params;
   if (!isSupportedLocale(locale)) {
@@ -108,7 +84,6 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
     state,
     ticket,
     totpError,
-    with: conflictWith,
     link: linkParam,
     detail: detailParam,
     view,
@@ -132,9 +107,22 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
   if (account && returnTo) {
     redirect(returnUrl(returnTo));
   }
+  /*
+   * Signed in, the personal area is the Lounge and nothing else.
+   *
+   * The sign-in screen's moments mean nothing to someone already signed
+   * in, and there is no separate account page any more: a list of
+   * conferences with "cancel registration" under the guest's own, which
+   * people reached from addresses like /en/me?state=wrong — a failed
+   * attempt before registering, the back button, a bookmark — and read
+   * as the platform having lost them. Any of those addresses, and the
+   * old ?view=account, go home.
+   */
+  if (account && (state || ticket || totpError || link || detail || view)) {
+    redirect(`/${locale}/me`);
+  }
   const siteLogo = await getSiteBrand();
   const barViewer = await conferenceBarViewer();
-  const ui = ACCOUNT_UI;
   const he = locale === 'he';
 
   if (!account) {
@@ -203,11 +191,8 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
 
   /*
    * The personal home IS the Lounge (the guest registers to the
-   * platform once; conferences come and go). The account view appears
-   * only on request or when there is something to say — a join
-   * conflict, a fresh sign-in link — or nothing to show yet.
+   * platform once; conferences come and go).
    */
-  const wantsAccount = view === 'account' || Boolean(state) || Boolean(link);
   const chosen = account.joined.find(
     (conference) => conference.slug === eventParam,
   ) ?? leadConference(account.joined);
@@ -218,436 +203,224 @@ const AccountPage = async ({ params, searchParams }: AccountPageProps) => {
    * its own life; without one the platform's own light holds the room,
    * and the conferences section carries the invitation.
    */
-  if (!wantsAccount) {
-    const content = chosen
-      ? await getAttendeeExperience(chosen.slug, locale).catch(() => null)
-      : null;
-    /*
-     * The conference is the site, so the directory is the site's own
-     * conference — not a list of ones this account happens to hold.
-     */
-    const directorySlug = await visibleSiteConference(locale).catch(
-      () => null,
-    );
-    const platformPeople =
-      content || !directorySlug
-        ? []
-        : (await listDirectoryParticipants(directorySlug).catch(() => []))
-          .filter(
-            (person) =>
-              person.participantId !== account.id &&
-              (!person.email ||
-                person.email.toLowerCase() !== account.email.toLowerCase()),
-          )
-          .slice(0, 3)
-          .map((person) => ({
-            id: person.participantId,
-            name: person.name,
-            role:
-              [person.roleTitle, person.orgName].filter(Boolean).join(' · ') ||
-              undefined,
-            reason:
-              person.interests ?? (he ? 'חבר/ת הפלטפורמה' : 'On the platform'),
-          }));
-    /*
-     * The bell's truth (platform-wide): requests and unread words from
-     * every joined conference, not only the one on screen.
-     */
-    const allLinks = (
-      await Promise.all(
-        account.joined
-          .slice(0, JOINED_CONFERENCE_FANOUT)
-          .map((conference) => myConnections(conference.slug).catch(() => [])),
+  const content = chosen
+    ? await getAttendeeExperience(chosen.slug, locale).catch(() => null)
+    : null;
+  /*
+   * The conference is the site, so the directory is the site's own
+   * conference — not a list of ones this account happens to hold.
+   */
+  const directorySlug = await visibleSiteConference(locale).catch(
+    () => null,
+  );
+  const platformPeople =
+    content || !directorySlug
+      ? []
+      : (await listDirectoryParticipants(directorySlug).catch(() => []))
+        .filter(
+          (person) =>
+            person.participantId !== account.id &&
+            (!person.email ||
+              person.email.toLowerCase() !== account.email.toLowerCase()),
+        )
+        .slice(0, 3)
+        .map((person) => ({
+          id: person.participantId,
+          name: person.name,
+          role:
+            [person.roleTitle, person.orgName].filter(Boolean).join(' · ') ||
+            undefined,
+          reason:
+            person.interests ?? (he ? 'חבר/ת הפלטפורמה' : 'On the platform'),
+        }));
+  /*
+   * The bell's truth (platform-wide): requests and unread words from
+   * every joined conference, not only the one on screen.
+   */
+  const allLinks = (
+    await Promise.all(
+      account.joined
+        .slice(0, JOINED_CONFERENCE_FANOUT)
+        .map((conference) => myConnections(conference.slug).catch(() => [])),
+    )
+  ).flat();
+  const livingLinks = allLinks.filter(
+    (connection) => connection.status === 'accepted' || connection.muted,
+  );
+  const unreadTotal = [
+    ...(await myUnreadByConnection(livingLinks)).values(),
+  ].reduce((sum, count) => sum + count, 0);
+  const links = allLinks;
+  /*
+   * Link-through, not link-out: the personal Lounge shows the schedule
+   * itself. Even before the account-level join, the participant's own
+   * activity registrations (the Program's data) fill "My schedule" here —
+   * and mark the active conference as one of "My conferences".
+   */
+  const activeSlug = content
+    ? null
+    : await visibleSiteConference(locale).catch(() => null);
+  const mySchedule = activeSlug
+    ? await myActivities(activeSlug, locale).catch(() => null)
+    : null;
+  /*
+   * What the conference has actually said. Read here for the same
+   * reason the schedule above is: this room is the platform Lounge,
+   * which holds no conference of its own, and a guest who registered
+   * for activities without joining at the account level still belongs
+   * to the live conference's audience.
+   */
+  const platformUpdates = activeSlug
+    ? toAttendeeUpdates(
+        await listMyAnnouncements(activeSlug).catch(() => []),
+        locale,
       )
-    ).flat();
-    const livingLinks = allLinks.filter(
-      (connection) => connection.status === 'accepted' || connection.muted,
-    );
-    const unreadTotal = [
-      ...(await myUnreadByConnection(livingLinks)).values(),
-    ].reduce((sum, count) => sum + count, 0);
-    const links = allLinks;
-    /*
-     * Link-through, not link-out: the personal Lounge shows the schedule
-     * itself. Even before the account-level join, the participant's own
-     * activity registrations (the Program's data) fill "My schedule" here —
-     * and mark the active conference as one of "My conferences".
-     */
-    const activeSlug = content
-      ? null
-      : await visibleSiteConference(locale).catch(() => null);
-    const mySchedule = activeSlug
-      ? await myActivities(activeSlug, locale).catch(() => null)
-      : null;
-    /*
-     * What the conference has actually said. Read here for the same
-     * reason the schedule above is: this room is the platform Lounge,
-     * which holds no conference of its own, and a guest who registered
-     * for activities without joining at the account level still belongs
-     * to the live conference's audience.
-     */
-    const platformUpdates = activeSlug
-      ? toAttendeeUpdates(
-          await listMyAnnouncements(activeSlug).catch(() => []),
-          locale,
-        )
-      : [];
-    const myRegistrations = mySchedule
-      ? [...mySchedule.upcoming, ...mySchedule.waiting].sort(
-          (a, b) =>
-            Date.parse(a.session.startsAt ?? '') -
-            Date.parse(b.session.startsAt ?? ''),
-        )
-      : [];
-    const scheduleMoments = myRegistrations.map((a) => ({
-      id: a.session.id,
-      startTime: formatTimeLabel(a.session.startsAt, locale),
-      endTime: formatTimeLabel(a.session.endsAt, locale),
-      title: a.session.title,
-      description: a.session.description,
-      room: placeOf(a.session) || undefined,
-      saved: true,
-      kind: (isPlainSession(a.session.sessionType) ? 'break' : 'session') as
-        | 'break'
-        | 'session',
-      dayLabel: formatDayLabel(a.session.startsAt, locale),
-      speaker: a.session.speaker,
-      sessionType: a.session.sessionType,
-    }));
-    /*
-     * The Lounge no longer sells conferences — it holds the guest's own
-     * sessions: the ones they registered for, and the ones they give.
-     * Both are read across every conference they belong to, so a speaker
-     * sees their talks the moment the organizer lists them.
-     */
-    const conferenceTitleBySlug = new Map<string, string>();
-    for (const conference of [...account.joined, ...account.available]) {
-      conferenceTitleBySlug.set(conference.slug, conference.title);
-    }
-    const sessionSlugs = [
-      ...new Set([
-        ...account.joined.slice(0, JOINED_CONFERENCE_FANOUT).map((conference) => conference.slug),
-        ...(activeSlug ? [activeSlug] : []),
-      ]),
-    ];
-    const manyConferences = sessionSlugs.length > 1;
-    const toSessionCard = (
-      session: SessionSummary,
-      slug: string,
-      waiting: boolean,
-    ) => ({
-      at: Date.parse(session.startsAt ?? '') || Number.MAX_SAFE_INTEGER,
-      card: {
-        id: session.id,
-        title: session.title,
-        conferenceTitle: manyConferences
-          ? conferenceTitleBySlug.get(slug)
-          : undefined,
-        dayLabel: formatDayLabel(session.startsAt, locale),
-        timeLabel: formatTimeLabel(session.startsAt, locale),
-        room: placeOf(session) || undefined,
-        sessionType: session.sessionType,
-        waiting,
-        imageUrl: session.image,
-        /*
-         * This session's own conference, not whichever one is live. The
-         * personal area fans out across every conference the account has
-         * joined, so a card from 2027 must lead to 2027's programme.
-         */
-        href: `/${locale}/events/${slug}/agenda?activity=${session.id}`,
-      },
-    });
-    const sessionSets = await Promise.all(
-      sessionSlugs.map(async (slug) => {
-        const [mine, agenda] = await Promise.all([
-          myActivities(slug, locale).catch(() => null),
-          listAgenda(slug, locale).catch(() => [] as SessionSummary[]),
-        ]);
-        return {
-          registered: mine
-            ? [...mine.upcoming, ...mine.waiting].map((entry) =>
-                toSessionCard(
-                  entry.session,
-                  slug,
-                  entry.category === 'waiting',
-                ),
-              )
-            : [],
-          presenting: agenda
-            .filter((session) =>
-              (session.speakers ?? []).some(
-                (speaker) => speaker.accountId === account.id,
+    : [];
+  const myRegistrations = mySchedule
+    ? [...mySchedule.upcoming, ...mySchedule.waiting].sort(
+        (a, b) =>
+          Date.parse(a.session.startsAt ?? '') -
+          Date.parse(b.session.startsAt ?? ''),
+      )
+    : [];
+  const scheduleMoments = myRegistrations.map((a) => ({
+    id: a.session.id,
+    startTime: formatTimeLabel(a.session.startsAt, locale),
+    endTime: formatTimeLabel(a.session.endsAt, locale),
+    title: a.session.title,
+    description: a.session.description,
+    room: placeOf(a.session) || undefined,
+    saved: true,
+    kind: (isPlainSession(a.session.sessionType) ? 'break' : 'session') as
+      | 'break'
+      | 'session',
+    dayLabel: formatDayLabel(a.session.startsAt, locale),
+    speaker: a.session.speaker,
+    sessionType: a.session.sessionType,
+  }));
+  /*
+   * The Lounge no longer sells conferences — it holds the guest's own
+   * sessions: the ones they registered for, and the ones they give.
+   * Both are read across every conference they belong to, so a speaker
+   * sees their talks the moment the organizer lists them.
+   */
+  const conferenceTitleBySlug = new Map<string, string>();
+  for (const conference of [...account.joined, ...account.available]) {
+    conferenceTitleBySlug.set(conference.slug, conference.title);
+  }
+  const sessionSlugs = [
+    ...new Set([
+      ...account.joined.slice(0, JOINED_CONFERENCE_FANOUT).map((conference) => conference.slug),
+      ...(activeSlug ? [activeSlug] : []),
+    ]),
+  ];
+  const manyConferences = sessionSlugs.length > 1;
+  const toSessionCard = (
+    session: SessionSummary,
+    slug: string,
+    waiting: boolean,
+  ) => ({
+    at: Date.parse(session.startsAt ?? '') || Number.MAX_SAFE_INTEGER,
+    card: {
+      id: session.id,
+      title: session.title,
+      conferenceTitle: manyConferences
+        ? conferenceTitleBySlug.get(slug)
+        : undefined,
+      dayLabel: formatDayLabel(session.startsAt, locale),
+      timeLabel: formatTimeLabel(session.startsAt, locale),
+      room: placeOf(session) || undefined,
+      sessionType: session.sessionType,
+      waiting,
+      imageUrl: session.image,
+      /*
+       * This session's own conference, not whichever one is live. The
+       * personal area fans out across every conference the account has
+       * joined, so a card from 2027 must lead to 2027's programme.
+       */
+      href: `/${locale}/events/${slug}/agenda?activity=${session.id}`,
+    },
+  });
+  const sessionSets = await Promise.all(
+    sessionSlugs.map(async (slug) => {
+      const [mine, agenda] = await Promise.all([
+        myActivities(slug, locale).catch(() => null),
+        listAgenda(slug, locale).catch(() => [] as SessionSummary[]),
+      ]);
+      return {
+        registered: mine
+          ? [...mine.upcoming, ...mine.waiting].map((entry) =>
+              toSessionCard(
+                entry.session,
+                slug,
+                entry.category === 'waiting',
               ),
             )
-            .map((session) => toSessionCard(session, slug, false)),
-        };
-      }),
-    );
-    const byTime = (a: { at: number }, b: { at: number }) => a.at - b.at;
-    const registeredSessions = sessionSets
-      .flatMap((set) => set.registered)
-      .sort(byTime)
-      .map((entry) => entry.card);
-    const presentingSessions = sessionSets
-      .flatMap((set) => set.presenting)
-      .sort(byTime)
-      .map((entry) => entry.card);
-    const platformContent = buildPlatformLounge(
-      account.name || account.email,
-      locale,
-      platformPeople,
-      platformUpdates,
-    );
-    if (scheduleMoments.length > 0) {
-      platformContent.myDay.moments = scheduleMoments;
-    }
-    return (
-      <LoungeView
-        content={content ?? platformContent}
-        locale={locale}
-        connections={livingLinks.length}
-        pending={
-          links.filter(
-            (connection) =>
-              connection.status === 'pending' &&
-              connection.direction === 'incoming',
-          ).length
-        }
-        unreadMessages={unreadTotal}
-        accountHref={`/${locale}/me?view=account`}
-        sessionsSection={{
-          registered: registeredSessions,
-          presenting: presentingSessions,
-          programHref: `/${locale}/events/${chosen?.slug ?? activeSlug}/agenda`,
-        }}
-        homeHref={`/${locale}/me`}
-        profileHref={`/${locale}/me/profile`}
-        {...(chosen?.slug ?? activeSlug
-          ? {
-              scheduleHref: `/${locale}/events/${chosen?.slug ?? activeSlug}/my-activities`,
-            }
-          : {})}
-        siteNav={
-          <ConferenceBar
-            locale={locale as Locale}
-            slug={chosen?.slug ?? activeSlug ?? null}
-            viewer={barViewer}
-            brand={brandFor(locale as Locale)}
-            brandLogo={siteLogo.onLight}
-          />
-        }
-      />
-    );
+          : [],
+        presenting: agenda
+          .filter((session) =>
+            /* Leading it, or sitting on its panel. */
+            [...(session.speakers ?? []), ...(session.panelists ?? [])].some(
+              (speaker) => speaker.accountId === account.id,
+            ),
+          )
+          .map((session) => toSessionCard(session, slug, false)),
+      };
+    }),
+  );
+  const byTime = (a: { at: number }, b: { at: number }) => a.at - b.at;
+  const registeredSessions = sessionSets
+    .flatMap((set) => set.registered)
+    .sort(byTime)
+    .map((entry) => entry.card);
+  const presentingSessions = sessionSets
+    .flatMap((set) => set.presenting)
+    .sort(byTime)
+    .map((entry) => entry.card);
+  const platformContent = buildPlatformLounge(
+    account.name || account.email,
+    locale,
+    platformPeople,
+    platformUpdates,
+  );
+  if (scheduleMoments.length > 0) {
+    platformContent.myDay.moments = scheduleMoments;
   }
-
-  const initial = (account.name || account.email).slice(0, 1).toUpperCase();
-
   return (
-    <main
-      id="main-content"
-      className="lounge lounge--site relative min-h-dvh bg-[var(--l-bg)] font-body text-[var(--l-ink)]"
-    >
-      <div className="relative h-56 md:h-64">
-        <Atmosphere />
-        <div className="relative mx-auto flex h-full max-w-5xl flex-col px-6 md:px-10">
-          <div className="flex items-center justify-between pt-6 text-white/85">
-            <Link
-              href={wordpressHref('home', locale as Locale)}
-              className="text-sm transition-opacity hover:opacity-75"
-            >
-              ← {he ? 'לדף הבית' : 'Home'}
-            </Link>
-            <span className="font-display text-sm font-semibold tracking-[0.3em]">
-              נטעים
-            </span>
-          </div>
-          <div className="mt-auto flex flex-wrap items-end gap-4 pb-14 text-white">
-            <span className="grid size-12 flex-none place-items-center rounded-full bg-white/15 font-display text-lg font-semibold backdrop-blur-sm">
-              {initial}
-            </span>
-            <div className="min-w-0">
-              <p className="text-xs font-medium tracking-[0.18em] text-[var(--l-bronze-soft)]">
-                {ui.greeting[locale]}
-              </p>
-              <h1 className="mt-1 truncate font-display text-3xl font-semibold md:text-4xl">
-                {account.name || account.email}
-              </h1>
-            </div>
-            <div className="ms-auto flex items-center gap-3">
-              <Link
-                href={`/${locale}/me/profile`}
-                className="inline-flex min-h-10 items-center rounded-xl border border-white/25 px-4 text-sm text-white transition-colors hover:border-white/60"
-              >
-                {ui.profile[locale]}
-              </Link>
-              <form action={signOutAction}>
-                <input type="hidden" name="locale" value={locale} />
-                <button
-                  type="submit"
-                  className="inline-flex min-h-10 items-center text-sm text-white/75 transition-colors hover:text-white"
-                >
-                  {ui.signOut[locale]}
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-5xl px-6 pb-20 md:px-10">
-        {state === 'conflict' && conflictWith ? (
-          <div className="lounge-rise -mt-8 mb-8">
-            <LoungeNote tone="accent">
-              {ui.conflictPrefix[locale]} <strong>{conflictWith}</strong>.{' '}
-              {ui.conflictHint[locale]}
-            </LoungeNote>
-          </div>
-        ) : null}
-        {state === 'joinFailed' ? (
-          <div className="lounge-rise -mt-8 mb-8">
-            <LoungeNote tone="accent">{ui.joinFailed[locale]}</LoungeNote>
-          </div>
-        ) : null}
-
-        <section className={state ? '' : '-mt-8'}>
-          <h2 className="sr-only">{ui.myConferences[locale]}</h2>
-          {account.joined.length === 0 ? (
-            <div className="lounge-rise">
-              <LoungeNote>{ui.noConferences[locale]}</LoungeNote>
-            </div>
-          ) : (
-            <ul className="grid gap-5 md:grid-cols-2">
-              {account.joined.map((conference, index) => (
-                <li key={conference.slug}>
-                  <article
-                    className={`lounge-rise flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-[0_14px_44px_rgba(23,32,51,0.08)] ${DELAYS[Math.min(index, 3)]}`}
-                  >
-                    <span className="relative block h-32 bg-[var(--l-navy)]">
-                      <span
-                        aria-hidden="true"
-                        className="absolute inset-0 bg-cover bg-center opacity-85"
-                        style={
-                          conference.posterUrl
-                            ? { backgroundImage: `url(${conference.posterUrl})` }
-                            : undefined
-                        }
-                      />
-                      <span
-                        aria-hidden="true"
-                        className="absolute inset-0 bg-gradient-to-t from-[color-mix(in_srgb,var(--l-navy)_55%,transparent)] to-transparent"
-                      />
-                      {conference.status ? (
-                        <span className="absolute end-4 top-4 inline-flex items-center rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-[var(--l-bronze)] backdrop-blur-sm">
-                          {ACCOUNT_STATUS_LABELS[conference.status]?.[locale] ??
-                            conference.status}
-                        </span>
-                      ) : null}
-                    </span>
-                    <div className="flex flex-1 flex-col p-5">
-                      <span className="block font-display text-lg font-semibold">
-                        {conference.title}
-                      </span>
-                      <span className="mt-0.5 block text-sm text-[var(--l-soft)]">
-                        {conference.dateLabel}
-                        {conference.location ? ` · ${conference.location}` : ''}
-                      </span>
-                      <div className="mt-auto flex flex-wrap items-center gap-4 pt-5">
-                        <Link
-                          href={`/${locale}/events/${conference.slug}/me`}
-                          className={loungePrimary}
-                        >
-                          {ui.openLounge[locale]}
-                        </Link>
-                        <form action={leaveConferenceAction}>
-                          <input type="hidden" name="locale" value={locale} />
-                          <input
-                            type="hidden"
-                            name="slug"
-                            value={conference.slug}
-                          />
-                          <button type="submit" className={loungeGhost}>
-                            {ui.leave[locale]}
-                          </button>
-                        </form>
-                      </div>
-                    </div>
-                  </article>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="mt-12 flex flex-col gap-4">
-          <h2 className="font-display text-xl font-semibold">
-            {ui.discover[locale]}
-          </h2>
-          {account.available.length === 0 ? (
-            <LoungeNote>{ui.noneAvailable[locale]}</LoungeNote>
-          ) : (
-            <ul className="grid gap-5 md:grid-cols-2">
-              {account.available.map((conference, index) => (
-                <li key={conference.slug}>
-                  <article
-                    className={`lounge-rise flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-[0_14px_44px_rgba(23,32,51,0.08)] ${DELAYS[Math.min(index, 3)]}`}
-                  >
-                    <span className="relative block h-24 bg-[var(--l-navy)]">
-                      <span
-                        aria-hidden="true"
-                        className="absolute inset-0 bg-cover bg-center opacity-70"
-                        style={
-                          conference.posterUrl
-                            ? { backgroundImage: `url(${conference.posterUrl})` }
-                            : undefined
-                        }
-                      />
-                      <span
-                        aria-hidden="true"
-                        className="absolute inset-0 bg-gradient-to-t from-[color-mix(in_srgb,var(--l-navy)_55%,transparent)] to-transparent"
-                      />
-                    </span>
-                    <div className="flex flex-1 flex-col p-5">
-                      <span className="block font-display text-lg font-semibold">
-                        {conference.title}
-                      </span>
-                      <span className="mt-0.5 block text-sm text-[var(--l-soft)]">
-                        {conference.dateLabel}
-                        {conference.location ? ` · ${conference.location}` : ''}
-                      </span>
-                      {conference.conflictWith ? (
-                        <span className="mt-auto block pt-5">
-                          <span className="flex flex-col gap-1 rounded-2xl bg-[var(--l-bronze)]/10 px-4 py-3">
-                            <span className="text-sm font-medium text-[var(--l-bronze)]">
-                              {ui.blocked[locale]} — {ui.conflictPrefix[locale]}{' '}
-                              {conference.conflictWith}
-                            </span>
-                            <span className="text-xs text-[var(--l-soft)]">
-                              {ui.conflictHint[locale]}
-                            </span>
-                          </span>
-                        </span>
-                      ) : (
-                        <form action={joinConferenceAction} className="mt-auto pt-5">
-                          <input type="hidden" name="locale" value={locale} />
-                          <input
-                            type="hidden"
-                            name="slug"
-                            value={conference.slug}
-                          />
-                          <button type="submit" className={loungeQuiet}>
-                            {ui.join[locale]}
-                          </button>
-                        </form>
-                      )}
-                    </div>
-                  </article>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      </div>
-    </main>
+    <LoungeView
+      content={content ?? platformContent}
+      locale={locale}
+      connections={livingLinks.length}
+      pending={
+        links.filter(
+          (connection) =>
+            connection.status === 'pending' &&
+            connection.direction === 'incoming',
+        ).length
+      }
+      unreadMessages={unreadTotal}
+      sessionsSection={{
+        registered: registeredSessions,
+        presenting: presentingSessions,
+        programHref: `/${locale}/events/${chosen?.slug ?? activeSlug}/agenda`,
+      }}
+      homeHref={`/${locale}/me`}
+      profileHref={`/${locale}/me/profile`}
+      {...(chosen?.slug ?? activeSlug
+        ? {
+            scheduleHref: `/${locale}/events/${chosen?.slug ?? activeSlug}/my-activities`,
+          }
+        : {})}
+      siteNav={
+        <ConferenceBar
+          locale={locale as Locale}
+          slug={chosen?.slug ?? activeSlug ?? null}
+          viewer={barViewer}
+          brand={brandFor(locale as Locale)}
+          brandLogo={siteLogo.onLight}
+        />
+      }
+    />
   );
 };
 

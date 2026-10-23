@@ -9,7 +9,8 @@ import type {
 } from '@/features/marketing';
 import type { Media } from '@/payload-types';
 import { resolveSpeakerIdentity } from '@/features/speakers/services/speaker-identity';
-import { conferenceRoster } from './payload-speaker-roster';
+import { frontFirst } from '@/features/speakers/utils/front-of-page';
+import { conferenceRoster, frontPlace, type FrontEntry } from './payload-speaker-roster';
 import { getSystemPayload } from './payload-context';
 import { payloadGalleryEntriesOfEvent } from './payload-gallery';
 
@@ -60,6 +61,8 @@ const nameOf = (value: unknown): string | undefined => {
 
 interface SpeakerRow {
   id: number | string;
+  /* The conferences this card leads the speakers page of, and where. */
+  featuredOn?: FrontEntry[] | null;
   name?: string | null;
   jobTitle?: string | null;
   role?: string | null;
@@ -242,7 +245,10 @@ export const payloadMarketingRepository: MarketingRepository = {
       pagination: false,
       overrideAccess: true,
     });
-    return (result.docs as unknown as SpeakerRow[]).map(toPublicSpeaker);
+    /* The organisers' front row first, in their order; everyone else as before. */
+    return frontFirst(result.docs as unknown as SpeakerRow[], (row) => frontPlace(row.featuredOn, eventId)).map(
+      toPublicSpeaker,
+    );
   },
 
   sponsorsOfEvent: async (eventId: string) => {

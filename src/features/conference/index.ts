@@ -73,6 +73,6 @@ export {
   IconBell,
   IconChevronDown,
 } from './ui/icons';
-export { BandIcon } from './components/activity-band';
+export { BandIcon, PANEL_WORDS } from './components/activity-band';
 export { useFavorites } from './ui/favorites';
 export type { FavoritesApi } from './ui/favorites';

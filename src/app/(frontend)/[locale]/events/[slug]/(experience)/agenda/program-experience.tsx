@@ -160,7 +160,7 @@ const ProgramExperience = ({
           (a.description ?? '').toLowerCase().includes(q) ||
           (a.place ?? '').toLowerCase().includes(q) ||
           a.typeLabel.toLowerCase().includes(q) ||
-          a.speakers.some((s) => s.name.toLowerCase().includes(q))
+          [...a.speakers, ...(a.panelists ?? [])].some((s) => s.name.toLowerCase().includes(q))
         );
       });
   }, [activities, activeDay, filter, query]);

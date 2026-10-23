@@ -14,6 +14,12 @@ interface Props {
   library: ResolvedSpeaker[];
   initial?: ResolvedSpeaker[];
   onCountChange?: (count: number) => void;
+  /*
+   * The same picker seats a panel's members: their own field in the
+   * form, and their own words above the list.
+   */
+  fieldName?: 'speakerId' | 'panelistId';
+  words?: { lead: string; empty: string; add: string };
 }
 
 const T = (locale: Locale) => ({
@@ -307,8 +313,10 @@ const SpeakerPicker = ({
   library,
   initial = [],
   onCountChange,
+  fieldName = 'speakerId',
+  words,
 }: Props) => {
-  const t = T(locale);
+  const t = { ...T(locale), ...words };
   const [selected, setSelected] = useState<ResolvedSpeaker[]>(initial);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<'search' | 'new'>('search');
@@ -496,7 +504,7 @@ const SpeakerPicker = ({
 
       {/* Hidden inputs — one per selected speaker, submitted with the form */}
       {selected.map((s) => (
-        <input key={s.id} type="hidden" name="speakerId" value={s.id} />
+        <input key={s.id} type="hidden" name={fieldName} value={s.id} />
       ))}
 
       {/* Selected chips */}

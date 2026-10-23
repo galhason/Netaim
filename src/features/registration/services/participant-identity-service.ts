@@ -6,6 +6,7 @@ import { participantSessionRepository, sendNotification } from '@/infrastructure
 import {
   SESSION_COOKIE,
   SESSION_TTL_SECONDS,
+  createLogger,
   mintSession,
   readSessionCookie,
   signedToken,
@@ -15,6 +16,16 @@ import { checkRateLimit, clearRateLimit } from '@/features/access';
 import { isStrongPassword } from '../schemas/password';
 import { generateTotpSecret, otpauthUrl, verifyTotp } from './totp';
 import type { ParticipantSummary } from '../types/registration';
+
+/*
+ * Why a sign-in was refused, on the record: an address the platform
+ * does not know, a password that did not match an account it does, an
+ * account with no password yet. Never the address and never what was
+ * typed — the account's id when there is one. Without this, "I
+ * registered and now the site says I don't exist" had nothing to be
+ * checked against.
+ */
+const signInLog = createLogger('sign-in');
 
 /*
  * Passwordless participant identity (D6). A single-use, expiring token is
@@ -120,15 +131,19 @@ export const signInWithPassword = async (
     .credentialsByEmail(email)
     .catch(() => null);
   if (!credentials) {
+    signInLog.warn('refused', { reason: 'unknown address' });
     return { ok: false, reason: 'wrong' };
   }
   if (credentials.blocked) {
+    signInLog.warn('refused', { reason: 'blocked', participantId: credentials.participantId });
     return { ok: false, reason: 'blocked' };
   }
   if (!credentials.passwordHash) {
+    signInLog.warn('refused', { reason: 'no password yet', participantId: credentials.participantId });
     return { ok: false, reason: 'noPassword' };
   }
   if (!verifyPassword(password, credentials.passwordHash)) {
+    signInLog.warn('refused', { reason: 'password did not match', participantId: credentials.participantId });
     return { ok: false, reason: 'wrong' };
   }
   const participant = await participantSessionRepository.participantById(
