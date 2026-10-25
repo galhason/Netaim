@@ -27,3 +27,11 @@ describe('a linked speaker keeps their face on the programme', () => {
     expect(readFileSync('src/features/conference/components/speaker-card.tsx', 'utf8')).toContain('size={64}');
   });
 });
+
+describe('an activity given by more than one speaker', () => {
+  it('shows every face on the tile, not only the first', () => {
+    const tile = readFileSync('src/features/conference/components/activity-tile.tsx', 'utf8');
+    expect(tile).toContain('<AvatarGroup speakers={activity.speakers} size={48} max={3} />');
+    expect(tile).not.toContain('activity.speakers[0]');
+  });
+});

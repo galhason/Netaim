@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import type { Locale } from '@/config/locales';
 import { withBasePath } from '@/config/site';
 import type { ActivityVM } from '../types';
-import { Avatar, RegistrationButton, TypePill, surface } from '../ui/kit';
+import { AvatarGroup, RegistrationButton, TypePill, surface } from '../ui/kit';
 import {
   IconBulb,
   IconCalendar,
@@ -104,7 +104,6 @@ const ActivityTile = ({ activity, locale, slug, onOpen, registerAction, leaveAct
   const favorites = useFavorites();
   const fav = favorites.has(activity.id);
   const held = activity.registration === 'registered';
-  const lead = activity.speakers[0];
 
   const open = () => onOpen(activity.id);
   const stop = (event: { stopPropagation: () => void }) => event.stopPropagation();
@@ -198,10 +197,13 @@ const ActivityTile = ({ activity, locale, slug, onOpen, registerAction, leaveAct
           </span>
         </div>
 
-        {/* Who gives it — the face first, large enough to know. */}
-        {lead ? (
+        {/* Who gives it — every face, large enough to know, overlapping when there are several. */}
+        {activity.speakers.length > 0 ? (
           <div className="mt-4 flex items-center gap-3">
-            <Avatar name={lead.name} url={lead.photoUrl} size={48} ring={false} />
+            {/* The group draws each face half a step back; the gutter keeps the first where it always stood. */}
+            <span className="flex-none ps-2">
+              <AvatarGroup speakers={activity.speakers} size={48} max={3} />
+            </span>
             <span className="min-w-0 truncate text-sm font-semibold text-[var(--x-ink)]">
               {activity.speakers.map((s) => s.name).join(', ')}
             </span>
