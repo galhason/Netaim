@@ -52,3 +52,34 @@ export const cancellationAllowed = (
   const deadline = instant(input.cancellationDeadline);
   return deadline === null || now < deadline;
 };
+
+/*
+ * The organiser's two switches, as the change each one writes.
+ *
+ * Closing stops new registrations from this moment: the closing time
+ * becomes now, and an opening still in the future is dropped so the
+ * activity reads "closed" rather than "opens later". Reopening removes
+ * the closing time, so registration runs until the activity is held.
+ * Neither touches a registration: a place already held is a record of
+ * its own, and the window only decides who may take a new one. A
+ * switch that would change nothing answers null, and nothing is written.
+ */
+export type RegistrationWindowPatch = Partial<Record<keyof RegistrationWindowInput, string>>;
+
+export const closingPatch = (
+  input: RegistrationWindowInput,
+  now: number,
+): RegistrationWindowPatch | null => {
+  const state = registrationWindow(input, now);
+  if (state === 'closed') return null;
+  return {
+    registrationClosesAt: new Date(now).toISOString(),
+    ...(state === 'notYet' ? { registrationOpensAt: '' } : {}),
+  };
+};
+
+export const reopeningPatch = (
+  input: RegistrationWindowInput,
+  now: number,
+): RegistrationWindowPatch | null =>
+  registrationWindow(input, now) === 'closed' ? { registrationClosesAt: '' } : null;

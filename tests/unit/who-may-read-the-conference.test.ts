@@ -32,7 +32,6 @@ describe('the conference is read by people who registered', () => {
     [`${EXPERIENCE}/speakers/page.tsx`, 'requireParticipant(lang, `/${lang}/events/${slug}/speakers`)'],
     [`${EXPERIENCE}/speakers/[id]/page.tsx`, 'requireParticipant(lang, `/${lang}/events/${slug}/speakers/${id}`)'],
     [`${EXPERIENCE}/gallery/page.tsx`, 'requireParticipant(lang, `/${lang}/events/${slug}/gallery`)'],
-    [`${FRONTEND}/events/[slug]/workshops/page.tsx`, 'requireParticipant(locale, `/${locale}/events/${slug}/workshops`)'],
     [`${FRONTEND}/events/[slug]/my-activities/page.tsx`, 'requireParticipant(lang, `/${lang}/events/${slug}/my-activities`)'],
     [`${FRONTEND}/events/[slug]/me/page.tsx`, 'requireParticipant(locale, `/${locale}/events/${slug}/me`)'],
     [`${FRONTEND}/events/[slug]/me/speakers/page.tsx`, 'requireParticipant(locale, `/${locale}/events/${slug}/me/speakers`)'],

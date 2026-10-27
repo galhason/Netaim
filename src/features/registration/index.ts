@@ -32,6 +32,8 @@ export {
   requestAccountLink,
   consumeMagicLink,
   signInWithLink,
+  passwordResetLink,
+  resetPasswordWithLink,
   establishSession,
   currentParticipant,
   emailHasAccount,
@@ -50,6 +52,8 @@ export {
   myLocalePreference,
 } from './services/participant-identity-service';
 export type {
+  PasswordResetLink,
+  PasswordResetOutcome,
   TotpSignInOutcome,
   TotpStatus,
 } from './services/participant-identity-service';

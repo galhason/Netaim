@@ -17,6 +17,7 @@ import {
   isSessionType,
   releaseWorkshopPlace,
   restoreSession,
+  setRegistrationOpen,
   takesPanel,
   type CreateSessionInput,
 } from '@/features/program';
@@ -241,6 +242,41 @@ export const duplicateActivityAction = async (formData: FormData) => {
   }
   publishedEvent(slug);
   revalidatePath('/studio/activity');
+};
+
+/*
+ * Registration closed — or opened again — for every chosen activity in
+ * one press. Only new registrations are stopped: everyone who already
+ * holds a place keeps it, nobody is mailed, and the guests' own "cancel"
+ * follows the activity's cancellation rule as before. Answers how many
+ * activities actually changed, so the screen can say so.
+ */
+const MAX_AT_ONCE = 200;
+
+export const setActivitiesRegistrationAction = async (input: {
+  slug: string;
+  sessionIds: string[];
+  open: boolean;
+}): Promise<{ changed: number }> => {
+  const { slug } = input;
+  const actor = slug ? await actorFor('activities:manage', slug) : null;
+  const ids = (Array.isArray(input.sessionIds) ? input.sessionIds : [])
+    .map((id) => String(id))
+    .filter((id) => /^\d+$/.test(id))
+    .slice(0, MAX_AT_ONCE);
+  if (!actor || ids.length === 0) {
+    return { changed: 0 };
+  }
+  const changed = await setRegistrationOpen(slug, ids, input.open === true);
+  if (changed.length > 0) {
+    await audit(actor, 'content.sessionUpdated', slug, {
+      sessions: changed.join(','),
+      registration: input.open === true ? 'reopened' : 'closed',
+    });
+    publishedEvent(slug);
+    revalidatePath('/studio/activity');
+  }
+  return { changed: changed.length };
 };
 
 /* Off the program, kept on the shelf — a supervisor's way of removing. */

@@ -4,7 +4,9 @@ import { redirect } from 'next/navigation';
 import { isSupportedLocale, type Locale } from '@/config/locales';
 import {
   completeTotpSignIn,
+  currentParticipant,
   requestAccountLink,
+  resetPasswordWithLink,
   signInWithPassword,
 } from '@/features/registration';
 import { readReturnPath, returnUrl } from '@/shared/utils/return-path';
@@ -129,6 +131,39 @@ export const requestAccountLinkAction = async (formData: FormData) => {
    * the answer to their request as a note above it.
    */
   redirect(`/${locale}/me?view=reset&state=sent${devLink}`);
+};
+
+/*
+ * The new password, chosen from the reset link: typed twice, checked
+ * against the policy, and — for an account with an authenticator — with
+ * its six digits. Every refusal comes back to the same page with the
+ * link still in hand, so a typo costs a retype, not a new email. Done,
+ * the person is signed in and lands in their own space.
+ */
+export const setNewPasswordAction = async (formData: FormData) => {
+  const locale = readLocale(formData);
+  const token = String(formData.get('token') ?? '');
+  const password = String(formData.get('password') ?? '');
+  const confirmation = String(formData.get('passwordConfirm') ?? '');
+  const code = String(formData.get('code') ?? '').replace(/\s/g, '');
+  const back = (state: string) =>
+    redirect(`/${locale}/me/new-password?token=${encodeURIComponent(token)}&state=${state}`);
+  if (password !== confirmation) {
+    back('mismatch');
+  }
+  const outcome = await resetPasswordWithLink(token, password, code);
+  if (outcome === 'ok') {
+    redirect(`/${locale}/me`);
+  }
+  /*
+   * A second press of the button arrives at a link the first press
+   * already spent — over an account the first press signed in. That is
+   * not an expired link; it is done.
+   */
+  if (outcome === 'invalid' && (await currentParticipant().catch(() => null))) {
+    redirect(`/${locale}/me`);
+  }
+  back(outcome);
 };
 
 /*

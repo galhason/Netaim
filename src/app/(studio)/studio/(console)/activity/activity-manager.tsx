@@ -1,11 +1,17 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { Locale } from '@/config/locales';
 import { withBasePath } from '@/config/site';
 import type { SessionType, WorkshopStatus } from '@/features/program';
-import { archiveActivityAction, removeActivityAction, restoreActivityAction } from './actions';
+import {
+  archiveActivityAction,
+  removeActivityAction,
+  restoreActivityAction,
+  setActivitiesRegistrationAction,
+} from './actions';
 import RegistrantsDialog from './registrants-dialog';
 
 export interface ActivityRow {
@@ -23,6 +29,8 @@ export interface ActivityRow {
   available: number | null;
   state: 'unlimited' | 'open' | 'limited' | 'full';
   status: WorkshopStatus;
+  /* Whether new registrations are taken now: the window the Studio wrote. */
+  registration: 'open' | 'notYet' | 'closed';
   /* The vote on the language, where the activity holds one: the tally, and the decision once taken. */
   votes?: { label: string; confirmed: number; waiting: number }[];
   decidedLanguage?: string;
@@ -45,6 +53,8 @@ interface Props {
   /* The shelf: archived activities, shown apart and restorable. */
   archived?: ActivityRow[];
   can: ActivityPermissions;
+  /* The conference's clock: every date and hour here is read on it, never on the operator's computer. */
+  timeZone: string;
 }
 
 const TYPE_LABELS: Record<SessionType, Record<Locale, string>> = {
@@ -135,6 +145,24 @@ const T = (locale: Locale) => ({
   exportOneLabel: (title: string) =>
     locale === 'he' ? `ייצוא הנרשמים לאקסל: ${title}` : `Export registrants to Excel: ${title}`,
   registrants: locale === 'he' ? 'נרשמים' : 'Registrants',
+  regClosed: locale === 'he' ? 'הרשמה סגורה' : 'Registration closed',
+  regNotYet: locale === 'he' ? 'הרשמה טרם נפתחה' : 'Registration not open yet',
+  selectAll: locale === 'he' ? 'בחירת כל הפעילויות המוצגות' : 'Select every activity shown',
+  selectOne: (title: string) => (locale === 'he' ? `בחירת ${title}` : `Select ${title}`),
+  selected: (n: number) =>
+    n === 1 ? (locale === 'he' ? 'נבחרה פעילות אחת' : '1 activity selected') : locale === 'he' ? `נבחרו ${n} פעילויות` : `${n} activities selected`,
+  closeSelected: locale === 'he' ? 'סגירת הרשמה' : 'Close registration',
+  reopenSelected: locale === 'he' ? 'פתיחת הרשמה מחדש' : 'Reopen registration',
+  clearSelection: locale === 'he' ? 'ביטול הבחירה' : 'Clear selection',
+  keepsPlaces:
+    locale === 'he'
+      ? 'סגירה עוצרת רק הרשמות חדשות — מי שכבר רשום נשאר רשום, ולא נשלח מייל לאף אחד.'
+      : 'Closing stops new registrations only — everyone already registered stays registered, and no one is emailed.',
+  closedDone: (n: number) =>
+    locale === 'he' ? `ההרשמה נסגרה ב-${n} פעילויות. כל הנרשמים נשארו רשומים.` : `Registration closed for ${n} activities. Everyone registered stays registered.`,
+  reopenedDone: (n: number) =>
+    locale === 'he' ? `ההרשמה נפתחה מחדש ב-${n} פעילויות.` : `Registration reopened for ${n} activities.`,
+  nothingChanged: locale === 'he' ? 'לא היה מה לשנות בפעילויות שנבחרו.' : 'Nothing to change in the selected activities.',
   registrantsLabel: (title: string, n: number) =>
     locale === 'he' ? `הנרשמים ל${title} (${n})` : `Registrants of ${title} (${n})`,
 });
@@ -154,21 +182,22 @@ const Download = () => (
   </svg>
 );
 
-const timeRange = (start: string | null, end: string | null, tag: string) => {
+const timeRange = (start: string | null, end: string | null, tag: string, timeZone: string) => {
   if (!start) return '—';
   const s = new Date(start);
   const date = new Intl.DateTimeFormat(tag, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
+    timeZone,
   }).format(s);
   const fmt = (d: Date) =>
-    new Intl.DateTimeFormat(tag, { hour: '2-digit', minute: '2-digit' }).format(d);
+    new Intl.DateTimeFormat(tag, { hour: '2-digit', minute: '2-digit', timeZone }).format(d);
   const times = end ? `${fmt(s)} - ${fmt(new Date(end))}` : fmt(s);
   return { date, times };
 };
 
-const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
+const ActivityManager = ({ locale, slug, rows, archived = [], can, timeZone }: Props) => {
   const t = T(locale);
   const tag = locale === 'he' ? 'he-IL' : 'en-GB';
   const [query, setQuery] = useState('');
@@ -177,18 +206,44 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
   const [day, setDay] = useState<string>('all');
   /* The activity whose registrants are open in the window, if any. */
   const [open, setOpen] = useState<ActivityRow | null>(null);
+  /* The activities chosen for one press of "close registration". */
+  const [chosen, setChosen] = useState<Set<string>>(() => new Set());
+  const [notice, setNotice] = useState<string | null>(null);
+  const [busy, startBusy] = useTransition();
+  const router = useRouter();
+  const selecting = can.manage && Boolean(slug);
+  const toggle = (id: string) =>
+    setChosen((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const applyRegistration = (reopen: boolean) => {
+    if (!slug || chosen.size === 0) return;
+    startBusy(async () => {
+      const { changed } = await setActivitiesRegistrationAction({ slug, sessionIds: [...chosen], open: reopen });
+      setNotice(changed === 0 ? t.nothingChanged : reopen ? t.reopenedDone(changed) : t.closedDone(changed));
+      setChosen(new Set());
+      router.refresh();
+    });
+  };
 
   /*
    * The day an activity belongs to, as the list names it: a calendar
-   * day in the operator's own clock, the same one the row prints — so
-   * the heading and the dates under it never disagree. An activity
+   * day on the conference's clock, the same one the row prints — so the
+   * heading and the dates under it never disagree, and an operator
+   * abroad reads the programme's hours, not their own. An activity
    * without a start has no day, and gathers with the others of its kind
    * at the end, under "no date".
    */
-  const dayOf = (startsAt: string | null): string => {
-    if (!startsAt || Number.isNaN(Date.parse(startsAt))) return '';
-    return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(startsAt));
-  };
+  const dayOf = useCallback(
+    (startsAt: string | null): string => {
+      if (!startsAt || Number.isNaN(Date.parse(startsAt))) return '';
+      return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone }).format(new Date(startsAt));
+    },
+    [timeZone],
+  );
   const dayName = (key: string): string =>
     key === ''
       ? t.undated
@@ -214,7 +269,7 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
           if (da !== db) return da === '' ? 1 : db === '' ? -1 : da.localeCompare(db);
           return (Date.parse(a.startsAt ?? '') || 0) - (Date.parse(b.startsAt ?? '') || 0) || a.title.localeCompare(b.title, tag);
         }),
-    [rows, query, status, type, day, tag],
+    [rows, query, status, type, day, tag, dayOf],
   );
 
   /* The list as days: one group per calendar day, in order, "no date" last. */
@@ -227,13 +282,23 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
       else out.push({ key, rows: [row] });
     }
     return out;
-  }, [filtered]);
+  }, [filtered, dayOf]);
+
+  const allShownChosen = filtered.length > 0 && filtered.every((r) => chosen.has(r.id));
+  const toggleAllShown = () =>
+    setChosen((current) => {
+      const next = new Set(current);
+      if (allShownChosen) filtered.forEach((r) => next.delete(r.id));
+      else filtered.forEach((r) => next.add(r.id));
+      return next;
+    });
+  const columns = selecting ? 7 : 6;
 
   /* Every day the programme has, for the day filter — dated days in order, then "no date" if any. */
   const days = useMemo(() => {
     const keys = Array.from(new Set(rows.map((r) => dayOf(r.startsAt))));
     return keys.sort((a, b) => (a === '' ? 1 : b === '' ? -1 : a.localeCompare(b)));
-  }, [rows]);
+  }, [rows, dayOf]);
 
   const stats = useMemo(() => {
     const registered = rows.reduce((s, r) => s + r.confirmed, 0);
@@ -370,11 +435,61 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
         </select>
       </div>
 
+      {notice ? (
+        <p role="status" className="rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-4 py-2.5 text-sm text-emerald-200">
+          {notice}
+        </p>
+      ) : null}
+
+      {/* What one press does to the chosen activities — and what it never does. */}
+      {selecting && chosen.size > 0 ? (
+        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-3 rounded-xl border border-[var(--c-bronze)]/40 bg-[var(--c-panel)] px-4 py-3 shadow-lg">
+          <p className="text-sm font-semibold text-[var(--c-text)]">{t.selected(chosen.size)}</p>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => applyRegistration(false)}
+            className="rounded-lg bg-[var(--c-bronze)] px-3.5 py-1.5 text-sm font-medium text-[var(--c-on-accent)] disabled:opacity-50"
+          >
+            {t.closeSelected}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => applyRegistration(true)}
+            className="rounded-lg border border-[var(--c-line-strong)] px-3.5 py-1.5 text-sm text-[var(--c-text)] hover:border-[var(--c-bronze)]/50 disabled:opacity-50"
+          >
+            {t.reopenSelected}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => setChosen(new Set())}
+            className="text-xs text-[var(--c-text-soft)] underline-offset-4 hover:underline"
+          >
+            {t.clearSelection}
+          </button>
+          <p className="basis-full text-xs text-[var(--c-text-soft)]">{t.keepsPlaces}</p>
+        </div>
+      ) : null}
+
       {/* Table */}
       <div className="overflow-hidden rounded-xl border border-[var(--c-line)]">
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-[rgba(255,255,255,0.03)] text-[var(--c-text-faint)]">
+              {selecting ? (
+                <th className="w-10 p-3 text-start font-medium">
+                  <input
+                    type="checkbox"
+                    checked={allShownChosen}
+                    onChange={toggleAllShown}
+                    aria-label={t.selectAll}
+                    title={t.selectAll}
+                    className="size-4 accent-[var(--c-bronze)]"
+                  />
+                </th>
+              ) : null}
               <th className="p-3 text-start font-medium">{t.colActivity}</th>
               <th className="p-3 text-start font-medium">{t.colWhen}</th>
               <th className="p-3 text-start font-medium">{t.colWhere}</th>
@@ -387,7 +502,7 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
             {filtered.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={columns}
                   className="p-8 text-center text-[var(--c-text-soft)]"
                 >
                   {t.empty}
@@ -397,7 +512,7 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
               groups.flatMap((group) => [
                 <tr key={`day-${group.key || 'undated'}`} className="bg-[rgba(255,255,255,0.04)]">
                   <th
-                    colSpan={6}
+                    colSpan={columns}
                     scope="rowgroup"
                     className="border-t border-[var(--c-line)] px-3 py-2 text-start text-xs font-semibold uppercase tracking-wide text-[var(--c-bronze)]"
                   >
@@ -408,7 +523,7 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
                   </th>
                 </tr>,
                 ...group.rows.map((r) => {
-                const when = timeRange(r.startsAt, r.endsAt, tag);
+                const when = timeRange(r.startsAt, r.endsAt, tag, timeZone);
                 const meta = STATUS_META[r.status];
                 const pct =
                   r.limit && r.limit > 0
@@ -417,8 +532,19 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
                 return (
                   <tr
                     key={r.id}
-                    className="border-t border-[var(--c-line)] align-middle"
+                    className={`border-t border-[var(--c-line)] align-middle ${chosen.has(r.id) ? 'bg-[var(--c-bronze)]/[0.06]' : ''}`}
                   >
+                    {selecting ? (
+                      <td className="w-10 p-3">
+                        <input
+                          type="checkbox"
+                          checked={chosen.has(r.id)}
+                          onChange={() => toggle(r.id)}
+                          aria-label={t.selectOne(r.title)}
+                          className="size-4 accent-[var(--c-bronze)]"
+                        />
+                      </td>
+                    ) : null}
                     <td className="p-3">
                       <p className="font-medium text-[var(--c-text)]">
                         {r.title}
@@ -497,6 +623,11 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
                       >
                         {meta[locale]}
                       </span>
+                      {r.registration !== 'open' ? (
+                        <span className="mt-1 block text-xs font-medium text-[var(--c-text-soft)]">
+                          {r.registration === 'closed' ? t.regClosed : t.regNotYet}
+                        </span>
+                      ) : null}
                     </td>
                     <td className="p-3">
                       <div className="flex items-center justify-end gap-2">
@@ -578,7 +709,7 @@ const ActivityManager = ({ locale, slug, rows, archived = [], can }: Props) => {
           ) : (
             <ul className="border-t border-[var(--c-line)]">
               {archived.map((r) => {
-                const when = timeRange(r.startsAt, r.endsAt, tag);
+                const when = timeRange(r.startsAt, r.endsAt, tag, timeZone);
                 return (
                   <li key={r.id} className="flex flex-wrap items-center gap-3 border-b border-[var(--c-line)] px-4 py-3 text-sm last:border-b-0">
                     <span className="min-w-0 flex-1">

@@ -2,6 +2,7 @@ export {
   listAgenda,
   createSession,
   updateSession,
+  setRegistrationOpen,
   deleteSession,
   archiveSession,
   restoreSession,

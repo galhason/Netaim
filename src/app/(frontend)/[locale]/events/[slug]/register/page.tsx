@@ -260,7 +260,7 @@ const RegisterPage = async ({ params, searchParams }: RegisterPageProps) => {
               {OUTCOME_COPY[shownOutcome].text[lang]}
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-              <Link href={`/${lang}/events/${slug}/workshops`} className={primaryCls}>
+              <Link href={`/${lang}/events/${slug}/agenda`} className={primaryCls}>
                 {m.toWorkshops[lang]}
               </Link>
               <Link href={`/${lang}/me`} className={ghostCls}>

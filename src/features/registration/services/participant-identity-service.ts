@@ -365,6 +365,40 @@ export const applyPasswordHash = async (
 /* The one-way hash used for a password chosen before an account exists. */
 export const passwordHashFor = (raw: string): string => hashPassword(raw);
 
+/*
+ * The password reset, in words. It says what the link does — choose a
+ * new password — and that nothing changes until it is used, so a
+ * person who did not ask can simply ignore it.
+ */
+const resetEmail = (
+  locale: Locale,
+  link: string,
+): { subject: string; body: string; cta: { label: string; href: string } } => {
+  const minutes = Math.round(LINK_TTL_MS / 60_000);
+  const he = locale === 'he';
+  return {
+    subject: he ? 'איפוס סיסמה לאזור האישי' : 'Reset your password',
+    body: he
+      ? [
+          'שלום,',
+          'התקבלה בקשה לאפס את הסיסמה לאזור האישי בנטעים. בקישור הבא תבחרו סיסמה חדשה:',
+          link,
+          `הקישור תקף למשך ${minutes} דקות וניתן לשימוש פעם אחת בלבד.`,
+          'אם לא ביקשתם לאפס את הסיסמה, אין צורך לעשות דבר — הסיסמה הנוכחית נשארת בתוקף.',
+          'בברכה,\nצוות נטעים',
+        ].join('\n\n')
+      : [
+          'Hello,',
+          'We received a request to reset the password for your personal area on Netaim. Use the following link to choose a new password:',
+          link,
+          `The link is valid for ${minutes} minutes and can be used once.`,
+          'If you did not ask to reset your password, no action is needed — your current password stays as it is.',
+          'Kind regards,\nThe Netaim team',
+        ].join('\n\n'),
+    cta: { label: he ? 'בחירת סיסמה חדשה' : 'Choose a new password', href: link },
+  };
+};
+
 export const requestMagicLink = async (
   email: string,
   slug: string,
@@ -486,7 +520,13 @@ export const requestAccountLink = async (
   if (!issued) {
     return { ok: false, reason: 'needName' };
   }
-  const link = `${serverUrl()}/${locale}/enter?token=${raw}`;
+  /*
+   * The recovery link opens the page that asks for the new password —
+   * not a session. Signing in with no password and being told to go
+   * and find the profile page left people inside an account whose
+   * password they still did not know.
+   */
+  const link = `${serverUrl()}/${locale}/me/new-password?token=${raw}`;
   /*
    * Never awaited into a failure: a mail server being unreachable must
    * not tell the visitor their account does not exist. The outbox has
@@ -497,7 +537,7 @@ export const requestAccountLink = async (
     eventSlug: '',
     type: 'participant.signin',
     locale,
-    ...signInEmail(locale, link),
+    ...resetEmail(locale, link),
   }).catch(() => undefined);
   return { ok: true, link, created: issued.created };
 };
@@ -543,6 +583,90 @@ export const signInWithLink = async (token: string): Promise<LinkSignInResult> =
   }
   await establishSession(participant.id);
   return { ok: true, participant };
+};
+
+/*
+ * A password chosen from the reset link.
+ *
+ * The page reads the link without spending it (`passwordResetLink`), so
+ * a mail scanner that opens every link in a message cannot burn it; the
+ * form's answer is what spends it. The new password replaces the old
+ * one, every other sign-in of the account ends — whoever had the old
+ * password is out — and this browser is signed in with the new one.
+ *
+ * The link proves the mailbox and nothing more, so an account that
+ * armed an authenticator owes its six digits here as well, checked
+ * before the link is spent or the password touched: a stolen mailbox
+ * must not be enough to take the account.
+ */
+export type PasswordResetLink =
+  | { ok: true; totp: boolean }
+  | { ok: false };
+
+const accountOfLink = async (
+  token: string,
+): Promise<{ participant: ParticipantSummary; totp: boolean } | null> => {
+  if (!token) {
+    return null;
+  }
+  const held = await participantSessionRepository
+    .peek(tokenHashOf(token), new Date().toISOString())
+    .catch(() => null);
+  if (!held) {
+    return null;
+  }
+  const credentials = await participantSessionRepository
+    .credentialsByEmail(held.participant.email)
+    .catch(() => null);
+  if (!credentials || credentials.participantId !== held.participant.id || credentials.blocked) {
+    return null;
+  }
+  return { participant: held.participant, totp: credentials.totpEnabled };
+};
+
+export const passwordResetLink = async (token: string): Promise<PasswordResetLink> => {
+  const account = await accountOfLink(token);
+  return account ? { ok: true, totp: account.totp } : { ok: false };
+};
+
+export type PasswordResetOutcome = 'ok' | 'invalid' | 'weakPassword' | 'totpWrong' | 'locked';
+
+export const resetPasswordWithLink = async (
+  token: string,
+  password: string,
+  code = '',
+): Promise<PasswordResetOutcome> => {
+  if (!isStrongPassword(password)) {
+    return 'weakPassword';
+  }
+  const account = await accountOfLink(token);
+  if (!account) {
+    return 'invalid';
+  }
+  const { participant } = account;
+  if (account.totp) {
+    const subject = `totp:${participant.id}`;
+    const attempt = await checkRateLimit('sign-in', subject);
+    if (!attempt.allowed) {
+      return 'locked';
+    }
+    const state = await participantSessionRepository.totpStateById(participant.id).catch(() => null);
+    if (!state?.secret || !state.enabledAt || !verifyTotp(state.secret, code, Date.now())) {
+      return 'totpWrong';
+    }
+    await clearRateLimit('sign-in', subject);
+  }
+  const spent = await consumeMagicLink(token).catch(() => null);
+  if (!spent || spent.id !== participant.id) {
+    return 'invalid';
+  }
+  await participantSessionRepository.setPasswordHash(participant.id, hashPassword(password));
+  /* A lock earned by guessing the old password does not outlive it. */
+  await clearRateLimit('sign-in', participant.email);
+  await clearAllSessions(participant.id);
+  await establishSession(participant.id);
+  signInLog.info('password reset', { participantId: participant.id });
+  return 'ok';
 };
 
 /*

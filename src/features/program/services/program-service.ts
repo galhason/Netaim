@@ -2,10 +2,12 @@ import type { Locale } from '@/config/locales';
 import {
   applyTransition,
   cancellationAllowed,
+  closingPatch,
   computeCapacity,
   decideOutcome,
   promotable,
   registrationWindow,
+  reopeningPatch,
   type CapacityView,
   type RegistrationStatus,
 } from '@/registration-engine';
@@ -192,6 +194,40 @@ export const updateSession = async (
     }
   }
   return after;
+};
+
+/*
+ * Registration closed, or opened again, for several activities at once.
+ *
+ * Only the window is written — the two dates that decide who may take a
+ * new place — through the repository directly, so nobody registered is
+ * mailed about it and no registration is read, moved or cancelled: a
+ * place already held stays held. Each activity must belong to this
+ * conference and still be on its programme; anything else is skipped.
+ * Answers the ids that actually changed.
+ */
+export const setRegistrationOpen = async (
+  slug: string,
+  sessionIds: string[],
+  open: boolean,
+): Promise<string[]> => {
+  const now = Date.now();
+  const changed: string[] = [];
+  for (const sessionId of [...new Set(sessionIds)]) {
+    const session = await sessionRepository.getById(sessionId, 'he').catch(() => null);
+    if (!session || session.eventSlug !== slug || session.archivedAt) {
+      continue;
+    }
+    const patch = open ? reopeningPatch(session, now) : closingPatch(session, now);
+    if (!patch) {
+      continue;
+    }
+    const saved = await sessionRepository.update(sessionId, patch, 'he').catch(() => null);
+    if (saved) {
+      changed.push(sessionId);
+    }
+  }
+  return changed;
 };
 
 /*

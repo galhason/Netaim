@@ -149,6 +149,16 @@ export interface ParticipantSessionRepository {
     now: string,
   ) => Promise<{ participant: ParticipantSummary } | null>;
   /*
+   * Whose a live, unspent link is — without spending it. The password
+   * reset page reads this to show its form; only the form's answer
+   * spends the link, so a mail scanner that opens every link in a
+   * message cannot burn a reset before the person reaches it.
+   */
+  peek: (
+    tokenHash: string,
+    now: string,
+  ) => Promise<{ participant: ParticipantSummary } | null>;
+  /*
    * Live sign-ins. The cookie names a session, not an account, so that
    * signing out can end it: deleting a cookie only asks the browser to
    * forget: it cannot reach a copy of the value taken beforehand.

@@ -247,12 +247,27 @@ describe('what the guest sees', () => {
     for (const file of [
       'src/app/(frontend)/[locale]/events/[slug]/(experience)/agenda/actions.ts',
       'src/app/(frontend)/[locale]/events/[slug]/my-activities/actions.ts',
-      'src/app/(frontend)/[locale]/events/[slug]/workshops/actions.ts',
     ]) {
       const actions = read(file);
       expect(actions).toContain("'Registration not open yet'");
       expect(actions).toContain("'Registration closed'");
     }
     expect(read('src/app/(frontend)/[locale]/events/[slug]/my-activities/actions.ts')).toContain('noCancel');
+  });
+});
+
+describe('seminars are chosen in the programme', () => {
+  const read = (file: string): string => readFileSync(file, 'utf8');
+
+  it('the registration finale sends the new guest to the programme, not the retired list', () => {
+    const page = read('src/app/(frontend)/[locale]/events/[slug]/register/page.tsx');
+    expect(page).toContain('<Link href={`/${lang}/events/${slug}/agenda`} className={primaryCls}>');
+    expect(page).not.toContain('/workshops');
+  });
+
+  it('the old address moves on to the programme, the named activity still open', () => {
+    const old = read('src/app/(frontend)/[locale]/events/[slug]/workshops/page.tsx');
+    expect(old).toContain('redirect(`/${locale}/events/${encodeURIComponent(slug)}/agenda${opened}`);');
+    expect(old).toContain("activity && /^\\d+$/.test(activity) ? `?activity=${activity}` : ''");
   });
 });

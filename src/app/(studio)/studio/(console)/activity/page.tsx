@@ -5,10 +5,12 @@ import {
   getStudioAccess,
   getStudioLocale as localeOf,
 } from '@/features/studio';
-import { getActiveConferenceSlug } from '@/features/events';
+import { findEvent, getActiveConferenceSlug } from '@/features/events';
+import { DEFAULT_VENUE_TIMEZONE } from '@/shared';
 import { languageTally, listArchivedActivities, listConferenceActivities } from '@/features/program';
 import { ACTIVITY_LANGUAGE_LABELS } from '@/shared/constants/activity-facets';
 import { can } from '@/permission-engine';
+import { registrationWindow } from '@/registration-engine';
 import ActivityManager, { type ActivityRow } from './activity-manager';
 
 /*
@@ -35,12 +37,15 @@ const ActivityPage = async () => {
     /* Releasing a guest's place — for the roles that govern registrations. */
     release: can(access.grants, 'registrations:manage', slug ?? undefined),
   };
-  const [activities, shelved] = slug
+  const [activities, shelved, event] = slug
     ? await Promise.all([
         listConferenceActivities(slug, locale).catch(() => []),
         listArchivedActivities(slug, locale).catch(() => []),
+        findEvent(slug).catch(() => null),
       ])
-    : [[], []];
+    : [[], [], null];
+  /* The conference's clock: the hours here are the hours the programme shows, wherever the operator sits. */
+  const timeZone = event?.timezone ?? DEFAULT_VENUE_TIMEZONE;
 
   /* The vote of every activity that holds one, read once for the list. */
   const tallies = new Map(
@@ -50,6 +55,7 @@ const ActivityPage = async () => {
         .map(async ({ session }) => [session.id, await languageTally(session.id).catch(() => [])] as const),
     ),
   );
+  const now = Date.now();
   const toRow = ({ session, capacity, status }: (typeof activities)[number]): ActivityRow => ({
       id: session.id,
       title: session.title,
@@ -68,6 +74,7 @@ const ActivityPage = async () => {
       available: capacity.available,
       state: capacity.state,
       status,
+      registration: registrationWindow(session, now),
       ...(session.languageVote
         ? {
             votes: (tallies.get(session.id) ?? []).map((row) => ({
@@ -97,6 +104,7 @@ const ActivityPage = async () => {
     available: null,
     state: 'unlimited',
     status: 'available',
+    registration: 'open',
   }));
 
   return (
@@ -109,7 +117,7 @@ const ActivityPage = async () => {
         </span>
       }
     >
-      <ActivityManager locale={locale} slug={slug} rows={rows} archived={archived} can={permissions} />
+      <ActivityManager locale={locale} slug={slug} rows={rows} archived={archived} can={permissions} timeZone={timeZone} />
     </ConsoleShell>
   );
 };

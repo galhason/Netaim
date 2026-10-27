@@ -172,11 +172,11 @@ const walk = (dir: string): string[] =>
 describe('every door of the conference', () => {
   const root = 'src/app/(frontend)/[locale]/events/[slug]';
   /* Two addresses only redirect to the account's own pages, and show nothing. */
-  const redirectsOnly = new Set([`${root}/me/messages/page.tsx`, `${root}/networking/page.tsx`]);
+  const redirectsOnly = new Set([`${root}/me/messages/page.tsx`, `${root}/networking/page.tsx`, `${root}/workshops/page.tsx`]);
 
   it('has every page ask before it reads anything, and draw the closed page instead', () => {
     const pages = walk(root).filter((file) => file.endsWith('/page.tsx') && !redirectsOnly.has(file));
-    expect(pages.length).toBeGreaterThanOrEqual(12);
+    expect(pages.length).toBeGreaterThanOrEqual(11);
     for (const file of pages) {
       const source = read(file);
       expect(source, file).toMatch(/const closed = await closedConferencePage\(slug, \w+, [^)]+\);/);

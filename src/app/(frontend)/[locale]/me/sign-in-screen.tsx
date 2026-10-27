@@ -56,8 +56,8 @@ const COPY = {
   resetEyebrow: { he: 'שחזור גישה', en: 'Account recovery' },
   resetTitle: { he: 'שכחתם את הסיסמה?', en: 'Forgot your password?' },
   resetIntro: {
-    he: 'הזינו את כתובת הדוא״ל שאיתה נרשמתם, ונשלח אליה קישור כניסה חד־פעמי. אחרי הכניסה אפשר לקבוע סיסמה חדשה בעמוד הפרופיל.',
-    en: 'Enter the email address you registered with and we will send a one-time sign-in link. Once you are in, you can set a new password on your profile page.',
+    he: 'הזינו את כתובת הדוא״ל שאיתה נרשמתם, ונשלח אליה קישור לבחירת סיסמה חדשה.',
+    en: 'Enter the email address you registered with and we will send a link to choose a new password.',
   },
   resetHint: {
     he: 'הקישור תקף ל-15 דקות וניתן לשימוש פעם אחת.',
@@ -65,8 +65,8 @@ const COPY = {
   },
   sentTitle: { he: 'הקישור בדרך אליכם', en: 'The link is on its way' },
   sentBody: {
-    he: 'אם הכתובת רשומה אצלנו, נשלח אליה כעת קישור כניסה. הקישור תקף ל-15 דקות וניתן לשימוש פעם אחת בלבד.',
-    en: 'If that address is registered with us, a sign-in link is on its way to it. The link is valid for 15 minutes and can be used once.',
+    he: 'אם הכתובת רשומה אצלנו, נשלח אליה כעת קישור לבחירת סיסמה חדשה. הקישור תקף ל-15 דקות וניתן לשימוש פעם אחת בלבד.',
+    en: 'If that address is registered with us, a link to choose a new password is on its way to it. The link is valid for 15 minutes and can be used once.',
   },
   sentSpam: {
     he: 'ההודעה לא מופיעה? בדקו גם בתיקיית הספאם או בקידומי מכירות — היא נשלחת מהכתובת noreply@netaim26.org.',

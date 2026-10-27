@@ -313,6 +313,29 @@ export const payloadParticipantSessionRepository: ParticipantSessionRepository =
       return participant ? { participant } : null;
     },
 
+    peek: async (tokenHash, now) => {
+      const payload = await getSystemPayload();
+      const sessions = await payload.find({
+        collection: 'participant-sessions',
+        where: {
+          and: [
+            { tokenHash: { equals: tokenHash } },
+            { usedAt: { exists: false } },
+            { expiresAt: { greater_than: now } },
+          ],
+        },
+        limit: 1,
+        depth: 1,
+        overrideAccess: true,
+      });
+      const session = sessions.docs[0] as SessionRow | undefined;
+      if (!session) {
+        return null;
+      }
+      const participant = await resolveParticipant(payload, session.participant);
+      return participant ? { participant } : null;
+    },
+
     openSession: async (participantId, tokenHash, expiresAt) => {
       const payload = await getSystemPayload();
       const account = await payload

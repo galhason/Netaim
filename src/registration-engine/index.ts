@@ -16,9 +16,10 @@ export {
   decideOutcome,
 } from './registration/mode';
 export type { RegistrationMode, RegistrationOutcome } from './registration/mode';
-export { registrationWindow, cancellationAllowed } from './registration/window';
+export { registrationWindow, cancellationAllowed, closingPatch, reopeningPatch } from './registration/window';
 export type {
   RegistrationWindowInput,
+  RegistrationWindowPatch,
   RegistrationWindowState,
   CancellationRuleInput,
 } from './registration/window';
