@@ -1,6 +1,8 @@
 export {
   broadcastAnnouncement,
+  emailParticipants,
   emailSessionRegistrants,
+  peopleByPlace,
   isAnnouncement,
   listMyAnnouncements,
   listMyFeed,
@@ -9,6 +11,7 @@ export {
   notifyParticipant,
 } from './services/notifications-service';
 export type {
+  PlaceSegment,
   BroadcastKind,
   BroadcastVersion,
   Spotlight,

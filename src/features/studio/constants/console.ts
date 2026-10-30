@@ -547,14 +547,14 @@ export const CONSOLE_UI = {
   },
   broadcastSubject: { he: 'נושא', en: 'Subject' },
   broadcastBody: { he: 'תוכן ההודעה', en: 'Message body' },
-  broadcastSend: { he: 'שליחה לכל המשתתפים', en: 'Send to all guests' },
+  broadcastSend: { he: 'שליחת ההודעה', en: 'Send the message' },
   broadcastSent: {
     he: 'ההודעה נשלחה ומופיעה כעת בפיד של המשתתפים.',
     en: 'The message was sent and now appears in the guests’ feed.',
   },
   broadcastFeedNote: {
-    he: 'ההודעה מופיעה מיד בחדר ההודעות של כל משתתפי הכנס. שליחה במייל תצטרף כשספק אימייל יחובר.',
-    en: 'The message appears immediately in every guest’s messages room. Email delivery joins once a provider is connected.',
+    he: 'הודעה באתר מופיעה מיד אצל מי שמחובר לפלטפורמה (פופאפ — בטעינה הבאה של דף). מייל נשלח מיד לכל אחד בקהל שנבחר, בשפה שבחר.',
+    en: 'An on-site message appears at once for whoever is signed in to the platform (a pop-up — on their next page load). An email goes out at once to everyone in the chosen audience, in their chosen language.',
   },
   momentsImages: { he: 'תמונות הרגעים', en: 'Moments images' },
   momentsHint: {

@@ -41,7 +41,7 @@ import {
   type AuditActor,
 } from '@/features/access';
 import { cancelRegistration } from '@/features/registration';
-import { broadcastAnnouncement } from '@/features/notifications';
+import { broadcastAnnouncement, emailParticipants, peopleByPlace, type PlaceSegment } from '@/features/notifications';
 import {
   buildOpeningDescriptor,
   getOpening,
@@ -531,45 +531,93 @@ export const broadcastAnnouncementAction = async (formData: FormData) => {
   const rawKind = String(formData.get('kind') ?? 'feed');
   const kind =
     rawKind === 'banner' || rawKind === 'popup' ? rawKind : 'feed';
-  const sent = await broadcastAnnouncement({
-    eventSlug: slug,
-    versions: [
-      {
-        locale: 'he',
-        subject: String(formData.get('subjectHe') ?? ''),
-        body: String(formData.get('bodyHe') ?? ''),
-      },
-      {
-        locale: 'en',
-        subject: String(formData.get('subjectEn') ?? ''),
-        body: String(formData.get('bodyEn') ?? ''),
-      },
-    ],
-    kind,
-    targetSessionId,
-    targetParticipantId,
-  });
-  if (sent) {
+  /*
+   * Who among the people holding places: everyone, only the seats, or
+   * only the waiting list — of the chosen activity, or of every activity
+   * when none is chosen. And how: on the site, by email, or both.
+   */
+  const rawSegment = String(formData.get('segment') ?? 'all');
+  const segment: PlaceSegment =
+    rawSegment === 'waitlisted' || rawSegment === 'confirmed' ? rawSegment : 'all';
+  const rawChannel = String(formData.get('channel') ?? 'site');
+  const channel = rawChannel === 'email' || rawChannel === 'both' ? rawChannel : 'site';
+  const onSite = channel !== 'email';
+  const byEmail = channel !== 'site';
+  const versions = [
+    {
+      locale: 'he',
+      subject: String(formData.get('subjectHe') ?? ''),
+      body: String(formData.get('bodyHe') ?? ''),
+    },
+    {
+      locale: 'en',
+      subject: String(formData.get('subjectEn') ?? ''),
+      body: String(formData.get('bodyEn') ?? ''),
+    },
+  ];
+  /*
+   * The people, named, whenever the message is not simply "everyone in
+   * the conference on the site": a single guest, a part of the places,
+   * or any email at all. An email to every guest of the conference is
+   * not sent from here — the mail provider's daily allowance is not a
+   * thing to spend by accident.
+   */
+  const everyoneOnSite = !targetParticipantId && !targetSessionId && segment === 'all';
+  if (byEmail && everyoneOnSite) {
+    redirect('/studio/communications?broadcast=emailEveryone');
+  }
+  const recipientIds = targetParticipantId
+    ? [targetParticipantId]
+    : segment !== 'all' || byEmail
+      ? await peopleByPlace({ eventSlug: slug, sessionId: targetSessionId, segment })
+      : undefined;
+  if (recipientIds && recipientIds.length === 0) {
+    redirect('/studio/communications?broadcast=nobody');
+  }
+  const shown = onSite
+    ? await broadcastAnnouncement({
+        eventSlug: slug,
+        versions,
+        kind,
+        ...(recipientIds ? { recipientIds } : { targetSessionId }),
+      })
+    : false;
+  const emailed =
+    byEmail && recipientIds
+      ? await emailParticipants({
+          eventSlug: slug,
+          participantIds: recipientIds,
+          versions,
+          ctaPath: (locale) => `/${locale}/events/${encodeURIComponent(slug)}/my-activities`,
+        })
+      : 0;
+  if (shown || emailed > 0) {
     /*
      * The audience is recorded, never the message: an announcement can
      * carry anything an organizer types, and the trail is read by more
      * people than the announcement was addressed to.
      */
     await audit(actor, 'communication.broadcast', slug, {
-      kind,
+      kind: onSite ? kind : 'none',
+      channel,
+      segment,
       audience: targetParticipantId
         ? 'oneGuest'
         : targetSessionId
           ? 'oneActivity'
           : 'everyone',
+      people: recipientIds ? recipientIds.length : 'everyone',
+      emailed,
     });
     revalidatePath('/studio/communications');
     /*
      * Announcements are addressed to guests and read per request on
      * the dynamic page, so no published-content tag is involved.
      */
-    redirect('/studio/communications?broadcast=sent');
+    const counts = `${recipientIds ? `&people=${recipientIds.length}` : ''}${byEmail ? `&emails=${emailed}` : ''}`;
+    redirect(`/studio/communications?broadcast=sent${counts}`);
   }
+  redirect('/studio/communications?broadcast=failed');
 };
 
 /*

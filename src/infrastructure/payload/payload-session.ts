@@ -607,6 +607,63 @@ export const payloadSessionRegistrationRepository: SessionRegistrationRepository
         .filter((id) => id && id !== 'null');
     },
 
+    participantsByPlace: async ({ eventSlug, sessionId, statuses }) => {
+      if (statuses.length === 0) {
+        return [];
+      }
+      const payload = await getSystemPayload();
+      const events = await payload.find({
+        collection: 'events',
+        where: { slug: { equals: eventSlug } },
+        limit: 1,
+        depth: 0,
+        overrideAccess: true,
+      });
+      const event = events.docs[0] as { id: number | string } | undefined;
+      if (!event) {
+        return [];
+      }
+      /* Shelved activities are off the programme, and their places with them. */
+      const live = await payload.find({
+        collection: 'sessions',
+        where: {
+          and: [
+            { event: { equals: event.id } },
+            { archivedAt: { exists: false } },
+            ...(sessionId ? [{ id: { equals: sessionId } }] : []),
+          ],
+        },
+        depth: 0,
+        pagination: false,
+        overrideAccess: true,
+        select: { title: true },
+      });
+      const ids = (live.docs as { id: number | string }[]).map((row) => row.id);
+      if (ids.length === 0) {
+        return [];
+      }
+      const result = await payload.find({
+        collection: 'session-registrations',
+        where: {
+          and: [
+            { session: { in: ids } },
+            { status: { in: statuses } },
+          ],
+        },
+        depth: 0,
+        pagination: false,
+        overrideAccess: true,
+        select: { participant: true },
+      });
+      return [
+        ...new Set(
+          (result.docs as unknown as { participant: number | string | { id: number | string } }[])
+            .map((row) => String(relationshipId(row.participant)))
+            .filter((id) => id && id !== 'null'),
+        ),
+      ];
+    },
+
     waitlistForSession: async (sessionId): Promise<SessionWaitlistEntry[]> => {
       const payload = await getSystemPayload();
       const result = await payload.find({

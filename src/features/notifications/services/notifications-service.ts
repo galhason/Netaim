@@ -88,6 +88,8 @@ export interface BroadcastInput {
   /* when set, only the registrants of this activity receive it */
   targetSessionId?: string;
   targetParticipantId?: string;
+  /* An audience already decided, by id — the waiting list of an activity, say. */
+  recipientIds?: string[];
   /*
    * What the note is about, when a click on it should land somewhere
    * more exact than the conference page: `activity` sends the reader
@@ -112,7 +114,12 @@ export const broadcastAnnouncement = async (
   const base = broadcastTypeOf(input.kind ?? 'feed');
   const type = input.topic ? `${base}.${input.topic}` : base;
   let recipients: string[] = [''];
-  if (input.targetParticipantId) {
+  if (input.recipientIds) {
+    recipients = [...new Set(input.recipientIds.filter((id) => id !== ''))];
+    if (recipients.length === 0) {
+      return false;
+    }
+  } else if (input.targetParticipantId) {
     recipients = [input.targetParticipantId];
   } else if (input.targetSessionId) {
     recipients = await sessionRegistrationRepository
@@ -270,6 +277,112 @@ export const emailSessionRegistrants = async (input: {
         locale: version.locale,
         subject: version.subject,
         body: `${version.body}\n\n${MAIL_FOOTER[version.locale]}`,
+        ...(base
+          ? {
+              cta: {
+                label: version.locale === 'he' ? 'לפעילויות שלי' : 'My activities',
+                href: `${base}${input.ctaPath(version.locale)}`,
+              },
+            }
+          : {}),
+      },
+    ];
+  });
+  let sent = 0;
+  for (let index = 0; index < messages.length; index += MAIL_BATCH) {
+    const outcomes = await Promise.all(
+      messages
+        .slice(index, index + MAIL_BATCH)
+        .map((message) => sendNotification(message).catch(() => 'failed' as const)),
+    );
+    sent += outcomes.filter((status) => status === 'sent').length;
+  }
+  return sent;
+};
+
+/*
+ * Who, among the people holding places in the activities: everyone
+ * with a live place, only those holding a seat, or only those waiting.
+ * In one activity, or across every activity of the conference. Read
+ * from the places as they stand, so a waiting list that formed before
+ * this was written is addressed the same as one formed after.
+ */
+export type PlaceSegment = 'all' | 'confirmed' | 'waitlisted';
+
+const SEGMENT_STATUSES: Record<PlaceSegment, ('confirmed' | 'pending' | 'waitlisted')[]> = {
+  all: ['confirmed', 'pending', 'waitlisted'],
+  confirmed: ['confirmed'],
+  waitlisted: ['waitlisted'],
+};
+
+export const peopleByPlace = (input: {
+  eventSlug: string;
+  sessionId?: string;
+  segment: PlaceSegment;
+}): Promise<string[]> =>
+  sessionRegistrationRepository
+    .participantsByPlace({
+      eventSlug: input.eventSlug,
+      sessionId: input.sessionId,
+      statuses: SEGMENT_STATUSES[input.segment],
+    })
+    .catch(() => []);
+
+/*
+ * The organiser's message, by email, to people already chosen — the
+ * waiting list of a tour, the registrants of a seminar, one guest.
+ *
+ * Each person reads it in the language they chose, the other language
+ * standing in when only one was written. It is a message about their
+ * own place, sent by the production, so it is not held back by the
+ * switch for emails about schedule changes; it says in its last line
+ * why it came. Blocked accounts are skipped. Recorded under its own
+ * type, outside the on-site feed, so a message sent both ways is not
+ * read twice in the bell. Answers how many were handed to the mail
+ * server.
+ */
+export const ORGANIZER_EMAIL_TYPE = 'organizer.email';
+
+const ORGANIZER_FOOTER = {
+  he: 'המייל נשלח אליכם מצוות נטעים בעקבות ההרשמה שלכם לכנס.',
+  en: 'This email was sent to you by the Netaim team because you are registered for the conference.',
+} as const;
+
+export const emailParticipants = async (input: {
+  eventSlug: string;
+  participantIds: string[];
+  versions: BroadcastVersion[];
+  ctaPath: (locale: 'he' | 'en') => string;
+}): Promise<number> => {
+  const versions = new Map(
+    input.versions
+      .map((version) => ({
+        locale: version.locale === 'en' ? ('en' as const) : ('he' as const),
+        subject: version.subject.trim().slice(0, MAX_SUBJECT),
+        body: version.body.trim().slice(0, MAX_BODY),
+      }))
+      .filter((version) => version.subject !== '' && version.body !== '')
+      .map((version) => [version.locale, version] as const),
+  );
+  const ids = [...new Set(input.participantIds.filter((id) => id !== ''))];
+  if (!input.eventSlug || ids.length === 0 || versions.size === 0) {
+    return 0;
+  }
+  const people = await participantSessionRepository.noticePreferencesByIds(ids).catch(() => []);
+  const base = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, '') ?? '';
+  const messages = people.flatMap((person) => {
+    const version = versions.get(person.locale) ?? versions.get('he') ?? versions.get('en');
+    if (!version) {
+      return [];
+    }
+    return [
+      {
+        participantId: person.id,
+        eventSlug: input.eventSlug,
+        type: ORGANIZER_EMAIL_TYPE,
+        locale: version.locale,
+        subject: version.subject,
+        body: `${version.body}\n\n${ORGANIZER_FOOTER[version.locale]}`,
         ...(base
           ? {
               cta: {

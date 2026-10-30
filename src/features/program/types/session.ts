@@ -220,6 +220,17 @@ export interface SessionRegistrationRepository {
   ) => Promise<SessionRegistrationSummary[]>;
   /* active registrants of one activity — for targeted announcements */
   participantsBySession: (sessionId: string) => Promise<string[]>;
+  /*
+   * Who holds a place of these kinds — in one activity, or in any
+   * activity of the conference — once each. The organiser's messages to
+   * "the waiting list" are addressed with it, read from the places as
+   * they stand.
+   */
+  participantsByPlace: (input: {
+    eventSlug: string;
+    sessionId?: string;
+    statuses: ('confirmed' | 'pending' | 'waitlisted')[];
+  }) => Promise<string[]>;
   /* the activity's waiting list, ordered first-in-line first */
   waitlistForSession: (
     sessionId: string,

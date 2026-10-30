@@ -17,6 +17,7 @@ export const NOTIFICATION_TYPE_LABELS: Record<string, Record<Locale, string>> = 
   announcement: { he: 'הודעה מההפקה', en: 'Announcement' },
   'announcement.banner': { he: 'באנר עליון', en: 'Ticker banner' },
   'announcement.popup': { he: 'הודעה מתפרצת', en: 'Pop-up' },
+  'organizer.email': { he: 'מייל מההפקה', en: 'Email from the production' },
 };
 
 export const DELIVERY_STATUS_LABELS: Record<string, Record<Locale, string>> = {

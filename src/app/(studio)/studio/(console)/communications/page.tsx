@@ -1,5 +1,6 @@
 import { listEvents } from '@/features/events';
-import { listAgenda } from '@/features/program';
+import { listConferenceActivities } from '@/features/program';
+import type { Locale } from '@/config/locales';
 import {
   DELIVERY_STATUS_LABELS,
   NOTIFICATION_TYPE_LABELS,
@@ -42,14 +43,52 @@ const timeLabel = (iso: string | undefined, localeTag: string): string => {
   }).format(parsed);
 };
 
+const t = (he: string, en: string): Record<Locale, string> => ({ he, en });
+
+const COPY = {
+  counts: {
+    he: (seats: number, waiting: number) => `${seats} רשומים · ${waiting} ברשימת המתנה`,
+    en: (seats: number, waiting: number) => `${seats} registered · ${waiting} waiting`,
+  } as Record<Locale, (seats: number, waiting: number) => string>,
+  segment: t('מי מקבל', 'Who receives it'),
+  segmentAll: t('כל הנרשמים (רשומים וממתינים)', 'Everyone with a place (registered and waiting)'),
+  segmentConfirmed: t('רק הרשומים', 'Registered only'),
+  segmentWaitlisted: t('רק מי שברשימת ההמתנה', 'Waiting list only'),
+  segmentNote: t(
+    'בלי פעילות נבחרת, "רק מי שברשימת ההמתנה" פונה לכל מי שממתין בפעילות כלשהי בכנס.',
+    'With no activity chosen, "waiting list only" reaches everyone waiting for any activity of the conference.',
+  ),
+  channel: t('ערוץ', 'Channel'),
+  channelSite: t('באתר בלבד', 'On the site only'),
+  channelEmail: t('במייל בלבד', 'By email only'),
+  channelBoth: t('באתר ובמייל', 'On the site and by email'),
+  channelNote: t(
+    'מייל נשלח רק לקהל מוגדר: פעילות, רשימת המתנה או משתתף אחד. "אופן הצגה" חל על ההודעה באתר.',
+    'Email goes to a defined audience only: an activity, a waiting list or one guest. "Presentation" applies to the on-site message.',
+  ),
+  sentTo: {
+    he: (people: string, emails: string) =>
+      `ההודעה נשלחה${people ? ` ל-${people} משתתפים` : ''}.${emails ? ` ${emails} מיילים נמסרו לשליחה.` : ''}`,
+    en: (people: string, emails: string) =>
+      `The message was sent${people ? ` to ${people} guests` : ''}.${emails ? ` ${emails} emails handed to the mail server.` : ''}`,
+  } as Record<Locale, (people: string, emails: string) => string>,
+  emailEveryone: t(
+    'מייל לכל משתתפי הכנס לא נשלח מכאן. בחרו פעילות, רשימת המתנה או משתתף אחד — או שלחו את ההודעה באתר בלבד.',
+    'An email to every guest of the conference is not sent from here. Choose an activity, a waiting list or one guest — or send the message on the site only.',
+  ),
+  nobody: t('אין אף אחד בקהל שנבחר — לא נשלח דבר.', 'No one is in the chosen audience — nothing was sent.'),
+  failed: t('ההודעה לא נשלחה. ודאו שמילאתם נושא ותוכן לפחות בשפה אחת.', 'The message was not sent. Make sure a subject and a body are filled in at least one language.'),
+};
+
 interface CommunicationsPageProps {
-  searchParams: Promise<{ broadcast?: string }>;
+  searchParams: Promise<{ broadcast?: string; people?: string; emails?: string }>;
 }
 
 const CommunicationsPage = async ({
   searchParams,
 }: CommunicationsPageProps) => {
-  const { broadcast } = await searchParams;
+  const { broadcast, people, emails } = await searchParams;
+  const digits = (value: string | undefined): string => (value && /^\d{1,6}$/.test(value) ? value : '');
   const locale = await getStudioLocale();
   const creator = await getStudioCreator();
   if (!(await requireCapability('communications:manage'))) {
@@ -64,20 +103,20 @@ const CommunicationsPage = async ({
     })),
   );
 
-  /* targeted audiences (PRD §4.2): every registrable activity, by name */
+  /*
+   * Targeted audiences (PRD §4.2): every registrable activity, by name,
+   * with how many hold a seat and how many wait — the waiting list is
+   * read from the places as they stand, so the count is the audience.
+   */
   const activityOptions = (
     await Promise.all(
       events.map(async (event) => {
-        const agenda = await listAgenda(event.slug, locale).catch(() => []);
-        return agenda
-          .filter(
-            (session) =>
-              session.sessionType === 'workshop' ||
-              session.sessionType === 'tour',
-          )
-          .map((session) => ({
+        const activities = await listConferenceActivities(event.slug, locale).catch(() => []);
+        return activities
+          .filter(({ session }) => session.sessionType === 'workshop' || session.sessionType === 'tour')
+          .map(({ session, counts }) => ({
             value: `${event.slug}::${session.id}`,
-            label: `${event.title} — ${session.title}`,
+            label: `${event.title} — ${session.title} (${COPY.counts[locale](counts.confirmed, counts.waitlisted)})`,
           }));
       }),
     )
@@ -120,8 +159,15 @@ const CommunicationsPage = async ({
         </header>
 
         {broadcast === 'sent' ? (
-          <p className="rounded-xl border border-[var(--c-live)]/35 bg-[var(--c-live)]/10 px-4 py-3 text-[12px] leading-relaxed text-[var(--c-text)]">
-            {CONSOLE_UI.broadcastSent[locale]}
+          <p role="status" className="rounded-xl border border-[var(--c-live)]/35 bg-[var(--c-live)]/10 px-4 py-3 text-[12px] leading-relaxed text-[var(--c-text)]">
+            {people || emails !== undefined
+              ? COPY.sentTo[locale](digits(people), digits(emails))
+              : CONSOLE_UI.broadcastSent[locale]}
+          </p>
+        ) : null}
+        {broadcast === 'emailEveryone' || broadcast === 'nobody' || broadcast === 'failed' ? (
+          <p role="alert" className="rounded-xl border border-amber-400/35 bg-amber-400/10 px-4 py-3 text-[12px] leading-relaxed text-[var(--c-text)]">
+            {COPY[broadcast][locale]}
           </p>
         ) : null}
 
@@ -162,6 +208,29 @@ const CommunicationsPage = async ({
                 options={activityOptions}
               />
             </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <CSelectField
+                name="segment"
+                label={COPY.segment[locale]}
+                emptyLabel={COPY.segmentAll[locale]}
+                options={[
+                  { value: 'confirmed', label: COPY.segmentConfirmed[locale] },
+                  { value: 'waitlisted', label: COPY.segmentWaitlisted[locale] },
+                ]}
+              />
+              <CSelectField
+                name="channel"
+                label={COPY.channel[locale]}
+                emptyLabel={COPY.channelSite[locale]}
+                options={[
+                  { value: 'email', label: COPY.channelEmail[locale] },
+                  { value: 'both', label: COPY.channelBoth[locale] },
+                ]}
+              />
+            </div>
+            <p className="-mt-2 text-[11px] leading-relaxed text-[var(--c-text-faint)]">
+              {COPY.segmentNote[locale]} {COPY.channelNote[locale]}
+            </p>
             <CSelectField
               name="person"
               label={CONSOLE_UI.broadcastPerson[locale]}
